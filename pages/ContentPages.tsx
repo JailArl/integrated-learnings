@@ -9,7 +9,6 @@ export const About: React.FC = () => (
   <>
     <PageHeader title="About Us" subtitle="We don't just teach. We engineer academic success." />
     
-    {/* Vision Section */}
     <Section>
        <div className="grid md:grid-cols-2 gap-12 items-center">
           <div>
@@ -48,9 +47,7 @@ export const About: React.FC = () => (
        </div>
     </Section>
 
-    {/* The CLA Spotlight - Dark Section */}
     <div className="bg-primary py-20 text-white relative overflow-hidden">
-       {/* Background accents */}
        <div className="absolute top-0 left-0 w-full h-full opacity-10" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
        
        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -87,7 +84,6 @@ export const About: React.FC = () => (
        </div>
     </div>
 
-    {/* Methodology / Why Choose Us */}
     <Section>
         <div className="max-w-5xl mx-auto">
            <div className="text-center mb-12">
@@ -134,7 +130,6 @@ export const Policies: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'parents' | 'tutors'>('parents');
 
   useEffect(() => {
-    // Only show tutor tab if explicitly requested via URL
     if (searchParams.get('tab') === 'tutors') {
       setActiveTab('tutors');
     }
@@ -147,7 +142,6 @@ export const Policies: React.FC = () => {
         subtitle="Transparent guidelines for Parents and Students." 
       />
       <Section>
-        {/* Only show distinct switcher if we are already in tutor mode, otherwise keep it clean for parents */}
         {activeTab === 'tutors' && (
           <div className="flex justify-center mb-16">
             <div className="bg-amber-100 p-2 rounded-lg inline-flex items-center text-amber-900 text-sm font-bold border border-amber-300">
@@ -255,7 +249,7 @@ export const Policies: React.FC = () => {
                          <Clock className="text-secondary shrink-0" />
                          <div>
                             <h5 className="font-bold text-slate-800">Punctuality</h5>
-                            <p className="text-sm text-slate-600">Arrive 5-10 minutes early. Late arrival >15mins without valid reason is grounds for immediate termination.</p>
+                            <p className="text-sm text-slate-600">Arrive 5-10 minutes early. Late arrival over 15mins without valid reason is grounds for immediate termination.</p>
                          </div>
                       </div>
                       <div className="flex gap-4">
@@ -278,7 +272,6 @@ export const Policies: React.FC = () => {
 
 export const TutorLanding: React.FC = () => (
   <>
-    {/* Hero */}
     <div className="bg-slate-900 text-white pt-24 pb-32 relative overflow-hidden">
         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
@@ -292,11 +285,10 @@ export const TutorLanding: React.FC = () => (
            <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
               Join Singapore's most professional tuition network. Guaranteed lesson protection, automated billing, and a steady stream of serious students.
            </p>
-           <Button to="/tutors" className="px-8 py-4 text-lg shadow-xl shadow-blue-500/20">Apply as Partner Tutor</Button>
+           <Button to="/tutors" variant="white" className="px-10 py-4 text-lg shadow-xl">Apply as Partner Tutor</Button>
         </div>
     </div>
 
-    {/* The Problem with Freelancing */}
     <Section>
        <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-primary mb-4">Tired of the "Freelance Grind"?</h2>
@@ -327,7 +319,6 @@ export const TutorLanding: React.FC = () => (
        </div>
     </Section>
 
-    {/* The Integrated Learnings Solution */}
     <Section className="bg-slate-50 rounded-3xl">
        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
@@ -369,7 +360,6 @@ export const TutorLanding: React.FC = () => (
        </div>
     </Section>
 
-    {/* Requirements */}
     <Section>
        <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-primary mb-12">Who we are looking for</h2>
@@ -399,7 +389,6 @@ export const TutorLanding: React.FC = () => (
        </div>
     </Section>
 
-    {/* Final CTA */}
     <div className="bg-primary py-24 text-center">
        <h2 className="text-3xl font-bold text-white mb-6">Ready to upgrade your teaching career?</h2>
        <Button to="/tutors" variant="white" className="px-10 py-4 text-lg">Start Application</Button>
