@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PageHeader, Section, Button, Card } from '../components/Components';
-import { Phone, Mail, Clock, Shield, FileText, AlertCircle, Users, DollarSign, Microscope, Target, BarChart3 } from 'lucide-react';
+import { Phone, Mail, Clock, Shield, FileText, AlertCircle, Users, DollarSign, Microscope, Target, BarChart3, CheckCircle2, TrendingUp, Calendar } from 'lucide-react';
 import { POLICY_CONTENT, PRIVACY_POLICY_TEXT } from '../constants';
 import { useSearchParams } from 'react-router-dom';
 
@@ -275,6 +275,137 @@ export const Policies: React.FC = () => {
     </>
   );
 };
+
+export const TutorLanding: React.FC = () => (
+  <>
+    {/* Hero */}
+    <div className="bg-slate-900 text-white pt-24 pb-32 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+           <div className="inline-block bg-blue-600/30 text-blue-200 border border-blue-500/30 px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wider mb-6">
+              For Educators
+           </div>
+           <h1 className="text-4xl md:text-6xl font-extrabold mb-6 tracking-tight">
+              Focus on Teaching.<br />
+              <span className="text-blue-400">We'll Handle The Rest.</span>
+           </h1>
+           <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+              Join Singapore's most professional tuition network. Guaranteed lesson protection, automated billing, and a steady stream of serious students.
+           </p>
+           <Button to="/tutors" className="px-8 py-4 text-lg shadow-xl shadow-blue-500/20">Apply as Partner Tutor</Button>
+        </div>
+    </div>
+
+    {/* The Problem with Freelancing */}
+    <Section>
+       <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-primary mb-4">Tired of the "Freelance Grind"?</h2>
+          <p className="text-slate-500">The typical private tutor lifecycle is broken.</p>
+       </div>
+       <div className="grid md:grid-cols-3 gap-8">
+          <div className="bg-white p-8 rounded-xl border border-red-100 shadow-sm hover:shadow-md transition text-center">
+             <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertCircle className="text-red-500" size={32} />
+             </div>
+             <h4 className="font-bold text-lg text-slate-800 mb-2">Last-Minute Cancellations</h4>
+             <p className="text-slate-600 text-sm">"Cher, can cancel today?" 1 hour before class. You lose income and time.</p>
+          </div>
+          <div className="bg-white p-8 rounded-xl border border-red-100 shadow-sm hover:shadow-md transition text-center">
+             <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <DollarSign className="text-red-500" size={32} />
+             </div>
+             <h4 className="font-bold text-lg text-slate-800 mb-2">Chasing Payments</h4>
+             <p className="text-slate-600 text-sm">Awkwardly reminding parents to PayNow you every month.</p>
+          </div>
+          <div className="bg-white p-8 rounded-xl border border-red-100 shadow-sm hover:shadow-md transition text-center">
+             <div className="bg-red-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Users className="text-red-500" size={32} />
+             </div>
+             <h4 className="font-bold text-lg text-slate-800 mb-2">Unfiltered Clients</h4>
+             <p className="text-slate-600 text-sm">Students who aren't serious, or parents who haggle over $5/hr.</p>
+          </div>
+       </div>
+    </Section>
+
+    {/* The Integrated Learnings Solution */}
+    <Section className="bg-slate-50 rounded-3xl">
+       <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+             <h2 className="text-3xl font-bold text-primary mb-4">The "Managed Model" Advantage</h2>
+             <p className="text-slate-500">We treat you like a professional, not a gig worker.</p>
+          </div>
+
+          <div className="space-y-8">
+             <div className="flex flex-col md:flex-row gap-8 items-center bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <div className="bg-green-100 p-4 rounded-full text-green-600 shrink-0">
+                   <Shield size={32} />
+                </div>
+                <div>
+                   <h3 className="text-xl font-bold text-primary mb-2">100% Lesson Protection</h3>
+                   <p className="text-slate-600">If a parent cancels less than 24 hours in advance, <strong className="text-green-600">you still get paid</strong>. We enforce the policy so you don't have to be the "bad guy".</p>
+                </div>
+             </div>
+
+             <div className="flex flex-col md:flex-row gap-8 items-center bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <div className="bg-blue-100 p-4 rounded-full text-blue-600 shrink-0">
+                   <TrendingUp size={32} />
+                </div>
+                <div>
+                   <h3 className="text-xl font-bold text-primary mb-2">Automated Billing & Payouts</h3>
+                   <p className="text-slate-600">Parents pay us via the platform. We pay you a consolidated salary by the 7th of every month. No more awkward payment texts.</p>
+                </div>
+             </div>
+
+             <div className="flex flex-col md:flex-row gap-8 items-center bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <div className="bg-purple-100 p-4 rounded-full text-purple-600 shrink-0">
+                   <CheckCircle2 size={32} />
+                </div>
+                <div>
+                   <h3 className="text-xl font-bold text-primary mb-2">Vetted High-Intent Students</h3>
+                   <p className="text-slate-600">Our parents pay a premium for results. You get students who actually want to learn, matched to your teaching style.</p>
+                </div>
+             </div>
+          </div>
+       </div>
+    </Section>
+
+    {/* Requirements */}
+    <Section>
+       <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl font-bold text-primary mb-12">Who we are looking for</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+             <div className="p-6 border border-slate-200 rounded-xl">
+                <div className="font-bold text-xl text-slate-800 mb-2">Full-Time Tutors</div>
+                <p className="text-sm text-slate-500">Graduates with 2+ years experience. Deep knowledge of MOE syllabus.</p>
+             </div>
+             <div className="p-6 border border-slate-200 rounded-xl">
+                <div className="font-bold text-xl text-slate-800 mb-2">MOE / Ex-MOE</div>
+                <p className="text-sm text-slate-500">Current or former school teachers familiar with exam marking standards.</p>
+             </div>
+             <div className="p-6 border border-slate-200 rounded-xl">
+                <div className="font-bold text-xl text-slate-800 mb-2">Specialists</div>
+                <p className="text-sm text-slate-500">Experts in niche areas like O-Level Art, D&T, or Coding.</p>
+             </div>
+          </div>
+          <div className="mt-12 bg-amber-50 p-6 rounded-lg border border-amber-200 inline-block text-left">
+             <div className="flex items-start">
+                <AlertCircle className="text-amber-600 mr-3 mt-1" />
+                <div>
+                   <h4 className="font-bold text-amber-900 text-sm">Strict Selection Process</h4>
+                   <p className="text-amber-800 text-xs mt-1">We require a character assessment and scenario test during sign-up. We prioritize attitude over just paper qualifications.</p>
+                </div>
+             </div>
+          </div>
+       </div>
+    </Section>
+
+    {/* Final CTA */}
+    <div className="bg-primary py-24 text-center">
+       <h2 className="text-3xl font-bold text-white mb-6">Ready to upgrade your teaching career?</h2>
+       <Button to="/tutors" variant="white" className="px-10 py-4 text-lg">Start Application</Button>
+    </div>
+  </>
+);
 
 export const CourseworkSupport: React.FC = () => (
   <>

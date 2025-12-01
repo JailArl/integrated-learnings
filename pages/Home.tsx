@@ -158,7 +158,7 @@ const Home: React.FC = () => {
         </div>
       </Section>
 
-      {/* Final CTA */}
+      {/* Final CTA for Parents */}
       <div className="bg-white py-24 text-center">
         <div className="max-w-3xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-primary mb-6">Start your child’s personalised learning journey today.</h2>
@@ -167,6 +167,12 @@ const Home: React.FC = () => {
             <Button to="/contact" variant="outline" className="w-full sm:w-auto text-lg px-8">Contact Us</Button>
           </div>
         </div>
+      </div>
+
+      {/* Subtle Link for Educators at bottom */}
+      <div className="bg-slate-50 py-12 text-center border-t border-slate-100">
+         <p className="text-slate-500 text-sm mb-4">Are you a qualified educator looking for students?</p>
+         <Link to="/teach" className="text-secondary font-bold hover:underline text-sm">Apply to join our Tutor Network &rarr;</Link>
       </div>
     </>
   );

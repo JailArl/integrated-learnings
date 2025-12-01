@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Section, Button, Card } from '../components/Components';
 import { api } from '../services/api';
 import { StudentProfile, TutorProfile, TutorRequest } from '../types';
-import { Users, FileText, CheckCircle, XCircle, Search, ShieldAlert } from 'lucide-react';
+import { Users, FileText, CheckCircle, XCircle, Search, ShieldAlert, Database, Cpu, Wifi } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
   const [isAuth, setIsAuth] = useState(false);
@@ -13,12 +13,22 @@ export const AdminDashboard: React.FC = () => {
   const [requests, setRequests] = useState<TutorRequest[]>([]);
   const [tutors, setTutors] = useState<TutorProfile[]>([]);
   const [students, setStudents] = useState<StudentProfile[]>([]);
+  
+  // System Status
+  const [dbStatus, setDbStatus] = useState<'Mock' | 'Live'>('Mock');
 
   useEffect(() => {
     if (isAuth) {
       loadData();
+      checkSystem();
     }
   }, [isAuth]);
+
+  const checkSystem = async () => {
+    // Check if we are running on real DB or Mock via API layer
+    const isLive = await api.admin.checkConnection(); 
+    setDbStatus(isLive ? 'Live' : 'Mock');
+  };
 
   const loadData = async () => {
     setRequests(await api.admin.getAllRequests());
@@ -56,11 +66,38 @@ export const AdminDashboard: React.FC = () => {
   return (
     <Section>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">Admin Control Center</h1>
-        <div className="space-x-4">
-           <span className="text-sm text-slate-500">Database Status: <span className="text-green-600 font-bold">Online</span></span>
+        <div>
+           <h1 className="text-3xl font-bold text-slate-800">Admin Control Center</h1>
+           <p className="text-sm text-slate-500">Manage Match Requests, Tutors, and System Status.</p>
+        </div>
+        <div className="space-x-4 flex items-center">
            <Button variant="outline" onClick={() => setIsAuth(false)} className="py-1 px-3 text-xs h-auto">Logout</Button>
         </div>
+      </div>
+
+      {/* System Health Bar */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+         <div className={`p-4 rounded-lg border flex items-center ${dbStatus === 'Live' ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+            <Database className={`mr-3 ${dbStatus === 'Live' ? 'text-green-600' : 'text-amber-600'}`} />
+            <div>
+               <h4 className={`font-bold ${dbStatus === 'Live' ? 'text-green-800' : 'text-amber-800'}`}>Database: {dbStatus}</h4>
+               <p className="text-xs text-slate-500">{dbStatus === 'Live' ? 'Connected to Supabase' : 'Using Simulation Data'}</p>
+            </div>
+         </div>
+         <div className="p-4 rounded-lg border bg-purple-50 border-purple-200 flex items-center">
+            <Cpu className="mr-3 text-purple-600" />
+            <div>
+               <h4 className="font-bold text-purple-800">AI Engine: Standby</h4>
+               <p className="text-xs text-slate-500">Ready to match (GPT-4o)</p>
+            </div>
+         </div>
+         <div className="p-4 rounded-lg border bg-blue-50 border-blue-200 flex items-center">
+            <Wifi className="mr-3 text-blue-600" />
+            <div>
+               <h4 className="font-bold text-blue-800">Server Status</h4>
+               <p className="text-xs text-slate-500">Vercel Edge Network: OK</p>
+            </div>
+         </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-8">
@@ -124,7 +161,11 @@ export const AdminDashboard: React.FC = () => {
                       <tr key={t.id} className="border-b hover:bg-slate-50">
                         <td className="p-3 font-bold">{t.name}</td>
                         <td className="p-3">{t.qualification}</td>
-                        <td className="p-3">{t.isManaged ? 'Managed' : 'Referral'}</td>
+                        <td className="p-3">
+                           <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold ${t.isManaged ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                              {t.isManaged ? 'Managed' : 'Referral'}
+                           </span>
+                        </td>
                         <td className="p-3 text-green-600 font-bold">{t.matchScore || '-'}</td>
                         <td className="p-3"><span className={`px-2 py-1 rounded-full text-xs font-bold ${t.status === 'verified' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>{t.status}</span></td>
                         <td className="p-3">

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Phone } from 'lucide-react';
+import { Menu, X, ChevronDown, Phone, Briefcase } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -37,11 +37,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <nav className="hidden md:flex items-center space-x-6 h-full">
               <Link to="/" className={`${isActive('/') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Home</Link>
               <Link to="/roadmap" className={`${isActive('/roadmap') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Education Roadmap</Link>
-              <Link to="/extra" className={`${isActive('/extra') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Extra Learnings</Link>
-              <Link to="/holiday" className={`${isActive('/holiday') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Holiday Programs</Link>
               <Link to="/pricing" className={`${isActive('/pricing') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Pricing</Link>
               <Link to="/about" className={`${isActive('/about') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>About</Link>
               
+              {/* Tutor Recruitment Link - High Visibility */}
+              <Link to="/teach" className={`flex items-center text-sm font-semibold transition ${isActive('/teach') ? 'text-emerald-600' : 'text-slate-500 hover:text-emerald-600'}`}>
+                 <Briefcase size={14} className="mr-1" /> Join as Tutor
+              </Link>
+
               {/* Dropdown with full height container to fix hover gap */}
               <div className="relative group h-full flex items-center">
                 <button className="flex items-center text-slate-600 hover:text-secondary transition text-sm py-2">
@@ -52,7 +55,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="bg-white border border-slate-100 shadow-lg rounded-lg overflow-hidden">
                     <Link to="/parents" className="block px-4 py-3 hover:bg-slate-50 text-sm">Parent Dashboard</Link>
                     <Link to="/tutors" className="block px-4 py-3 hover:bg-slate-50 text-sm">Tutor Dashboard</Link>
-                    <Link to="/admin" className="block px-4 py-3 hover:bg-slate-50 text-sm border-t border-slate-100 text-slate-400">Admin Login</Link>
                   </div>
                 </div>
               </div>
@@ -75,9 +77,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="px-4 py-6 space-y-4">
               <button onClick={() => handleNav('/')} className="block w-full text-left py-2 font-medium text-slate-700">Home</button>
               <button onClick={() => handleNav('/roadmap')} className="block w-full text-left py-2 font-medium text-slate-700">Education Roadmap</button>
-              <button onClick={() => handleNav('/extra')} className="block w-full text-left py-2 font-medium text-slate-700">Extra Learnings</button>
-              <button onClick={() => handleNav('/holiday')} className="block w-full text-left py-2 font-medium text-slate-700">Holiday Programs</button>
               <button onClick={() => handleNav('/pricing')} className="block w-full text-left py-2 font-medium text-slate-700">Pricing</button>
+              <button onClick={() => handleNav('/teach')} className="block w-full text-left py-2 font-medium text-emerald-600">Join as Tutor</button>
               <button onClick={() => handleNav('/about')} className="block w-full text-left py-2 font-medium text-slate-700">About Us</button>
               <hr className="border-slate-100" />
               <button onClick={() => handleNav('/parents')} className="block w-full text-left py-2 text-slate-600">Parent Login</button>
@@ -107,14 +108,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ul className="space-y-2 text-sm">
                <li><Link to="/parents" className="hover:text-white transition">Parent / Student Login</Link></li>
                <li><Link to="/tutors" className="hover:text-white transition">Tutor Partner Login</Link></li>
-               <li><Link to="/admin" className="hover:text-white transition">Admin Dashboard</Link></li>
             </ul>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm">
               <li><Link to="/roadmap" className="hover:text-white transition">Education Roadmap</Link></li>
-              <li><Link to="/about" className="hover:text-white transition">About Us</Link></li>
+              <li><Link to="/teach" className="hover:text-white transition">Join as Tutor</Link></li>
               <li><Link to="/policies" className="hover:text-white transition">Policies & Terms</Link></li>
             </ul>
           </div>

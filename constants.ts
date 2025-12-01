@@ -350,6 +350,12 @@ export const POLICY_CONTENT = {
       "First Month: The first 2 weeks of fees (Agency Fee) are payable directly to Integrated Learnings to confirm the start date.",
       "Subsequent Payments: For Referral tutors, pay the tutor directly from Week 3 onwards. For Managed tutors, continue paying the Agency monthly.",
       "Methods: PayNow (UEN) or Bank Transfer."
+    ],
+    materials: [
+      "Digital Resources: The agency provides a proprietary digital library (Cheat Sheets, Summaries) at no extra cost.",
+      "Physical Materials: Tutors may recommend assessment books. These are billed 'at-cost' (reimbursement).",
+      "Approval Process: Tutors must seek parental approval via WhatsApp before purchasing any physical materials.",
+      "Printing: Minimal printing is expected to be borne by the tutor/student. Heavy printing should be discussed."
     ]
   },
   tutors: {
