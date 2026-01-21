@@ -98,19 +98,19 @@ export const About: React.FC = () => (
                          <li>• Try Tutor #1: Wrong teaching style (4 weeks wasted)</li>
                          <li>• Try Tutor #2: No chemistry with student (6 weeks wasted)</li>
                          <li>• Try Tutor #3: Finally works, but 3 months behind</li>
-                         <li>• Total cost: $600+ in switching fees + lost progress</li>
+                         <li>• Total cost: Lost time, money, and student confidence</li>
                       </ul>
                    </div>
                 </div>
                 <div className="flex gap-4">
                    <div className="text-green-600 font-bold text-2xl flex-shrink-0">✓</div>
                    <div>
-                      <h4 className="font-bold text-slate-800 mb-2">Our "Right First Time" Guarantee</h4>
+                      <h4 className="font-bold text-slate-800 mb-2">Our "Right First Time" Approach</h4>
                       <ul className="text-slate-600 text-sm space-y-1 leading-relaxed">
-                         <li>• One diagnostic session (30-90 min)</li>
+                         <li>• Understanding your child's learning needs</li>
                          <li>• Precision match based on learning profile</li>
-                         <li>• Right tutor from Day 1, or we replace—free</li>
-                         <li>• Total cost: $250-600 matching fee (one-time only)</li>
+                         <li>• Right tutor from Day 1, building confidence</li>
+                         <li>• Optional diagnostic session to fine-tune approach</li>
                       </ul>
                    </div>
                 </div>
