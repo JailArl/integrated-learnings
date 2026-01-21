@@ -141,15 +141,6 @@ const Home: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border-4 border-green-400 p-8 max-w-3xl mx-auto text-center mb-12">
-          <Award size={56} className="text-green-600 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-slate-900 mb-3">🎖️ Our Money-Back Guarantee</h3>
-          <p className="text-lg text-slate-700 mb-4">
-            If your child hasn't improved by at least 1 grade level within 8 weeks, <strong>we refund your matching fee in full.</strong> Zero questions asked.
-          </p>
-          <p className="text-sm text-slate-600 italic">That's how confident we are in our process.</p>
-        </div>
-
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-8 text-center">
           <p className="text-lg font-semibold mb-4">Ready to see measurable results?</p>
           <Button to="/parents" variant="white" className="text-lg px-8 py-3">
