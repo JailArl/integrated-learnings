@@ -47,7 +47,7 @@ const About: React.FC = () => {
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="flex items-start">
                   <div className="flex-shrink-0 h-6 w-6 rounded-full bg-[#4BA3C7] flex items-center justify-center text-white font-bold mt-1">1</div>
-                  <p className="ml-4 text-gray-700"><strong>Diagnostics First:</strong> We don't guess. We assess gaps before rushing into the syllabus.</p>
+                  <p className="ml-4 text-gray-700"><strong>Understanding First:</strong> We assess each student's learning style and needs to find the right tutor match.</p>
                </div>
                <div className="flex items-start">
                   <div className="flex-shrink-0 h-6 w-6 rounded-full bg-[#4BA3C7] flex items-center justify-center text-white font-bold mt-1">2</div>
