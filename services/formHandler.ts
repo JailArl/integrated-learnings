@@ -143,14 +143,14 @@ export const getSubmissions = async (adminToken: string): Promise<FormSubmission
       ]);
       const parents = (parentsRes.data || []).map((p: any) => ({
         id: p.id,
-        type: 'parent',
+        type: 'parent' as const,
         data: p,
         submittedAt: p.submittedAt || p.submitted_at || new Date().toISOString(),
         status: p.status || 'pending',
       }));
       const tutors = (tutorsRes.data || []).map((t: any) => ({
         id: t.id,
-        type: 'tutor',
+        type: 'tutor' as const,
         data: t,
         submittedAt: t.submittedAt || t.submitted_at || new Date().toISOString(),
         status: t.status || 'pending',

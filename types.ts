@@ -1,3 +1,11 @@
+export enum PageRoutes {
+  HOME = '/',
+  SERVICES = '/services',
+  PARENTS = '/parents',
+  DIAGNOSTIC = '/diagnostic',
+  TUTORS = '/tutors',
+  ABOUT = '/about'
+}
 
 export interface RoadmapSection {
   title: string;
