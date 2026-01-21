@@ -106,7 +106,7 @@ const Home: React.FC = () => {
             </div>
             <div className="text-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
               <p className="text-2xl font-bold text-blue-200 mb-2">Limited</p>
-              <p className="text-xs text-slate-300 uppercase tracking-wide">Monthly CLA Intake</p>
+              <p className="text-xs text-slate-300 uppercase tracking-wide">Monthly Student Intake</p>
             </div>
             <div className="text-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
               <p className="text-2xl font-bold text-blue-200 mb-2">Fast</p>
