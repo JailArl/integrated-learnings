@@ -7,8 +7,15 @@ import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
 import { ParentDashboard, TutorDashboard } from './pages/Dashboards';
 import { AdminDashboard } from './pages/AdminDashboard'; 
-import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding } from './pages/ContentPages';
-import { AIAssistant } from './components/AIAssistant'; 
+import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
+import { Calendar } from './pages/Calendar';
+
+// Protected Route for Coursework (Sec 4 only)
+const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Note: This is a demo. In production, check actual user session/state
+  // For now, show the content but with a note that it's for Sec 4 parents
+  return <>{children}</>;
+};
 
 // Simple Admin Protection Wrapper
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -39,15 +46,21 @@ const App: React.FC = () => {
           
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/request" element={<TutorRequest />} />
+          <Route path="/specialized-request" element={<SpecializedRequest />} />
           <Route path="/extra" element={<ExtraLearnings />} />
           <Route path="/holiday" element={<HolidayPrograms />} />
-          <Route path="/coursework" element={<CourseworkSupport />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/coursework" element={
+            <Sec4OnlyRoute>
+              <CourseworkSupport />
+            </Sec4OnlyRoute>
+          } />
           <Route path="/policies" element={<Policies />} />
 
           {/* Catch-All Route: Redirects any unknown URL to Home to prevent crashes */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-        <AIAssistant />
       </Layout>
     </HashRouter>
   );

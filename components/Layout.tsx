@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Phone, Briefcase } from 'lucide-react';
+import { Menu, X, ChevronDown, Phone } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,32 +18,34 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   };
 
   const isActive = (path: string) => location.pathname === path;
+  const isAdminPage = location.pathname === '/admin';
+
+  if (isAdminPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-surface font-sans text-slate-800">
       {/* Header */}
       <header className="fixed w-full z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
+          <div className="flex justify-between items-center h-20 py-3">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2" onClick={() => setIsMenuOpen(false)}>
-              <div className="bg-primary text-white p-2 rounded font-bold text-xl tracking-tighter">
+            <Link to="/" className="flex items-center space-x-3" onClick={() => setIsMenuOpen(false)}>
+              <div className="bg-gradient-to-br from-blue-600 to-blue-800 text-white px-3 py-2 rounded-lg font-bold text-xl tracking-tight shadow-md">
                 IL
               </div>
-              <span className="font-bold text-xl text-primary tracking-tight">Integrated Learnings</span>
+              <div className="hidden sm:block">
+                <span className="font-bold text-xl text-primary tracking-tight leading-tight">Integrated Learnings</span>
+                <p className="text-xs text-slate-500 -mt-1">Education Consultancy</p>
+              </div>
             </Link>
 
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center space-x-6 h-full">
               <Link to="/" className={`${isActive('/') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Home</Link>
-              <Link to="/roadmap" className={`${isActive('/roadmap') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Education Roadmap</Link>
-              <Link to="/pricing" className={`${isActive('/pricing') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Pricing</Link>
               <Link to="/about" className={`${isActive('/about') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>About</Link>
-              
-              {/* Tutor Recruitment Link - High Visibility */}
-              <Link to="/teach" className={`flex items-center text-sm font-semibold transition ${isActive('/teach') ? 'text-emerald-600' : 'text-slate-500 hover:text-emerald-600'}`}>
-                 <Briefcase size={14} className="mr-1" /> Join as Tutor
-              </Link>
+              <Link to="/pricing" className={`${isActive('/pricing') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Pricing</Link>
 
               {/* Dropdown with full height container to fix hover gap */}
               <div className="relative group h-full flex items-center">
@@ -51,10 +53,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   Login <ChevronDown size={14} className="ml-1" />
                 </button>
                 {/* Dropdown Content */}
-                <div className="absolute right-0 top-full pt-2 w-48 hidden group-hover:block">
+                <div className="absolute right-0 top-full pt-2 w-56 hidden group-hover:block z-50">
                   <div className="bg-white border border-slate-100 shadow-lg rounded-lg overflow-hidden">
-                    <Link to="/parents" className="block px-4 py-3 hover:bg-slate-50 text-sm">Parent Dashboard</Link>
-                    <Link to="/tutors" className="block px-4 py-3 hover:bg-slate-50 text-sm">Tutor Dashboard</Link>
+                    <div className="px-4 py-2 bg-slate-50 font-bold text-xs text-slate-700 uppercase">Parents</div>
+                    <Link to="/parents" className="block px-4 py-3 hover:bg-blue-50 text-sm text-slate-700 border-b border-slate-100">👨‍👩‍👧 Parent Dashboard</Link>
+                    
+                    <div className="px-4 py-2 bg-slate-50 font-bold text-xs text-slate-700 uppercase">Tutors</div>
+                    <Link to="/tutors" className="block px-4 py-3 hover:bg-green-50 text-sm text-slate-700">🎓 Tutor Dashboard</Link>
                   </div>
                 </div>
               </div>
@@ -76,9 +81,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="md:hidden bg-white border-b border-slate-200 shadow-lg">
             <div className="px-4 py-6 space-y-4">
               <button onClick={() => handleNav('/')} className="block w-full text-left py-2 font-medium text-slate-700">Home</button>
-              <button onClick={() => handleNav('/roadmap')} className="block w-full text-left py-2 font-medium text-slate-700">Education Roadmap</button>
-              <button onClick={() => handleNav('/pricing')} className="block w-full text-left py-2 font-medium text-slate-700">Pricing</button>
-              <button onClick={() => handleNav('/teach')} className="block w-full text-left py-2 font-medium text-emerald-600">Join as Tutor</button>
               <button onClick={() => handleNav('/about')} className="block w-full text-left py-2 font-medium text-slate-700">About Us</button>
               <hr className="border-slate-100" />
               <button onClick={() => handleNav('/parents')} className="block w-full text-left py-2 text-slate-600">Parent Login</button>
@@ -113,9 +115,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div>
             <h4 className="text-white font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/roadmap" className="hover:text-white transition">Education Roadmap</Link></li>
-              <li><Link to="/teach" className="hover:text-white transition">Join as Tutor</Link></li>
               <li><Link to="/policies" className="hover:text-white transition">Policies & Terms</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition">Contact Us</Link></li>
             </ul>
           </div>
         </div>
@@ -127,7 +128,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </footer>
 
-      {/* Floating WhatsApp - Adjusted Z-index to coexist with AI Chat */}
+      {/* Floating WhatsApp */}
       <a 
         href="https://wa.me/98882675" 
         target="_blank" 

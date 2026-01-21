@@ -6,42 +6,114 @@ import { POLICY_CONTENT, PRIVACY_POLICY_TEXT } from '../constants';
 import { useSearchParams } from 'react-router-dom';
 
 export const About: React.FC = () => (
-  <>
-    <PageHeader title="About Us" subtitle="We don't just teach. We engineer academic success." />
+  <div>
+    <PageHeader title="About Us" subtitle="Find the right tutor on your first try. Not through trial and error." />
     
+    {/* Hero Problem Section */}
+    <Section className="bg-gradient-to-br from-blue-50 to-white py-16">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-tight">
+            Stop Tutor Shopping. Start with a Diagnosis.
+          </h2>
+          <p className="text-xl text-slate-600 mb-6 leading-relaxed">
+            Parents spend <strong>months</strong> and <strong>hundreds of dollars</strong> switching tutors, hoping to find the right fit. 
+            What if you could get it right the first time?
+          </p>
+          <p className="text-lg text-slate-500">
+            Our <strong className="text-secondary">Right Fit Assessment</strong> is your shortcut. 
+            One diagnostic session. One matched tutor. One path forward.
+          </p>
+        </div>
+
+        {/* Logo & Credibility Card */}
+        <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900 text-white rounded-3xl shadow-2xl p-12 border border-slate-800">
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="inline-block bg-white/5 border border-white/10 rounded-2xl p-6 shadow-inner md:flex-shrink-0">
+              <img 
+                src="/images/logo.png" 
+                alt="Integrated Learnings logo" 
+                className="h-28 md:h-32 w-auto object-contain"
+              />
+            </div>
+            <div className="text-center md:text-left flex-1">
+              <h3 className="text-2xl font-bold text-white mb-3">Integrated Learnings</h3>
+              <p className="text-slate-200 text-base leading-relaxed mb-4">
+                Singapore's diagnostic education consultancy. We help parents skip the guesswork and connect with tutors who actually work for their child.
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center md:justify-start text-sm">
+                <span className="flex items-center text-slate-300"><CheckCircle2 size={16} className="mr-2 text-green-400" />Diagnostic-driven</span>
+                <span className="flex items-center text-slate-300"><CheckCircle2 size={16} className="mr-2 text-green-400" />Parent-centric</span>
+                <span className="flex items-center text-slate-300"><CheckCircle2 size={16} className="mr-2 text-green-400" />Verified tutors</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Section>
+    
+    {/* The Right Fit Assessment Section */}
     <Section>
-       <div className="grid md:grid-cols-2 gap-12 items-center">
-          <div>
-             <div className="inline-block bg-blue-100 text-secondary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mb-4">Our Philosophy</div>
-             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-6 leading-tight">Strategic Pedagogy over "Drilling"</h2>
-             <p className="text-lg text-slate-600 mb-6 leading-relaxed">
-                Integrated Learnings was founded to address a critical flaw in the Singapore tuition market: <strong>The lack of diagnosis.</strong>
-             </p>
-             <p className="text-slate-600 mb-8 leading-relaxed">
-                Most agencies simply throw a tutor at a struggling student and hope for the best. We believe that <span className="text-secondary font-bold">hope is not a strategy</span>. 
-                Without understanding <em>why</em> a child is losing marks—be it conceptual gaps, exam anxiety, or careless habits—endless drilling often does more harm than good.
-             </p>
-             <div className="flex gap-4">
-                <Button to="/parents">Start with a Diagnosis</Button>
+       <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">The Right Fit Assessment</h2>
+             <p className="text-lg text-slate-600">How we skip the tutor-shopping cycle and get you the right match on your first try.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+             <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-sm border border-blue-100">
+                <Microscope className="text-secondary mb-4" size={40} />
+                <h3 className="text-lg font-bold text-primary mb-3">1. Pinpoint the Real Issue</h3>
+               <p className="text-slate-600 text-sm leading-relaxed">
+                 We run diagnostic tests to uncover why your child is struggling—is it conceptual gaps, exam anxiety, study habits, or something else? Understanding the root cause is everything.
+               </p>
+             </div>
+             <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-sm border border-blue-100">
+                <Target className="text-secondary mb-4" size={40} />
+                <h3 className="text-lg font-bold text-primary mb-3">2. Map Their Learning Profile</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  We assess learning style, motivation level, and tutoring preference. A shy student needs encouragement, not pressure. A complacent one needs accountability.
+                </p>
+             </div>
+             <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-sm border border-blue-100">
+                <Users className="text-secondary mb-4" size={40} />
+                <h3 className="text-lg font-bold text-primary mb-3">3. Match Your Perfect Tutor</h3>
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  We select from our vetted network based on expertise, teaching style, and personality fit. Not just subject knowledge—the right human connection matters.
+                </p>
              </div>
           </div>
-          <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-xl relative overflow-hidden">
-             <div className="absolute top-0 right-0 bg-slate-50 w-32 h-32 rounded-bl-full -mr-8 -mt-8 z-0"></div>
-             <div className="relative z-10 space-y-8">
-               <div className="flex items-start">
-                  <div className="bg-blue-100 p-3 rounded-lg mr-4 text-secondary shrink-0"><FileText size={24} /></div>
-                  <div>
-                     <h4 className="font-bold text-xl text-primary">The "Holistic" Reality</h4>
-                     <p className="text-slate-600 mt-2 text-sm leading-relaxed">"Holistic doesn't mean ignoring grades. It means achieving grades without destroying the child's confidence."</p>
-                  </div>
-               </div>
-               <div className="flex items-start">
-                  <div className="bg-blue-100 p-3 rounded-lg mr-4 text-secondary shrink-0"><Shield size={24} /></div>
-                  <div>
-                     <h4 className="font-bold text-xl text-primary">High-Performance Culture</h4>
-                     <p className="text-slate-600 mt-2 text-sm leading-relaxed">We reject ~80% of tutor applicants. We only accept educators who understand the psychology of learning and can build "academic stamina".</p>
-                  </div>
-               </div>
+
+          <div className="bg-slate-50 border-2 border-secondary/20 rounded-2xl p-8 md:p-12">
+             <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-primary mb-3">Why This Matters</h3>
+                <p className="text-slate-600">The cost of getting it wrong far exceeds the cost of doing it right.</p>
+             </div>
+             <div className="grid md:grid-cols-2 gap-8">
+                <div className="flex gap-4">
+                   <div className="text-secondary font-bold text-2xl flex-shrink-0">❌</div>
+                   <div>
+                      <h4 className="font-bold text-slate-800 mb-2">The Typical Path (Trial & Error)</h4>
+                      <ul className="text-slate-600 text-sm space-y-1 leading-relaxed">
+                         <li>• Try Tutor #1: Wrong teaching style (4 weeks wasted)</li>
+                         <li>• Try Tutor #2: No chemistry with student (6 weeks wasted)</li>
+                         <li>• Try Tutor #3: Finally works, but 3 months behind</li>
+                         <li>• Total cost: $600+ in switching fees + lost progress</li>
+                      </ul>
+                   </div>
+                </div>
+                <div className="flex gap-4">
+                   <div className="text-green-600 font-bold text-2xl flex-shrink-0">✓</div>
+                   <div>
+                      <h4 className="font-bold text-slate-800 mb-2">Our "Right First Time" Guarantee</h4>
+                      <ul className="text-slate-600 text-sm space-y-1 leading-relaxed">
+                         <li>• One diagnostic session (30-90 min)</li>
+                         <li>• Precision match based on learning profile</li>
+                         <li>• Right tutor from Day 1, or we replace—free</li>
+                         <li>• Total cost: $250-600 matching fee (one-time only)</li>
+                      </ul>
+                   </div>
+                </div>
              </div>
           </div>
        </div>
@@ -50,79 +122,303 @@ export const About: React.FC = () => (
     <div className="bg-primary py-20 text-white relative overflow-hidden">
        <div className="absolute top-0 left-0 w-full h-full opacity-10" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
        
-       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-             <h2 className="text-3xl md:text-5xl font-bold mb-6 tracking-tight">The Secret Weapon: <span className="text-blue-400">CLA</span></h2>
-             <p className="text-slate-300 text-lg md:text-xl leading-relaxed">
-                The <strong className="text-white">Comprehensive Learning Assessment (CLA)</strong> is our signature diagnostic tool. 
-                Think of it as a medical checkup for your child's academic health before we prescribe the medicine (Tuition).
+       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+             <div className="inline-block bg-blue-400/20 border border-blue-400/30 px-4 py-2 rounded-full text-sm font-bold mb-6">
+                Limited Spots • Application Only
+             </div>
+             <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Book Your Right Fit Assessment</h2>
+             <p className="text-slate-200 text-lg leading-relaxed mb-6">
+               Your complimentary session includes subject diagnostics, learning style analysis, a personalized improvement plan, and guidance on next steps.
+             </p>
+             <p className="text-blue-200 text-sm italic">
+               We accept a limited number of families per month to ensure personalized attention and quality matching.
              </p>
           </div>
           
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-             <div className="bg-white/10 p-8 rounded-2xl border border-white/10 backdrop-blur-sm hover:bg-white/15 transition">
-                <Microscope className="text-blue-400 mb-4" size={40} />
-                <h3 className="text-xl font-bold text-white mb-3">1. Identify Hidden Gaps</h3>
-                <p className="text-slate-300">We pinpoint exactly which topics (e.g., P4 Fractions) are causing P6 failures. It's often not the current chapter that is the problem.</p>
+          <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-2xl mx-auto">
+             <div className="bg-white/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
+                <Calendar className="text-blue-400 mb-3" size={32} />
+                <h4 className="font-bold text-white mb-2">When</h4>
+                <p className="text-slate-300 text-sm">Flexible scheduling within 2–4 weeks of your application approval.</p>
              </div>
-             <div className="bg-white/10 p-8 rounded-2xl border border-white/10 backdrop-blur-sm hover:bg-white/15 transition">
-                <Target className="text-blue-400 mb-4" size={40} />
-                <h3 className="text-xl font-bold text-white mb-3">2. Analyze Behavior</h3>
-                <p className="text-slate-300">Is it a lack of knowledge, or a panic response during exams? We test for carelessness, anxiety, and time management issues.</p>
-             </div>
-             <div className="bg-white/10 p-8 rounded-2xl border border-white/10 backdrop-blur-sm hover:bg-white/15 transition">
-                <BarChart3 className="text-blue-400 mb-4" size={40} />
-                <h3 className="text-xl font-bold text-white mb-3">3. Build The Roadmap</h3>
-                <p className="text-slate-300">You receive a concrete 6-month plan to bridge the gap before the major exams. No guesswork.</p>
+             <div className="bg-white/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
+                <Users className="text-blue-400 mb-3" size={32} />
+                <h4 className="font-bold text-white mb-2">Who Qualifies</h4>
+                <div className="text-slate-300 text-sm space-y-2">
+                  <p>Primary 5 and above. Learning patterns are clearer at this stage, making our diagnostic more valuable.</p>
+                  <p className="text-slate-400 text-xs italic">Younger students or specialized needs (language, enrichment, etc.): reach out—we assess case-by-case.</p>
+                </div>
              </div>
           </div>
-          
-          <div className="text-center">
-             <Button to="/parents" variant="white" className="px-10 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">Book a CLA Session ($80)</Button>
-             <p className="text-xs text-slate-400 mt-4 tracking-wide uppercase">Available exclusively in the Parent Dashboard</p>
+
+          <div className="text-center mb-8">
+             <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg px-4 py-2 inline-block mb-6">
+                <p className="text-amber-200 text-sm font-bold">
+                  ✓ Complimentary • No fees, no pressure • Just a serious diagnostic
+                </p>
+             </div>
+             <div>
+                <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
+                   Book Your Right Fit Assessment
+                </Button>
+             </div>
           </div>
+
+          <p className="text-center text-slate-400 text-xs mt-6">
+             Applications reviewed within 48 hours. We maintain a selective intake to ensure the best tutor-student matches.
+          </p>
        </div>
     </div>
 
     <Section>
-        <div className="max-w-5xl mx-auto">
-           <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-primary mb-4">Why Parents Trust Integrated Learnings</h2>
-              <p className="text-slate-500">We are not a mass-market agency. We are a boutique educational consultancy.</p>
-           </div>
-           
-           <div className="grid md:grid-cols-2 gap-8 text-left">
-              <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                 <h3 className="text-xl font-bold text-primary mb-3">Data-Driven Matching</h3>
-                 <p className="text-slate-600 leading-relaxed">
-                    We don't just match based on location. We match based on <strong className="text-secondary">Learning Style</strong>. 
-                    An anxious student needs a nurturing mentor; a complacent student needs a strict strategist. 
-                    We use the data from your signup profile to find the perfect fit.
-                 </p>
-              </div>
-              <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                 <h3 className="text-xl font-bold text-primary mb-3">Long-Term Vision</h3>
-                 <p className="text-slate-600 leading-relaxed">
-                    We prepare students for the next stage, not just the next test. 
-                    Our Primary tuition prepares for Secondary transition; our Secondary tuition builds the foundation for JC/Poly. 
-                    We are always looking 3 years ahead.
-                 </p>
-              </div>
-           </div>
-           
-           <div className="mt-16 text-center bg-slate-50 p-8 rounded-2xl border border-slate-200">
-              <h3 className="text-2xl font-bold text-primary mb-4">Ready to fix the root cause?</h3>
-              <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
-                 Stop wasting time on ineffective drilling. Let us diagnose the issue and match you with a tutor who can actually solve it.
-              </p>
-              <div className="flex justify-center gap-4">
-                 <Button to="/parents">Get Started</Button>
-                 <Button to="/contact" variant="outline">Speak to Consultant</Button>
-              </div>
-           </div>
-        </div>
+       <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+             <h2 className="text-3xl font-bold text-primary mb-4">Why Parents Choose Integrated Learnings</h2>
+             <p className="text-slate-600">We're not a tutoring marketplace. We're a partner in your child's academic journey.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
+                  <Microscope size={24} className="mr-3 text-secondary" />
+                  Diagnosis Before Drilling
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                   We never assume the problem. Subject knowledge gaps, exam anxiety, or careless mistakes—each needs a different tutor. We find the root cause first.
+                </p>
+             </div>
+             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
+                  <TrendingUp size={24} className="mr-3 text-secondary" />
+                  Long-Term Planning
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                   We prepare students for the next milestone, not just the next test. Your child's tutor works with a 2–3 year roadmap aligned to Singapore's education system.
+                </p>
+             </div>
+             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
+                  <Shield size={24} className="mr-3 text-secondary" />
+                  Vetted Tutors
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                   Our tutors are screened for subject expertise, teaching quality, and the soft skills that build student confidence. We reject those who don't meet our bar.
+                </p>
+             </div>
+             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
+                  <Clock size={24} className="mr-3 text-secondary" />
+                  Ongoing Support
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                   We don't disappear after the first lesson. We track progress, support both tutor and student, and step in if adjustments are needed.
+                </p>
+             </div>
+          </div>
+
+          <div className="mt-16 text-center bg-gradient-to-r from-blue-50 to-slate-50 p-8 rounded-2xl border border-slate-200">
+             <h3 className="text-2xl font-bold text-primary mb-4">Ready to Skip the Guesswork?</h3>
+             <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
+                Your Right Fit Assessment is the fastest path to a tutor who actually works for your child.
+             </p>
+             <Button to="/parents" className="px-10 py-3 font-bold text-lg">
+                Start with Your Right Fit Assessment
+             </Button>
+          </div>
+       </div>
     </Section>
-  </>
+
+    <div className="bg-primary py-20 text-white relative overflow-hidden">
+       <div className="absolute top-0 left-0 w-full h-full opacity-10" style={{ backgroundImage: 'radial-gradient(#3b82f6 1px, transparent 1px)', backgroundSize: '32px 32px' }}></div>
+       
+       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+             <div className="inline-block bg-blue-400/20 border border-blue-400/30 px-4 py-2 rounded-full text-sm font-bold mb-6">
+                Limited Spots • Application Only
+             </div>
+             <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Book Your Right Fit Assessment</h2>
+             <p className="text-slate-200 text-lg leading-relaxed mb-6">
+               Your complimentary session includes subject diagnostics, learning style analysis, a personalized improvement plan, and guidance on next steps.
+             </p>
+             <p className="text-blue-200 text-sm italic">
+               We accept a limited number of families per month to ensure personalized attention and quality matching.
+             </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-2xl mx-auto">
+             <div className="bg-white/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
+                <Calendar className="text-blue-400 mb-3" size={32} />
+                <h4 className="font-bold text-white mb-2">When</h4>
+                <p className="text-slate-300 text-sm">Flexible scheduling within 2–4 weeks of your application approval.</p>
+             </div>
+             <div className="bg-white/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
+                <Users className="text-blue-400 mb-3" size={32} />
+                <h4 className="font-bold text-white mb-2">Who Qualifies</h4>
+                <div className="text-slate-300 text-sm space-y-2">
+                  <p>Primary 5 and above. Learning patterns are clearer at this stage, making our diagnostic more valuable.</p>
+                  <p className="text-slate-400 text-xs italic">Younger students or specialized needs (language, enrichment, etc.): reach out—we assess case-by-case.</p>
+                </div>
+             </div>
+          </div>
+
+          <div className="text-center mb-8">
+             <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg px-4 py-2 inline-block mb-6">
+                <p className="text-amber-200 text-sm font-bold">
+                  ✓ Complimentary • No fees, no pressure • Just a serious diagnostic
+                </p>
+             </div>
+             <div>
+                <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
+                   Book Your Right Fit Assessment
+                </Button>
+             </div>
+          </div>
+
+          <p className="text-center text-slate-400 text-xs mt-6">
+             Applications reviewed within 48 hours. We maintain a selective intake to ensure the best tutor-student matches.
+          </p>
+       </div>
+    </div>
+
+    <Section>
+       <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+             <h2 className="text-3xl font-bold text-primary mb-4">Why Parents Choose Integrated Learnings</h2>
+             <p className="text-slate-600">We're not a tutoring marketplace. We're a partner in your child's academic journey.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
+                  <Microscope size={24} className="mr-3 text-secondary" />
+                  Diagnosis Before Drilling
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                   We never assume the problem. Subject knowledge gaps, exam anxiety, or careless mistakes—each needs a different tutor. We find the root cause first.
+                </p>
+             </div>
+             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
+                  <TrendingUp size={24} className="mr-3 text-secondary" />
+                  Long-Term Planning
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                   We prepare students for the next milestone, not just the next test. Your child's tutor works with a 2–3 year roadmap aligned to Singapore's education system.
+                </p>
+             </div>
+             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
+                  <Shield size={24} className="mr-3 text-secondary" />
+                  Vetted Tutors
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                   Our tutors are screened for subject expertise, teaching quality, and the soft skills that build student confidence. We reject those who don't meet our bar.
+                </p>
+             </div>
+             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
+                  <Clock size={24} className="mr-3 text-secondary" />
+                  Ongoing Support
+                </h3>
+                <p className="text-slate-600 leading-relaxed">
+                   We don't disappear after the first lesson. We track progress, support both tutor and student, and step in if adjustments are needed.
+                </p>
+             </div>
+          </div>
+
+          <div className="mt-16 text-center bg-gradient-to-r from-blue-50 to-slate-50 p-8 rounded-2xl border border-slate-200">
+             <h3 className="text-2xl font-bold text-primary mb-4">Ready to Skip the Guesswork?</h3>
+             <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
+                Your Right Fit Assessment is the fastest path to a tutor who actually works for your child.
+             </p>
+             <Button to="/parents" className="px-10 py-3 font-bold text-lg">
+                Start with Your Right Fit Assessment
+             </Button>
+          </div>
+       </div>
+    </Section>
+
+    <Section>
+      <div className="mt-20 pt-12 border-t border-slate-200">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-primary mb-4">Singapore's Education Roadmap</h2>
+          <p className="text-slate-600">Key milestones your child will face. Our tutors help navigate them strategically.</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-12">
+          <div>
+            <h3 className="text-2xl font-bold text-primary mb-6">Primary Years</h3>
+            <div className="space-y-4">
+              <div className="bg-white p-5 rounded-lg border border-slate-200">
+                <h4 className="font-bold text-primary mb-2">P4 Subject-Based Banding</h4>
+                <p className="text-sm text-slate-600">Students are recommended subject combinations based on exam performance. Tutors help prepare for this critical transition.</p>
+              </div>
+              <div className="bg-blue-50 p-5 rounded-lg border border-blue-200">
+                <h4 className="font-bold text-primary mb-2">PSLE (Primary School Leaving Exam)</h4>
+                <p className="text-sm text-slate-600">The first standardized national exam. Tutor support focuses on exam technique, time management, and confidence building.</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-2xl font-bold text-primary mb-6">Secondary Years</h3>
+            <div className="space-y-4">
+              <div className="bg-white p-5 rounded-lg border border-slate-200">
+                <h4 className="font-bold text-primary mb-2">Lower Secondary (Sec 1–2)</h4>
+                <p className="text-sm text-slate-600">Foundation years. Subject difficulty increases significantly. Tutors build strong fundamentals to prevent later struggles.</p>
+              </div>
+              <div className="bg-amber-50 p-5 rounded-lg border border-amber-200">
+                <h4 className="font-bold text-primary mb-2">Upper Secondary (Sec 3–4) & O-Levels</h4>
+                <p className="text-sm text-slate-600">Critical exam that determines polytechnic/JC eligibility. Tutor role shifts to exam strategy and subject mastery.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 grid md:grid-cols-2 gap-12">
+          <div>
+            <h3 className="text-2xl font-bold text-primary mb-6">JC & Beyond</h3>
+            <div className="space-y-4">
+              <div className="bg-white p-5 rounded-lg border border-slate-200">
+                <h4 className="font-bold text-primary mb-2">Junior College (A-Levels)</h4>
+                <p className="text-sm text-slate-600">Specialized path to university. Subject demand intensifies. Tutors provide targeted support for A-Level subjects.</p>
+              </div>
+              <div className="bg-purple-50 p-5 rounded-lg border border-purple-200">
+                <h4 className="font-bold text-primary mb-2">Polytechnic Path</h4>
+                <p className="text-sm text-slate-600">3-year diploma with workplace learning. Tutors help students succeed in practical, industry-focused education.</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-2xl font-bold text-primary mb-6">DSA & Special Pathways</h3>
+            <div className="space-y-4">
+              <div className="bg-white p-5 rounded-lg border border-slate-200">
+                <h4 className="font-bold text-primary mb-2">Direct School Admission (DSA-Sec)</h4>
+                <p className="text-sm text-slate-600">Talent-based entry to secondary school before PSLE results. Tutors help develop subject expertise or skills for application.</p>
+              </div>
+              <div className="bg-green-50 p-5 rounded-lg border border-green-200">
+                <h4 className="font-bold text-primary mb-2">Integrated Programme (IP)</h4>
+                <p className="text-sm text-slate-600">Select schools combine O-Levels into a 6-year curriculum. Requires strategic planning and sustained excellence.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-16 bg-gradient-to-r from-secondary to-blue-700 p-8 rounded-2xl text-white text-center">
+          <h3 className="text-2xl font-bold mb-3">Every Milestone Needs the Right Tutor</h3>
+          <p className="text-blue-100 mb-6 max-w-2xl mx-auto leading-relaxed">
+            From PSLE to O-Levels to polytechnic—each transition is an opportunity to build momentum or lose it. 
+            Our Right Fit Assessment ensures your child has consistent, expert support aligned to their needs.
+          </p>
+          <Button to="/parents" variant="white" className="px-8 py-3 font-bold shadow-lg">
+            Book Your Right Fit Assessment
+          </Button>
+        </div>
+      </div>
+    </Section>
+  </div>
 );
 
 export const Policies: React.FC = () => {
@@ -188,6 +484,17 @@ export const Policies: React.FC = () => {
                   </ul>
                 </Card>
 
+                <Card title="Materials & Resources">
+                  <ul className="space-y-4">
+                    {POLICY_CONTENT.parents.materials.map((item, i) => (
+                      <li key={i} className="flex items-start text-slate-700">
+                        <span className="mr-3 text-secondary font-bold">•</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+
                 <Card title="Privacy Policy (PDPA)">
                   <div className="flex items-center mb-4 text-secondary">
                     <Shield className="mr-2" size={20} />
@@ -217,28 +524,19 @@ export const Policies: React.FC = () => {
                </div>
 
               <div className="grid gap-8">
-                <Card title="Engagement Models">
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
-                      <h4 className="font-bold text-primary mb-4 flex items-center">
-                        <Users className="mr-2 text-secondary" size={18} /> Referral Model
-                      </h4>
-                      <ul className="space-y-3">
-                        {POLICY_CONTENT.tutors.referral.map((item, i) => (
-                          <li key={i} className="text-slate-600 text-sm list-disc list-inside">{item}</li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
-                      <h4 className="font-bold text-primary mb-4 flex items-center">
-                        <Shield className="mr-2 text-secondary" size={18} /> Managed Model
-                      </h4>
-                      <ul className="space-y-3">
-                        {POLICY_CONTENT.tutors.managed.map((item, i) => (
-                          <li key={i} className="text-slate-600 text-sm list-disc list-inside">{item}</li>
-                        ))}
-                      </ul>
-                    </div>
+                <Card title="Referral Partnership Model">
+                  <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
+                    <h4 className="font-bold text-primary mb-4 flex items-center">
+                      <Users className="mr-2 text-secondary" size={18} /> How It Works
+                    </h4>
+                    <ul className="space-y-3">
+                      {POLICY_CONTENT.tutors.referral.map((item, i) => (
+                        <li key={i} className="text-slate-600 text-sm flex items-start">
+                          <span className="mr-3 text-secondary font-bold">•</span>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </Card>
 
@@ -248,15 +546,15 @@ export const Policies: React.FC = () => {
                       <div className="flex gap-4">
                          <Clock className="text-secondary shrink-0" />
                          <div>
-                            <h5 className="font-bold text-slate-800">Punctuality</h5>
-                            <p className="text-sm text-slate-600">Arrive 5-10 minutes early. Late arrival over 15mins without valid reason is grounds for immediate termination.</p>
+                            <h5 className="font-bold text-slate-800">Professionalism</h5>
+                            <p className="text-sm text-slate-600">Punctual lessons, well-prepared content, and consistent communication with your student.</p>
                          </div>
                       </div>
                       <div className="flex gap-4">
                          <FileText className="text-secondary shrink-0" />
                          <div>
-                            <h5 className="font-bold text-slate-800">Preparation</h5>
-                            <p className="text-sm text-slate-600">You are expected to have a lesson plan. "Wing-ing it" is strictly prohibited.</p>
+                            <h5 className="font-bold text-slate-800">Direct Communication</h5>
+                            <p className="text-sm text-slate-600">Build a direct relationship with the parent and student. Agree on rates, schedule, and expectations upfront.</p>
                          </div>
                       </div>
                    </div>
@@ -282,10 +580,10 @@ export const TutorLanding: React.FC = () => (
               Focus on Teaching.<br />
               <span className="text-blue-400">We'll Handle The Rest.</span>
            </h1>
-           <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+            <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
               Join Singapore's most professional tuition network. Guaranteed lesson protection, automated billing, and a steady stream of serious students.
-           </p>
-           <Button to="/tutors" variant="white" className="px-10 py-4 text-lg shadow-xl">Apply as Partner Tutor</Button>
+             </p>
+             <Button to="/teach" variant="white" className="px-10 py-4 text-lg shadow-xl">Apply as Partner Tutor</Button>
         </div>
     </div>
 
@@ -342,8 +640,8 @@ export const TutorLanding: React.FC = () => (
                    <TrendingUp size={32} />
                 </div>
                 <div>
-                   <h3 className="text-xl font-bold text-primary mb-2">Automated Billing & Payouts</h3>
-                   <p className="text-slate-600">Parents pay us via the platform. We pay you a consolidated salary by the 7th of every month. No more awkward payment texts.</p>
+                   <h3 className="text-xl font-bold text-primary mb-2">Simplified Payment Flow</h3>
+                   <p className="text-slate-600">Month 1: Parents pay us the referral fee. Month 2 onwards: You collect directly from parents (we support you with payment reminders and templates). No middleman on ongoing fees.</p>
                 </div>
              </div>
 
@@ -400,6 +698,16 @@ export const CourseworkSupport: React.FC = () => (
   <>
     <PageHeader title="O-Level Coursework Support" subtitle="D&T and Art. The 70% weightage that makes or breaks the grade." />
     <Section>
+      <div className="max-w-4xl mx-auto mb-8">
+        <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-6">
+          <h3 className="text-lg font-bold text-blue-900 mb-2">📌 For Secondary 4 Parents</h3>
+          <p className="text-blue-800">
+            This specialized support is tailored for students taking O-Level D&T, Art, or Food & Consumer Education. 
+            If your child is in Secondary 4 and needs coursework guidance, this service is recommended for you.
+          </p>
+        </div>
+      </div>
+
       <div className="max-w-4xl mx-auto mb-12">
         <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-lg">
           <h3 className="text-lg font-bold text-amber-900 mb-2">Critical for O-Levels</h3>
@@ -448,43 +756,162 @@ export const CourseworkSupport: React.FC = () => (
 
 export const Contact: React.FC = () => (
   <>
-    <PageHeader title="Contact Us" />
+    <PageHeader title="Let's Find Your Child's Perfect Tutor" subtitle="Trusted by Singapore families for data-driven tutor matching." />
+    
     <Section>
-      <div className="grid md:grid-cols-2 gap-12">
-        <div>
-          <h2 className="text-2xl font-bold text-primary mb-6">Get in Touch</h2>
-          <div className="space-y-6">
-            <div className="flex items-start">
-              <Phone className="text-secondary mr-4 mt-1" />
-              <div>
-                <p className="font-bold">WhatsApp / Phone</p>
-                <p className="text-slate-600">9888 2675</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <Mail className="text-secondary mr-4 mt-1" />
-              <div>
-                <p className="font-bold">Email</p>
-                <p className="text-slate-600">manage.integrated.learnings@gmail.com</p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <Clock className="text-secondary mr-4 mt-1" />
-              <div>
-                <p className="font-bold">Operating Hours</p>
-                <p className="text-slate-600">Mon - Sun: 9am - 9pm</p>
-              </div>
-            </div>
+      {/* Hero - Dual Audience Cards */}
+      <div className="grid md:grid-cols-2 gap-8 mb-16">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-10 rounded-2xl shadow-xl relative overflow-hidden group hover:shadow-2xl transition">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative z-10">
+            <div className="text-4xl mb-4">👨‍👩‍👧</div>
+            <h2 className="text-2xl font-bold mb-3">For Parents</h2>
+            <p className="text-blue-100 mb-6 leading-relaxed">
+              Get your child matched with the ideal tutor through our diagnostic-driven approach. Proven improvements with targeted coaching.
+            </p>
+            <Button to="/parents" variant="white" className="w-full group-hover:scale-105 transition">📋 Apply for Free Assessment</Button>
+            <p className="text-xs text-blue-200 mt-3">⏱️ 90-min diagnostic • Limited monthly intake</p>
           </div>
         </div>
-        <div className="bg-white p-8 rounded-xl shadow-lg border border-slate-100">
-          <h3 className="text-xl font-bold mb-4">Send us a message</h3>
-          <form className="space-y-4">
-            <input className="w-full border p-3 rounded-lg" placeholder="Name" />
-            <input className="w-full border p-3 rounded-lg" placeholder="Phone Number" />
-            <textarea className="w-full border p-3 rounded-lg h-32" placeholder="How can we help?" />
-            <Button className="w-full">Send Message</Button>
-          </form>
+
+        <div className="bg-gradient-to-br from-green-600 to-green-700 text-white p-10 rounded-2xl shadow-xl relative overflow-hidden group hover:shadow-2xl transition">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+          <div className="relative z-10">
+            <div className="text-4xl mb-4">🎓</div>
+            <h2 className="text-2xl font-bold mb-3">For Tutors</h2>
+            <p className="text-green-100 mb-6 leading-relaxed">
+              Join Singapore's premier tutor network. Earn $50-90/hr with flexible hours, 100% commission (1-to-1), and pre-screened quality students.
+            </p>
+            <Button to="/tutors" variant="white" className="w-full group-hover:scale-105 transition bg-white text-green-700 hover:bg-green-50">🎓 Apply to Join Network</Button>
+            <p className="text-xs text-green-200 mt-3">💰 Earn $50-90/hr • 100% commission on 1-to-1</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Contact Options */}
+      <div className="mb-16">
+        <h3 className="text-2xl font-bold text-primary text-center mb-8">How Would You Like to Connect?</h3>
+        <div className="grid md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer">
+            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Phone className="text-secondary" size={24} />
+            </div>
+            <h4 className="font-bold text-sm text-primary mb-1">WhatsApp Chat</h4>
+            <p className="text-xs text-slate-500 mb-3">Quick questions</p>
+            <a href="https://wa.me/6598882675" className="text-secondary text-xs font-semibold hover:underline">Start Chat →</a>
+          </div>
+
+          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer">
+            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Calendar className="text-secondary" size={24} />
+            </div>
+            <h4 className="font-bold text-sm text-primary mb-1">Book Call</h4>
+            <p className="text-xs text-slate-500 mb-3">15-min consultation</p>
+            <Button to="/parents" variant="outline" className="text-xs py-1 px-3">View Times</Button>
+          </div>
+
+          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer">
+            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <FileText className="text-secondary" size={24} />
+            </div>
+            <h4 className="font-bold text-sm text-primary mb-1">Detailed Enquiry</h4>
+            <p className="text-xs text-slate-500 mb-3">Get 3 tutor matches</p>
+            <Button to="/parents" variant="outline" className="text-xs py-1 px-3">Submit Form</Button>
+          </div>
+
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 p-6 rounded-xl text-center hover:border-amber-400 hover:shadow-md transition cursor-pointer">
+            <div className="bg-amber-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle2 className="text-amber-600" size={24} />
+            </div>
+            <h4 className="font-bold text-sm text-amber-900 mb-1">Book Assessment</h4>
+            <p className="text-xs text-amber-700 mb-3">Limited slots</p>
+            <Button to="/parents" className="text-xs py-1 px-3 bg-amber-600 hover:bg-amber-700">Check Eligibility</Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Response Time Transparency */}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 mb-16">
+        <h3 className="text-xl font-bold text-primary text-center mb-6">Our Response Commitment</h3>
+        <div className="max-w-3xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
+              <span className="text-sm font-semibold text-slate-700">Family Consultations</span>
+              <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Within 4 hours</span>
+            </div>
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
+              <span className="text-sm font-semibold text-slate-700">Tutor Applications</span>
+              <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">Within 48 hours</span>
+            </div>
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
+              <span className="text-sm font-semibold text-slate-700">WhatsApp Messages</span>
+              <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Same day</span>
+            </div>
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
+              <span className="text-sm font-semibold text-slate-700">Partnership Enquiries</span>
+              <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold">Within 1 week</span>
+            </div>
+          </div>
+          <p className="text-center text-xs text-slate-500 mt-4">*Business hours: Mon-Sun, 9am-9pm SGT</p>
+        </div>
+      </div>
+
+      {/* Credibility without hard numbers */}
+      <div className="bg-gradient-to-r from-blue-50 to-slate-50 border border-blue-100 rounded-xl p-8 mb-16">
+        <div className="text-center mb-6">
+          <h3 className="text-xl font-bold text-primary mb-2">Why Parents Choose Us</h3>
+          <p className="text-sm text-slate-600">Verified tutors, curated matches, transparent communication.</p>
+        </div>
+        <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-secondary mb-1">Verified</p>
+            <p className="text-xs text-slate-600 uppercase tracking-wide">Tutor Network</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-secondary mb-1">Curated</p>
+            <p className="text-xs text-slate-600 uppercase tracking-wide">Matches by Style</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-secondary mb-1">Responsive</p>
+            <p className="text-xs text-slate-600 uppercase tracking-wide">Consultant Support</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-secondary mb-1">Transparent</p>
+            <p className="text-xs text-slate-600 uppercase tracking-wide">Policy & Payments</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Direct Contact */}
+      <div className="border-t border-slate-200 pt-12">
+        <h3 className="text-xl font-bold text-primary text-center mb-8">Prefer Direct Contact?</h3>
+        <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+          <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Phone className="text-secondary" size={28} />
+            </div>
+            <h4 className="font-bold text-primary mb-2">WhatsApp / Phone</h4>
+            <p className="text-lg font-bold text-secondary mb-1">9888 2675</p>
+            <p className="text-xs text-slate-500">Mon-Sun, 9am-9pm</p>
+          </div>
+          
+          <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="text-secondary" size={28} />
+            </div>
+            <h4 className="font-bold text-primary mb-2">Email</h4>
+            <p className="text-sm font-semibold text-secondary mb-1 break-all">manage.integrated.learnings@gmail.com</p>
+            <p className="text-xs text-slate-500">Response within 24hrs</p>
+          </div>
+          
+          <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Clock className="text-secondary" size={28} />
+            </div>
+            <h4 className="font-bold text-primary mb-2">Operating Hours</h4>
+            <p className="text-sm font-semibold text-secondary mb-1">Mon - Sun</p>
+            <p className="text-xs text-slate-500">9:00 AM - 9:00 PM SGT</p>
+          </div>
         </div>
       </div>
     </Section>
@@ -583,3 +1010,377 @@ export const HolidayPrograms: React.FC = () => (
     </Section>
   </>
 );
+
+export const TutorRequest: React.FC = () => {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState({
+    studentName: '',
+    level: '',
+    subjects: [] as string[],
+    classType: 'one-to-one', // one-to-one or group
+    postalCode: '',
+    address: '',
+    needsCoursework: false,
+    tutorGender: 'any',
+    preferredExperience: 'any',
+    teachingStyle: 'any',
+    details: ''
+  });
+
+  const handleSubjectToggle = (subject: string) => {
+    const current = formData.subjects;
+    if (current.includes(subject)) {
+      setFormData({ ...formData, subjects: current.filter(s => s !== subject) });
+    } else {
+      setFormData({ ...formData, subjects: [...current, subject] });
+    }
+  };
+
+  const subjects = [
+    'English', 'Mathematics', 'Science',
+    'Chinese', 'Malay', 'Tamil',
+    'A-Math', 'Pure Physics', 'Pure Chemistry', 'Pure Biology',
+    'Economics', 'History', 'Geography', 'Literature'
+  ];
+
+  const handleSubmit = () => {
+    if (!formData.postalCode || !formData.address) {
+      alert('Please fill in your address and postal code.');
+      return;
+    }
+    alert('Request submitted successfully! We will contact you within 24 hours to confirm the best tutor match.');
+    window.location.href = '/#/parents';
+  };
+
+  return (
+    <>
+      <PageHeader 
+        title="Submit Your Tutor Request" 
+        subtitle="Tell us what you're looking for. We'll find the perfect match." 
+      />
+      <Section>
+        <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+          
+          {/* Progress Bar */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center text-sm font-bold text-slate-400 mb-2">
+              <span className={step >= 1 ? "text-secondary" : ""}>1. Student & Location</span>
+              <span className={step >= 2 ? "text-secondary" : ""}>2. Preferences</span>
+              <span className={step >= 3 ? "text-secondary" : ""}>3. Details</span>
+            </div>
+            <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full bg-secondary transition-all duration-300" style={{ width: `${(step / 3) * 100}%` }}></div>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-bold text-primary mb-6">Tutor Request Form</h2>
+
+          {step === 1 && (
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-slate-700 mb-4">About Your Child</h3>
+              <div>
+                <label className="block text-sm font-bold mb-1">Student Name *</label>
+                <input 
+                  className="w-full border p-2 rounded"
+                  placeholder="Student's Name"
+                  value={formData.studentName}
+                  onChange={(e) => setFormData({...formData, studentName: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">Academic Level *</label>
+                <select 
+                  className="w-full border p-2 rounded"
+                  value={formData.level}
+                  onChange={(e) => setFormData({...formData, level: e.target.value})}
+                >
+                  <option value="">Select Level</option>
+                  <option value="Primary 1-3">Primary 1-3</option>
+                  <option value="Primary 4-6">Primary 4-6</option>
+                  <option value="Secondary 1-2">Secondary 1-2</option>
+                  <option value="Secondary 3-4 (O-Level)">Secondary 3-4 (O-Level)</option>
+                  <option value="Junior College">Junior College</option>
+                </select>
+              </div>
+
+              <hr className="my-6" />
+
+              <h3 className="font-bold text-lg text-slate-700 mb-4">Location Details</h3>
+              <div>
+                <label className="block text-sm font-bold mb-1">Postal Code *</label>
+                <input 
+                  className="w-full border p-2 rounded"
+                  placeholder="E.g. 560123"
+                  value={formData.postalCode}
+                  onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
+                  maxLength={6}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold mb-1">Full Address *</label>
+                <textarea 
+                  className="w-full border p-2 rounded h-16" 
+                  placeholder="Your home address (helps us find tutors nearby)"
+                  value={formData.address}
+                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-3">Class Type *</label>
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 p-3 border border-secondary rounded-lg bg-blue-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="classType"
+                      value="one-to-one"
+                      checked={formData.classType === 'one-to-one'}
+                      onChange={(e) => setFormData({...formData, classType: e.target.value})}
+                      className="mt-1"
+                    />
+                    <div>
+                      <p className="font-bold text-secondary">One-to-One Tutoring (Recommended)</p>
+                      <p className="text-sm text-slate-600">Personalized attention at your home or online</p>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg bg-slate-50 cursor-not-allowed opacity-50">
+                    <input
+                      type="radio"
+                      name="classType"
+                      value="group"
+                      disabled
+                      className="mt-1"
+                    />
+                    <div>
+                      <p className="font-bold text-slate-600">Group Classes (Coming Soon)</p>
+                      <p className="text-sm text-slate-500">Will be available once we partner with tuition centers</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <Button onClick={() => setStep(2)} className="w-full mt-6">Next: Tutor Preferences</Button>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-slate-700 mb-4">Tutor Preferences</h3>
+              
+              <div>
+                <label className="block text-sm font-bold mb-1">Tutor Gender (Optional)</label>
+                <select 
+                  className="w-full border p-2 rounded"
+                  value={formData.tutorGender}
+                  onChange={(e) => setFormData({...formData, tutorGender: e.target.value})}
+                >
+                  <option value="any">No Preference</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">Preferred Experience Level (Optional)</label>
+                <select 
+                  className="w-full border p-2 rounded"
+                  value={formData.preferredExperience}
+                  onChange={(e) => setFormData({...formData, preferredExperience: e.target.value})}
+                >
+                  <option value="any">No Preference</option>
+                  <option value="fresh">Fresh Graduate (0-2 years)</option>
+                  <option value="experienced">Experienced (2-5 years)</option>
+                  <option value="expert">Expert (5+ years)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">Teaching Style Preference (Optional)</label>
+                <select 
+                  className="w-full border p-2 rounded"
+                  value={formData.teachingStyle}
+                  onChange={(e) => setFormData({...formData, teachingStyle: e.target.value})}
+                >
+                  <option value="any">No Preference</option>
+                  <option value="structured">Structured & Systematic</option>
+                  <option value="flexible">Flexible & Adaptive</option>
+                  <option value="strict">Strict & Disciplined</option>
+                  <option value="caring">Caring & Supportive</option>
+                </select>
+              </div>
+
+              <Button onClick={() => setStep(3)} className="w-full mt-6">Next: Subjects & Details</Button>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-4">
+              <h3 className="font-bold text-lg text-slate-700 mb-4">Subjects & Additional Notes</h3>
+              
+              <div>
+                <label className="block text-sm font-bold mb-3">Subjects Needed (Select at least one) *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {subjects.map(subject => (
+                    <button
+                      key={subject}
+                      onClick={() => handleSubjectToggle(subject)}
+                      className={`p-2 text-sm rounded border text-left transition ${
+                        formData.subjects.includes(subject) 
+                          ? 'bg-secondary text-white border-secondary' 
+                          : 'bg-white text-slate-600 border-slate-200 hover:border-secondary'
+                      }`}
+                    >
+                      {subject}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold mb-1">Additional Notes</label>
+                <textarea 
+                  className="w-full border p-2 rounded h-24" 
+                  placeholder="E.g. specific weaknesses, learning pace, exam preparation, etc."
+                  value={formData.details}
+                  onChange={(e) => setFormData({...formData, details: e.target.value})}
+                />
+              </div>
+
+              {/* Coursework Option */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mt-6">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.needsCoursework}
+                    onChange={(e) => setFormData({...formData, needsCoursework: e.target.checked})}
+                    className="mt-1"
+                  />
+                  <div>
+                    <p className="font-bold text-amber-900">Need O-Level Coursework Help?</p>
+                    <p className="text-sm text-amber-800">D&T, Art, or FCE coursework guidance (70% of final grade)</p>
+                  </div>
+                </label>
+              </div>
+
+              <div className="flex gap-4">
+                <Button onClick={() => setStep(2)} variant="outline" className="flex-1">Back</Button>
+                <Button onClick={handleSubmit} className="flex-1 bg-green-600 hover:bg-green-700">Submit Request</Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Section>
+    </>
+  );
+};
+
+export const SpecializedRequest: React.FC = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    serviceType: '',
+    details: ''
+  });
+
+  const serviceOptions = [
+    'Holiday Programs (Head-start bootcamps & intensive revision)',
+    'Extra Learnings (Coding, Financial Literacy, Skills)',
+    'Exam Emergency Help (Last-minute intensive sessions)',
+    'Subject Specialists (Niche subjects or advanced topics)',
+    'Other (Please specify in details)'
+  ];
+
+  const handleSubmit = () => {
+    if (!formData.name || !formData.email || !formData.serviceType) {
+      alert('Please fill in all required fields');
+      return;
+    }
+    alert('Request submitted successfully! We will contact you within 24 hours.');
+    window.location.href = '/#/parents';
+  };
+
+  return (
+    <>
+      <PageHeader 
+        title="Request Specialized Services" 
+        subtitle="Looking for something beyond standard tuition? We can help." 
+      />
+      <Section>
+        <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+          <h2 className="text-2xl font-bold text-primary mb-6">Specialized Services Request</h2>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-bold mb-1">Your Name *</label>
+              <input 
+                className="w-full border p-2 rounded"
+                placeholder="Parent's Name"
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold mb-1">Email Address *</label>
+              <input 
+                type="email"
+                className="w-full border p-2 rounded"
+                placeholder="your@email.com"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold mb-1">Phone Number</label>
+              <input 
+                type="tel"
+                className="w-full border p-2 rounded"
+                placeholder="+65 XXXX XXXX"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold mb-2">What Service Are You Looking For? *</label>
+              <select 
+                className="w-full border p-2 rounded"
+                value={formData.serviceType}
+                onChange={(e) => setFormData({...formData, serviceType: e.target.value})}
+              >
+                <option value="">Select a Service</option>
+                {serviceOptions.map((option, idx) => (
+                  <option key={idx} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold mb-1">Tell Us More</label>
+              <textarea 
+                className="w-full border p-2 rounded h-24" 
+                placeholder="Describe what you're looking for in detail. This helps us find the perfect solution for your needs."
+                value={formData.details}
+                onChange={(e) => setFormData({...formData, details: e.target.value})}
+              />
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+              <p className="text-sm text-blue-800">
+                <strong>What happens next?</strong> Our team will review your request and contact you within 24 hours with tailored recommendations and pricing.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <Button onClick={() => window.location.href = '/#/parents'} variant="outline" className="flex-1">Back to Dashboard</Button>
+              <Button onClick={handleSubmit} className="flex-1 bg-green-600 hover:bg-green-700">Submit Request</Button>
+            </div>
+          </div>
+        </div>
+      </Section>
+    </>
+  );
+};

@@ -213,28 +213,21 @@ export const SERVICES: ServiceBlock[] = [
     title: 'Primary Tuition',
     description: 'English, Math, Science, Chinese. Mastery of concepts for PSLE.',
     image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop', // Child writing/studying
-    link: '#contact'
+    link: '/contact'
   },
   {
     id: 'secondary',
     title: 'Secondary Tuition',
     description: 'Specialised tutors for G3, G2, and G1 streams.',
     image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=800&auto=format&fit=crop', // Student in library
-    link: '#contact'
-  },
-  {
-    id: 'coursework',
-    title: 'O-Level Coursework',
-    description: 'D&T, Art, FCE Guidance. High weightage project support.',
-    image: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?q=80&w=800&auto=format&fit=crop', // Art/Design supplies
-    link: '/coursework'
+    link: '/contact'
   },
   {
     id: 'jc',
     title: 'JC / IB / IGCSE',
     description: 'Advanced consultation for high-stakes examinations.',
     image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?q=80&w=800&auto=format&fit=crop', // Intensive study/books
-    link: '#contact'
+    link: '/contact'
   },
   {
     id: 'extra',
@@ -300,29 +293,51 @@ export const TUTOR_SCENARIO_QUESTIONS = [
 ];
 
 export const TUTOR_CONTRACT_TEXT = `
-TUTOR AGREEMENT & CODE OF CONDUCT
+TUTOR REFERRAL AGREEMENT
 
-1. ENGAGEMENT MODEL (See Policies Page for details)
-Integrated Learnings operates on two models: Referral and Managed.
-- Referral: One-time agency fee.
-- Managed: Monthly billing via Agency.
+1. PARTNERSHIP MODEL
+You are joining Integrated Learnings as a Referral Partner tutor. This is a referral-based arrangement:
+- One-time Commission: 50% of the first month's tuition fees (covering the first 2 weeks of lessons).
+- Payment Flow: Parents pay the Agency for the first 2 weeks. From Week 3 onwards, you collect fees directly from the parent.
+- Independence: After the initial match, you manage your own schedule, rates, and client relationship.
 
 2. PROFESSIONAL CONDUCT
-Tutors are expected to maintain the highest standards of professionalism.
-- Punctuality: Arrive 5 minutes before scheduled time.
-- Preparation: Lesson plans must be prepared in advance.
-- Attire: Smart casual.
+As an educator with Integrated Learnings, you agree to:
+- Punctuality: Arrive on time for all scheduled lessons.
+- Preparation: Maintain well-prepared lesson plans and materials.
+- Professionalism: Conduct yourself with integrity and respect towards students and parents.
+- Communication: Maintain regular contact with parents regarding student progress.
 
-3. NON-SOLICITATION
-Tutors shall not solicit Agency clients for private arrangements outside of the Agency agreement.
+3. QUALIFICATION VERIFICATION
+You agree to provide genuine, verified credentials:
+- Upload your original educational certificates (Degree, Diploma, Teaching Certification, etc.).
+- Provide valid NRIC or identification for background verification.
+- Certifications must be from recognized institutions.
+- False credentials will result in immediate termination and legal action.
 
-4. REPORTING
-- Managed tutors must submit a Weekly Learning Log via the dashboard.
-- Progress Reports are due monthly.
+4. DIRECT PAYMENT RESPONSIBILITY
+Once you collect payment directly from parents:
+- You are fully responsible for tax declarations and business records.
+- You must maintain professional communication and documentation.
+- Disputes must be resolved directly between you and the parent (Integrated Learnings is not liable).
 
-5. TERMINATION
-Agency reserves the right to terminate this agreement immediately for misconduct.
+5. CANCELLATION & RELIABILITY
+- Maintain consistent lesson attendance. High cancellation rates may result in removal from our tutor pool.
+- Notify parents immediately if you cannot conduct a lesson.
+- For long-term absences, inform Integrated Learnings so we can support student transitions.
+
+6. CODE OF CONDUCT VIOLATIONS
+Violations include (but are not limited to):
+- Misconduct towards students or parents.
+- False certification claims.
+- Soliciting parents for "off-the-books" arrangements before the Agency fee period ends.
+- Sharing student/parent information without consent.
+- Breach of this agreement results in immediate removal from the platform.
+
+7. AGREEMENT TERMS
+By signing up, you accept these terms and agree to abide by this Referral Agreement and Integrated Learnings' Code of Conduct.
 `;
+
 
 export const PRIVACY_POLICY_TEXT = `
 1. COLLECTION OF DATA
@@ -340,36 +355,31 @@ All data is stored securely and is only accessible by authorized administrative 
 export const POLICY_CONTENT = {
   parents: {
     cancellation: [
-      "We understand that emergencies happen. However, consistency is key to your child's progress.",
-      "24-Hour Notice: Cancellations must be made at least 24 hours in advance. Less than 24 hours notice will be considered a billable lesson.",
-      "Medical Certificates: Fees may be waived for last-minute cancellations upon production of a valid MC (Managed Plan only).",
-      "Termination: We require 2 weeks' notice for termination of tuition services."
+      "Consistency is key to your child's academic progress. We ask that you prioritize regular attendance.",
+      "24-Hour Notice: Cancellations must be made at least 24 hours in advance. Last-minute cancellations may result in the tutor charging you directly.",
+      "Rescheduling (First Month): During the first month, contact Integrated Learnings to reschedule lessons. We will coordinate with your tutor.",
+      "Rescheduling (After First Month): From Month 2 onwards, reschedule directly with your tutor. This is a private arrangement between you and your tutor."
     ],
     payments: [
-      "Minimum Commitment: We require a minimum commitment of 4 lessons to ensure the tutor has sufficient time to make an impact.",
-      "First Month: The first 2 weeks of fees (Agency Fee) are payable directly to Integrated Learnings to confirm the start date.",
-      "Subsequent Payments: For Referral tutors, pay the tutor directly from Week 3 onwards. For Managed tutors, continue paying the Agency monthly.",
-      "Methods: PayNow (UEN) or Bank Transfer."
+      "Payment Structure: You pay the Agency for the first month (50% of fees) as a matching fee. From Month 2 onwards, you pay your tutor directly.",
+      "Rate Setting: You and your tutor agree on the hourly rate during your initial consultation. Our pricing guide is available on the Pricing page.",
+      "Payment Method: Discuss payment method (PayNow, bank transfer, cash) with your tutor for Month 2 onwards.",
+      "Minimum Commitment: It's recommended to commit to at least 4 lessons to give the tutor sufficient time to make an impact."
     ],
     materials: [
-      "Digital Resources: The agency provides a proprietary digital library (Cheat Sheets, Summaries) at no extra cost.",
-      "Physical Materials: Tutors may recommend assessment books. These are billed 'at-cost' (reimbursement).",
-      "Approval Process: Tutors must seek parental approval via WhatsApp before purchasing any physical materials.",
-      "Printing: Minimal printing is expected to be borne by the tutor/student. Heavy printing should be discussed."
+      "Tutors may recommend assessment books or additional resources based on your child's needs.",
+      "Cost of Materials: Tutors will inform you about any costs upfront. Approve materials before purchase.",
+      "Digital Resources: Request any digital notes or summarized materials directly from your tutor.",
+      "Flexibility: Discuss any printing or material concerns directly with your tutor."
     ]
   },
   tutors: {
     referral: [
-      "Commission: 50% of the first month's tuition fees (First 2 weeks of lessons).",
-      "Payment Flow: The client pays the Agency directly for the first 2 weeks. From the 3rd week onwards, you collect fees directly from the client.",
-      "Relationship: You are an independent contractor. You manage your own schedule and client relationship after the initial match.",
-      "Risk: No payment protection from Agency after the commission period."
-    ],
-    managed: [
-      "Commission: Agency takes a fixed percentage (20-30%) of the hourly rate for the duration of the assignment.",
-      "Payment Flow: Agency collects all fees from the client. You receive a monthly payout from the Agency by the 7th of the following month.",
-      "Benefits: Income stability, lesson cancellation protection (you are paid if client cancels <24h), and administrative support.",
-      "Requirements: Must submit weekly lesson logs and monthly progress reports."
+      "Commission: Integrated Learnings charges a one-time referral fee of 50% of the first month's fees.",
+      "Payment Flow: Parents pay the Agency for the first month (50% of their agreed fees). From Month 2 onwards, you collect fees directly from the parent.",
+      "Rescheduling Support: During the first month, we handle rescheduling requests. From Month 2 onwards, manage scheduling directly with your student.",
+      "Relationship: You are an independent contractor. After the initial month, you manage your own schedule and client relationship.",
+      "Contract: There is no long-term commitment. You are free to set your own rates and terms with the client."
     ]
   }
 };

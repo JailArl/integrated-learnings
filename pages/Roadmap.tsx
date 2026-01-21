@@ -76,15 +76,196 @@ const MapNode: React.FC<{
 );
 
 const EducationMRTMap: React.FC = () => {
+  const [showMobileTimeline, setShowMobileTimeline] = React.useState(true);
+
   return (
     <div className="relative">
-      {/* Mobile Hint */}
-      <div className="md:hidden absolute top-2 right-2 z-40 bg-white/80 p-2 rounded-full shadow-lg animate-pulse text-xs text-slate-500 flex items-center">
-         Swipe <ArrowRight size={12} className="ml-1" />
+      {/* Mobile/Desktop Toggle */}
+      <div className="md:hidden mb-4 flex justify-center gap-2">
+        <button 
+          onClick={() => setShowMobileTimeline(true)}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${showMobileTimeline ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`}
+        >
+          Timeline View
+        </button>
+        <button 
+          onClick={() => setShowMobileTimeline(false)}
+          className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${!showMobileTimeline ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'}`}
+        >
+          Full Map
+        </button>
       </div>
 
-      <div className="w-full overflow-x-auto pb-8 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
-        <div className="relative mx-auto" style={{ width: CONFIG.w, height: CONFIG.h }}>
+      {/* Mobile Timeline View - Enhanced */}
+      {showMobileTimeline && (
+        <div className="md:hidden space-y-1">
+          {/* Primary Foundation */}
+          <div className="bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-slate-400 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                P1-3
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-slate-800">Primary Foundation</h3>
+                <p className="text-xs text-slate-500">Building blocks</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-slate-300 to-blue-300"></div></div>
+
+          {/* P4 SPLIT - Branch Indicator */}
+          <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl border-2 border-blue-200 p-4 shadow-md">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md text-xs">
+                P4
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-blue-800">⚡ First Major Split</h3>
+                <p className="text-xs text-blue-600">Subject-Based Banding</p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-2">
+              <div className="flex-1 bg-blue-100 border border-blue-300 rounded-lg p-2 text-center">
+                <p className="text-xs font-bold text-blue-700">Standard</p>
+              </div>
+              <div className="flex-1 bg-emerald-100 border border-emerald-300 rounded-lg p-2 text-center">
+                <p className="text-xs font-bold text-emerald-700">Foundation</p>
+              </div>
+            </div>
+            <Link to="/roadmap/primary" className="text-xs text-blue-600 font-semibold mt-2 block hover:underline">Learn more →</Link>
+          </div>
+
+          <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-blue-300 to-slate-700"></div></div>
+
+          {/* PSLE - Major Checkpoint */}
+          <div className="bg-gradient-to-br from-slate-100 to-white rounded-xl border-2 border-slate-700 p-4 shadow-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-slate-800 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg ring-2 ring-slate-300">
+                🎯
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-slate-900">PSLE</h3>
+                <p className="text-xs text-slate-600">National Exam • AL Scoring</p>
+              </div>
+            </div>
+            <div className="bg-amber-50 border-l-2 border-amber-400 pl-2 py-1 text-xs text-amber-800 mt-2">
+              <strong>Critical:</strong> June hols = intensive revision month
+            </div>
+            <Link to="/roadmap/psle" className="text-xs text-secondary font-semibold mt-2 block hover:underline">View strategies →</Link>
+          </div>
+
+          <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-slate-700 to-blue-700"></div></div>
+
+          {/* Secondary - Dual Path */}
+          <div className="bg-gradient-to-r from-blue-50 to-emerald-50 rounded-xl border-2 border-slate-300 p-4 shadow-md">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-gradient-to-br from-blue-700 to-emerald-600 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md text-xs">
+                Sec
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-slate-800">Secondary School</h3>
+                <p className="text-xs text-slate-500">G3 / G2 / G1 streams</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-blue-100 border border-blue-400 rounded-lg p-2">
+                <p className="text-xs font-bold text-blue-800 text-center">G3 Express</p>
+                <p className="text-[10px] text-blue-600 text-center mt-1">→ O-Levels</p>
+              </div>
+              <div className="bg-emerald-100 border border-emerald-400 rounded-lg p-2">
+                <p className="text-xs font-bold text-emerald-800 text-center">G2/G1 Normal</p>
+                <p className="text-[10px] text-emerald-600 text-center mt-1">→ N-Levels first</p>
+              </div>
+            </div>
+            <Link to="/roadmap/secondary" className="text-xs text-secondary font-semibold mt-2 block hover:underline">Understand FSBB →</Link>
+          </div>
+
+          <div className="flex justify-center items-center gap-1">
+            <div className="w-0.5 h-6 bg-blue-700"></div>
+            <span className="text-xs text-slate-400">+</span>
+            <div className="w-0.5 h-6 bg-emerald-600"></div>
+          </div>
+
+          {/* National Exams */}
+          <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+            <h4 className="text-xs font-bold text-slate-500 uppercase mb-3">National Exams</h4>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg p-2">
+                <div className="bg-emerald-600 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold">N</div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-emerald-800">N-Levels</p>
+                  <p className="text-[10px] text-emerald-600">G2/G1 students (Sec 4)</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-2">
+                <div className="bg-blue-800 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ring-2 ring-blue-200">O</div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-blue-800">O-Levels</p>
+                  <p className="text-[10px] text-blue-600">G3 (Sec 4) + G2 (Sec 5)</p>
+                </div>
+              </div>
+            </div>
+            <Link to="/roadmap/olevel" className="text-xs text-secondary font-semibold mt-2 block hover:underline">L1R5 strategies →</Link>
+          </div>
+
+          <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-blue-800 to-indigo-600"></div></div>
+
+          {/* Post-Secondary - Triple Path */}
+          <div className="bg-gradient-to-br from-indigo-50 to-white rounded-xl border-2 border-indigo-200 p-4 shadow-md">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="bg-indigo-600 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-md">
+                🎓
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-indigo-800">Post-Secondary</h3>
+                <p className="text-xs text-indigo-600">Choose your path</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="bg-indigo-100 border border-indigo-300 rounded-lg p-2">
+                <p className="text-xs font-bold text-indigo-900">Junior College (JC)</p>
+                <p className="text-[10px] text-indigo-600">2 years → A-Levels → Uni</p>
+              </div>
+              <div className="bg-purple-100 border border-purple-300 rounded-lg p-2">
+                <p className="text-xs font-bold text-purple-900">Polytechnic</p>
+                <p className="text-[10px] text-purple-600">3 years → Diploma → Uni/Work</p>
+              </div>
+              <div className="bg-emerald-100 border border-emerald-300 rounded-lg p-2">
+                <p className="text-xs font-bold text-emerald-900">ITE Track</p>
+                <p className="text-[10px] text-emerald-600">Nitec → Higher Nitec → Poly</p>
+              </div>
+            </div>
+            <Link to="/roadmap/postsec" className="text-xs text-indigo-600 font-semibold mt-2 block hover:underline">Compare routes →</Link>
+          </div>
+
+          <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-indigo-600 to-slate-900"></div></div>
+
+          {/* Final Destination */}
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border-2 border-slate-600 p-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="bg-slate-700 w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-lg ring-4 ring-slate-500">
+                🏛️
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-white">University</h3>
+                <p className="text-xs text-slate-300">All paths converge here</p>
+              </div>
+            </div>
+            <div className="mt-3 bg-slate-700/50 rounded-lg p-2 border border-slate-500">
+              <p className="text-[10px] text-slate-200">NUS • NTU • SMU • SUTD • SIT • SUSS</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Map / Mobile Swipeable Map */}
+      <div className={`${showMobileTimeline ? 'hidden md:block' : 'block'}`}>
+        <div className="md:hidden mb-2 bg-amber-50 border border-amber-200 rounded p-2 text-xs text-center text-amber-800">
+          ← Swipe to explore full map →
+        </div>
+        <div className="w-full overflow-x-auto pb-8 bg-slate-50 rounded-xl border border-slate-200 shadow-inner">
+          <div className="relative mx-auto" style={{ width: CONFIG.w, height: CONFIG.h }}>
           
           {/* SVG LAYER FOR LINES */}
           <svg className="absolute inset-0 w-full h-full z-0 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
@@ -170,6 +351,7 @@ const EducationMRTMap: React.FC = () => {
             <div className="flex items-center"><div className="w-8 h-0.5 border-t-2 border-dashed border-emerald-600 mr-2"></div> Bridge / Transfer</div>
           </div>
 
+          </div>
         </div>
       </div>
     </div>

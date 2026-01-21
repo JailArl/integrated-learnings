@@ -40,6 +40,7 @@ export enum UserRole {
 // AI-Ready Data Structures
 export interface StudentProfile {
   id?: string;
+  parentName?: string;
   name: string;
   level: string;
   subjects: string[];
