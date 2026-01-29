@@ -47,8 +47,8 @@ const App: React.FC = () => {
           <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
           <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
           <Route path="/tuition/pricing" element={<Pricing />} />
-          <Route path="/tuition/parents" element={<Navigate to="/parents/login" replace />} />
-          <Route path="/tuition/tutors" element={<Navigate to="/tutors/login" replace />} />
+          <Route path="/tuition/parents" element={<Navigate to="/parents/signup" replace />} />
+          <Route path="/tuition/tutors" element={<Navigate to="/tutors/signup" replace />} />
           <Route path="/tuition/teach" element={<TutorLanding />} />
           
           {/* Authentication Routes */}
@@ -62,8 +62,8 @@ const App: React.FC = () => {
           <Route path="/tutors/signup" element={<TutorSignup />} />
           
           {/* New Dashboards */}
-          <Route path="/parents" element={<Navigate to="/parents/login" replace />} />
-          <Route path="/tutors" element={<Navigate to="/tutors/login" replace />} />
+          <Route path="/parents" element={<Navigate to="/parents/signup" replace />} />
+          <Route path="/tutors" element={<Navigate to="/tutors/signup" replace />} />
           <Route path="/tuition/about" element={<Navigate to="/tuition" replace />} />
           <Route path="/tuition/contact" element={<Contact />} />
           <Route path="/tuition/request" element={<TutorRequest />} />
