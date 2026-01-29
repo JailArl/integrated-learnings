@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signUpTutor } from '../services/auth';
+import { signUpTutor, signIn } from '../services/auth';
 import { PageHeader, Section } from '../components/Components';
 import { Mail, Lock, Phone, User } from 'lucide-react';
 
@@ -67,8 +67,23 @@ export const TutorSignup: React.FC = () => {
       return;
     }
 
-    alert('Account created successfully! Please log in with your email and password.');
-    navigate('/tutors/login');
+    // Auto-login after signup
+    const loginResult = await signIn(formData.email, formData.password);
+    
+    if (!loginResult.success) {
+      // If auto-login fails, redirect to manual login
+      alert('Account created! Please log in with your credentials.');
+      navigate('/tutors/login');
+      return;
+    }
+
+    if (loginResult.role !== 'tutor') {
+      setError('Account created but with unexpected role. Please login manually.');
+      return;
+    }
+
+    // Redirect to tutor dashboard after successful login
+    navigate('/tutors');
   };
 
   return (
