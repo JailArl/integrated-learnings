@@ -234,6 +234,10 @@ const EnrichmentHome: React.FC = () => {
               Download Brochure
             </button>
           </div>
+
+          <p className="text-sm text-gray-500 mt-6">
+            MOE-compliant educational program | Trusted by 50+ schools
+          </p>
         </div>
       </section>
     </div>

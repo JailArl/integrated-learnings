@@ -1,23 +1,12 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Section, Button } from '../components/Components';
 import { SERVICES } from '../constants';
-import { Link, useLocation } from 'react-router-dom';
-import { CheckCircle2, AlertOctagon, BookOpen, GraduationCap, School, ChevronDown, Star, TrendingUp, Users, Award, Microscope, Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { CheckCircle2, ChevronDown, Star, TrendingUp, Users, Award } from 'lucide-react';
 
-const TuitionHome: React.FC = () => {
+const Home: React.FC = () => {
   const [openFaqParent, setOpenFaqParent] = useState<number | null>(0);
-  const location = useLocation();
-
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('section') === 'about') {
-      const section = document.getElementById('about');
-      if (section) {
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  }, [location.search]);
 
   const parentFaqs = [
     {
@@ -39,10 +28,6 @@ const TuitionHome: React.FC = () => {
     {
       q: "Do you offer trial lessons?",
       a: "Not formally, but many tutors offer a 30-min intro call before the first paid lesson. This is perfect for compatibility and a quick learning-style check."
-    },
-    {
-      q: "What's included in diagnostic matching?",
-      a: "Our diagnostic matching is a premium service included at no extra cost for families requesting tutors. We evaluate learning profile, identify knowledge gaps, and match the most compatible tutor quickly. It's a curated, high-touch process for families who want the right tutor fast."
     }
   ];
   return (
@@ -235,24 +220,6 @@ const TuitionHome: React.FC = () => {
         </div>
       </Section>
 
-      {/* SOS / Crisis Mode */}
-      <div className="bg-red-50 border-y border-red-100 py-12">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-6 md:mb-0">
-               <div className="flex items-center text-red-700 mb-2">
-                 <AlertOctagon className="mr-2" />
-                 <span className="font-bold uppercase tracking-wide">Exam Emergency?</span>
-               </div>
-               <h3 className="text-2xl font-extrabold text-primary">"Save My Grades" Ad-Hoc Sessions</h3>
-               <p className="text-slate-700 max-w-2xl mt-2">
-                 Exams in 2 weeks? Don't panic. We offer intensive, short-term ad-hoc rescue sessions to spot questions, clarify doubts, and stabilize grades.
-               </p>
-            </div>
-            <Button to="/parents" className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-200">
-               🚨 Book Emergency Session Now
-            </Button>
-         </div>
-      </div>
 
       {/* Services - Premium Cards */}
       <Section className="bg-white">
@@ -284,62 +251,6 @@ const TuitionHome: React.FC = () => {
         </div>
       </Section>
 
-      {/* The Too Late Trap (Persuasion) */}
-      <Section className="bg-slate-900 text-white rounded-3xl my-8">
-         <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-white">The "Too Late" Trap</h2>
-            <p className="mt-4 text-xl text-slate-400">Most parents wait until exam year. Here is why that fails.</p>
-         </div>
-         <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-            <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
-               <h3 className="text-2xl font-bold text-yellow-400 mb-4">Primary 5</h3>
-               <p className="text-slate-300 leading-relaxed mb-4">
-                 P5 is the "Killer Year". The weighted assessment difficulty spikes, introducing the full SA2 format. If your child struggles in P5, P6 is spent patching holes instead of refining skills.
-               </p>
-               <p className="font-bold text-white">Start tuition in P5 to build the runway for AL1.</p>
-            </div>
-            <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
-               <h3 className="text-2xl font-bold text-yellow-400 mb-4">Secondary 3</h3>
-               <p className="text-slate-300 leading-relaxed mb-4">
-                 The "Honeymoon is Over". Students jump from 4 subjects to 7-8. A-Math and Pure Sciences move fast. Gaps in Sec 3 topics (like Trigonometry or Mole Concept) are fatal for O-Levels.
-               </p>
-               <p className="font-bold text-white">Sec 3 Foundation determines O-Level L1R5.</p>
-            </div>
-         </div>
-         <div className="text-center mt-12">
-            <Button to="/parents" variant="white">Start Early - Contact Us</Button>
-         </div>
-      </Section>
-
-      {/* Roadmap Snippet - No Image */}
-      <Section className="bg-slate-50">
-        <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-3xl font-extrabold text-primary mb-6">Singapore Education Explained Clearly</h2>
-            <p className="text-lg text-slate-600 mb-10">
-              The path from PSLE to Tertiary education is complex. Use our new interactive Metro Map to navigate P4 Streaming, FSBB (G1/G2/G3), O-Levels, and Poly/JC Routes.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-               <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <BookOpen className="w-10 h-10 text-secondary mb-4 mx-auto" />
-                  <h4 className="font-bold text-primary mb-2">Primary Foundation</h4>
-                  <p className="text-sm text-slate-500">P4 Streaming & PSLE (AL Scoring)</p>
-               </div>
-               <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <School className="w-10 h-10 text-secondary mb-4 mx-auto" />
-                  <h4 className="font-bold text-primary mb-2">Secondary Strategy</h4>
-                  <p className="text-sm text-slate-500">FSBB, G3/G2/G1 & O-Levels</p>
-               </div>
-               <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <GraduationCap className="w-10 h-10 text-secondary mb-4 mx-auto" />
-                  <h4 className="font-bold text-primary mb-2">Tertiary Pathways</h4>
-                  <p className="text-sm text-slate-500">JC vs Poly vs ITE Routes</p>
-               </div>
-            </div>
-            
-            <Button to="/roadmap">View Interactive Flow Map</Button>
-        </div>
-      </Section>
 
       {/* Why Us - Premium Version */}
       <Section className="bg-gradient-to-br from-slate-50 to-blue-50">
@@ -378,71 +289,6 @@ const TuitionHome: React.FC = () => {
         </div>
       </Section>
 
-      {/* Integrated About Section */}
-      <Section id="about" className="bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">How Premium Matching Works</h2>
-            <p className="text-lg text-slate-600">A diagnostic-first approach that gets you the right tutor without trial and error.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-sm border border-blue-100">
-              <Microscope className="text-secondary mb-4" size={40} />
-              <h3 className="text-lg font-bold text-primary mb-3">1. Diagnose the Real Issue</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                We identify whether the struggle is conceptual gaps, exam anxiety, study habits, or learning style—so the match is precise.
-              </p>
-            </div>
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-sm border border-blue-100">
-              <Target className="text-secondary mb-4" size={40} />
-              <h3 className="text-lg font-bold text-primary mb-3">2. Map the Learning Profile</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                We assess learning preference, motivation level, and tutoring style fit to avoid mismatches from day one.
-              </p>
-            </div>
-            <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-sm border border-blue-100">
-              <Users className="text-secondary mb-4" size={40} />
-              <h3 className="text-lg font-bold text-primary mb-3">3. Match the Right Tutor</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                We select from vetted educators by expertise and personality fit—because the right human connection matters.
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-slate-50 border-2 border-secondary/20 rounded-2xl p-8 md:p-12">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-primary mb-3">Why Matching Matters</h3>
-              <p className="text-slate-600">The real cost is time, confidence, and momentum lost from the wrong fit.</p>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              <div className="flex gap-4">
-                <div className="text-secondary font-bold text-2xl flex-shrink-0">❌</div>
-                <div>
-                  <h4 className="font-bold text-slate-800 mb-2">Trial & Error</h4>
-                  <ul className="text-slate-600 text-sm space-y-1 leading-relaxed">
-                    <li>• Weeks lost to mismatched tutors</li>
-                    <li>• Confidence drops and frustration builds</li>
-                    <li>• Progress stalls while switching</li>
-                  </ul>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="text-green-600 font-bold text-2xl flex-shrink-0">✓</div>
-                <div>
-                  <h4 className="font-bold text-slate-800 mb-2">Premium Matching</h4>
-                  <ul className="text-slate-600 text-sm space-y-1 leading-relaxed">
-                    <li>• Diagnostic included with tutor request</li>
-                    <li>• Precision match based on learning profile</li>
-                    <li>• Fast replacement if the fit isn’t right</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Section>
-
       {/* Final CTA - Premium */}
       <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 py-24 text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
@@ -471,7 +317,6 @@ const TuitionHome: React.FC = () => {
         <h2 className="text-3xl font-bold text-primary text-center mb-12">Frequently Asked Questions</h2>
         
         <div className="max-w-3xl mx-auto">
-          {/* Parent FAQs Only */}
           <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
             👨‍👩‍👧 Frequently Asked Questions
           </h3>
@@ -493,12 +338,16 @@ const TuitionHome: React.FC = () => {
               </div>
             ))}
           </div>
-          <Button to="/parents" className="w-full mt-8">Start Your Application →</Button>
+          <Button to="/parents" className="w-full mt-6">Request a Tutor →</Button>
         </div>
       </Section>
-
+      {/* Subtle Link for Educators at bottom */}
+      <div className="bg-slate-50 py-12 text-center border-t border-slate-100">
+         <p className="text-slate-500 text-sm mb-4">Are you a qualified educator looking for students?</p>
+         <Link to="/teach" className="text-secondary font-bold hover:underline text-sm">Apply to join our Tutor Network &rarr;</Link>
+      </div>
     </>
   );
 };
 
-export default TuitionHome;
+export default Home;

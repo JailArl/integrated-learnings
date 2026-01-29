@@ -61,8 +61,8 @@ export const AIAssistant: React.FC = () => {
       aiResponse.actions = [{ label: "Start Request", action: () => navigate('/parents') }];
     }
     else if (lowerText.includes("fail") || lowerText.includes("weak") || lowerText.includes("bad grade")) {
-      aiResponse.text = "It sounds like there might be a foundational gap. I strongly recommend booking a Right Fit Assessment before starting regular tuition.";
-      aiResponse.actions = [{ label: "What is Right Fit Assessment?", action: () => navigate('/about') }, { label: "Book Assessment", action: () => navigate('/parents') }];
+      aiResponse.text = "It sounds like there might be a foundational gap. Our premium diagnostic matching helps us find the right tutor quickly.";
+      aiResponse.actions = [{ label: "How Premium Matching Works", action: () => navigate('/tuition?section=about') }, { label: "Request a Tutor", action: () => navigate('/parents') }];
     }
     else if (lowerText.includes("roadmap") || lowerText.includes("plan")) {
       aiResponse.text = "The Singapore Education Roadmap is complex. Which stage is your child in?";
