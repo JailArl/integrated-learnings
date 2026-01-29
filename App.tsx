@@ -35,8 +35,6 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const App: React.FC = () => {
   return (
-    // HashRouter is required for the preview environment to work correctly.
-    // When deploying to production (e.g. Vercel) with a custom domain, you can switch this to BrowserRouter.
     <HashRouter>
       <Layout>
         <Routes>
