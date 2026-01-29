@@ -20,7 +20,7 @@ const Pricing: React.FC = () => {
     <>
       <PageHeader title="Transparent Pricing" subtitle="Fair rates for quality education. No hidden fees, pay only for completed lessons." />
       
-      {/* Right Fit Assessment Banner */}
+      {/* Diagnostic Matching Banner */}
       <div className="bg-gradient-to-br from-blue-50 to-slate-50 border-b border-blue-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h3 className="text-2xl font-bold text-center text-slate-900 mb-6">Our Diagnostic Matching Process</h3>
@@ -37,8 +37,8 @@ const Pricing: React.FC = () => {
               <div className="bg-gradient-to-br from-secondary to-blue-700 rounded-xl border-2 border-secondary p-6 text-center text-white relative shadow-lg">
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full">OUR EDGE</div>
                 <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-                <h4 className="font-bold mb-2">Complimentary Diagnostic Zoom</h4>
-                <p className="text-sm text-blue-100">30-min session: tutor assesses learning style, pace, personality in real-time</p>
+                <h4 className="font-bold mb-2">Diagnostic Matching Call</h4>
+                <p className="text-sm text-blue-100">30-min session to assess learning style, pace, and fit in real-time</p>
               </div>
               
               {/* Step 3 */}
@@ -53,7 +53,7 @@ const Pricing: React.FC = () => {
               <p className="text-sm text-green-900 mb-4">
                 <strong>Why this works:</strong> Other agencies match on paper. We match on compatibility. That's why our students improve faster and parents are more satisfied.
               </p>
-              <Button onClick={handleRequestClick} className="w-full text-lg py-3">Start Your Assessment</Button>
+              <Button onClick={handleRequestClick} className="w-full text-lg py-3">Start Tutor Request</Button>
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@ const Pricing: React.FC = () => {
           <div className="bg-green-50 border border-green-200 rounded-xl p-6">
             <h3 className="text-lg font-bold text-green-900 mb-4">How Payment Works</h3>
             <ol className="space-y-3 text-sm text-green-800">
-              <li><strong>1. Get Matched</strong> - We conduct a Right Fit Assessment and connect you with the perfect tutor</li>
+              <li><strong>1. Get Matched</strong> - We run diagnostic matching and connect you with the best-fit tutor</li>
               <li><strong>2. First Month</strong> - You pay 50% of your first month's tuition to us as a matching fee</li>
               <li><strong>3. Month 2 Onwards</strong> - Pay tutor directly via PayNow/bank transfer. No intermediaries.</li>
               <li><strong>4. Flexible & Transparent</strong> - Cancel anytime with 1 week notice. No lock-in contracts.</li>

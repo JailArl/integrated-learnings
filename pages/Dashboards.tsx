@@ -5,7 +5,7 @@ import { StudentProfile, TutorProfile } from '../types';
 import { TUTOR_CONTRACT_TEXT, TUTOR_SCENARIO_QUESTIONS, POLICY_CONTENT } from '../constants';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, CreditCard, Calendar, BookOpen, Cpu, Shield, AlertCircle, User, MapPin, DollarSign, Clock, Briefcase, FileCheck, Landmark, CheckCircle2, Wallet, QrCode, FileText, Download, Filter, Edit2, PlusCircle, X, Search, File, Receipt, MessageSquare, Users } from 'lucide-react';
-import { submitParentForm, submitTutorForm } from '../services/formHandler';
+import { submitTutorForm } from '../services/formHandler';
 
 
 // --- TOAST NOTIFICATION COMPONENT ---
@@ -178,15 +178,9 @@ const ParentSignupWizard: React.FC<{
   const [parentName, setParentName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [childName, setChildName] = useState('');
-  const [childAge, setChildAge] = useState(10);
-  const [level, setLevel] = useState('Secondary 3');
-  const [subjects, setSubjects] = useState<string[]>(['English']);
-  const [mainConcerns, setMainConcerns] = useState('');
-  const [learningStyle, setLearningStyle] = useState('Visual');
-  const [preferredFormat, setPreferredFormat] = useState<'zoom' | 'inPerson' | 'either'>('either');
-  const [assignmentType, setAssignmentType] = useState<'quick' | 'rightFit' | 'premium'>('rightFit');
-  const [toast, setToast] = useState({ message: '', type: 'success' as 'success' | 'error', visible: false });
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Demo Profile
@@ -201,65 +195,123 @@ const ParentSignupWizard: React.FC<{
       status: "active"
   };
 
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type, visible: true });
-    setTimeout(() => setToast({ ...toast, visible: false }), 3000);
-  };
-
   const handleSubmit = async () => {
-    if (!parentName || !email || !phone || !childName) {
-      showToast('Please fill in all required fields', 'error');
+    setError('');
+    
+    if (!parentName || !email || !phone || !password) {
+      setError('Please fill in all required fields');
       return;
     }
-    setLoading(true);
-    const result = await submitParentForm({
-      parentName,
-      email,
-      phone,
-      childName,
-      childAge,
-      level,
-      subjects,
-      mainConcerns,
-      learningStyle,
-      preferredTiming: 'Flexible',
-      preferredFormat,
-      assignmentType,
-    });
-    setLoading(false);
-    if (result.success) {
-      showToast('Application submitted! Check your email for updates.', 'success');
-      setTimeout(() => {
-        onComplete({ ...demoProfile, parentName, name: childName, level, subjects, status: 'active' });
-      }, 2000);
-    } else {
-      showToast(result.error || 'Failed to submit application', 'error');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
     }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (!email.includes('@')) {
+      setError('Please enter a valid email address');
+      return;
+    }
+
+    setLoading(true);
+    
+    // For demo purposes, just complete
+    setTimeout(() => {
+      setLoading(false);
+      onComplete({ ...demoProfile, parentName });
+    }, 1000);
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200 relative">
-      <Toast message={toast.message} type={toast.type} visible={toast.visible} />
-      <div className="absolute top-4 right-4">
-         <button onClick={() => onComplete(demoProfile)} className="text-xs font-bold text-slate-400 hover:text-secondary underline bg-slate-50 px-2 py-1 rounded">
-             Skip (Preview Mode)
-         </button>
-      </div>
+    <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+      <h2 className="text-2xl font-bold text-primary mb-2">Create Parent Account</h2>
+      <p className="text-slate-600 text-sm mb-6">Quick signup - child details collected later</p>
 
-      <h2 className="text-2xl font-bold text-primary mb-6">Create Parent Account</h2>
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="space-y-4">
-        <div><label className="block text-sm font-bold mb-1">Parent Name</label><input value={parentName} onChange={e => setParentName(e.target.value)} className="w-full border p-2 rounded" placeholder="Your Name" /></div>
-        <div><label className="block text-sm font-bold mb-1">Email</label><input value={email} onChange={e => setEmail(e.target.value)} className="w-full border p-2 rounded" placeholder="Email Address" /></div>
-        <div><label className="block text-sm font-bold mb-1">Phone Number</label><input value={phone} onChange={e => setPhone(e.target.value)} className="w-full border p-2 rounded" placeholder="+65 9xxx xxxx" type="tel" /></div>
-        <div><label className="block text-sm font-bold mb-1">Child's Name</label><input value={childName} onChange={e => setChildName(e.target.value)} className="w-full border p-2 rounded" placeholder="Child's Name" /></div>
-        <div><label className="block text-sm font-bold mb-1">Child's Age</label><input value={childAge} onChange={e => setChildAge(parseInt(e.target.value))} type="number" className="w-full border p-2 rounded" placeholder="Age" /></div>
-        <div><label className="block text-sm font-bold mb-1">Level</label><input value={level} onChange={e => setLevel(e.target.value)} className="w-full border p-2 rounded" placeholder="e.g. Secondary 3" /></div>
-        <div><label className="block text-sm font-bold mb-1">Main Concerns</label><input value={mainConcerns} onChange={e => setMainConcerns(e.target.value)} className="w-full border p-2 rounded" placeholder="What would you like help with?" /></div>
-        <Button onClick={handleSubmit} disabled={loading} className="w-full mt-4">{loading ? 'Submitting...' : 'Create Account'}</Button>
+        <div>
+          <label className="block text-sm font-bold mb-1">Full Name *</label>
+          <input 
+            type="text"
+            value={parentName} 
+            onChange={e => setParentName(e.target.value)} 
+            className="w-full border p-2 rounded" 
+            placeholder="Enter your full name" 
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold mb-1">Email Address *</label>
+          <input 
+            type="email"
+            value={email} 
+            onChange={e => setEmail(e.target.value)} 
+            className="w-full border p-2 rounded" 
+            placeholder="your.email@example.com" 
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold mb-1">Phone Number *</label>
+          <input 
+            type="tel"
+            value={phone} 
+            onChange={e => setPhone(e.target.value)} 
+            className="w-full border p-2 rounded" 
+            placeholder="+65 XXXX XXXX" 
+          />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold mb-1">Password *</label>
+          <input 
+            type="password"
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            className="w-full border p-2 rounded" 
+            placeholder="Minimum 6 characters" 
+          />
+          <p className="text-xs text-slate-500 mt-1">Must be at least 6 characters long</p>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-bold mb-1">Confirm Password *</label>
+          <input 
+            type="password"
+            value={confirmPassword} 
+            onChange={e => setConfirmPassword(e.target.value)} 
+            className="w-full border p-2 rounded" 
+            placeholder="Re-enter your password" 
+          />
+        </div>
+
+        <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-6">
+          <p className="text-xs text-blue-800">
+            <strong>ℹ️ What's Next?</strong><br />
+            After signup, you'll provide details about your child and tutoring needs. This helps us find the perfect match!
+          </p>
+        </div>
+        
+        <Button 
+          onClick={handleSubmit} 
+          disabled={loading} 
+          className="w-full mt-4"
+        >
+          {loading ? 'Creating Account...' : 'Create Account'}
+        </Button>
         
         <div className="text-center pt-4 mt-4 border-t border-slate-100">
-           <p className="text-sm text-slate-600">Already registered? <button onClick={onSwitchToLogin} className="text-secondary font-bold hover:underline">Sign In here</button></p>
+          <p className="text-sm text-slate-600">Already have an account? <button onClick={onSwitchToLogin} className="text-secondary font-bold hover:underline">Sign In here</button></p>
         </div>
       </div>
     </div>
@@ -526,7 +578,7 @@ export const ParentDashboard: React.FC = () => {
                       <div>
                          <p className="font-bold text-slate-800">Tutor Match (Direct)</p>
                          <p className="text-xs text-slate-600">Jan 10, 2026 • Matched based on your student profile and learning needs</p>
-                         <p className="text-xs text-slate-500 mt-1 italic">Skip the diagnostic? We match directly. Or request a Right Fit Assessment below.</p>
+                         <p className="text-xs text-slate-500 mt-1 italic">Diagnostic matching is included to improve fit. Optional live diagnostic sessions are available below.</p>
                       </div>
                    </div>
                    <div className="flex gap-3">
@@ -545,9 +597,9 @@ export const ParentDashboard: React.FC = () => {
                    </div>
                 </div>
                 
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                   <h4 className="font-bold text-slate-800 mb-3 text-sm">Want a Right Fit Assessment First?</h4>
-                   <p className="text-xs text-slate-600 mb-3">Optional diagnostic to clarify your child's learning needs before lessons begin.</p>
+                 <div className="mt-6 pt-6 border-t border-slate-200">
+                   <h4 className="font-bold text-slate-800 mb-3 text-sm">Optional Live Diagnostic Session</h4>
+                   <p className="text-xs text-slate-600 mb-3">A deeper session to clarify learning needs before lessons begin.</p>
                    <div className="grid grid-cols-2 gap-2">
                       <Button variant="outline" className="text-xs h-auto py-2">Zoom Session (30 min)</Button>
                       <Button variant="outline" className="text-xs h-auto py-2">1-to-1 In-Person</Button>

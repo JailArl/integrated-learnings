@@ -9,8 +9,16 @@ import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
 import { ParentDashboard, TutorDashboard } from './pages/Dashboards';
 import { AdminDashboard } from './pages/AdminDashboard'; 
-import { Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
+import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
+import ServiceDetail from './pages/ServiceDetail';
 import { Calendar } from './pages/Calendar';
+import { ParentLogin } from './pages/ParentLogin';
+import { ParentSignup } from './pages/ParentSignup';
+import { TutorLogin } from './pages/TutorLogin';
+import { TutorSignup } from './pages/TutorSignup';
+// Temporarily commented out to debug blank page
+// import { NewParentDashboard } from './pages/NewParentDashboard';
+// import { NewTutorDashboard } from './pages/NewTutorDashboard';
 
 // Protected Route for Coursework (Sec 4 only)
 const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -28,12 +36,23 @@ const App: React.FC = () => {
   return (
     // HashRouter is required for the preview environment to work correctly.
     // When deploying to production (e.g. Vercel) with a custom domain, you can switch this to BrowserRouter.
-    <HashRouter>
-      <Layout>
-        <Routes>
-          {/* Main Landing Page */}
-          <Route path="/" element={<MainLanding />} />
+    <HashRouter>service/:serviceId" element={<ServiceDetail />} />
+          <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
+          <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
+          <Route path="/tuition/pricing" element={<Pricing />} />
+          <Route path="/tuition/parents" element={<ParentDashboard />} />
+          <Route path="/tuition/tutors" element={<TutorDashboard />} />
+          <Route path="/tuition/teach" element={<TutorLanding />} />
           
+          {/* Authentication Routes */}
+          <Route path="/parent-login" element={<ParentLogin />} />
+          <Route path="/parent-signup" element={<ParentSignup />} />
+          <Route path="/parents/login" element={<ParentLogin />} />
+          <Route path="/parents/signup" element={<ParentSignup />} />
+          <Route path="/tutor-login" element={<TutorLogin />} />
+          <Route path="/tutor-signup" element={<TutorSignup />} />
+          <Route path="/tutors/login" element={<TutorLogin />} />
+          <Route path="/tutors/signup" element={<TutorSignup
           {/* Tuition Service Routes */}
           <Route path="/tuition" element={<TuitionHome />} />
           <Route path="/tuition/roadmap" element={<RoadmapLanding />} />

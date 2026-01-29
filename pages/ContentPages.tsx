@@ -14,15 +14,15 @@ export const About: React.FC = () => (
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6 leading-tight">
-            Stop Tutor Shopping. Start with a Diagnosis.
+            Request the Right Tutor, From Day One.
           </h2>
           <p className="text-xl text-slate-600 mb-6 leading-relaxed">
-            Parents spend <strong>months</strong> and <strong>hundreds of dollars</strong> switching tutors, hoping to find the right fit. 
-            What if you could get it right the first time?
+            Parents lose precious time switching tutors and waiting for progress. 
+            We help you request a tutor with the right fit from the start.
           </p>
           <p className="text-lg text-slate-500">
-            Our <strong className="text-secondary">Right Fit Assessment</strong> is your shortcut. 
-            One diagnostic session. One matched tutor. One path forward.
+            Our <strong className="text-secondary">Premium Diagnostic Matching</strong> removes guesswork. 
+            One diagnostic, one matched tutor, one clear path forward.
           </p>
         </div>
 
@@ -52,13 +52,13 @@ export const About: React.FC = () => (
       </div>
     </Section>
     
-    {/* The Right Fit Assessment Section */}
+    {/* Premium Matching Section */}
     <Section>
        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">The Right Fit Assessment</h2>
-             <p className="text-lg text-slate-600">How we skip the tutor-shopping cycle and get you the right match on your first try.</p>
-          </div>
+           <div className="text-center mb-12">
+             <h2 className="text-3xl md:text-4xl font-bold text-primary mb-4">How Premium Matching Works</h2>
+             <p className="text-lg text-slate-600">A diagnostic-first approach that gets you the right tutor without trial and error.</p>
+           </div>
           
           <div className="grid md:grid-cols-3 gap-6 mb-12">
              <div className="bg-gradient-to-br from-blue-50 to-white p-8 rounded-xl shadow-sm border border-blue-100">
@@ -86,31 +86,31 @@ export const About: React.FC = () => (
 
           <div className="bg-slate-50 border-2 border-secondary/20 rounded-2xl p-8 md:p-12">
              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold text-primary mb-3">Why This Matters</h3>
-                <p className="text-slate-600">The cost of getting it wrong far exceeds the cost of doing it right.</p>
+               <h3 className="text-2xl font-bold text-primary mb-3">Why Matching Matters</h3>
+               <p className="text-slate-600">The real cost is time, confidence, and momentum lost from the wrong fit.</p>
              </div>
              <div className="grid md:grid-cols-2 gap-8">
                 <div className="flex gap-4">
                    <div className="text-secondary font-bold text-2xl flex-shrink-0">❌</div>
                    <div>
-                      <h4 className="font-bold text-slate-800 mb-2">The Typical Path (Trial & Error)</h4>
+                       <h4 className="font-bold text-slate-800 mb-2">The Typical Path (Trial & Error)</h4>
                       <ul className="text-slate-600 text-sm space-y-1 leading-relaxed">
                          <li>• Try Tutor #1: Wrong teaching style (4 weeks wasted)</li>
                          <li>• Try Tutor #2: No chemistry with student (6 weeks wasted)</li>
                          <li>• Try Tutor #3: Finally works, but 3 months behind</li>
-                         <li>• Total cost: Lost time, money, and student confidence</li>
+                         <li>• Momentum drops and confidence suffers</li>
                       </ul>
                    </div>
                 </div>
                 <div className="flex gap-4">
                    <div className="text-green-600 font-bold text-2xl flex-shrink-0">✓</div>
                    <div>
-                      <h4 className="font-bold text-slate-800 mb-2">Our "Right First Time" Approach</h4>
+                       <h4 className="font-bold text-slate-800 mb-2">Our Premium Matching Process</h4>
                       <ul className="text-slate-600 text-sm space-y-1 leading-relaxed">
-                         <li>• Understanding your child's learning needs</li>
+                         <li>• Diagnostic session included when you request a tutor</li>
                          <li>• Precision match based on learning profile</li>
-                         <li>• Right tutor from Day 1, building confidence</li>
-                         <li>• Optional diagnostic session to fine-tune approach</li>
+                         <li>• Fast replacement if the fit isn’t right</li>
+                         <li>• Transparent, premium service with no hidden fees</li>
                       </ul>
                    </div>
                 </div>
@@ -125,29 +125,29 @@ export const About: React.FC = () => (
        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-12">
              <div className="inline-block bg-blue-400/20 border border-blue-400/30 px-4 py-2 rounded-full text-sm font-bold mb-6">
-                Limited Spots • Application Only
+                Premium Matching • By Request
              </div>
-             <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Book Your Right Fit Assessment</h2>
+             <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Request Your Tutor Match</h2>
              <p className="text-slate-200 text-lg leading-relaxed mb-6">
-               Your complimentary session includes subject diagnostics, learning style analysis, a personalized improvement plan, and guidance on next steps.
+               We run a diagnostic, map the learning profile, and match the right tutor fast—so you skip trial and error.
              </p>
              <p className="text-blue-200 text-sm italic">
-               We accept a limited number of families per month to ensure personalized attention and quality matching.
+               Premium, high-touch matching included with every request.
              </p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-2xl mx-auto">
              <div className="bg-white/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
                 <Calendar className="text-blue-400 mb-3" size={32} />
-                <h4 className="font-bold text-white mb-2">When</h4>
-                <p className="text-slate-300 text-sm">Flexible scheduling within 2–4 weeks of your application approval.</p>
+                <h4 className="font-bold text-white mb-2">Timeline</h4>
+                <p className="text-slate-300 text-sm">We typically match within 3–7 days after your request is reviewed.</p>
              </div>
              <div className="bg-white/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
                 <Users className="text-blue-400 mb-3" size={32} />
-                <h4 className="font-bold text-white mb-2">Who Qualifies</h4>
+                <h4 className="font-bold text-white mb-2">Who It’s For</h4>
                 <div className="text-slate-300 text-sm space-y-2">
-                  <p>Primary 5 and above. Learning patterns are clearer at this stage, making our diagnostic more valuable.</p>
-                  <p className="text-slate-400 text-xs italic">Younger students or specialized needs (language, enrichment, etc.): reach out—we assess case-by-case.</p>
+                  <p>Primary to JC/IB/IGCSE students who want the right tutor quickly.</p>
+                  <p className="text-slate-400 text-xs italic">We also support enrichment and specialized needs—just tell us what you’re looking for.</p>
                 </div>
              </div>
           </div>
@@ -155,19 +155,19 @@ export const About: React.FC = () => (
           <div className="text-center mb-8">
              <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg px-4 py-2 inline-block mb-6">
                 <p className="text-amber-200 text-sm font-bold">
-                  ✓ Complimentary • No fees, no pressure • Just a serious diagnostic
+                  ✓ Premium matching included • Transparent process • No hidden fees
                 </p>
              </div>
              <div>
-                <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
-                   Book Your Right Fit Assessment
-                </Button>
+                 <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
+                   Request a Tutor
+                 </Button>
              </div>
           </div>
 
-          <p className="text-center text-slate-400 text-xs mt-6">
-             Applications reviewed within 48 hours. We maintain a selective intake to ensure the best tutor-student matches.
-          </p>
+           <p className="text-center text-slate-400 text-xs mt-6">
+             Requests reviewed within 48 hours. We prioritize quality matches and fast turnaround.
+           </p>
        </div>
     </div>
 
@@ -217,15 +217,15 @@ export const About: React.FC = () => (
              </div>
           </div>
 
-          <div className="mt-16 text-center bg-gradient-to-r from-blue-50 to-slate-50 p-8 rounded-2xl border border-slate-200">
+           <div className="mt-16 text-center bg-gradient-to-r from-blue-50 to-slate-50 p-8 rounded-2xl border border-slate-200">
              <h3 className="text-2xl font-bold text-primary mb-4">Ready to Skip the Guesswork?</h3>
              <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
-                Your Right Fit Assessment is the fastest path to a tutor who actually works for your child.
+               Diagnostic matching is the fastest path to a tutor who actually works for your child.
              </p>
              <Button to="/parents" className="px-10 py-3 font-bold text-lg">
-                Start with Your Right Fit Assessment
+               Request a Tutor
              </Button>
-          </div>
+           </div>
        </div>
     </Section>
 
@@ -235,109 +235,51 @@ export const About: React.FC = () => (
        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-3xl mx-auto mb-12">
              <div className="inline-block bg-blue-400/20 border border-blue-400/30 px-4 py-2 rounded-full text-sm font-bold mb-6">
-                Limited Spots • Application Only
+                Premium Matching • By Request
              </div>
-             <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Book Your Right Fit Assessment</h2>
+             <h2 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Request Your Tutor Match</h2>
              <p className="text-slate-200 text-lg leading-relaxed mb-6">
-               Your complimentary session includes subject diagnostics, learning style analysis, a personalized improvement plan, and guidance on next steps.
+               Your request includes diagnostic review, learning style analysis, and a personalized plan so we can match the right tutor fast.
              </p>
              <p className="text-blue-200 text-sm italic">
-               We accept a limited number of families per month to ensure personalized attention and quality matching.
+               Premium, high-touch matching included with every request.
              </p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-2xl mx-auto">
              <div className="bg-white/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
                 <Calendar className="text-blue-400 mb-3" size={32} />
-                <h4 className="font-bold text-white mb-2">When</h4>
-                <p className="text-slate-300 text-sm">Flexible scheduling within 2–4 weeks of your application approval.</p>
+                <h4 className="font-bold text-white mb-2">Timeline</h4>
+                <p className="text-slate-300 text-sm">We typically match within 3–7 days after your request is reviewed.</p>
              </div>
              <div className="bg-white/10 p-6 rounded-xl border border-white/10 backdrop-blur-sm">
                 <Users className="text-blue-400 mb-3" size={32} />
-                <h4 className="font-bold text-white mb-2">Who Qualifies</h4>
+                <h4 className="font-bold text-white mb-2">Who It’s For</h4>
                 <div className="text-slate-300 text-sm space-y-2">
-                  <p>Primary 5 and above. Learning patterns are clearer at this stage, making our diagnostic more valuable.</p>
-                  <p className="text-slate-400 text-xs italic">Younger students or specialized needs (language, enrichment, etc.): reach out—we assess case-by-case.</p>
+                  <p>Primary to JC/IB/IGCSE students who want the right tutor quickly.</p>
+                  <p className="text-slate-400 text-xs italic">We also support enrichment and specialized needs—just tell us what you’re looking for.</p>
                 </div>
              </div>
           </div>
 
           <div className="text-center mb-8">
              <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg px-4 py-2 inline-block mb-6">
-                <p className="text-amber-200 text-sm font-bold">
-                  ✓ Complimentary • No fees, no pressure • Just a serious diagnostic
-                </p>
+                 <p className="text-amber-200 text-sm font-bold">
+                  ✓ Premium matching included • Transparent process • No hidden fees
+                 </p>
              </div>
              <div>
-                <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
-                   Book Your Right Fit Assessment
-                </Button>
+                 <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
+                   Request a Tutor
+                 </Button>
              </div>
           </div>
 
-          <p className="text-center text-slate-400 text-xs mt-6">
-             Applications reviewed within 48 hours. We maintain a selective intake to ensure the best tutor-student matches.
-          </p>
+           <p className="text-center text-slate-400 text-xs mt-6">
+             Requests reviewed within 48 hours. We prioritize quality matches and fast turnaround.
+           </p>
        </div>
     </div>
-
-    <Section>
-       <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-             <h2 className="text-3xl font-bold text-primary mb-4">Why Parents Choose Integrated Learnings</h2>
-             <p className="text-slate-600">We're not a tutoring marketplace. We're a partner in your child's academic journey.</p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8 mb-12">
-             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
-                  <Microscope size={24} className="mr-3 text-secondary" />
-                  Diagnosis Before Drilling
-                </h3>
-                <p className="text-slate-600 leading-relaxed">
-                   We never assume the problem. Subject knowledge gaps, exam anxiety, or careless mistakes—each needs a different tutor. We find the root cause first.
-                </p>
-             </div>
-             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
-                  <TrendingUp size={24} className="mr-3 text-secondary" />
-                  Long-Term Planning
-                </h3>
-                <p className="text-slate-600 leading-relaxed">
-                   We prepare students for the next milestone, not just the next test. Your child's tutor works with a 2–3 year roadmap aligned to Singapore's education system.
-                </p>
-             </div>
-             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
-                  <Shield size={24} className="mr-3 text-secondary" />
-                  Vetted Tutors
-                </h3>
-                <p className="text-slate-600 leading-relaxed">
-                   Our tutors are screened for subject expertise, teaching quality, and the soft skills that build student confidence. We reject those who don't meet our bar.
-                </p>
-             </div>
-             <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
-                <h3 className="text-xl font-bold text-primary mb-3 flex items-center">
-                  <Clock size={24} className="mr-3 text-secondary" />
-                  Ongoing Support
-                </h3>
-                <p className="text-slate-600 leading-relaxed">
-                   We don't disappear after the first lesson. We track progress, support both tutor and student, and step in if adjustments are needed.
-                </p>
-             </div>
-          </div>
-
-          <div className="mt-16 text-center bg-gradient-to-r from-blue-50 to-slate-50 p-8 rounded-2xl border border-slate-200">
-             <h3 className="text-2xl font-bold text-primary mb-4">Ready to Skip the Guesswork?</h3>
-             <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
-                Your Right Fit Assessment is the fastest path to a tutor who actually works for your child.
-             </p>
-             <Button to="/parents" className="px-10 py-3 font-bold text-lg">
-                Start with Your Right Fit Assessment
-             </Button>
-          </div>
-       </div>
-    </Section>
 
     <Section>
       <div className="mt-20 pt-12 border-t border-slate-200">
@@ -410,10 +352,10 @@ export const About: React.FC = () => (
           <h3 className="text-2xl font-bold mb-3">Every Milestone Needs the Right Tutor</h3>
           <p className="text-blue-100 mb-6 max-w-2xl mx-auto leading-relaxed">
             From PSLE to O-Levels to polytechnic—each transition is an opportunity to build momentum or lose it. 
-            Our Right Fit Assessment ensures your child has consistent, expert support aligned to their needs.
+            Our diagnostic matching ensures your child has consistent, expert support aligned to their needs.
           </p>
           <Button to="/parents" variant="white" className="px-8 py-3 font-bold shadow-lg">
-            Book Your Right Fit Assessment
+            Request a Tutor
           </Button>
         </div>
       </div>
@@ -580,8 +522,8 @@ export const TutorLanding: React.FC = () => (
               Focus on Teaching.<br />
               <span className="text-blue-400">We'll Handle The Rest.</span>
            </h1>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
-              Join Singapore's most professional tuition network. Guaranteed lesson protection, automated billing, and a steady stream of serious students.
+             <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10">
+              Join Singapore's most professional tuition network. Reliable lesson protection, automated billing, and a steady stream of serious students.
              </p>
              <Button to="/teach" variant="white" className="px-10 py-4 text-lg shadow-xl">Apply as Partner Tutor</Button>
         </div>
@@ -756,34 +698,38 @@ export const CourseworkSupport: React.FC = () => (
 
 export const Contact: React.FC = () => (
   <>
-    <PageHeader title="Let's Find Your Child's Perfect Tutor" subtitle="Trusted by Singapore families for data-driven tutor matching." />
+    <PageHeader title="Request the Right Tutor" subtitle="Premium diagnostic matching for fast, accurate tutor placement." />
     
     <Section>
       {/* Hero - Dual Audience Cards */}
       <div className="grid md:grid-cols-2 gap-8 mb-16">
-        <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-10 rounded-2xl shadow-xl relative overflow-hidden group hover:shadow-2xl transition">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-10 rounded-2xl shadow-xl relative overflow-hidden group hover:shadow-2xl transition h-full flex flex-col">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col h-full">
             <div className="text-4xl mb-4">👨‍👩‍👧</div>
             <h2 className="text-2xl font-bold mb-3">For Parents</h2>
             <p className="text-blue-100 mb-6 leading-relaxed">
-              Get your child matched with the ideal tutor through our diagnostic-driven approach. Proven improvements with targeted coaching.
+              Request a tutor and we’ll run a diagnostic to match the right educator quickly—no trial and error.
             </p>
-            <Button to="/parents" variant="white" className="w-full group-hover:scale-105 transition">📋 Apply for Free Assessment</Button>
-            <p className="text-xs text-blue-200 mt-3">⏱️ 90-min diagnostic • Limited monthly intake</p>
+            <div className="mt-auto">
+              <Button to="/parents" variant="white" className="w-full group-hover:scale-105 transition">📋 Request a Tutor</Button>
+              <p className="text-xs text-blue-200 mt-3 text-center">Premium diagnostic matching included</p>
+            </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-600 to-green-700 text-white p-10 rounded-2xl shadow-xl relative overflow-hidden group hover:shadow-2xl transition">
+        <div className="bg-gradient-to-br from-green-600 to-green-700 text-white p-10 rounded-2xl shadow-xl relative overflow-hidden group hover:shadow-2xl transition h-full flex flex-col">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative z-10">
+          <div className="relative z-10 flex flex-col h-full">
             <div className="text-4xl mb-4">🎓</div>
             <h2 className="text-2xl font-bold mb-3">For Tutors</h2>
             <p className="text-green-100 mb-6 leading-relaxed">
-              Join Singapore's premier tutor network. Earn $50-90/hr with flexible hours, 100% commission (1-to-1), and pre-screened quality students.
+              Join our verified tutor network and get matched with quality families who value fit and outcomes.
             </p>
-            <Button to="/tutors" variant="white" className="w-full group-hover:scale-105 transition bg-white text-green-700 hover:bg-green-50">🎓 Apply to Join Network</Button>
-            <p className="text-xs text-green-200 mt-3">💰 Earn $50-90/hr • 100% commission on 1-to-1</p>
+            <div className="mt-auto">
+              <Button to="/tutors" variant="white" className="w-full group-hover:scale-105 transition bg-white text-green-700 hover:bg-green-50">🎓 Apply to Join Network</Button>
+              <p className="text-xs text-green-200 mt-3 text-center">Flexible schedules • Verified families</p>
+            </div>
           </div>
         </div>
       </div>
@@ -792,41 +738,39 @@ export const Contact: React.FC = () => (
       <div className="mb-16">
         <h3 className="text-2xl font-bold text-primary text-center mb-8">How Would You Like to Connect?</h3>
         <div className="grid md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer">
-            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer h-full flex flex-col items-center">
+            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mb-3">
               <Phone className="text-secondary" size={24} />
             </div>
             <h4 className="font-bold text-sm text-primary mb-1">WhatsApp Chat</h4>
             <p className="text-xs text-slate-500 mb-3">Quick questions</p>
-            <a href="https://wa.me/6598882675" className="text-secondary text-xs font-semibold hover:underline">Start Chat →</a>
+            <div className="mt-auto">
+              <a href="https://wa.me/6598882675" className="text-secondary text-xs font-semibold hover:underline">Start Chat →</a>
+            </div>
           </div>
 
-          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer">
-            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer h-full flex flex-col items-center">
+            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mb-3">
               <Calendar className="text-secondary" size={24} />
             </div>
             <h4 className="font-bold text-sm text-primary mb-1">Book Call</h4>
             <p className="text-xs text-slate-500 mb-3">15-min consultation</p>
-            <Button to="/parents" variant="outline" className="text-xs py-1 px-3">View Times</Button>
+            <div className="mt-auto">
+              <Button to="/parents" variant="outline" className="text-xs py-1 px-3">View Times</Button>
+            </div>
           </div>
 
-          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer">
-            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer h-full flex flex-col items-center">
+            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mb-3">
               <FileText className="text-secondary" size={24} />
             </div>
-            <h4 className="font-bold text-sm text-primary mb-1">Detailed Enquiry</h4>
-            <p className="text-xs text-slate-500 mb-3">Get 3 tutor matches</p>
-            <Button to="/parents" variant="outline" className="text-xs py-1 px-3">Submit Form</Button>
+            <h4 className="font-bold text-sm text-primary mb-1">Tutor Request Form</h4>
+            <p className="text-xs text-slate-500 mb-3">Tell us your needs</p>
+            <div className="mt-auto">
+              <Button to="/parents" variant="outline" className="text-xs py-1 px-3">Submit Request</Button>
+            </div>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 p-6 rounded-xl text-center hover:border-amber-400 hover:shadow-md transition cursor-pointer">
-            <div className="bg-amber-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
-              <CheckCircle2 className="text-amber-600" size={24} />
-            </div>
-            <h4 className="font-bold text-sm text-amber-900 mb-1">Book Assessment</h4>
-            <p className="text-xs text-amber-700 mb-3">Limited slots</p>
-            <Button to="/parents" className="text-xs py-1 px-3 bg-amber-600 hover:bg-amber-700">Check Eligibility</Button>
-          </div>
         </div>
       </div>
 
@@ -836,23 +780,23 @@ export const Contact: React.FC = () => (
         <div className="max-w-3xl mx-auto">
           <div className="grid md:grid-cols-2 gap-4">
             <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
-              <span className="text-sm font-semibold text-slate-700">Family Consultations</span>
-              <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Within 4 hours</span>
+              <span className="text-sm font-semibold text-slate-700">Tutor Requests (Families)</span>
+              <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Within 24 hours</span>
             </div>
             <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
               <span className="text-sm font-semibold text-slate-700">Tutor Applications</span>
-              <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">Within 48 hours</span>
+              <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">Within 2–3 days</span>
             </div>
             <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
-              <span className="text-sm font-semibold text-slate-700">WhatsApp Messages</span>
+              <span className="text-sm font-semibold text-slate-700">WhatsApp / Email</span>
               <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Same day</span>
             </div>
             <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
-              <span className="text-sm font-semibold text-slate-700">Partnership Enquiries</span>
-              <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold">Within 1 week</span>
+              <span className="text-sm font-semibold text-slate-700">School / Partnership Enquiries</span>
+              <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold">Within 5 business days</span>
             </div>
           </div>
-          <p className="text-center text-xs text-slate-500 mt-4">*Business hours: Mon-Sun, 9am-9pm SGT</p>
+          <p className="text-center text-xs text-slate-500 mt-4">*Business hours: Mon–Sun, 9am–9pm SGT. Responses may be slower on public holidays.</p>
         </div>
       </div>
 
