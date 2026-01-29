@@ -183,18 +183,6 @@ const ParentSignupWizard: React.FC<{
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Demo Profile
-  const demoProfile: StudentProfile = {
-      parentName: "Sarah Tan",
-      name: "Demo Student",
-      level: "Secondary 3",
-      subjects: ["English", "A-Math"],
-      weaknesses: "Algebra & Time Management",
-      characterTraits: ["Visual Learner", "Anxious"],
-      learningStyle: "Visual",
-      status: "active"
-  };
-
   const handleSubmit = async () => {
     setError('');
     
@@ -220,10 +208,19 @@ const ParentSignupWizard: React.FC<{
 
     setLoading(true);
     
-    // For demo purposes, just complete
     setTimeout(() => {
       setLoading(false);
-      onComplete({ ...demoProfile, parentName });
+      const newProfile: StudentProfile = {
+        parentName,
+        name: '',
+        level: '',
+        subjects: [],
+        weaknesses: '',
+        characterTraits: [],
+        learningStyle: 'Visual',
+        status: 'active'
+      };
+      onComplete(newProfile);
     }, 1000);
   };
 
@@ -495,8 +492,8 @@ export const ParentDashboard: React.FC = () => {
     } else {
       // Minimal profile for login - no student data collected
       setProfile({
-        parentName: 'Sarah Tan',
-        name: 'Parent',
+        parentName: '',
+        name: '',
         level: '',
         subjects: [],
         weaknesses: '',
@@ -531,7 +528,7 @@ export const ParentDashboard: React.FC = () => {
        <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Parent Dashboard</h1>
           <div className="text-right">
-             <p className="font-bold text-primary">{profile.parentName || profile.name}</p>
+             <p className="font-bold text-primary">{profile.parentName || profile.name || 'Your Account'}</p>
           </div>
        </div>
        
@@ -539,63 +536,40 @@ export const ParentDashboard: React.FC = () => {
           <div className="md:col-span-2 space-y-8">
              {/* Matched Tutor Widget */}
              <Card title="Your Matched Tutor">
-                <div className="bg-gradient-to-br from-blue-50 to-white border border-green-200 rounded-lg p-6">
-                   <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-start gap-4">
-                         <div className="bg-gradient-to-br from-secondary to-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shadow-lg">ML</div>
-                         <div className="flex-1">
-                            <h3 className="font-bold text-lg text-slate-800">Mr. Lee Wei Ming</h3>
-                            <p className="text-sm text-secondary font-bold mb-1">Mathematics Specialist</p>
-                            <p className="text-xs text-slate-600">⭐ 4.9/5.0 • 8 years experience</p>
-                         </div>
-                      </div>
-                      <span className="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap">MATCHED</span>
-                   </div>
-                   <div className="bg-white rounded p-3 mb-4 border border-slate-100">
-                      <div className="text-xs space-y-2">
-                         <div className="flex items-center gap-2">
-                            <span className="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-0.5 rounded">✓ VETTED</span>
-                            <p><strong>Credentials Verified</strong></p>
-                         </div>
-                         <p><strong>Subjects:</strong> A-Math, E-Math</p>
-                         <p><strong>Your Child's Level:</strong> Secondary 3</p>
-                         <p><strong>Lesson Rate:</strong> $50/hour • One-to-One</p>
-                         <p className="text-slate-600"><strong>Commitment:</strong> Sustained engagement for measurable improvement</p>
-                      </div>
-                   </div>
-                   <div className="flex gap-2">
-                      <button className="flex-1 px-3 py-2 bg-secondary hover:bg-blue-800 text-white rounded-lg font-bold text-sm transition">💬 Message</button>
-                      <button className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-bold text-sm transition">View Profile</button>
-                   </div>
-                </div>
+               <div className="bg-white border border-slate-200 rounded-lg p-6 text-center">
+                 <p className="text-slate-700 font-semibold">No tutor matched yet.</p>
+                 <p className="text-sm text-slate-500 mt-2">Submit a request to begin the matching process.</p>
+                 <div className="mt-4">
+                   <Button to="/tuition/request" className="px-6 py-2">Submit Tutor Request</Button>
+                 </div>
+               </div>
              </Card>
 
              {/* Request Status Timeline */}
              <Card title="Your Matching Timeline">
-                <div className="space-y-3">
-                   <div className="flex gap-3">
-                      <div className="bg-slate-100 text-slate-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold text-sm">1</div>
-                      <div>
-                         <p className="font-bold text-slate-800">Tutor Match (Direct)</p>
-                         <p className="text-xs text-slate-600">Jan 10, 2026 • Matched based on your student profile and learning needs</p>
-                         <p className="text-xs text-slate-500 mt-1 italic">Diagnostic matching is included to improve fit. Optional live diagnostic sessions are available below.</p>
-                      </div>
+               <div className="space-y-3">
+                 <div className="flex gap-3">
+                   <div className="bg-slate-100 text-slate-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold text-sm">1</div>
+                   <div>
+                     <p className="font-bold text-slate-800">Request Submitted</p>
+                     <p className="text-xs text-slate-600">Pending your submission details.</p>
                    </div>
-                   <div className="flex gap-3">
-                      <div className="bg-green-100 text-green-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold text-sm">✓</div>
-                      <div>
-                         <p className="font-bold text-slate-800">Tutor Profile Reviewed & Confirmed</p>
-                         <p className="text-xs text-slate-600">Jan 12, 2026 • Credentials verified. Teaching approach matches your child's needs.</p>
-                      </div>
+                 </div>
+                 <div className="flex gap-3">
+                   <div className="bg-slate-100 text-slate-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold text-sm">2</div>
+                   <div>
+                     <p className="font-bold text-slate-800">Matching In Progress</p>
+                     <p className="text-xs text-slate-600">We’ll review your request and find a suitable tutor.</p>
                    </div>
-                   <div className="flex gap-3">
-                      <div className="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold text-sm">→</div>
-                      <div>
-                         <p className="font-bold text-slate-800">First Lesson Scheduled</p>
-                         <p className="text-xs text-slate-600">In progress: Tutor will confirm date/time. You'll receive details within 24 hours.</p>
-                      </div>
+                 </div>
+                 <div className="flex gap-3">
+                   <div className="bg-slate-100 text-slate-800 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold text-sm">3</div>
+                   <div>
+                     <p className="font-bold text-slate-800">First Lesson Scheduled</p>
+                     <p className="text-xs text-slate-600">You’ll receive scheduling details once a match is confirmed.</p>
                    </div>
-                </div>
+                 </div>
+               </div>
                 
                  <div className="mt-6 pt-6 border-t border-slate-200">
                    <h4 className="font-bold text-slate-800 mb-3 text-sm">Optional Live Diagnostic Session</h4>
