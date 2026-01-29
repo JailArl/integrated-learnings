@@ -6,7 +6,6 @@ import TuitionHome from './pages/TuitionHome';
 import EnrichmentHome from './pages/EnrichmentHome';
 import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
-import { AdminDashboard } from './pages/AdminDashboard';
 import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
 import ServiceDetail from './pages/ServiceDetail';
 import { Calendar } from './pages/Calendar';
@@ -70,7 +69,6 @@ const App: React.FC = () => {
           <Route path="/calendar" element={<Navigate to="/tuition/calendar" replace />} />
           <Route path="/coursework" element={<Navigate to="/tuition/coursework" replace />} />
           <Route path="/policies" element={<Navigate to="/tuition/policies" replace />} />
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>
