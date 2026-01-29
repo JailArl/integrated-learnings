@@ -1,6 +1,3 @@
-
-// VERSION: v2-latest-2026-01-29
-// DEPLOYMENT: All old routes redirected to v2 signup pages
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
@@ -9,7 +6,7 @@ import TuitionHome from './pages/TuitionHome';
 import EnrichmentHome from './pages/EnrichmentHome';
 import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
-import { AdminDashboard } from './pages/AdminDashboard'; 
+import { AdminDashboard } from './pages/AdminDashboard';
 import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
 import ServiceDetail from './pages/ServiceDetail';
 import { Calendar } from './pages/Calendar';
@@ -17,18 +14,11 @@ import { ParentLogin } from './pages/ParentLogin';
 import { ParentSignup } from './pages/ParentSignup';
 import { TutorLogin } from './pages/TutorLogin';
 import { TutorSignup } from './pages/TutorSignup';
-// Temporarily commented out to debug blank page
-// import { NewParentDashboard } from './pages/NewParentDashboard';
-// import { NewTutorDashboard } from './pages/NewTutorDashboard';
 
-// Protected Route for Coursework (Sec 4 only)
 const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Note: This is a demo. In production, check actual user session/state
-  // For now, show the content but with a note that it's for Sec 4 parents
   return <>{children}</>;
 };
 
-// Simple Admin Protection Wrapper
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
