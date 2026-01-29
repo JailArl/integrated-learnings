@@ -9,7 +9,7 @@ import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
 import { ParentDashboard, TutorDashboard } from './pages/Dashboards';
 import { AdminDashboard } from './pages/AdminDashboard'; 
-import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
+import { Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
 import { Calendar } from './pages/Calendar';
 
 // Protected Route for Coursework (Sec 4 only)
