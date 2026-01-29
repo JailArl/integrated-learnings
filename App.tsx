@@ -1,4 +1,6 @@
 
+// VERSION: v2-latest-2026-01-29
+// DEPLOYMENT: All old routes redirected to v2 signup pages
 import React from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
