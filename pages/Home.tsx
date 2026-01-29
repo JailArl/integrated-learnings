@@ -3,11 +3,10 @@ import React, { useState } from 'react';
 import { Section, Button } from '../components/Components';
 import { SERVICES } from '../constants';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, AlertOctagon, BookOpen, GraduationCap, School, ChevronDown, Star, TrendingUp, Users, Award } from 'lucide-react';
+import { CheckCircle2, ChevronDown, Star, TrendingUp, Users, Award } from 'lucide-react';
 
 const Home: React.FC = () => {
   const [openFaqParent, setOpenFaqParent] = useState<number | null>(0);
-  const [openFaqTutor, setOpenFaqTutor] = useState<number | null>(0);
 
   const parentFaqs = [
     {
@@ -16,7 +15,7 @@ const Home: React.FC = () => {
     },
     {
       q: "What's the typical cost of tuition?",
-      a: "Rates vary by level and subject. Primary students: $35-50/hr, Secondary: $45-65/hr, JC: $60-80/hr. One-to-One at your home is standard. We don't charge upfront—you pay only for completed lessons."
+      a: "Rates vary by level and subject. Primary students: $40-55/hr, Secondary: $50-75/hr, JC: $65-90/hr. One-to-One at your home is standard. We don't charge upfront—you pay only for completed lessons. Premium pricing reflects our diagnostic-driven matching service."
     },
     {
       q: "What if I'm not satisfied with my tutor?",
@@ -28,30 +27,7 @@ const Home: React.FC = () => {
     },
     {
       q: "Do you offer trial lessons?",
-      a: "Not formally, but many tutors offer a 30-min intro call before the first paid lesson. This is perfect for compatibility and learning style assessment."
-    }
-  ];
-
-  const tutorFaqs = [
-    {
-      q: "How much can I earn as a tutor?",
-      a: "Set your own rates (Primary $35-50/hr, Secondary $50-70/hr, JC $70-90/hr). We charge parents a one-time 50% referral fee for Month 1. From Month 2 onwards, you collect payment directly from parents. No ongoing commissions."
-    },
-    {
-      q: "What's the application and verification process?",
-      a: "1. Create account → 2. Upload certificates (degree, teaching qualifications) → 3. Verification (24-48 hrs) → 4. Browse job board. We're selective (~80% rejection rate) to ensure quality."
-    },
-    {
-      q: "Can I work flexible hours?",
-      a: "Absolutely. You choose which jobs to apply for and negotiate hours with parents. Many tutors juggle this with full-time jobs or studies."
-    },
-    {
-      q: "How many students can I teach?",
-      a: "No limits. Some tutors teach 2-3 regular students and take ad-hoc jobs. Others focus on 1-2 long-term relationships. You're in control."
-    },
-    {
-      q: "What support do you provide?",
-      a: "Access to our tutor network, ongoing training resources, lesson planning guides, and direct support for any parent disputes. We've got your back."
+      a: "Not formally, but many tutors offer a 30-min intro call before the first paid lesson. This is perfect for compatibility and a quick learning-style check."
     }
   ];
   return (
@@ -87,9 +63,9 @@ const Home: React.FC = () => {
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
             <Button to="/parents" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
-              Apply for Assessment
+              Request a Tutor
             </Button>
-            <Button to="/about" variant="white" className="px-10 py-5 text-lg shadow-xl hover:scale-105 transition-transform">
+            <Button to="/tuition?section=about" variant="white" className="px-10 py-5 text-lg shadow-xl hover:scale-105 transition-transform">
               How We're Different
             </Button>
           </div>
@@ -105,8 +81,8 @@ const Home: React.FC = () => {
               <p className="text-xs text-slate-300 uppercase tracking-wide">Student Community</p>
             </div>
             <div className="text-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
-              <p className="text-2xl font-bold text-blue-200 mb-2">Limited</p>
-              <p className="text-xs text-slate-300 uppercase tracking-wide">Monthly Student Intake</p>
+              <p className="text-2xl font-bold text-blue-200 mb-2">Premium</p>
+              <p className="text-xs text-slate-300 uppercase tracking-wide">Matching Service</p>
             </div>
             <div className="text-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
               <p className="text-2xl font-bold text-blue-200 mb-2">Fast</p>
@@ -116,11 +92,11 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* 🎯 RESULTS & GUARANTEES SECTION */}
+      {/* 🎯 RESULTS & OUTCOMES SECTION */}
       <Section className="bg-gradient-to-br from-green-50 to-emerald-50">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Proven Results. Guaranteed.</h2>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">Our students don't just improve—they transform. Here's the proof.</p>
+          <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Proven Results. Real Outcomes.</h2>
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto">Our students don't just improve—they transform. Here’s what families report.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-12">
@@ -142,9 +118,9 @@ const Home: React.FC = () => {
         </div>
 
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-8 text-center">
-          <p className="text-lg font-semibold mb-4">Ready to see measurable results?</p>
+          <p className="text-lg font-semibold mb-4">Ready to request your tutor match?</p>
           <Button to="/parents" variant="white" className="text-lg px-8 py-3">
-            Start Your Right Fit Assessment
+            Request a Tutor
           </Button>
         </div>
       </Section>
@@ -173,8 +149,8 @@ const Home: React.FC = () => {
 
           <div className="text-center">
             <p className="text-slate-300 mb-6">Today, we've helped 250+ families get it right the first time. Our mission: <strong>eliminate tutor-shopping waste.</strong></p>
-            <Button to="/about" variant="white" className="px-8 py-3 text-lg">
-              Learn Our Full Story
+            <Button to="/tuition?section=about" variant="white" className="px-8 py-3 text-lg">
+              How Premium Matching Works
             </Button>
           </div>
         </div>
@@ -198,7 +174,6 @@ const Home: React.FC = () => {
               <li>• Weak algebra foundations</li>
               <li>• Exam anxiety affecting performance</li>
               <li>• Parents unsure which tutor to try</li>
-              <li>• 2 failed tutors already (3 months, $450)</li>
             </ul>
           </div>
 
@@ -207,7 +182,7 @@ const Home: React.FC = () => {
               <p className="text-lg font-bold text-blue-600">Our Process</p>
               <p className="text-sm text-slate-600">Week 1</p>
             </div>
-            <h4 className="font-bold text-slate-900 mb-3">Right Fit Assessment</h4>
+            <h4 className="font-bold text-slate-900 mb-3">Diagnostic Match</h4>
             <ul className="text-sm text-slate-700 space-y-2">
               <li>✓ Diagnosed weak algebra foundations (not carelessness)</li>
               <li>✓ Identified visual learning preference</li>
@@ -245,24 +220,6 @@ const Home: React.FC = () => {
         </div>
       </Section>
 
-      {/* SOS / Crisis Mode */}
-      <div className="bg-red-50 border-y border-red-100 py-12">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
-            <div className="mb-6 md:mb-0">
-               <div className="flex items-center text-red-700 mb-2">
-                 <AlertOctagon className="mr-2" />
-                 <span className="font-bold uppercase tracking-wide">Exam Emergency?</span>
-               </div>
-               <h3 className="text-2xl font-extrabold text-primary">"Save My Grades" Ad-Hoc Sessions</h3>
-               <p className="text-slate-700 max-w-2xl mt-2">
-                 Exams in 2 weeks? Don't panic. We offer intensive, short-term ad-hoc rescue sessions to spot questions, clarify doubts, and stabilize grades.
-               </p>
-            </div>
-            <Button to="/parents" className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-200">
-               🚨 Book Emergency Session Now
-            </Button>
-         </div>
-      </div>
 
       {/* Services - Premium Cards */}
       <Section className="bg-white">
@@ -294,62 +251,6 @@ const Home: React.FC = () => {
         </div>
       </Section>
 
-      {/* The Too Late Trap (Persuasion) */}
-      <Section className="bg-slate-900 text-white rounded-3xl my-8">
-         <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-white">The "Too Late" Trap</h2>
-            <p className="mt-4 text-xl text-slate-400">Most parents wait until exam year. Here is why that fails.</p>
-         </div>
-         <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-            <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
-               <h3 className="text-2xl font-bold text-yellow-400 mb-4">Primary 5</h3>
-               <p className="text-slate-300 leading-relaxed mb-4">
-                 P5 is the "Killer Year". The weighted assessment difficulty spikes, introducing the full SA2 format. If your child struggles in P5, P6 is spent patching holes instead of refining skills.
-               </p>
-               <p className="font-bold text-white">Start tuition in P5 to build the runway for AL1.</p>
-            </div>
-            <div className="bg-white/5 p-8 rounded-2xl border border-white/10">
-               <h3 className="text-2xl font-bold text-yellow-400 mb-4">Secondary 3</h3>
-               <p className="text-slate-300 leading-relaxed mb-4">
-                 The "Honeymoon is Over". Students jump from 4 subjects to 7-8. A-Math and Pure Sciences move fast. Gaps in Sec 3 topics (like Trigonometry or Mole Concept) are fatal for O-Levels.
-               </p>
-               <p className="font-bold text-white">Sec 3 Foundation determines O-Level L1R5.</p>
-            </div>
-         </div>
-         <div className="text-center mt-12">
-            <Button to="/parents" variant="white">Start Early - Contact Us</Button>
-         </div>
-      </Section>
-
-      {/* Roadmap Snippet - No Image */}
-      <Section className="bg-slate-50">
-        <div className="text-center max-w-4xl mx-auto">
-            <h2 className="text-3xl font-extrabold text-primary mb-6">Singapore Education Explained Clearly</h2>
-            <p className="text-lg text-slate-600 mb-10">
-              The path from PSLE to Tertiary education is complex. Use our new interactive Metro Map to navigate P4 Streaming, FSBB (G1/G2/G3), O-Levels, and Poly/JC Routes.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-               <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <BookOpen className="w-10 h-10 text-secondary mb-4 mx-auto" />
-                  <h4 className="font-bold text-primary mb-2">Primary Foundation</h4>
-                  <p className="text-sm text-slate-500">P4 Streaming & PSLE (AL Scoring)</p>
-               </div>
-               <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <School className="w-10 h-10 text-secondary mb-4 mx-auto" />
-                  <h4 className="font-bold text-primary mb-2">Secondary Strategy</h4>
-                  <p className="text-sm text-slate-500">FSBB, G3/G2/G1 & O-Levels</p>
-               </div>
-               <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <GraduationCap className="w-10 h-10 text-secondary mb-4 mx-auto" />
-                  <h4 className="font-bold text-primary mb-2">Tertiary Pathways</h4>
-                  <p className="text-sm text-slate-500">JC vs Poly vs ITE Routes</p>
-               </div>
-            </div>
-            
-            <Button to="/roadmap">View Interactive Flow Map</Button>
-        </div>
-      </Section>
 
       {/* Why Us - Premium Version */}
       <Section className="bg-gradient-to-br from-slate-50 to-blue-50">
@@ -358,14 +259,14 @@ const Home: React.FC = () => {
                <div className="inline-block bg-white border border-blue-200 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-4 text-secondary">
                  The Integrated Learnings Difference
                </div>
-               <h2 className="text-4xl md:text-5xl font-extrabold text-primary mb-6">Beyond Traditional Tuition</h2>
+               <h2 className="text-4xl md:text-5xl font-extrabold text-primary mb-6">Premium Tutor Matching, Done Right</h2>
                <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-                 We don't just assign tutors. We diagnose learning gaps, match by teaching style, and track progress with data—treating education like the serious investment it is.
+                 We don’t just list tutors. We run a premium diagnostic-driven matching service so parents can request the right tutor quickly—then we track progress with clarity.
                </p>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
               {[
-                { title: "Diagnostic-First Approach", desc: "90-min Comprehensive Learning Assessment before matching" },
+                { title: "Premium Diagnostic Matching", desc: "Included when you request a tutor—no extra fees" },
                 { title: "Singapore Education Expertise", desc: "FSBB/SBB, DSA, O-Level, PSLE pathway specialists" },
                 { title: "Character-Vetted Tutors", desc: "80% rejection rate • Only qualified educators with proven track records" },
                 { title: "Real-Time Dashboards", desc: "Parents see lesson schedules, progress reports, and payment history" },
@@ -400,14 +301,14 @@ const Home: React.FC = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button to="/parents" variant="white" className="w-full sm:w-auto text-lg px-10 py-5 shadow-2xl hover:scale-105 transition-transform">
-              Book Your Right Fit Assessment →
+              Request a Tutor →
             </Button>
             <Button to="/contact" className="w-full sm:w-auto text-lg px-10 py-5 bg-blue-800 hover:bg-blue-900 border-2 border-white/20 hover:scale-105 transition-transform">
               💬 Chat With Education Consultant
             </Button>
           </div>
           <p className="text-blue-200 text-sm mt-6">
-            📅 Limited intake each month • Application required
+            Premium diagnostic matching included
           </p>
         </div>
       </div>
@@ -415,58 +316,29 @@ const Home: React.FC = () => {
       <Section className="bg-slate-50">
         <h2 className="text-3xl font-bold text-primary text-center mb-12">Frequently Asked Questions</h2>
         
-        <div className="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Parent FAQs */}
-          <div>
-            <h3 className="text-2xl font-bold text-slate-800 mb-4 flex items-center">
-              👨‍👩‍👧 For Parents
-            </h3>
-            <div className="space-y-3">
-              {parentFaqs.map((faq, idx) => (
-                <div key={idx} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-                  <button
-                    onClick={() => setOpenFaqParent(openFaqParent === idx ? null : idx)}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition font-bold text-slate-800 text-left"
-                  >
-                    {faq.q}
-                    <ChevronDown size={18} className={`transition ${openFaqParent === idx ? 'rotate-180' : ''}`} />
-                  </button>
-                  {openFaqParent === idx && (
-                    <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-slate-700 text-sm leading-relaxed">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <Button to="/parents" className="w-full mt-6">Start Your Application →</Button>
+        <div className="max-w-3xl mx-auto">
+          <h3 className="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+            👨‍👩‍👧 Frequently Asked Questions
+          </h3>
+          <div className="space-y-3">
+            {parentFaqs.map((faq, idx) => (
+              <div key={idx} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+                <button
+                  onClick={() => setOpenFaqParent(openFaqParent === idx ? null : idx)}
+                  className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition font-bold text-slate-800 text-left"
+                >
+                  {faq.q}
+                  <ChevronDown size={18} className={`transition ${openFaqParent === idx ? 'rotate-180' : ''}`} />
+                </button>
+                {openFaqParent === idx && (
+                  <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-slate-700 text-sm leading-relaxed">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-
-          {/* Tutor FAQs */}
-          <div>
-            <h3 className="text-2xl font-bold text-slate-800 mb-4 flex items-center">
-              🎓 For Tutors
-            </h3>
-            <div className="space-y-3">
-              {tutorFaqs.map((faq, idx) => (
-                <div key={idx} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-                  <button
-                    onClick={() => setOpenFaqTutor(openFaqTutor === idx ? null : idx)}
-                    className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition font-bold text-slate-800 text-left"
-                  >
-                    {faq.q}
-                    <ChevronDown size={18} className={`transition ${openFaqTutor === idx ? 'rotate-180' : ''}`} />
-                  </button>
-                  {openFaqTutor === idx && (
-                    <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-slate-700 text-sm leading-relaxed">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-            <Button to="/teach" className="w-full mt-6 bg-green-600 hover:bg-green-700">Apply as Tutor →</Button>
-          </div>
+          <Button to="/parents" className="w-full mt-6">Request a Tutor →</Button>
         </div>
       </Section>
       {/* Subtle Link for Educators at bottom */}
