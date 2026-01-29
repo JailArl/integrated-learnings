@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { signUpParent, signIn } from '../services/auth';
+import { signUpParent } from '../services/auth';
 import { PageHeader, Section } from '../components/Components';
 import { Mail, Lock, Phone, User } from 'lucide-react';
 
@@ -65,23 +65,8 @@ export const ParentSignup: React.FC = () => {
       return;
     }
 
-    // Auto-login after signup
-    const loginResult = await signIn(formData.email, formData.password);
-    
-    if (!loginResult.success) {
-      // If auto-login fails, redirect to manual login
-      alert('Account created! Please log in with your credentials.');
-      navigate('/parents/login');
-      return;
-    }
-
-    if (loginResult.role !== 'parent') {
-      setError('Account created but with unexpected role. Please login manually.');
-      return;
-    }
-
-    // Redirect to parent dashboard after successful login
-    navigate('/parents');
+    alert('Account created successfully! Please log in with your email and password.');
+    navigate('/parents/login');
   };
 
   return (
