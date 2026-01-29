@@ -36,7 +36,15 @@ const App: React.FC = () => {
   return (
     // HashRouter is required for the preview environment to work correctly.
     // When deploying to production (e.g. Vercel) with a custom domain, you can switch this to BrowserRouter.
-    <HashRouter>service/:serviceId" element={<ServiceDetail />} />
+    <HashRouter>
+      <Layout>
+        <Routes>
+          {/* Main Landing Page */}
+          <Route path="/" element={<MainLanding />} />
+          
+          {/* Tuition Service Routes */}
+          <Route path="/tuition" element={<TuitionHome />} />
+          <Route path="/service/:serviceId" element={<ServiceDetail />} />
           <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
           <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
           <Route path="/tuition/pricing" element={<Pricing />} />
@@ -52,15 +60,7 @@ const App: React.FC = () => {
           <Route path="/tutor-login" element={<TutorLogin />} />
           <Route path="/tutor-signup" element={<TutorSignup />} />
           <Route path="/tutors/login" element={<TutorLogin />} />
-          <Route path="/tutors/signup" element={<TutorSignup
-          {/* Tuition Service Routes */}
-          <Route path="/tuition" element={<TuitionHome />} />
-          <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
-          <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
-          <Route path="/tuition/pricing" element={<Pricing />} />
-          <Route path="/tuition/parents" element={<ParentDashboard />} />
-          <Route path="/tuition/tutors" element={<TutorDashboard />} />
-          <Route path="/tuition/teach" element={<TutorLanding />} />
+          <Route path="/tutors/signup" element={<TutorSignup />} />
           
           {/* New Dashboards */}
           <Route path="/parents" element={<ParentDashboard />} />
