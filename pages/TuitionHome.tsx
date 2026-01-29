@@ -77,7 +77,7 @@ const TuitionHome: React.FC = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-            <Button to="/parents" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
+            <Button to="/parents/signup" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
               Request a Tutor
             </Button>
             <Button to="/tuition?section=about" variant="white" className="px-10 py-5 text-lg shadow-xl hover:scale-105 transition-transform">
@@ -134,7 +134,7 @@ const TuitionHome: React.FC = () => {
 
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-8 text-center">
           <p className="text-lg font-semibold mb-4">Ready to request your tutor match?</p>
-          <Button to="/parents" variant="white" className="text-lg px-8 py-3">
+          <Button to="/parents/signup" variant="white" className="text-lg px-8 py-3">
             Request a Tutor
           </Button>
         </div>
@@ -248,7 +248,7 @@ const TuitionHome: React.FC = () => {
                  Exams in 2 weeks? Don't panic. We offer intensive, short-term ad-hoc rescue sessions to spot questions, clarify doubts, and stabilize grades.
                </p>
             </div>
-            <Button to="/parents" className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-200">
+            <Button to="/parents/signup" className="bg-red-600 hover:bg-red-700 text-white border-0 shadow-lg shadow-red-200">
                🚨 Book Emergency Session Now
             </Button>
          </div>
@@ -307,7 +307,7 @@ const TuitionHome: React.FC = () => {
             </div>
          </div>
          <div className="text-center mt-12">
-            <Button to="/parents" variant="white">Start Early - Contact Us</Button>
+            <Button to="/parents/signup" variant="white">Start Early - Contact Us</Button>
          </div>
       </Section>
 

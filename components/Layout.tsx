@@ -130,10 +130,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="absolute right-0 top-full pt-2 w-56 hidden group-hover:block z-50">
                     <div className="bg-white border border-slate-100 shadow-lg rounded-lg overflow-hidden">
                       <div className="px-4 py-2 bg-slate-50 font-bold text-xs text-slate-700 uppercase">Parents</div>
-                      <Link to="/tuition/parents" className="block px-4 py-3 hover:bg-blue-50 text-sm text-slate-700 border-b border-slate-100">👨‍👩‍👧 Parent Dashboard</Link>
+                      <Link to="/parents/login" className="block px-4 py-3 hover:bg-blue-50 text-sm text-slate-700 border-b border-slate-100">👨‍👩‍👧 Parent Dashboard</Link>
                       
                       <div className="px-4 py-2 bg-slate-50 font-bold text-xs text-slate-700 uppercase">Tutors</div>
-                      <Link to="/tuition/tutors" className="block px-4 py-3 hover:bg-green-50 text-sm text-slate-700">🎓 Tutor Dashboard</Link>
+                      <Link to="/tutors/login" className="block px-4 py-3 hover:bg-green-50 text-sm text-slate-700">🎓 Tutor Dashboard</Link>
                     </div>
                   </div>
                 </div>
@@ -168,8 +168,8 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="px-4 py-6 space-y-4">
               <button onClick={() => handleNav('/tuition')} className="block w-full text-left py-2 font-medium text-slate-700">Home</button>
               <hr className="border-slate-100" />
-              <button onClick={() => handleNav('/tuition/parents')} className="block w-full text-left py-2 text-slate-600">Parent Login</button>
-              <button onClick={() => handleNav('/tuition/tutors')} className="block w-full text-left py-2 text-slate-600">Tutor Login</button>
+              <button onClick={() => handleNav('/parents/login')} className="block w-full text-left py-2 text-slate-600">Parent Login</button>
+              <button onClick={() => handleNav('/tutors/login')} className="block w-full text-left py-2 text-slate-600">Tutor Login</button>
               <button onClick={() => handleNav('/tuition/contact')} className="block w-full text-center bg-secondary text-white py-3 rounded-lg font-medium mt-4">Contact Us</button>
             </div>
           </div>
