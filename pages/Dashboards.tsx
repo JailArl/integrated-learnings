@@ -183,18 +183,6 @@ const ParentSignupWizard: React.FC<{
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Demo Profile
-  const demoProfile: StudentProfile = {
-      parentName: "Sarah Tan",
-      name: "Demo Student",
-      level: "Secondary 3",
-      subjects: ["English", "A-Math"],
-      weaknesses: "Algebra & Time Management",
-      characterTraits: ["Visual Learner", "Anxious"],
-      learningStyle: "Visual",
-      status: "active"
-  };
-
   const handleSubmit = async () => {
     setError('');
     
@@ -220,11 +208,10 @@ const ParentSignupWizard: React.FC<{
 
     setLoading(true);
     
-    // For demo purposes, just complete
-    setTimeout(() => {
-      setLoading(false);
-      onComplete({ ...demoProfile, parentName });
-    }, 1000);
+    // This component uses legacy demo mode. Real signup should go through the proper auth pages.
+    // For now, show error to encourage using the actual signup flow
+    setError('Please use the main signup page for account creation.');
+    setLoading(false);
   };
 
   return (
@@ -370,26 +357,9 @@ const TutorSignupWizard: React.FC<{
     }
   };
 
-  // Demo Profile
-  const demoProfile: TutorProfile = {
-      name: "Demo Tutor",
-      qualification: "NUS Math Degree",
-      experienceYears: 5,
-      subjects: ["Math", "A-Math"],
-      scenarioAnswers: {1: "B", 2: "C"},
-      isManaged: false,
-      status: "pending"
-  };
-
   return (
     <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200 relative">
        <Toast message={toast.message} type={toast.type} visible={toast.visible} />
-       {/* Preview Button */}
-       <div className="absolute top-4 right-4">
-         <button onClick={() => onComplete(demoProfile)} className="text-xs font-bold text-slate-400 hover:text-secondary underline bg-slate-50 px-2 py-1 rounded">
-             Skip (Preview Mode)
-         </button>
-      </div>
 
       <div className="mb-8">
         <div className="flex justify-between items-center text-sm font-bold text-slate-400 mb-2">
@@ -671,24 +641,15 @@ export const TutorDashboard: React.FC = () => {
   const [showUploadModal, setShowUploadModal] = useState(false); // Upload Modal State
   const [isVerified, setIsVerified] = useState(false); // Verification Status
 
-  // Demo Profile
-  const demoProfile: TutorProfile = {
-      name: "Demo Tutor",
-      qualification: "NUS Math Degree",
-      experienceYears: 5,
-      subjects: ["Math", "A-Math"],
-      scenarioAnswers: {},
-      status: "active",
-      isManaged: false
-  };
-
   if (!profile) {
     return (
       <Section className="min-h-[80vh] flex items-center justify-center">
         {authMode === 'login' ? (
           <LoginScreen 
             title="Tutor Login" 
-            onLogin={() => setProfile(demoProfile)} 
+            onLogin={(data) => {
+              if (data) setProfile(data as TutorProfile);
+            }} 
             onSwitchToSignup={() => setAuthMode('signup')} 
           />
         ) : (
