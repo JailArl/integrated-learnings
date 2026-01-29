@@ -7,7 +7,6 @@ import TuitionHome from './pages/TuitionHome';
 import EnrichmentHome from './pages/EnrichmentHome';
 import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
-import { ParentDashboard, TutorDashboard } from './pages/Dashboards';
 import { AdminDashboard } from './pages/AdminDashboard'; 
 import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
 import ServiceDetail from './pages/ServiceDetail';
@@ -48,8 +47,8 @@ const App: React.FC = () => {
           <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
           <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
           <Route path="/tuition/pricing" element={<Pricing />} />
-          <Route path="/tuition/parents" element={<ParentDashboard />} />
-          <Route path="/tuition/tutors" element={<TutorDashboard />} />
+          <Route path="/tuition/parents" element={<Navigate to="/parents/login" replace />} />
+          <Route path="/tuition/tutors" element={<Navigate to="/tutors/login" replace />} />
           <Route path="/tuition/teach" element={<TutorLanding />} />
           
           {/* Authentication Routes */}
@@ -63,8 +62,8 @@ const App: React.FC = () => {
           <Route path="/tutors/signup" element={<TutorSignup />} />
           
           {/* New Dashboards */}
-          <Route path="/parents" element={<ParentDashboard />} />
-          <Route path="/tutors" element={<TutorDashboard />} />
+          <Route path="/parents" element={<Navigate to="/parents/login" replace />} />
+          <Route path="/tutors" element={<Navigate to="/tutors/login" replace />} />
           <Route path="/tuition/about" element={<Navigate to="/tuition" replace />} />
           <Route path="/tuition/contact" element={<Contact />} />
           <Route path="/tuition/request" element={<TutorRequest />} />
