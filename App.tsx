@@ -41,17 +41,7 @@ const App: React.FC = () => {
           {/* Main Landing Page */}
           <Route path="/" element={<MainLanding />} />
           
-          {/* Tuition Service Routes */}
-          <Route path="/tuition" element={<TuitionHome />} />
-          <Route path="/service/:serviceId" element={<ServiceDetail />} />
-          <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
-          <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
-          <Route path="/tuition/pricing" element={<Pricing />} />
-          <Route path="/tuition/parents" element={<NewParentDashboard />} />
-          <Route path="/tuition/tutors" element={<NewTutorDashboard />} />
-          <Route path="/tuition/teach" element={<TutorLanding />} />
-          
-          {/* Authentication Routes */}
+          {/* Authentication Routes - MUST be before dashboard routes for proper precedence */}
           <Route path="/parent-login" element={<ParentLogin />} />
           <Route path="/parent-signup" element={<ParentSignup />} />
           <Route path="/parents/login" element={<ParentLogin />} />
@@ -61,9 +51,19 @@ const App: React.FC = () => {
           <Route path="/tutors/login" element={<TutorLogin />} />
           <Route path="/tutors/signup" element={<TutorSignup />} />
           
-          {/* New Dashboards */}
+          {/* Protected Dashboards */}
           <Route path="/parents" element={<NewParentDashboard />} />
           <Route path="/tutors" element={<NewTutorDashboard />} />
+          
+          {/* Tuition Service Routes */}
+          <Route path="/tuition" element={<TuitionHome />} />
+          <Route path="/service/:serviceId" element={<ServiceDetail />} />
+          <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
+          <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
+          <Route path="/tuition/pricing" element={<Pricing />} />
+          <Route path="/tuition/parents" element={<NewParentDashboard />} />
+          <Route path="/tuition/tutors" element={<NewTutorDashboard />} />
+          <Route path="/tuition/teach" element={<TutorLanding />} />
           <Route path="/tuition/about" element={<Navigate to="/tuition" replace />} />
           <Route path="/tuition/contact" element={<Contact />} />
           <Route path="/tuition/request" element={<TutorRequest />} />
