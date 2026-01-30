@@ -53,6 +53,11 @@ export const AdminMatching: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [approvingBid, setApprovingBid] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [confirmModal, setConfirmModal] = useState<{
+    show: boolean;
+    requestId: string;
+    tutorId: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchRequests();
@@ -94,14 +99,12 @@ export const AdminMatching: React.FC = () => {
   };
 
   const handleApproveBid = async (requestId: string, tutorId: string) => {
-    if (!confirm('Are you sure you want to approve this match?')) return;
-
-    // Set loading state for this specific bid
+    // Set loading state for this specific bid immediately
     setApprovingBid(`${requestId}-${tutorId}`);
     setError(null);
 
-    // Use setTimeout to defer the heavy work, allowing UI to update first
-    setTimeout(async () => {
+    // Perform the approval without blocking
+    requestAnimationFrame(async () => {
       try {
         const result = await approveBid(requestId, tutorId);
         
@@ -120,8 +123,23 @@ export const AdminMatching: React.FC = () => {
         setError('An error occurred while approving the bid');
       } finally {
         setApprovingBid(null);
+        setConfirmModal(null);
       }
-    }, 0);
+    });
+  };
+
+  const showConfirmApproval = (requestId: string, tutorId: string) => {
+    setConfirmModal({ show: true, requestId, tutorId });
+  };
+
+  const cancelApproval = () => {
+    setConfirmModal(null);
+  };
+
+  const confirmApproval = () => {
+    if (confirmModal) {
+      handleApproveBid(confirmModal.requestId, confirmModal.tutorId);
+    }
   };
 
   const handleMarkTestComplete = async (requestId: string) => {
@@ -335,7 +353,7 @@ export const AdminMatching: React.FC = () => {
                               )}
                               <Button
                                 variant="primary"
-                                onClick={() => handleApproveBid(request.id, bid.tutor.id)}
+                                onClick={() => showConfirmApproval(request.id, bid.tutor.id)}
                                 disabled={approvingBid === `${request.id}-${bid.tutor.id}`}
                                 className="text-sm"
                               >
@@ -378,6 +396,26 @@ export const AdminMatching: React.FC = () => {
             <div className="mt-6 flex justify-end">
               <Button variant="outline" onClick={() => setShowQuestionnaireModal(false)}>
                 Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal?.show && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+            <h3 className="text-xl font-bold text-gray-900 mb-3">Confirm Match Approval</h3>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to approve this tutor-parent match? This action will notify both parties.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={cancelApproval}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={confirmApproval}>
+                Yes, Approve Match
               </Button>
             </div>
           </div>
