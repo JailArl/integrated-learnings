@@ -61,7 +61,7 @@ const MainLanding: React.FC = () => {
               <Lightbulb className="w-12 h-12 text-blue-300 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-3">Our Mission</h3>
               <p className="text-slate-200 leading-relaxed">
-                We help students identify and unlock their unique potentials through personalized tutor matching and interactive financial literacy programs. Empowering every learner to discover their strengths and build essential life skills.
+                We help students identify and unlock their unique potentials through personalized educational matching and interactive financial literacy programs. Empowering every learner to discover their strengths and build essential life skills.
               </p>
             </div>
 
