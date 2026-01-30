@@ -34,12 +34,12 @@ interface Bid {
     experience_years: number;
     verification_status: string;
     questionnaire_answers: any;
+    certificates: Array<{
+      id: string;
+      file_url: string;
+      file_name: string;
+    }>;
   };
-  certificates: Array<{
-    id: string;
-    file_url: string;
-    file_name: string;
-  }>;
 }
 
 export const AdminMatching: React.FC = () => {
@@ -279,9 +279,9 @@ export const AdminMatching: React.FC = () => {
                                   View Questionnaire
                                 </Button>
                               )}
-                              {bid.certificates && bid.certificates.length > 0 && (
+                              {bid.tutor.certificates && bid.tutor.certificates.length > 0 && (
                                 <div className="flex gap-2">
-                                  {bid.certificates.map((cert) => (
+                                  {bid.tutor.certificates.map((cert: any) => (
                                     <a
                                       key={cert.id}
                                       href={cert.file_url}

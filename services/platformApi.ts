@@ -317,8 +317,10 @@ export const getBidsForRequest = async (
       .select(
         `
         *,
-        tutor:tutor_profiles(*),
-        certificates:tutor_certificates(*)
+        tutor:tutor_profiles(
+          *,
+          certificates:tutor_certificates(*)
+        )
       `
       )
       .eq('request_id', requestId)
