@@ -12,6 +12,8 @@ export const submitParentRequest = async (data: {
   subjects: string[];
   address: string;
   postalCode: string;
+  tutorType?: string;
+  preferredRate?: string;
   diagnosticTestBooked: boolean;
   diagnosticTestDate?: string;
 }): Promise<{ success: boolean; error?: string; requestId?: string }> => {
@@ -30,6 +32,8 @@ export const submitParentRequest = async (data: {
           subjects: data.subjects,
           address: data.address,
           postal_code: data.postalCode,
+          tutor_type: data.tutorType || null,
+          preferred_rate: data.preferredRate ? parseFloat(data.preferredRate) : null,
           diagnostic_test_booked: data.diagnosticTestBooked,
           diagnostic_test_date: data.diagnosticTestDate || null,
           status: data.diagnosticTestBooked ? 'test_booked' : 'pending',

@@ -13,8 +13,46 @@ const STUDENT_LEVELS = [
   'JC 1', 'JC 2', 'Millennia Institute'
 ];
 
-// Tutor type options
+// Tutor type options with pricing info
 const TUTOR_TYPES = ['Undergraduate', 'Full-Time Tutor', 'MOE/Ex-MOE Teacher'];
+
+// Pricing guide based on level and tutor type
+const PRICING_GUIDE: { [key: string]: { [key: string]: string } } = {
+  'Primary 1-2': {
+    'Undergraduate': '$30-40/hr',
+    'Full-Time Tutor': '$40-60/hr',
+    'MOE/Ex-MOE Teacher': '$80-150/hr'
+  },
+  'Primary 3-6': {
+    'Undergraduate': '$35-45/hr',
+    'Full-Time Tutor': '$45-70/hr',
+    'MOE/Ex-MOE Teacher': '$90-170/hr'
+  },
+  'Secondary 1-2': {
+    'Undergraduate': '$40-50/hr',
+    'Full-Time Tutor': '$50-80/hr',
+    'MOE/Ex-MOE Teacher': '$100-180/hr'
+  },
+  'Secondary 3-5': {
+    'Undergraduate': '$45-60/hr',
+    'Full-Time Tutor': '$60-100/hr',
+    'MOE/Ex-MOE Teacher': '$120-200/hr'
+  },
+  'JC/MI': {
+    'Undergraduate': '$60-80/hr',
+    'Full-Time Tutor': '$80-120/hr',
+    'MOE/Ex-MOE Teacher': '$150-250/hr'
+  }
+};
+
+const getLevelCategory = (level: string): string => {
+  if (['Primary 1', 'Primary 2'].includes(level)) return 'Primary 1-2';
+  if (['Primary 3', 'Primary 4', 'Primary 5', 'Primary 6'].includes(level)) return 'Primary 3-6';
+  if (['Secondary 1', 'Secondary 2'].includes(level)) return 'Secondary 1-2';
+  if (['Secondary 3', 'Secondary 4', 'Secondary 5'].includes(level)) return 'Secondary 3-5';
+  if (['JC 1', 'JC 2', 'Millennia Institute'].includes(level)) return 'JC/MI';
+  return '';
+};
 
 // Subject options based on level
 const getSubjectsForLevel = (level: string) => {
@@ -86,6 +124,7 @@ interface RequestFormData {
   address: string;
   postalCode: string;
   tutorType: string;
+  preferredRate: string;
   diagnosticTestBooked: boolean;
   diagnosticTestDate: string;
 }
@@ -126,6 +165,7 @@ const RequestSubmissionForm: React.FC<{
     address: '',
     postalCode: '',
     tutorType: '',
+    preferredRate: '',
     diagnosticTestBooked: false,
     diagnosticTestDate: '',
   });
@@ -154,7 +194,7 @@ const RequestSubmissionForm: React.FC<{
     e.preventDefault();
     setError('');
     
-    if (!formData.studentName.trim() || !formData.studentLevel || formData.subjects.length === 0 || !formData.address.trim() || !formData.postalCode.trim() || !formData.tutorType) {
+    if (!formData.studentName.trim() || !formData.studentLevel || formData.subjects.length === 0 || !formData.address.trim() || !formData.postalCode.trim() || !formData.tutorType || !formData.preferredRate) {
       setError('Please fill in all required fields');
       return;
     }
@@ -177,6 +217,8 @@ const RequestSubmissionForm: React.FC<{
         subjects: formData.subjects,
         address: formData.address,
         postalCode: formData.postalCode,
+        tutorType: formData.tutorType,
+        preferredRate: formData.preferredRate,
         diagnosticTestBooked: formData.diagnosticTestBooked,
         diagnosticTestDate: formData.diagnosticTestBooked ? formData.diagnosticTestDate : undefined,
       });
@@ -191,6 +233,7 @@ const RequestSubmissionForm: React.FC<{
           address: '',
           postalCode: '',
           tutorType: '',
+          preferredRate: '',
           diagnosticTestBooked: false,
           diagnosticTestDate: '',
         });
@@ -328,11 +371,43 @@ const RequestSubmissionForm: React.FC<{
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">Select tutor type</option>
-            {TUTOR_TYPES.map(type => (
-              <option key={type} value={type}>{type}</option>
-            ))}
+            {TUTOR_TYPES.map(type => {
+              const levelCategory = getLevelCategory(formData.studentLevel);
+              const priceRange = levelCategory && PRICING_GUIDE[levelCategory]?.[type];
+              return (
+                <option key={type} value={type}>
+                  {type} {priceRange ? `(${priceRange})` : ''}
+                </option>
+              );
+            })}
           </select>
+          {formData.studentLevel && formData.tutorType && (
+            <p className="text-sm text-gray-600 mt-1">
+              Market rate: {PRICING_GUIDE[getLevelCategory(formData.studentLevel)]?.[formData.tutorType] || 'N/A'}
+            </p>
+          )}
         </div>
+
+        {formData.tutorType && (
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Your Preferred Rate ($/hour) *
+            </label>
+            <input
+              type="number"
+              value={formData.preferredRate}
+              onChange={(e) => setFormData({ ...formData, preferredRate: e.target.value })}
+              placeholder="e.g. 50"
+              min="20"
+              max="300"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              required
+            />
+            <p className="text-sm text-gray-500 mt-1">
+              Enter your budget for this tuition
+            </p>
+          </div>
+        )}
 
         <button
           type="submit"
