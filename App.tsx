@@ -16,9 +16,8 @@ import { ParentLogin } from './pages/ParentLogin';
 import { ParentSignup } from './pages/ParentSignup';
 import { TutorLogin } from './pages/TutorLogin';
 import { TutorSignup } from './pages/TutorSignup';
-// Temporarily commented out to debug blank page
-// import { NewParentDashboard } from './pages/NewParentDashboard';
-// import { NewTutorDashboard } from './pages/NewTutorDashboard';
+import NewParentDashboard from './pages/NewParentDashboard';
+import NewTutorDashboard from './pages/NewTutorDashboard';
 
 // Protected Route for Coursework (Sec 4 only)
 const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -48,8 +47,8 @@ const App: React.FC = () => {
           <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
           <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
           <Route path="/tuition/pricing" element={<Pricing />} />
-          <Route path="/tuition/parents" element={<ParentDashboard />} />
-          <Route path="/tuition/tutors" element={<TutorDashboard />} />
+          <Route path="/tuition/parents" element={<NewParentDashboard />} />
+          <Route path="/tuition/tutors" element={<NewTutorDashboard />} />
           <Route path="/tuition/teach" element={<TutorLanding />} />
           
           {/* Authentication Routes */}
@@ -63,8 +62,8 @@ const App: React.FC = () => {
           <Route path="/tutors/signup" element={<TutorSignup />} />
           
           {/* New Dashboards */}
-          <Route path="/parents" element={<ParentDashboard />} />
-          <Route path="/tutors" element={<TutorDashboard />} />
+          <Route path="/parents" element={<NewParentDashboard />} />
+          <Route path="/tutors" element={<NewTutorDashboard />} />
           <Route path="/tuition/about" element={<Navigate to="/tuition" replace />} />
           <Route path="/tuition/contact" element={<Contact />} />
           <Route path="/tuition/request" element={<TutorRequest />} />
