@@ -126,7 +126,14 @@ export const submitTutorForm = async (data: TutorFormData): Promise<{ success: b
     return { success: true, id: result.id };
   } catch (error: any) {
     console.error('Tutor form submission error:', error);
-    return { success: false, error: error.message };
+    const message = error?.message || 'Unknown error';
+    if (/invalid api key/i.test(message)) {
+      return {
+        success: false,
+        error: 'Supabase API key is invalid. Update VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.',
+      };
+    }
+    return { success: false, error: message };
   }
 };
 

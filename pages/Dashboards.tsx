@@ -325,13 +325,22 @@ const TutorSignupWizard: React.FC<{
   const [phone, setPhone] = useState('');
   const [qualification, setQualification] = useState('');
   const [experienceYears, setExperienceYears] = useState(0);
-  const [subjects, setSubjects] = useState<string[]>([]);
-  const [levels, setLevels] = useState<string[]>([]);
-  const [preferredFormat, setPreferredFormat] = useState<'zoom' | 'inPerson' | 'either'>('either');
   const [toast, setToast] = useState({ message: '', type: 'success' as 'success' | 'error', visible: false });
   const [loading, setLoading] = useState(false);
 
   const nextStep = () => setStep(step + 1);
+
+  const handleProfileNext = () => {
+    if (!fullName.trim() || !email.trim() || !phone.trim() || !qualification.trim()) {
+      showToast('Please complete all required fields before continuing.', 'error');
+      return;
+    }
+    if (experienceYears <= 0) {
+      showToast('Please enter years of experience (0 if none).', 'error');
+      return;
+    }
+    nextStep();
+  };
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ message, type, visible: true });
@@ -350,11 +359,11 @@ const TutorSignupWizard: React.FC<{
       phone,
       qualification,
       experienceYears,
-      subjects: subjects.length > 0 ? subjects : ['Mathematics'],
-      levels: levels.length > 0 ? levels : ['Secondary 3'],
+      subjects: [],
+      levels: [],
       teachingPhilosophy: 'Personalized learning approach',
       availability: 'Flexible',
-      preferredFormat,
+      preferredFormat: 'either',
     });
     setLoading(false);
     if (result.success) {
@@ -381,21 +390,14 @@ const TutorSignupWizard: React.FC<{
   return (
     <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200 relative">
        <Toast message={toast.message} type={toast.type} visible={toast.visible} />
-       {/* Preview Button */}
-       <div className="absolute top-4 right-4">
-         <button onClick={() => onComplete(demoProfile)} className="text-xs font-bold text-slate-400 hover:text-secondary underline bg-slate-50 px-2 py-1 rounded">
-             Skip (Preview Mode)
-         </button>
-      </div>
 
       <div className="mb-8">
         <div className="flex justify-between items-center text-sm font-bold text-slate-400 mb-2">
           <span className={step >= 1 ? "text-secondary" : ""}>1. Profile</span>
-          <span className={step >= 2 ? "text-secondary" : ""}>2. Subjects</span>
-          <span className={step >= 3 ? "text-secondary" : ""}>3. Agreement</span>
+          <span className={step >= 2 ? "text-secondary" : ""}>2. Agreement</span>
         </div>
         <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-          <div className="h-full bg-secondary transition-all duration-300" style={{ width: `${(step / 3) * 100}%` }}></div>
+          <div className="h-full bg-secondary transition-all duration-300" style={{ width: `${(step / 2) * 100}%` }}></div>
         </div>
       </div>
 
@@ -417,44 +419,11 @@ const TutorSignupWizard: React.FC<{
           <div className="pt-4 border-t border-slate-100 mt-4">
              <p className="text-sm text-slate-600 mb-2">Already have an account? <button onClick={onSwitchToLogin} className="text-secondary font-bold hover:underline">Login here</button></p>
           </div>
-          <Button onClick={nextStep} className="w-full mt-4">Next: Teaching Scenarios</Button>
+          <Button onClick={handleProfileNext} className="w-full mt-4">Next: Agreement</Button>
         </div>
       )}
 
       {step === 2 && (
-        <div className="space-y-4">
-          <p className="text-slate-500 text-sm mb-4">What subjects and levels do you teach?</p>
-          <div>
-            <label className="block text-sm font-bold mb-2">Subjects (comma-separated)</label>
-            <input 
-              value={subjects.join(', ')} 
-              onChange={e => setSubjects(e.target.value.split(',').map(s => s.trim()))} 
-              className="w-full border p-2 rounded" 
-              placeholder="e.g. Mathematics, A-Math, Physics" 
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold mb-2">Levels (comma-separated)</label>
-            <input 
-              value={levels.join(', ')} 
-              onChange={e => setLevels(e.target.value.split(',').map(s => s.trim()))} 
-              className="w-full border p-2 rounded" 
-              placeholder="e.g. Secondary 3, Secondary 4, JC" 
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-bold mb-2">Preferred Format</label>
-            <select value={preferredFormat} onChange={e => setPreferredFormat(e.target.value as any)} className="w-full border p-2 rounded">
-              <option value="zoom">Zoom (Online)</option>
-              <option value="inPerson">In-Person</option>
-              <option value="either">Either</option>
-            </select>
-          </div>
-          <Button onClick={nextStep} className="w-full mt-4">Next: Agreement</Button>
-        </div>
-      )}
-
-      {step === 3 && (
         <div className="space-y-6">
            <h3 className="font-bold text-lg">Referral Partnership Agreement</h3>
            
@@ -472,7 +441,7 @@ const TutorSignupWizard: React.FC<{
            </label>
 
            <div className="flex gap-3">
-             <Button onClick={() => setStep(2)} variant="outline" className="flex-1">Back</Button>
+             <Button onClick={() => setStep(1)} variant="outline" className="flex-1">Back</Button>
              <Button onClick={handleTutorSubmit} disabled={loading} className="flex-1 bg-green-600 hover:bg-green-700">{loading ? 'Submitting...' : 'Submit Application'}</Button>
            </div>
         </div>

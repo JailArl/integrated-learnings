@@ -504,6 +504,9 @@ const NewTutorDashboardContent: React.FC = () => {
   const [error, setError] = useState('');
   const [bidModalOpen, setBidModalOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [subjectFilter, setSubjectFilter] = useState('');
+  const [levelFilter, setLevelFilter] = useState('');
 
   const loadData = async () => {
     setLoading(true);
@@ -598,6 +601,48 @@ const NewTutorDashboardContent: React.FC = () => {
     );
   }
 
+  const subjectOptions = Array.from(
+    new Set(
+      availableCases
+        .flatMap((caseItem) => caseItem.subjects || [])
+        .map((subject) => subject.trim())
+        .filter(Boolean)
+    )
+  ).sort();
+
+  const levelOptions = Array.from(
+    new Set(
+      availableCases
+        .map((caseItem) => caseItem.student_level)
+        .filter(Boolean)
+    )
+  ).sort();
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+
+  const filteredCases = availableCases.filter((caseItem) => {
+    const searchableText = [
+      caseItem.student_name,
+      caseItem.student_level,
+      caseItem.address,
+      caseItem.postal_code,
+      (caseItem.subjects || []).join(' '),
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    const matchesQuery = !normalizedQuery || searchableText.includes(normalizedQuery);
+    const matchesSubject =
+      !subjectFilter ||
+      (caseItem.subjects || []).some(
+        (subject) => subject.toLowerCase() === subjectFilter.toLowerCase()
+      );
+    const matchesLevel = !levelFilter || caseItem.student_level === levelFilter;
+
+    return matchesQuery && matchesSubject && matchesLevel;
+  });
+
   return (
     <>
       <Section>
@@ -649,13 +694,82 @@ const NewTutorDashboardContent: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {availableCases.map((caseData) => (
-                <CaseCard
-                  key={caseData.id}
-                  caseData={caseData}
-                  onBid={() => handleBidClick(caseData)}
-                />
-              ))}
+              <div className="md:col-span-2 lg:col-span-3">
+                <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
+                  <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-gray-500 mb-2">Search</label>
+                      <input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search by student, subject, level, or location"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-gray-500 mb-2">Subject</label>
+                      <select
+                        value={subjectFilter}
+                        onChange={(e) => setSubjectFilter(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">All subjects</option>
+                        {subjectOptions.map((subject) => (
+                          <option key={subject} value={subject}>
+                            {subject}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-xs font-semibold text-gray-500 mb-2">Level</label>
+                      <select
+                        value={levelFilter}
+                        onChange={(e) => setLevelFilter(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">All levels</option>
+                        {levelOptions.map((level) => (
+                          <option key={level} value={level}>
+                            {level}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-end">
+                      <button
+                        onClick={() => {
+                          setSearchQuery('');
+                          setSubjectFilter('');
+                          setLevelFilter('');
+                        }}
+                        className="px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition"
+                      >
+                        Clear filters
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">
+                    Showing {filteredCases.length} of {availableCases.length} cases
+                  </p>
+                </div>
+              </div>
+
+              {filteredCases.length === 0 ? (
+                <div className="md:col-span-2 lg:col-span-3 bg-gray-50 border border-gray-200 text-gray-600 px-6 py-8 rounded-lg text-center">
+                  <FileText size={48} className="mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg font-semibold mb-2">No cases match your filters</p>
+                  <p className="text-sm">Try adjusting or clearing your filters to see more cases.</p>
+                </div>
+              ) : (
+                filteredCases.map((caseData) => (
+                  <CaseCard
+                    key={caseData.id}
+                    caseData={caseData}
+                    onBid={() => handleBidClick(caseData)}
+                  />
+                ))
+              )}
             </div>
           )}
         </div>
