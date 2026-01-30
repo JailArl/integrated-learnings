@@ -410,20 +410,49 @@ export const getBidsForRequest = async (
 
 export const approveBid = async (
   requestId: string,
-  tutorId: string
+  tutorId: string,
+  firstClassDetails?: {
+    date?: string;
+    location?: string;
+    notes?: string;
+  }
 ): Promise<{ success: boolean; error?: string }> => {
   if (!supabase) {
     return { success: false, error: 'Supabase not configured' };
   }
 
   try {
-    // Create match
-    const { error: matchError } = await supabase.from('matches').insert([
-      {
-        request_id: requestId,
-        tutor_id: tutorId,
-      },
-    ]);
+    // Get the parent request to get first class preferences
+    const { data: requestData } = await supabase
+      .from('parent_requests')
+      .select('first_class_date, first_class_location')
+      .eq('id', requestId)
+      .single();
+
+    // Create match with first class details
+    const matchData: any = {
+      request_id: requestId,
+      tutor_id: tutorId,
+    };
+
+    // Use admin-provided details if available, otherwise fall back to parent preferences
+    if (firstClassDetails?.date) {
+      matchData.first_class_date = firstClassDetails.date;
+    } else if (requestData?.first_class_date) {
+      matchData.first_class_date = requestData.first_class_date;
+    }
+
+    if (firstClassDetails?.location) {
+      matchData.first_class_location = firstClassDetails.location;
+    } else if (requestData?.first_class_location) {
+      matchData.first_class_location = requestData.first_class_location;
+    }
+
+    if (firstClassDetails?.notes) {
+      matchData.first_class_notes = firstClassDetails.notes;
+    }
+
+    const { error: matchError } = await supabase.from('matches').insert([matchData]);
 
     if (matchError) throw matchError;
 

@@ -58,6 +58,11 @@ export const AdminMatching: React.FC = () => {
     requestId: string;
     tutorId: string;
   } | null>(null);
+  const [firstClassSchedule, setFirstClassSchedule] = useState({
+    date: '',
+    location: '',
+    notes: '',
+  });
 
   useEffect(() => {
     fetchRequests();
@@ -106,11 +111,18 @@ export const AdminMatching: React.FC = () => {
     // Perform the approval without blocking
     requestAnimationFrame(async () => {
       try {
-        const result = await approveBid(requestId, tutorId);
+        const result = await approveBid(requestId, tutorId, {
+          date: firstClassSchedule.date || undefined,
+          location: firstClassSchedule.location || undefined,
+          notes: firstClassSchedule.notes || undefined,
+        });
         
         if (result.success) {
           setSuccessMessage('Match approved successfully!');
           setTimeout(() => setSuccessMessage(null), 3000);
+          
+          // Reset first class schedule
+          setFirstClassSchedule({ date: '', location: '', notes: '' });
           
           // Use startTransition for non-urgent state updates
           startTransition(() => {
@@ -407,11 +419,64 @@ export const AdminMatching: React.FC = () => {
       {/* Confirmation Modal */}
       {confirmModal?.show && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-gray-900 mb-3">Confirm Match Approval</h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-4">
               Are you sure you want to approve this tutor-parent match? This action will notify both parties.
             </p>
+
+            <div className="border-t border-gray-200 pt-4 mb-6">
+              <h4 className="text-md font-semibold text-gray-900 mb-3">Schedule First Class (Optional)</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                You can schedule the first class now, or leave it blank and the parent/tutor can arrange later.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={firstClassSchedule.date}
+                    onChange={(e) => setFirstClassSchedule({ ...firstClassSchedule, date: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Location
+                  </label>
+                  <select
+                    value={firstClassSchedule.location}
+                    onChange={(e) => setFirstClassSchedule({ ...firstClassSchedule, location: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select location</option>
+                    <option value="student_home">Student's Home</option>
+                    <option value="tutor_home">Tutor's Home</option>
+                    <option value="public_library">Public Library</option>
+                    <option value="online">Online (Zoom/Google Meet)</option>
+                    <option value="other">Other (To be discussed)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Notes (Optional)
+                  </label>
+                  <textarea
+                    value={firstClassSchedule.notes}
+                    onChange={(e) => setFirstClassSchedule({ ...firstClassSchedule, notes: e.target.value })}
+                    placeholder="Any additional notes for the first class..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="flex gap-3 justify-end">
               <Button variant="outline" onClick={cancelApproval}>
                 Cancel
