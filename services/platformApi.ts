@@ -357,7 +357,7 @@ export const getAllRequests = async (): Promise<{
   }
 
   try {
-    const { data, error } = await supabase
+    const { data, error} = await supabase
       .from('parent_requests')
       .select(
         `
@@ -376,6 +376,31 @@ export const getAllRequests = async (): Promise<{
     return { success: false, error: error.message };
   }
 };
+
+export const getAllTutors = async (): Promise<{
+  success: boolean;
+  data?: any[];
+  error?: string;
+}> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('tutor_profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return { success: true, data: data || [] };
+  } catch (error: any) {
+    console.error('Get all tutors error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 
 export const getBidsForRequest = async (
   requestId: string

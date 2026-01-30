@@ -10,6 +10,7 @@ import Pricing from './pages/Pricing';
 import { ParentDashboard, TutorDashboard } from './pages/Dashboards';
 import { AdminDashboard } from './pages/AdminDashboard'; 
 import { AdminMatching } from './pages/AdminMatching';
+import { AdminTutors } from './pages/AdminTutors';
 import { AdminLogin } from './pages/AdminLogin';
 import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
 import ServiceDetail from './pages/ServiceDetail';
@@ -133,6 +134,11 @@ const App: React.FC = () => {
           <Route path="/admin/matching" element={
             <AdminRoute>
               <AdminMatching />
+            </AdminRoute>
+          } />
+          <Route path="/admin/tutors" element={
+            <AdminRoute>
+              <AdminTutors />
             </AdminRoute>
           } />
 

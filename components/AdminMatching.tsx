@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useTransition } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Section, Card, Button } from './Components';
 import {
   getAllRequests,
@@ -43,6 +44,7 @@ interface Bid {
 }
 
 export const AdminMatching: React.FC = () => {
+  const navigate = useNavigate();
   const [requests, setRequests] = useState<Request[]>([]);
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
   const [bids, setBids] = useState<{ [key: string]: Bid[] }>({});
@@ -196,6 +198,24 @@ export const AdminMatching: React.FC = () => {
 
   return (
     <Section>
+      {/* Admin Navigation */}
+      <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate('/admin/matching')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold"
+          >
+            Matching
+          </button>
+          <button
+            onClick={() => navigate('/admin/tutors')}
+            className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold"
+          >
+            Tutor Browser
+          </button>
+        </div>
+      </div>
+
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-primary mb-2">Bid Review & Matching</h2>
         <p className="text-slate-600">Review tutor bids and approve matches</p>
