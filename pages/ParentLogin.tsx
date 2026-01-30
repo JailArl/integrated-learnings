@@ -25,6 +25,13 @@ export const ParentLogin: React.FC = () => {
       return;
     }
 
+    // Check for admin credentials
+    if (formData.email === 'admin' && formData.password === 'admin123') {
+      localStorage.setItem('adminSession', 'true');
+      navigate('/admin/matching');
+      return;
+    }
+
     setLoading(true);
 
     const result = await signIn(formData.email, formData.password);
@@ -61,12 +68,12 @@ export const ParentLogin: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email Address
+                Email or Username
               </label>
               <input
-                type="email"
+                type="text"
                 name="email"
-                placeholder="your.email@example.com"
+                placeholder="your.email@example.com or admin"
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

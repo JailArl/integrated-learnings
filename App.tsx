@@ -9,6 +9,8 @@ import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
 import { ParentDashboard, TutorDashboard } from './pages/Dashboards';
 import { AdminDashboard } from './pages/AdminDashboard'; 
+import { AdminMatching } from './pages/AdminMatching';
+import { AdminLogin } from './pages/AdminLogin';
 import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
 import ServiceDetail from './pages/ServiceDetail';
 import { Calendar } from './pages/Calendar';
@@ -29,6 +31,12 @@ const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 // Simple Admin Protection Wrapper
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const isAdminLoggedIn = localStorage.getItem('adminSession') === 'true';
+  
+  if (!isAdminLoggedIn) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  
   return <>{children}</>;
 };
 
@@ -115,10 +123,16 @@ const App: React.FC = () => {
           <Route path="/coursework" element={<Navigate to="/tuition/coursework" replace />} />
           <Route path="/policies" element={<Navigate to="/tuition/policies" replace />} />
           
-          {/* Admin Route - Hidden from UI, but accessible via URL */}
+          {/* Admin Routes - Hidden from UI, but accessible via URL */}
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={
             <AdminRoute>
               <AdminDashboard />
+            </AdminRoute>
+          } />
+          <Route path="/admin/matching" element={
+            <AdminRoute>
+              <AdminMatching />
             </AdminRoute>
           } />
 
