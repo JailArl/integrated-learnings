@@ -203,6 +203,20 @@ const BidCard: React.FC<{ bid: Bid }> = ({ bid }) => {
         {getStatusBadge()}
       </div>
 
+      {bid.request.status === 'matched' && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <CheckCircle2 className="text-green-600 mt-0.5" size={20} />
+            <div>
+              <h5 className="font-semibold text-green-900 mb-1">🎉 Congratulations! Your bid was approved!</h5>
+              <p className="text-sm text-green-800">
+                The parent has been notified. They will contact you shortly to arrange the first lesson.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-3 mb-4">
         <div className="flex items-start space-x-2">
           <BookOpen className="text-blue-600 mt-0.5" size={18} />
