@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Zap, BookOpen, Users } from 'lucide-react';
+import { ArrowRight, Heart, Lightbulb, Users, Compass } from 'lucide-react';
 
 const MainLanding: React.FC = () => {
   return (
@@ -16,12 +16,12 @@ const MainLanding: React.FC = () => {
         <div className="max-w-5xl w-full relative z-10">
           <div className="text-center mb-12">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight mb-8 leading-tight">
-              Strategic Learning.<br />
-              <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">Measurable Excellence.</span>
+              Holistic Learning.<br />
+              <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">Student-Centered Growth.</span>
             </h1>
             
             <p className="mt-6 max-w-3xl mx-auto text-xl md:text-2xl text-slate-300 leading-relaxed font-light mb-8">
-              Diagnostic-driven matching for academic success. From strategic educator pairing to long-term academic planning—we engineer results.
+              We integrate academic excellence with social-emotional development. Every student deserves personalized support that nurtures their unique strengths, addresses their needs, and builds confidence for lifelong learning.
             </p>
             
             <div className="flex flex-col md:flex-row gap-6 justify-center max-w-3xl mx-auto">
@@ -49,19 +49,19 @@ const MainLanding: React.FC = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Vision */}
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8">
-              <Zap className="w-12 h-12 text-blue-300 mb-4" />
+              <Heart className="w-12 h-12 text-blue-300 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-3">Our Vision</h3>
               <p className="text-slate-200 leading-relaxed">
-                Singapore's most trusted education consultancy—where diagnostic expertise meets human connection.
+                Every student thrives—academically, emotionally, and socially. We create integrated learning environments where students discover their potential and develop as whole individuals.
               </p>
             </div>
 
             {/* Mission */}
             <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-8">
-              <BookOpen className="w-12 h-12 text-blue-300 mb-4" />
+              <Lightbulb className="w-12 h-12 text-blue-300 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-3">Our Mission</h3>
               <p className="text-slate-200 leading-relaxed">
-                We eliminate guesswork from education. Every family gets diagnostic matching, the right tutor, and a clear path forward.
+                We match students with educators who understand their learning style, address their unique needs, and cultivate confidence. Holistic support for every stage of their journey.
               </p>
             </div>
 
@@ -70,7 +70,7 @@ const MainLanding: React.FC = () => {
               <Users className="w-12 h-12 text-blue-300 mb-4" />
               <h3 className="text-2xl font-bold text-white mb-3">Our Values</h3>
               <p className="text-slate-200 leading-relaxed">
-                Transparency. Excellence. Flexibility. We operate without long-term lock-ins, hidden fees, or false promises.
+                Student-centered. Integrity. Compassion. We believe education extends beyond grades—nurturing resilience, creativity, and a love for learning shapes futures.
               </p>
             </div>
           </div>
