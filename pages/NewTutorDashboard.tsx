@@ -3,6 +3,7 @@ import { ProtectedRoute } from '../components/ProtectedRoute';
 import { Link, useNavigate } from 'react-router-dom';
 import { Section, Button, Card } from '../components/Components';
 import { getCurrentUser, signOut } from '../services/auth';
+import { TutorProfileEdit } from '../components/TutorProfileEdit';
 import {
   getAvailableCases,
   getMyBids,
@@ -22,6 +23,7 @@ import {
   X,
   Send,
   LogOut,
+  Edit,
 } from 'lucide-react';
 
 const FILE_UPLOAD_CONFIG = {
@@ -51,6 +53,12 @@ interface Bid {
   message: string;
   created_at: string;
   request: Case;
+  match?: {
+    id: string;
+    first_class_date: string | null;
+    first_class_location: string | null;
+    first_class_notes: string | null;
+  };
 }
 
 interface Certificate {
@@ -224,11 +232,42 @@ const BidCard: React.FC<{ bid: Bid }> = ({ bid }) => {
         <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
           <div className="flex items-start gap-2">
             <CheckCircle2 className="text-green-600 mt-0.5" size={20} />
-            <div>
+            <div className="flex-1">
               <h5 className="font-semibold text-green-900 mb-1">🎉 Congratulations! Your bid was approved!</h5>
-              <p className="text-sm text-green-800">
+              <p className="text-sm text-green-800 mb-3">
                 The parent has been notified. They will contact you shortly to arrange the first lesson.
               </p>
+
+              {bid.match?.first_class_date && (
+                <div className="bg-white rounded p-3 border border-green-300 mt-2">
+                  <h6 className="font-semibold text-green-900 text-sm mb-2">First Class Details:</h6>
+                  <div className="space-y-1 text-sm">
+                    <div>
+                      <span className="font-semibold text-gray-700">Date & Time:</span>{' '}
+                      <span className="text-gray-900">
+                        {new Date(bid.match.first_class_date).toLocaleString('en-SG', { 
+                          dateStyle: 'medium', 
+                          timeStyle: 'short' 
+                        })}
+                      </span>
+                    </div>
+                    {bid.match.first_class_location && (
+                      <div>
+                        <span className="font-semibold text-gray-700">Location:</span>{' '}
+                        <span className="text-gray-900">
+                          {bid.match.first_class_location.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </span>
+                      </div>
+                    )}
+                    {bid.match.first_class_notes && (
+                      <div>
+                        <span className="font-semibold text-gray-700">Notes:</span>{' '}
+                        <span className="text-gray-900">{bid.match.first_class_notes}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -441,6 +480,7 @@ const NewTutorDashboardContent: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [levelFilter, setLevelFilter] = useState('');
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
 
   const handleLogout = async () => {
     const result = await signOut();
@@ -587,6 +627,13 @@ const NewTutorDashboardContent: React.FC = () => {
                   <VerificationBadge status={profile.verification_status} />
                 </div>
               )}
+              <button
+                onClick={() => setShowProfileEdit(true)}
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg font-semibold transition"
+              >
+                <Edit size={18} />
+                <span>Edit Profile</span>
+              </button>
               <button
                 onClick={loadData}
                 disabled={loading}
@@ -751,6 +798,16 @@ const NewTutorDashboardContent: React.FC = () => {
               </div>
             </Card>
           </div>
+        )}
+
+        {/* Profile Edit Modal */}
+        {tutorId && (
+          <TutorProfileEdit
+            tutorId={tutorId}
+            isOpen={showProfileEdit}
+            onClose={() => setShowProfileEdit(false)}
+            onSuccess={loadData}
+          />
         )}
       </Section>
     </>

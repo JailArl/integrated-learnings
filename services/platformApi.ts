@@ -16,6 +16,8 @@ export const submitParentRequest = async (data: {
   preferredRate?: string;
   diagnosticTestBooked: boolean;
   diagnosticTestDate?: string;
+  firstClassDate?: string;
+  firstClassLocation?: string;
 }): Promise<{ success: boolean; error?: string; requestId?: string }> => {
   if (!supabase) {
     return { success: false, error: 'Supabase not configured' };
@@ -36,6 +38,8 @@ export const submitParentRequest = async (data: {
           preferred_rate: data.preferredRate ? parseFloat(data.preferredRate) : null,
           diagnostic_test_booked: data.diagnosticTestBooked,
           diagnostic_test_date: data.diagnosticTestDate || null,
+          first_class_date: data.firstClassDate || null,
+          first_class_location: data.firstClassLocation || null,
           status: data.diagnosticTestBooked ? 'test_booked' : 'pending',
         },
       ])
@@ -171,7 +175,8 @@ export const getMyBids = async (
       .select(
         `
         *,
-        request:parent_requests(*)
+        request:parent_requests(*),
+        match:matches!tutor_bids_tutor_id_fkey(*)
       `
       )
       .eq('tutor_id', tutorId)
@@ -179,7 +184,22 @@ export const getMyBids = async (
 
     if (error) throw error;
 
-    return { success: true, data: data || [] };
+    // For each bid, fetch the corresponding match if the request is matched
+    const bidsWithMatches = await Promise.all((data || []).map(async (bid) => {
+      if (bid.request?.status === 'matched' || bid.request?.status === 'invoiced') {
+        const { data: matchData } = await supabase
+          .from('matches')
+          .select('*')
+          .eq('request_id', bid.request.id)
+          .eq('tutor_id', tutorId)
+          .single();
+        
+        return { ...bid, match: matchData };
+      }
+      return bid;
+    }));
+
+    return { success: true, data: bidsWithMatches || [] };
   } catch (error: any) {
     console.error('Get my bids error:', error);
     return { success: false, error: error.message };
@@ -270,6 +290,55 @@ export const getTutorCertificates = async (
     return { success: true, data: data || [] };
   } catch (error: any) {
     console.error('Get tutor certificates error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateTutorProfile = async (
+  tutorId: string,
+  updates: {
+    teachingPhilosophy?: string;
+    whyTutoring?: string;
+    strengths?: string;
+    preferredStudentLevels?: string[];
+    availabilityDays?: string[];
+    maxStudents?: number;
+    emergencyContact?: string;
+    questionnaireCompleted?: boolean;
+    hourlyRate?: number;
+    availabilityNotes?: string;
+    teachingSubjects?: string[];
+  }
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const updateData: any = {};
+    
+    if (updates.teachingPhilosophy !== undefined) updateData.teaching_philosophy = updates.teachingPhilosophy;
+    if (updates.whyTutoring !== undefined) updateData.why_tutoring = updates.whyTutoring;
+    if (updates.strengths !== undefined) updateData.strengths = updates.strengths;
+    if (updates.preferredStudentLevels !== undefined) updateData.preferred_student_levels = updates.preferredStudentLevels;
+    if (updates.availabilityDays !== undefined) updateData.availability_days = updates.availabilityDays;
+    if (updates.maxStudents !== undefined) updateData.max_students = updates.maxStudents;
+    if (updates.emergencyContact !== undefined) updateData.emergency_contact = updates.emergencyContact;
+    if (updates.questionnaireCompleted !== undefined) updateData.questionnaire_completed = updates.questionnaireCompleted;
+    if (updates.hourlyRate !== undefined) updateData.hourly_rate = updates.hourlyRate;
+    if (updates.availabilityNotes !== undefined) updateData.availability_notes = updates.availabilityNotes;
+    if (updates.teachingSubjects !== undefined) updateData.teaching_subjects = updates.teachingSubjects;
+
+    const { error } = await supabase
+      .from('tutor_profiles')
+      .update(updateData)
+      .eq('id', tutorId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Update tutor profile error:', error);
     return { success: false, error: error.message };
   }
 };

@@ -127,6 +127,8 @@ interface RequestFormData {
   preferredRate: string;
   diagnosticTestBooked: boolean;
   diagnosticTestDate: string;
+  firstClassDate: string;
+  firstClassLocation: string;
 }
 
 interface Request {
@@ -168,6 +170,8 @@ const RequestSubmissionForm: React.FC<{
     preferredRate: '',
     diagnosticTestBooked: false,
     diagnosticTestDate: '',
+    firstClassDate: '',
+    firstClassLocation: '',
   });
   const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -221,6 +225,8 @@ const RequestSubmissionForm: React.FC<{
         preferredRate: formData.preferredRate,
         diagnosticTestBooked: formData.diagnosticTestBooked,
         diagnosticTestDate: formData.diagnosticTestBooked ? formData.diagnosticTestDate : undefined,
+        firstClassDate: formData.firstClassDate || undefined,
+        firstClassLocation: formData.firstClassLocation || undefined,
       });
 
       setSubmitting(false);
@@ -236,6 +242,8 @@ const RequestSubmissionForm: React.FC<{
           preferredRate: '',
           diagnosticTestBooked: false,
           diagnosticTestDate: '',
+          firstClassDate: '',
+          firstClassLocation: '',
         });
         onSuccess();
       } else {
@@ -409,6 +417,45 @@ const RequestSubmissionForm: React.FC<{
           </div>
         )}
 
+        <div className="border-t pt-4 mt-4">
+          <h3 className="text-md font-semibold text-gray-800 mb-3">First Class Details (Optional)</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            Provide preferred date/time and location for the first tuition session
+          </p>
+          
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Preferred First Class Date & Time
+              </label>
+              <input
+                type="datetime-local"
+                value={formData.firstClassDate}
+                onChange={(e) => setFormData({ ...formData, firstClassDate: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Preferred Location
+              </label>
+              <select
+                value={formData.firstClassLocation}
+                onChange={(e) => setFormData({ ...formData, firstClassLocation: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="">Select location</option>
+                <option value="student_home">Student's Home (My Address)</option>
+                <option value="tutor_home">Tutor's Home</option>
+                <option value="public_library">Public Library</option>
+                <option value="online">Online (Zoom/Google Meet)</option>
+                <option value="other">Other (To be discussed)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <button
           type="submit"
           disabled={submitting}
@@ -524,6 +571,21 @@ const RequestCard: React.FC<{ request: Request; match: MatchData | null }> = ({ 
               <div><span className="font-semibold">Experience:</span> {match.tutor.experience_years} years</div>
               <div><span className="font-semibold">Hourly Rate:</span> ${match.tutor.hourly_rate}</div>
             </div>
+            
+            {match.first_class_date && (
+              <div className="mt-3 pt-3 border-t border-blue-200">
+                <h5 className="font-semibold text-blue-900 mb-2">First Class Scheduled</h5>
+                <div className="space-y-1 text-sm">
+                  <div><span className="font-semibold">Date & Time:</span> {new Date(match.first_class_date).toLocaleString('en-SG', { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                  {match.first_class_location && (
+                    <div><span className="font-semibold">Location:</span> {match.first_class_location.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</div>
+                  )}
+                  {match.first_class_notes && (
+                    <div><span className="font-semibold">Notes:</span> {match.first_class_notes}</div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
