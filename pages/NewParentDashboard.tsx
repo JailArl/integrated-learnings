@@ -12,6 +12,9 @@ const STUDENT_LEVELS = [
   'JC 1', 'JC 2', 'Millennia Institute'
 ];
 
+// Tutor type options
+const TUTOR_TYPES = ['Undergraduate', 'Full-Time Tutor', 'MOE/Ex-MOE Teacher'];
+
 // Subject options based on level
 const getSubjectsForLevel = (level: string) => {
   if (!level) return [];
@@ -81,6 +84,7 @@ interface RequestFormData {
   subjects: string[];
   address: string;
   postalCode: string;
+  tutorType: string;
   diagnosticTestBooked: boolean;
   diagnosticTestDate: string;
 }
@@ -120,6 +124,7 @@ const RequestSubmissionForm: React.FC<{
     subjects: [],
     address: '',
     postalCode: '',
+    tutorType: '',
     diagnosticTestBooked: false,
     diagnosticTestDate: '',
   });
@@ -148,7 +153,7 @@ const RequestSubmissionForm: React.FC<{
     e.preventDefault();
     setError('');
     
-    if (!formData.studentName || !formData.studentLevel || formData.subjects.length === 0 || !formData.address || !formData.postalCode) {
+    if (!formData.studentName.trim() || !formData.studentLevel || formData.subjects.length === 0 || !formData.address.trim() || !formData.postalCode.trim() || !formData.tutorType) {
       setError('Please fill in all required fields');
       return;
     }
@@ -159,33 +164,42 @@ const RequestSubmissionForm: React.FC<{
     }
 
     setSubmitting(true);
+    
+    // Yield to UI thread
+    await new Promise(resolve => setTimeout(resolve, 0));
 
-    const result = await submitParentRequest({
-      parentId,
-      studentName: formData.studentName,
-      studentLevel: formData.studentLevel,
-      subjects: formData.subjects,
-      address: formData.address,
-      postalCode: formData.postalCode,
-      diagnosticTestBooked: formData.diagnosticTestBooked,
-      diagnosticTestDate: formData.diagnosticTestBooked ? formData.diagnosticTestDate : undefined,
-    });
-
-    setSubmitting(false);
-
-    if (result.success) {
-      setFormData({
-        studentName: '',
-        studentLevel: '',
-        subjects: [],
-        address: '',
-        postalCode: '',
-        diagnosticTestBooked: false,
-        diagnosticTestDate: '',
+    try {
+      const result = await submitParentRequest({
+        parentId,
+        studentName: formData.studentName,
+        studentLevel: formData.studentLevel,
+        subjects: formData.subjects,
+        address: formData.address,
+        postalCode: formData.postalCode,
+        diagnosticTestBooked: formData.diagnosticTestBooked,
+        diagnosticTestDate: formData.diagnosticTestBooked ? formData.diagnosticTestDate : undefined,
       });
-      onSuccess();
-    } else {
-      setError(result.error || 'Failed to submit request');
+
+      setSubmitting(false);
+
+      if (result.success) {
+        setFormData({
+          studentName: '',
+          studentLevel: '',
+          subjects: [],
+          address: '',
+          postalCode: '',
+          tutorType: '',
+          diagnosticTestBooked: false,
+          diagnosticTestDate: '',
+        });
+        onSuccess();
+      } else {
+        setError(result.error || 'Failed to submit request');
+      }
+    } catch (error) {
+      setSubmitting(false);
+      setError('An unexpected error occurred');
     }
   };
 
@@ -302,6 +316,22 @@ const RequestSubmissionForm: React.FC<{
             />
           </div>
         )}
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Type of Tutor *
+          </label>
+          <select 
+            value={formData.tutorType} 
+            onChange={(e) => setFormData({ ...formData, tutorType: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="">Select tutor type</option>
+            {TUTOR_TYPES.map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
 
         <button
           type="submit"
@@ -445,6 +475,7 @@ const RequestCard: React.FC<{ request: Request; match: MatchData | null }> = ({ 
 
 const NewParentDashboardContent: React.FC = () => {
   const [parentId, setParentId] = useState<string | null>(null);
+  const [parentName, setParentName] = useState<string>('Your Account');
   const [requests, setRequests] = useState<Request[]>([]);
   const [matches, setMatches] = useState<{ [key: string]: MatchData | null }>({});
   const [loading, setLoading] = useState(true);
@@ -462,6 +493,10 @@ const NewParentDashboardContent: React.FC = () => {
     }
 
     setParentId(user.id);
+    
+    // Get parent name from user metadata or set default
+    const fullName = user.user_metadata?.full_name || 'Your Account';
+    setParentName(fullName);
 
     const requestsResult = await getMyRequests(user.id);
     if (requestsResult.success && requestsResult.data) {
@@ -519,7 +554,7 @@ const NewParentDashboardContent: React.FC = () => {
     <Section>
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">Parent Dashboard</h1>
-        <p className="text-lg text-gray-600">Manage your tuition requests and track progress</p>
+        <p className="text-lg text-gray-600">Welcome, {parentName}! Manage your tuition requests and track progress</p>
       </div>
 
       {parentId && (
