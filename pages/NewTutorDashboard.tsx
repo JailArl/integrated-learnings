@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { ProtectedRoute } from '../components/ProtectedRoute';
+import { Link } from 'react-router-dom';
 import { Section, Button, Card } from '../components/Components';
 import { getCurrentUser } from '../services/auth';
 import {
   getAvailableCases,
   getMyBids,
-  submitBid,
   uploadCertificate,
   getTutorProfile,
   getTutorCertificates,
@@ -64,106 +64,6 @@ interface TutorProfile {
   verification_status: 'pending' | 'verified' | 'rejected';
 }
 
-interface BidModalProps {
-  isOpen: boolean;
-  caseData: Case | null;
-  onClose: () => void;
-  onSubmit: (message: string) => Promise<void>;
-}
-
-const BidModal: React.FC<BidModalProps> = ({ isOpen, caseData, onClose, onSubmit }) => {
-  const [message, setMessage] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  if (!isOpen || !caseData) return null;
-
-  const handleSubmit = async () => {
-    if (!message.trim()) return;
-
-    setSubmitting(true);
-    await onSubmit(message);
-    setSubmitting(false);
-    setMessage('');
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
-          <h3 className="text-xl font-bold text-primary">Submit Bid</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-            <div className="flex items-start space-x-2">
-              <User className="text-blue-600 mt-0.5" size={18} />
-              <div>
-                <div className="text-sm font-semibold text-gray-700">Student</div>
-                <div className="text-sm text-gray-600">
-                  {caseData.student_name} - {caseData.student_level}
-                </div>
-              </div>
-            </div>
-            <div className="flex items-start space-x-2">
-              <BookOpen className="text-blue-600 mt-0.5" size={18} />
-              <div>
-                <div className="text-sm font-semibold text-gray-700">Subjects</div>
-                <div className="text-sm text-gray-600">{caseData.subjects.join(', ')}</div>
-              </div>
-            </div>
-            <div className="flex items-start space-x-2">
-              <MapPin className="text-blue-600 mt-0.5" size={18} />
-              <div>
-                <div className="text-sm font-semibold text-gray-700">Location</div>
-                <div className="text-sm text-gray-600">
-                  {caseData.address} (S{caseData.postal_code})
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Your Proposal/Message *
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Introduce yourself and explain why you're a good fit for this case..."
-              rows={6}
-            />
-          </div>
-        </div>
-
-        <div className="p-6 border-t border-gray-200 flex items-center justify-end space-x-3">
-          <Button variant="outline" onClick={onClose} disabled={submitting}>
-            Cancel
-          </Button>
-          <button
-            onClick={handleSubmit}
-            disabled={!message.trim() || submitting}
-            className={`inline-flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition duration-200 text-base shadow-sm ${
-              !message.trim() || submitting
-                ? 'bg-gray-400 cursor-not-allowed text-white'
-                : 'bg-secondary text-white hover:bg-blue-800 shadow-blue-900/20'
-            }`}
-          >
-            <Send size={18} />
-            <span>{submitting ? 'Submitting...' : 'Submit Bid'}</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const VerificationBadge: React.FC<{ status: 'pending' | 'verified' | 'rejected' }> = ({
   status,
 }) => {
@@ -207,7 +107,7 @@ const VerificationBadge: React.FC<{ status: 'pending' | 'verified' | 'rejected' 
   );
 };
 
-const CaseCard: React.FC<{ caseData: Case; onBid: () => void }> = ({ caseData, onBid }) => {
+const CaseCard: React.FC<{ caseData: Case }> = ({ caseData }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6 hover:shadow-md transition">
       <div className="space-y-3 mb-4">
@@ -265,9 +165,12 @@ const CaseCard: React.FC<{ caseData: Case; onBid: () => void }> = ({ caseData, o
         </div>
       </div>
 
-      <Button variant="primary" onClick={onBid} className="w-full">
-        Bid for This Case
-      </Button>
+      <Link 
+        to={`/tutors/case/${caseData.id}`}
+        className="block w-full px-6 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-center transition duration-200 shadow-sm"
+      >
+        View & Bid for This Case
+      </Link>
     </div>
   );
 };
@@ -502,8 +405,6 @@ const NewTutorDashboardContent: React.FC = () => {
   const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [bidModalOpen, setBidModalOpen] = useState(false);
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [levelFilter, setLevelFilter] = useState('');
@@ -559,24 +460,6 @@ const NewTutorDashboardContent: React.FC = () => {
     loadData();
   }, []);
 
-  const handleBidClick = (caseData: Case) => {
-    setSelectedCase(caseData);
-    setBidModalOpen(true);
-  };
-
-  const handleBidSubmit = async (message: string) => {
-    if (!tutorId || !selectedCase) return;
-
-    const result = await submitBid(tutorId, selectedCase.id, message);
-
-    if (result.success) {
-      setBidModalOpen(false);
-      setSelectedCase(null);
-      await loadData(); // Reload data to update bids and available cases
-    } else {
-      alert(result.error || 'Failed to submit bid');
-    }
-  };
 
   if (loading) {
     return (
@@ -650,7 +533,7 @@ const NewTutorDashboardContent: React.FC = () => {
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                Tutor Dashboard
+                Welcome, {profile?.full_name || 'Tutor'}!
               </h1>
               <p className="text-lg text-gray-600">
                 Browse cases, submit bids, and manage your profile
@@ -766,7 +649,6 @@ const NewTutorDashboardContent: React.FC = () => {
                   <CaseCard
                     key={caseData.id}
                     caseData={caseData}
-                    onBid={() => handleBidClick(caseData)}
                   />
                 ))
               )}
@@ -809,16 +691,6 @@ const NewTutorDashboardContent: React.FC = () => {
           </div>
         )}
       </Section>
-
-      <BidModal
-        isOpen={bidModalOpen}
-        caseData={selectedCase}
-        onClose={() => {
-          setBidModalOpen(false);
-          setSelectedCase(null);
-        }}
-        onSubmit={handleBidSubmit}
-      />
     </>
   );
 };

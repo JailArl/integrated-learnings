@@ -18,6 +18,7 @@ import { TutorLogin } from './pages/TutorLogin';
 import { TutorSignup } from './pages/TutorSignup';
 import NewParentDashboard from './pages/NewParentDashboard';
 import NewTutorDashboard from './pages/NewTutorDashboard';
+import CaseDetail from './pages/CaseDetail';
 
 // Protected Route for Coursework (Sec 4 only)
 const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -54,6 +55,7 @@ const App: React.FC = () => {
           {/* Protected Dashboards */}
           <Route path="/parents" element={<NewParentDashboard />} />
           <Route path="/tutors" element={<NewTutorDashboard />} />
+          <Route path="/tutors/case/:caseId" element={<CaseDetail />} />
           
           {/* Tuition Service Routes */}
           <Route path="/tuition" element={<TuitionHome />} />
