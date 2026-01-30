@@ -363,22 +363,31 @@ const TutorSignupWizard: React.FC<{
       showToast('Please fill in all required fields', 'error');
       return;
     }
+    
     setLoading(true);
     
-    // Use signUpTutor to create auth user and profile
-    const result = await signUpTutor(email, password, {
-      fullName,
-      phone,
-    });
+    // Allow UI to update before heavy operation
+    await new Promise(resolve => setTimeout(resolve, 0));
     
-    setLoading(false);
-    if (result.success) {
-      showToast('Account created successfully! Please log in.', 'success');
-      setTimeout(() => {
-        onSwitchToLogin();
-      }, 2000);
-    } else {
-      showToast(result.error || 'Failed to submit application', 'error');
+    try {
+      // Use signUpTutor to create auth user and profile
+      const result = await signUpTutor(email, password, {
+        fullName,
+        phone,
+      });
+      
+      setLoading(false);
+      if (result.success) {
+        showToast('Account created successfully! Please log in.', 'success');
+        setTimeout(() => {
+          onSwitchToLogin();
+        }, 2000);
+      } else {
+        showToast(result.error || 'Failed to submit application', 'error');
+      }
+    } catch (error) {
+      setLoading(false);
+      showToast('An unexpected error occurred', 'error');
     }
   };
 
