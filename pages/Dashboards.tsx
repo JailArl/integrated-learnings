@@ -369,7 +369,7 @@ const TutorSignupWizard: React.FC<{
     if (result.success) {
       showToast('Application submitted! We will review and contact you within 48 hours.', 'success');
       setTimeout(() => {
-        onComplete({ name: fullName, qualification, experienceYears, subjects, status: 'pending', isManaged: false, scenarioAnswers: {} });
+        onComplete({ name: fullName, qualification, experienceYears, subjects: [], status: 'pending', isManaged: false, scenarioAnswers: {} });
       }, 2000);
     } else {
       showToast(result.error || 'Failed to submit application', 'error');
