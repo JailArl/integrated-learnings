@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { Section, Button, Card } from '../components/Components';
-import { getCurrentUser } from '../services/auth';
+import { getCurrentUser, signOut } from '../services/auth';
 import { submitParentRequest, getMyRequests, getMyMatch } from '../services/platformApi';
-import { CheckCircle2, Clock, Download, FileText, User, MapPin, BookOpen, Calendar } from 'lucide-react';
+import { CheckCircle2, Clock, Download, FileText, User, MapPin, BookOpen, Calendar, LogOut } from 'lucide-react';
 
 // Student level options
 const STUDENT_LEVELS = [
@@ -474,12 +475,22 @@ const RequestCard: React.FC<{ request: Request; match: MatchData | null }> = ({ 
 };
 
 const NewParentDashboardContent: React.FC = () => {
+  const navigate = useNavigate();
   const [parentId, setParentId] = useState<string | null>(null);
   const [parentName, setParentName] = useState<string>('Your Account');
   const [requests, setRequests] = useState<Request[]>([]);
   const [matches, setMatches] = useState<{ [key: string]: MatchData | null }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const handleLogout = async () => {
+    const result = await signOut();
+    if (result.success) {
+      navigate('/');
+    } else {
+      setError(result.error || 'Failed to logout');
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -553,8 +564,19 @@ const NewParentDashboardContent: React.FC = () => {
   return (
     <Section>
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">Parent Dashboard</h1>
-        <p className="text-lg text-gray-600">Welcome, {parentName}! Manage your tuition requests and track progress</p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">Parent Dashboard</h1>
+            <p className="text-lg text-gray-600">Welcome, {parentName}! Manage your tuition requests and track progress</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="inline-flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition"
+          >
+            <LogOut size={18} />
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
 
       {parentId && (

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ProtectedRoute } from '../components/ProtectedRoute';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Section, Button, Card } from '../components/Components';
-import { getCurrentUser } from '../services/auth';
+import { getCurrentUser, signOut } from '../services/auth';
 import {
   getAvailableCases,
   getMyBids,
@@ -21,6 +21,7 @@ import {
   Upload,
   X,
   Send,
+  LogOut,
 } from 'lucide-react';
 
 const FILE_UPLOAD_CONFIG = {
@@ -398,6 +399,7 @@ const CertificateList: React.FC<{ certificates: Certificate[] }> = ({ certificat
 };
 
 const NewTutorDashboardContent: React.FC = () => {
+  const navigate = useNavigate();
   const [tutorId, setTutorId] = useState<string | null>(null);
   const [profile, setProfile] = useState<TutorProfile | null>(null);
   const [availableCases, setAvailableCases] = useState<Case[]>([]);
@@ -408,6 +410,15 @@ const NewTutorDashboardContent: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [levelFilter, setLevelFilter] = useState('');
+
+  const handleLogout = async () => {
+    const result = await signOut();
+    if (result.success) {
+      navigate('/');
+    } else {
+      setError(result.error || 'Failed to logout');
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -539,11 +550,20 @@ const NewTutorDashboardContent: React.FC = () => {
                 Browse cases, submit bids, and manage your profile
               </p>
             </div>
-            {profile && (
-              <div>
-                <VerificationBadge status={profile.verification_status} />
-              </div>
-            )}
+            <div className="flex items-center space-x-4">
+              {profile && (
+                <div>
+                  <VerificationBadge status={profile.verification_status} />
+                </div>
+              )}
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center space-x-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition"
+              >
+                <LogOut size={18} />
+                <span>Logout</span>
+              </button>
+            </div>
           </div>
 
           {profile?.verification_status === 'pending' && (
