@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import { Section, Card, Button } from './Components';
 import {
   getAllRequests,
@@ -51,6 +51,8 @@ export const AdminMatching: React.FC = () => {
   const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false);
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<any>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [approvingBid, setApprovingBid] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     fetchRequests();
@@ -71,14 +73,21 @@ export const AdminMatching: React.FC = () => {
 
   const fetchBidsForRequest = async (requestId: string) => {
     if (bids[requestId]) {
-      setExpandedRequest(expandedRequest === requestId ? null : requestId);
+      // Use startTransition for toggling expanded state
+      startTransition(() => {
+        setExpandedRequest(expandedRequest === requestId ? null : requestId);
+      });
       return;
     }
+
+    // Defer the fetch to allow UI to respond first
+    startTransition(() => {
+      setExpandedRequest(requestId);
+    });
 
     const result = await getBidsForRequest(requestId);
     if (result.success && result.data) {
       setBids((prev) => ({ ...prev, [requestId]: result.data || [] }));
-      setExpandedRequest(requestId);
     } else {
       setError(result.error || 'Failed to fetch bids');
     }
@@ -87,27 +96,57 @@ export const AdminMatching: React.FC = () => {
   const handleApproveBid = async (requestId: string, tutorId: string) => {
     if (!confirm('Are you sure you want to approve this match?')) return;
 
-    const result = await approveBid(requestId, tutorId);
-    if (result.success) {
-      setSuccessMessage('Match approved successfully!');
-      setTimeout(() => setSuccessMessage(null), 3000);
-      fetchRequests();
-    } else {
-      setError(result.error || 'Failed to approve bid');
-    }
+    // Set loading state for this specific bid
+    setApprovingBid(`${requestId}-${tutorId}`);
+    setError(null);
+
+    // Use setTimeout to defer the heavy work, allowing UI to update first
+    setTimeout(async () => {
+      try {
+        const result = await approveBid(requestId, tutorId);
+        
+        if (result.success) {
+          setSuccessMessage('Match approved successfully!');
+          setTimeout(() => setSuccessMessage(null), 3000);
+          
+          // Use startTransition for non-urgent state updates
+          startTransition(() => {
+            fetchRequests();
+          });
+        } else {
+          setError(result.error || 'Failed to approve bid');
+        }
+      } catch (err) {
+        setError('An error occurred while approving the bid');
+      } finally {
+        setApprovingBid(null);
+      }
+    }, 0);
   };
 
   const handleMarkTestComplete = async (requestId: string) => {
     if (!confirm('Mark diagnostic test as complete?')) return;
 
-    const result = await markTestComplete(requestId);
-    if (result.success) {
-      setSuccessMessage('Test marked as complete!');
-      setTimeout(() => setSuccessMessage(null), 3000);
-      fetchRequests();
-    } else {
-      setError(result.error || 'Failed to mark test complete');
-    }
+    setError(null);
+    
+    setTimeout(async () => {
+      try {
+        const result = await markTestComplete(requestId);
+        
+        if (result.success) {
+          setSuccessMessage('Test marked as complete!');
+          setTimeout(() => setSuccessMessage(null), 3000);
+          
+          startTransition(() => {
+            fetchRequests();
+          });
+        } else {
+          setError(result.error || 'Failed to mark test complete');
+        }
+      } catch (err) {
+        setError('An error occurred');
+      }
+    }, 0);
   };
 
   const openQuestionnaireModal = (answers: any) => {
@@ -297,9 +336,12 @@ export const AdminMatching: React.FC = () => {
                               <Button
                                 variant="primary"
                                 onClick={() => handleApproveBid(request.id, bid.tutor.id)}
+                                disabled={approvingBid === `${request.id}-${bid.tutor.id}`}
                                 className="text-sm"
                               >
-                                Approve Match
+                                {approvingBid === `${request.id}-${bid.tutor.id}` 
+                                  ? 'Approving...' 
+                                  : 'Approve Match'}
                               </Button>
                             </div>
                           </div>
