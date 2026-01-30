@@ -37,6 +37,8 @@ interface Case {
   subjects: string[];
   address: string;
   postal_code: string;
+  tutor_type: string | null;
+  preferred_rate: number | null;
   diagnostic_test_booked: boolean;
   diagnostic_test_date: string | null;
   diagnostic_test_completed: boolean;
@@ -164,6 +166,21 @@ const CaseCard: React.FC<{ caseData: Case }> = ({ caseData }) => {
             </div>
           </div>
         </div>
+
+        {caseData.tutor_type && (
+          <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="text-sm font-semibold text-green-900 mb-1">Parent's Preference</div>
+            <div className="text-sm text-green-800">
+              <span className="font-medium">Type:</span> {caseData.tutor_type}
+              {caseData.preferred_rate && (
+                <>
+                  <br />
+                  <span className="font-medium">Budget:</span> ${caseData.preferred_rate}/hour
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <Link 
