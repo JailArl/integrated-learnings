@@ -90,7 +90,7 @@ const TuitionHome: React.FC = () => {
             <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
               <Zap className="text-blue-600 mx-auto mb-3" size={32} />
               <h3 className="font-bold text-slate-900 mb-2">Our Promise</h3>
-              <p className="text-sm text-slate-600">Right tutor, first time. Free swap within 2 lessons if needed</p>
+              <p className="text-sm text-slate-600">Right tutor, first time—or we'll find you another</p>
             </div>
           </div>
         </div>
