@@ -207,7 +207,9 @@ export const AdminMatching: React.FC = () => {
         </Card>
       ) : (
         <div className="space-y-6">
-          {requests.map((request) => (
+          {requests
+            .filter(request => request.status !== 'matched' && request.status !== 'invoiced')
+            .map((request) => (
             <Card key={request.id} title={`Request #${request.id.slice(0, 8)}`}>
               <div className="space-y-3">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
