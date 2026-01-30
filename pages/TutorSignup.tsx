@@ -67,8 +67,8 @@ export const TutorSignup: React.FC = () => {
       return;
     }
 
-    alert('Account created successfully! Please log in with your email and password.');
-    navigate('/tutors/login');
+    alert('Account created successfully! Welcome to Integrated Learnings.');
+    navigate('/tutors');
   };
 
   return (

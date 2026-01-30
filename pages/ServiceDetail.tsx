@@ -72,7 +72,7 @@ export const ServiceDetail: React.FC = () => {
                   <Button to="/parents/login" className="w-full mb-3">
                     Parent Login
                   </Button>
-                  <Button to="/parent-signup" variant="outline" className="w-full">
+                  <Button to="/parents/signup" variant="outline" className="w-full">
                     Create Account
                   </Button>
                 </>
@@ -128,7 +128,7 @@ export const ServiceDetail: React.FC = () => {
                 <Button to="/parents/login" variant="white" className="px-10 py-3 text-lg font-bold mr-4">
                   Login
                 </Button>
-                <Button to="/parent-signup" className="px-10 py-3 text-lg font-bold bg-blue-800 hover:bg-blue-900 border-2 border-blue-500">
+                <Button to="/parents/signup" className="px-10 py-3 text-lg font-bold bg-blue-800 hover:bg-blue-900 border-2 border-blue-500">
                   Sign Up
                 </Button>
               </>

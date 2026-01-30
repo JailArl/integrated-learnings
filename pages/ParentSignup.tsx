@@ -65,8 +65,8 @@ export const ParentSignup: React.FC = () => {
       return;
     }
 
-    alert('Account created successfully! Please log in with your email and password.');
-    navigate('/parents/login');
+    alert('Account created successfully! Welcome to Integrated Learnings.');
+    navigate('/parents');
   };
 
   return (
