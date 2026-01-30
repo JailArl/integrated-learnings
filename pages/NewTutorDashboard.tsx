@@ -10,6 +10,7 @@ import {
   uploadCertificate,
   getTutorProfile,
   getTutorCertificates,
+  updateTutorProfile,
 } from '../services/platformApi';
 import {
   CheckCircle2,
@@ -24,6 +25,11 @@ import {
   Send,
   LogOut,
   Edit,
+  MessageSquare,
+  Award,
+  Users,
+  Calendar,
+  Phone,
 } from 'lucide-react';
 
 const FILE_UPLOAD_CONFIG = {
@@ -73,7 +79,23 @@ interface TutorProfile {
   id: string;
   full_name: string;
   verification_status: 'pending' | 'verified' | 'rejected';
+  questionnaire_completed: boolean;
+  teaching_philosophy?: string;
+  why_tutoring?: string;
+  strengths?: string;
+  preferred_student_levels?: string[];
+  availability_days?: string[];
+  max_students?: number;
+  emergency_contact?: string;
 }
+
+const STUDENT_LEVELS = [
+  'Primary 1-2', 'Primary 3-4', 'Primary 5-6',
+  'Secondary 1-2', 'Secondary 3-5',
+  'JC/MI'
+];
+
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 const VerificationBadge: React.FC<{ status: 'pending' | 'verified' | 'rejected' }> = ({
   status,
@@ -468,6 +490,318 @@ const CertificateList: React.FC<{ certificates: Certificate[] }> = ({ certificat
   );
 };
 
+const QuestionnaireForm: React.FC<{
+  tutorId: string;
+  onComplete: () => void;
+}> = ({ tutorId, onComplete }) => {
+  const [formData, setFormData] = useState({
+    teachingPhilosophy: '',
+    whyTutoring: '',
+    strengths: '',
+    preferredLevels: [] as string[],
+    availableDays: [] as string[],
+    maxStudents: '5',
+    emergencyContact: '',
+  });
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const toggleLevel = (level: string) => {
+    setFormData(prev => ({
+      ...prev,
+      preferredLevels: prev.preferredLevels.includes(level)
+        ? prev.preferredLevels.filter(l => l !== level)
+        : [...prev.preferredLevels, level]
+    }));
+  };
+
+  const toggleDay = (day: string) => {
+    setFormData(prev => ({
+      ...prev,
+      availableDays: prev.availableDays.includes(day)
+        ? prev.availableDays.filter(d => d !== day)
+        : [...prev.availableDays, day]
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!formData.teachingPhilosophy.trim() || 
+        !formData.whyTutoring.trim() || 
+        !formData.strengths.trim() ||
+        formData.preferredLevels.length === 0 ||
+        formData.availableDays.length === 0 ||
+        !formData.emergencyContact.trim()) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    setSaving(true);
+
+    const result = await updateTutorProfile(tutorId, {
+      teachingPhilosophy: formData.teachingPhilosophy,
+      whyTutoring: formData.whyTutoring,
+      strengths: formData.strengths,
+      preferredStudentLevels: formData.preferredLevels,
+      availabilityDays: formData.availableDays,
+      maxStudents: parseInt(formData.maxStudents),
+      emergencyContact: formData.emergencyContact,
+      questionnaireCompleted: true,
+    });
+
+    setSaving(false);
+
+    if (!result.success) {
+      setError(result.error || 'Failed to save questionnaire');
+      return;
+    }
+
+    alert('Questionnaire completed successfully!');
+    onComplete();
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <div className="flex items-center gap-2">
+            <BookOpen size={16} className="text-green-600" />
+            Teaching Philosophy *
+          </div>
+        </label>
+        <textarea
+          name="teachingPhilosophy"
+          placeholder="Describe your teaching philosophy and approach..."
+          value={formData.teachingPhilosophy}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+          rows={4}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <div className="flex items-center gap-2">
+            <MessageSquare size={16} className="text-green-600" />
+            Why Do You Want to Teach/Tutor? *
+          </div>
+        </label>
+        <textarea
+          name="whyTutoring"
+          placeholder="Share your motivation for teaching..."
+          value={formData.whyTutoring}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+          rows={4}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <div className="flex items-center gap-2">
+            <Award size={16} className="text-green-600" />
+            Your Strengths as an Educator *
+          </div>
+        </label>
+        <textarea
+          name="strengths"
+          placeholder="What are your key strengths as a tutor/teacher?"
+          value={formData.strengths}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+          rows={4}
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <div className="flex items-center gap-2">
+            <Users size={16} className="text-green-600" />
+            Preferred Student Levels * (Select all that apply)
+          </div>
+        </label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+          {STUDENT_LEVELS.map(level => (
+            <label key={level} className="flex items-center space-x-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+              <input
+                type="checkbox"
+                checked={formData.preferredLevels.includes(level)}
+                onChange={() => toggleLevel(level)}
+                className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+              />
+              <span className="text-sm text-gray-700">{level}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-3">
+          <div className="flex items-center gap-2">
+            <Calendar size={16} className="text-green-600" />
+            Available Days * (Select all that apply)
+          </div>
+        </label>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {DAYS_OF_WEEK.map(day => (
+            <label key={day} className="flex items-center space-x-2 cursor-pointer p-3 border rounded-lg hover:bg-gray-50">
+              <input
+                type="checkbox"
+                checked={formData.availableDays.includes(day)}
+                onChange={() => toggleDay(day)}
+                className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+              />
+              <span className="text-sm text-gray-700">{day}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <div className="flex items-center gap-2">
+            <Clock size={16} className="text-green-600" />
+            Maximum Number of Students *
+          </div>
+        </label>
+        <select
+          name="maxStudents"
+          value={formData.maxStudents}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+          required
+        >
+          <option value="1">1 student</option>
+          <option value="2">2 students</option>
+          <option value="3">3 students</option>
+          <option value="5">5 students</option>
+          <option value="10">10 students</option>
+          <option value="20">20+ students</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          <div className="flex items-center gap-2">
+            <Phone size={16} className="text-green-600" />
+            Emergency Contact *
+          </div>
+        </label>
+        <input
+          type="text"
+          name="emergencyContact"
+          placeholder="Name and phone number of emergency contact"
+          value={formData.emergencyContact}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+          required
+        />
+      </div>
+
+      <button
+        type="submit"
+        disabled={saving}
+        className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition duration-200 ${
+          saving
+            ? 'bg-green-400 cursor-not-allowed'
+            : 'bg-green-600 hover:bg-green-700 active:bg-green-800'
+        }`}
+      >
+        {saving ? 'Saving...' : 'Complete Questionnaire'}
+      </button>
+    </form>
+  );
+};
+
+const QuestionnaireView: React.FC<{ profile: TutorProfile }> = ({ profile }) => {
+  return (
+    <div className="space-y-5">
+      <div>
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <BookOpen size={16} className="text-green-600" />
+          Teaching Philosophy
+        </h4>
+        <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">{profile.teaching_philosophy || 'Not provided'}</p>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <MessageSquare size={16} className="text-green-600" />
+          Why Teaching/Tutoring
+        </h4>
+        <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">{profile.why_tutoring || 'Not provided'}</p>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <Award size={16} className="text-green-600" />
+          Strengths as an Educator
+        </h4>
+        <p className="text-gray-800 bg-gray-50 p-3 rounded-lg">{profile.strengths || 'Not provided'}</p>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <Users size={16} className="text-green-600" />
+          Preferred Student Levels
+        </h4>
+        <div className="flex flex-wrap gap-2">
+          {(profile.preferred_student_levels || []).map(level => (
+            <span key={level} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+              {level}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <Calendar size={16} className="text-green-600" />
+          Available Days
+        </h4>
+        <div className="flex flex-wrap gap-2">
+          {(profile.availability_days || []).map(day => (
+            <span key={day} className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+              {day}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <Clock size={16} className="text-green-600" />
+          Maximum Students
+        </h4>
+        <p className="text-gray-800">{profile.max_students || 'Not specified'}</p>
+      </div>
+
+      <div>
+        <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+          <Phone size={16} className="text-green-600" />
+          Emergency Contact
+        </h4>
+        <p className="text-gray-800">{profile.emergency_contact || 'Not provided'}</p>
+      </div>
+    </div>
+  );
+};
+
 const NewTutorDashboardContent: React.FC = () => {
   const navigate = useNavigate();
   const [tutorId, setTutorId] = useState<string | null>(null);
@@ -784,6 +1118,36 @@ const NewTutorDashboardContent: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Profile Questionnaire Section */}
+        {tutorId && !profile?.questionnaire_completed && (
+          <div className="mb-12">
+            <Card title="Complete Your Profile Questionnaire" className="max-w-4xl">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-900">
+                  <strong>📋 Help us match you better!</strong> Complete this questionnaire to provide more details about your teaching approach and availability. This helps parents find the right tutor for their children.
+                </p>
+              </div>
+              <QuestionnaireForm tutorId={tutorId} onComplete={loadData} />
+            </Card>
+          </div>
+        )}
+
+        {/* Questionnaire Completed - View Only */}
+        {tutorId && profile?.questionnaire_completed && (
+          <div className="mb-12">
+            <Card title="Your Profile Questionnaire" className="max-w-4xl">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start gap-3">
+                <CheckCircle2 className="text-green-600 mt-0.5" size={20} />
+                <div>
+                  <p className="text-sm text-green-900 font-semibold">Questionnaire Completed!</p>
+                  <p className="text-sm text-green-800">You can update this information using the "Edit Profile" button above.</p>
+                </div>
+              </div>
+              <QuestionnaireView profile={profile} />
+            </Card>
+          </div>
+        )}
 
         {/* Certificate Upload Section */}
         {tutorId && (
