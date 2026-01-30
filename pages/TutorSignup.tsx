@@ -112,7 +112,7 @@ export const TutorSignup: React.FC = () => {
       return;
     }
 
-    setTutorId(result.userId || '');
+    setTutorId(result.user?.id || '');
     setStep(2); // Move to questionnaire
   };
 
@@ -469,133 +469,6 @@ export const TutorSignup: React.FC = () => {
                 </form>
               </>
             )}
-          </div>
-        </div>
-      </Section>
-    </div>
-  );
-};
-
-export default TutorSignup;
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <User size={16} className="text-green-600" />
-                    Full Name *
-                  </div>
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  placeholder="Enter your full name"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Mail size={16} className="text-green-600" />
-                    Email Address *
-                  </div>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="your.email@example.com"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Lock size={16} className="text-green-600" />
-                    Password *
-                  </div>
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Minimum 6 characters"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters long</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Lock size={16} className="text-green-600" />
-                    Confirm Password *
-                  </div>
-                </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Re-enter your password"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Phone size={16} className="text-green-600" />
-                    Phone Number *
-                  </div>
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  placeholder="+65 XXXX XXXX"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition duration-200 mt-6 ${
-                  loading
-                    ? 'bg-green-400 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700 active:bg-green-800'
-                }`}
-              >
-                {loading ? 'Creating Account...' : 'Create Account'}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center border-t border-gray-200 pt-6">
-              <p className="text-gray-600 text-sm">
-                Already have an account?{' '}
-                <Link to="/tutors/login" className="text-green-600 font-semibold hover:text-green-700">
-                  Log In
-                </Link>
-              </p>
-            </div>
-
-            <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-xs text-gray-700">
-                <strong>ℹ️ What's Next?</strong><br />
-                After signup, you'll provide qualifications, subjects, experience, and upload documents for verification.
-              </p>
-            </div>
           </div>
         </div>
       </Section>

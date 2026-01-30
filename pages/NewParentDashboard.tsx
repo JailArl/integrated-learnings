@@ -154,6 +154,9 @@ interface MatchData {
     hourly_rate: number;
   };
   invoice_url?: string;
+  first_class_date?: string | null;
+  first_class_location?: string | null;
+  first_class_notes?: string | null;
 }
 
 const RequestSubmissionForm: React.FC<{ 

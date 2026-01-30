@@ -165,7 +165,7 @@ export const AdminTutors: React.FC = () => {
       )}
 
       {/* Filters */}
-      <Card className="mb-6">
+      <Card title="Filters" className="mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
@@ -203,7 +203,7 @@ export const AdminTutors: React.FC = () => {
       {/* Tutor Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTutors.map(tutor => (
-          <Card key={tutor.id} className="hover:shadow-lg transition">
+          <Card key={tutor.id} title={tutor.full_name} className="hover:shadow-lg transition">
             <div className="space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between">
