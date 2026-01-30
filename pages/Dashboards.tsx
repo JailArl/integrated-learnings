@@ -6,6 +6,7 @@ import { TUTOR_CONTRACT_TEXT, TUTOR_SCENARIO_QUESTIONS, POLICY_CONTENT } from '.
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, CreditCard, Calendar, BookOpen, Cpu, Shield, AlertCircle, User, MapPin, DollarSign, Clock, Briefcase, FileCheck, Landmark, CheckCircle2, Wallet, QrCode, FileText, Download, Filter, Edit2, PlusCircle, X, Search, File, Receipt, MessageSquare, Users } from 'lucide-react';
 import { submitTutorForm } from '../services/formHandler';
+import { signUpTutor } from '../services/auth';
 
 
 // --- TOAST NOTIFICATION COMPONENT ---
@@ -322,6 +323,8 @@ const TutorSignupWizard: React.FC<{
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [qualification, setQualification] = useState('');
   const [experienceYears, setExperienceYears] = useState(0);
@@ -331,11 +334,19 @@ const TutorSignupWizard: React.FC<{
   const nextStep = () => setStep(step + 1);
 
   const handleProfileNext = () => {
-    if (!fullName.trim() || !email.trim() || !phone.trim() || !qualification.trim()) {
+    if (!fullName.trim() || !email.trim() || !password.trim() || !phone.trim() || !qualification.trim()) {
       showToast('Please complete all required fields before continuing.', 'error');
       return;
     }
-    if (experienceYears <= 0) {
+    if (password !== confirmPassword) {
+      showToast('Passwords do not match.', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters.', 'error');
+      return;
+    }
+    if (experienceYears < 0) {
       showToast('Please enter years of experience (0 if none).', 'error');
       return;
     }
@@ -348,28 +359,23 @@ const TutorSignupWizard: React.FC<{
   };
 
   const handleTutorSubmit = async () => {
-    if (!fullName || !email || !phone || !qualification) {
+    if (!fullName || !email || !password || !phone || !qualification) {
       showToast('Please fill in all required fields', 'error');
       return;
     }
     setLoading(true);
-    const result = await submitTutorForm({
+    
+    // Use signUpTutor to create auth user and profile
+    const result = await signUpTutor(email, password, {
       fullName,
-      email,
       phone,
-      qualification,
-      experienceYears,
-      subjects: [],
-      levels: [],
-      teachingPhilosophy: 'Personalized learning approach',
-      availability: 'Flexible',
-      preferredFormat: 'either',
     });
+    
     setLoading(false);
     if (result.success) {
-      showToast('Application submitted! We will review and contact you within 48 hours.', 'success');
+      showToast('Account created successfully! Please log in.', 'success');
       setTimeout(() => {
-        onComplete({ name: fullName, qualification, experienceYears, subjects: [], status: 'pending', isManaged: false, scenarioAnswers: {} });
+        onSwitchToLogin();
       }, 2000);
     } else {
       showToast(result.error || 'Failed to submit application', 'error');
@@ -406,7 +412,9 @@ const TutorSignupWizard: React.FC<{
       {step === 1 && (
         <div className="space-y-4">
           <div><label className="block text-sm font-bold mb-1">Full Name</label><input value={fullName} onChange={e => setFullName(e.target.value)} className="w-full border p-2 rounded" placeholder="As per NRIC" /></div>
-          <div><label className="block text-sm font-bold mb-1">Email</label><input value={email} onChange={e => setEmail(e.target.value)} className="w-full border p-2 rounded" placeholder="your@email.com" /></div>
+          <div><label className="block text-sm font-bold mb-1">Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border p-2 rounded" placeholder="your@email.com" /></div>
+          <div><label className="block text-sm font-bold mb-1">Password</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border p-2 rounded" placeholder="Minimum 6 characters" /></div>
+          <div><label className="block text-sm font-bold mb-1">Confirm Password</label><input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="w-full border p-2 rounded" placeholder="Re-enter password" /></div>
           <div><label className="block text-sm font-bold mb-1">Phone</label><input value={phone} onChange={e => setPhone(e.target.value)} className="w-full border p-2 rounded" placeholder="+65 9xxx xxxx" type="tel" /></div>
           <div><label className="block text-sm font-bold mb-1">Highest Qualification</label><input value={qualification} onChange={e => setQualification(e.target.value)} className="w-full border p-2 rounded" placeholder="e.g. Bachelor of Science (NUS)" /></div>
           <div><label className="block text-sm font-bold mb-1">Years of Experience</label><input type="number" value={experienceYears} onChange={e => setExperienceYears(parseInt(e.target.value) || 0)} className="w-full border p-2 rounded" placeholder="0" /></div>
