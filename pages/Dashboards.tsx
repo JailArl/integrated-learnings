@@ -381,7 +381,7 @@ const TutorSignupWizard: React.FC<{
       name: "Demo Tutor",
       qualification: "NUS Math Degree",
       experienceYears: 5,
-      subjects: ["Math", "A-Math"],
+      subjects: [],
       scenarioAnswers: {1: "B", 2: "C"},
       isManaged: false,
       status: "pending"
