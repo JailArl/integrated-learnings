@@ -261,14 +261,10 @@ export const AdminTutors: React.FC = () => {
             tutor.questionnaire_answers?.personality?.traitScores
           );
           
-          // Debug log
-          if (tutor.questionnaire_answers) {
-            console.log(`${tutor.full_name}:`, {
-              questionnaire_completed: tutor.questionnaire_completed,
-              has_questionnaire_answers: !!tutor.questionnaire_answers,
-              trait_scores: tutor.questionnaire_answers?.personality?.traitScores,
-              tutor_type: tutorType
-            });
+          // Debug: Test the function directly with known good data
+          if (tutor.questionnaire_answers?.personality?.traitScores) {
+            const testType = getTutorTypeLabel(tutor.questionnaire_answers.personality.traitScores);
+            console.log(`${tutor.full_name} - Type function result:`, testType);
           }
           
           return (
@@ -299,6 +295,12 @@ export const AdminTutors: React.FC = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
                   <Award size={14} />
                   Questionnaire Pending Analysis
+                </div>
+              )}
+              
+              {tutor.questionnaire_completed && tutorType && (
+                <div className="text-xs text-slate-500 mt-1">
+                  Type scores: {JSON.stringify(tutor.questionnaire_answers?.personality?.traitScores).substring(0, 50)}...
                 </div>
               )}
 
