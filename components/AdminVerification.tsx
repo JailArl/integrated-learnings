@@ -238,6 +238,16 @@ export const AdminVerification: React.FC = () => {
                   )}
                 </div>
 
+                {tutorType && (
+                  <div className="border-t pt-4 mt-4">
+                    <p className="text-sm font-semibold text-slate-700 mb-3">Tutor Type</p>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                      {tutorType.label}
+                    </div>
+                    <p className="text-xs text-slate-600 mt-2">{tutorType.description}</p>
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-3 border-t">
                   {tutor.questionnaire_answers && (
                     <Button

@@ -75,8 +75,6 @@ export const AdminTutors: React.FC = () => {
     ]);
 
     if (tutorsResult.success && tutorsResult.data) {
-      console.log('Tutors fetched:', tutorsResult.data);
-      console.log('Sample tutor questionnaire_answers:', tutorsResult.data[0]?.questionnaire_answers);
       setTutors(tutorsResult.data);
     } else {
       setError(tutorsResult.error || 'Failed to fetch tutors');
