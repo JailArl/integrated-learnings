@@ -81,6 +81,7 @@ interface TutorProfile {
   full_name: string;
   verification_status: 'pending' | 'verified' | 'rejected';
   questionnaire_completed: boolean;
+  questionnaire_answers?: any;
   teaching_philosophy?: string;
   why_tutoring?: string;
   strengths?: string;
