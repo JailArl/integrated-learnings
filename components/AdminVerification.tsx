@@ -124,7 +124,12 @@ export const AdminVerification: React.FC = () => {
       </div>
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-primary mb-2">Tutor Verification</h2>
-        <p className="text-slate-600">Review and verify tutor applications</p>
+        <p className="text-slate-600">Review and verify tutor applications and certificates</p>
+        {tutors.length > 0 && (
+          <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <span className="text-yellow-800 font-semibold">{tutors.length} pending verification{tutors.length !== 1 ? 's' : ''}</span>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -191,9 +196,9 @@ export const AdminVerification: React.FC = () => {
                   </div>
                 </div>
 
-                {tutor.certificates && tutor.certificates.length > 0 && (
-                  <div className="border-t pt-3">
-                    <p className="text-sm text-slate-500 mb-2">Uploaded Certificates</p>
+                <div className="border-t pt-4 mt-4">
+                  <p className="text-sm font-semibold text-slate-700 mb-3">Certificates</p>
+                  {tutor.certificates && tutor.certificates.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {tutor.certificates.map((cert) => (
                         <a
@@ -201,14 +206,19 @@ export const AdminVerification: React.FC = () => {
                           href={cert.file_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
                         >
                           📄 {cert.file_name || 'Certificate'}
                         </a>
                       ))}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="bg-yellow-50 border border-yellow-300 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+                      <p className="font-semibold">⚠️ No certificates uploaded</p>
+                      <p className="mt-1">This tutor has not uploaded any certificates yet. Consider rejecting or requesting upload before approval.</p>
+                    </div>
+                  )}
+                </div>
 
                 <div className="flex gap-3 pt-3 border-t">
                   <Button
