@@ -300,6 +300,7 @@ export const updateTutorProfile = async (
     teachingPhilosophy?: string;
     whyTutoring?: string;
     strengths?: string;
+    questionnaireAnswers?: any;
     preferredStudentLevels?: string[];
     availabilityDays?: string[];
     maxStudents?: number;
@@ -320,6 +321,7 @@ export const updateTutorProfile = async (
     if (updates.teachingPhilosophy !== undefined) updateData.teaching_philosophy = updates.teachingPhilosophy;
     if (updates.whyTutoring !== undefined) updateData.why_tutoring = updates.whyTutoring;
     if (updates.strengths !== undefined) updateData.strengths = updates.strengths;
+    if (updates.questionnaireAnswers !== undefined) updateData.questionnaire_answers = updates.questionnaireAnswers;
     if (updates.preferredStudentLevels !== undefined) updateData.preferred_student_levels = updates.preferredStudentLevels;
     if (updates.availabilityDays !== undefined) updateData.availability_days = updates.availabilityDays;
     if (updates.maxStudents !== undefined) updateData.max_students = updates.maxStudents;

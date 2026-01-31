@@ -23,6 +23,7 @@ import { TutorSignup } from './pages/TutorSignup';
 import NewParentDashboard from './pages/NewParentDashboard';
 import NewTutorDashboard from './pages/NewTutorDashboard';
 import CaseDetail from './pages/CaseDetail';
+import TutorQuestionnaire from './pages/TutorQuestionnaire';
 
 // Protected Route for Coursework (Sec 4 only)
 const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -66,6 +67,8 @@ const App: React.FC = () => {
           <Route path="/parents" element={<NewParentDashboard />} />
           <Route path="/tutors" element={<NewTutorDashboard />} />
           <Route path="/tutors/case/:caseId" element={<CaseDetail />} />
+          <Route path="/tutors/questionnaire" element={<TutorQuestionnaire />} />
+          <Route path="/tutor/questionnaire" element={<TutorQuestionnaire />} />
           
           {/* Tuition Service Routes */}
           <Route path="/tuition" element={<TuitionHome />} />

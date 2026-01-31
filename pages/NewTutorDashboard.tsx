@@ -1128,7 +1128,11 @@ const NewTutorDashboardContent: React.FC = () => {
                   <strong>📋 Help us match you better!</strong> Complete this questionnaire to provide more details about your teaching approach and availability. This helps parents find the right tutor for their children.
                 </p>
               </div>
-              <QuestionnaireForm tutorId={tutorId} onComplete={loadData} />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button to="/tutors/questionnaire" variant="primary" className="w-full sm:w-auto">
+                  Start Questionnaire
+                </Button>
+              </div>
             </Card>
           </div>
         )}
