@@ -75,6 +75,8 @@ export const AdminTutors: React.FC = () => {
     ]);
 
     if (tutorsResult.success && tutorsResult.data) {
+      console.log('Tutors fetched:', tutorsResult.data);
+      console.log('Sample tutor questionnaire_answers:', tutorsResult.data[0]?.questionnaire_answers);
       setTutors(tutorsResult.data);
     } else {
       setError(tutorsResult.error || 'Failed to fetch tutors');
@@ -271,6 +273,13 @@ export const AdminTutors: React.FC = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
                   <Award size={14} />
                   {tutorType.label}
+                </div>
+              )}
+              
+              {!tutorType && tutor.questionnaire_completed && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
+                  <Award size={14} />
+                  Questionnaire Pending Analysis
                 </div>
               )}
 
