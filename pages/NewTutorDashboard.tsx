@@ -12,6 +12,7 @@ import {
   getTutorCertificates,
   updateTutorProfile,
 } from '../services/platformApi';
+import { getTutorTypeLabel } from '../constants';
 import {
   CheckCircle2,
   XCircle,
@@ -728,18 +729,47 @@ const QuestionnaireForm: React.FC<{
   );
 };
 
+const normalizeQuestionnaire = (value: any) => {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      console.error('Failed to parse questionnaire JSON:', error);
+      return null;
+    }
+  }
+  return value;
+};
+
 const QuestionnaireView: React.FC<{ profile: TutorProfile }> = ({ profile }) => {
+  const questionnaire = normalizeQuestionnaire(profile.questionnaire_answers);
+  const traitScores = questionnaire?.personality?.traitScores;
+  const tutorType = getTutorTypeLabel(traitScores);
+
   return (
     <div className="space-y-5">
+      {/* Teaching Style Section */}
+      {tutorType && (
+        <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+          <h4 className="text-sm font-semibold text-purple-900 mb-2 flex items-center gap-2">
+            <Award size={16} className="text-purple-600" />
+            Your Teaching Style
+          </h4>
+          <p className="text-lg font-bold text-purple-700">{tutorType.label}</p>
+          <p className="text-sm text-purple-800 mt-1">{tutorType.description}</p>
+        </div>
+      )}
+
       {/* Personality Profile Section */}
-      {profile.questionnaire_answers?.personality?.traitScores && (
+      {traitScores && (
         <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
             <Award size={16} className="text-blue-600" />
             Your Personality Profile
           </h4>
           <div className="space-y-3">
-            {Object.entries(profile.questionnaire_answers.personality.traitScores).map(([trait, score]: [string, any]) => (
+            {Object.entries(traitScores).map(([trait, score]: [string, any]) => (
               <div key={trait}>
                 <div className="flex justify-between mb-1">
                   <span className="capitalize text-sm font-semibold text-blue-800">{trait}</span>
@@ -754,10 +784,10 @@ const QuestionnaireView: React.FC<{ profile: TutorProfile }> = ({ profile }) => 
               </div>
             ))}
           </div>
-          {profile.questionnaire_answers.personality.topTraits && (
+          {questionnaire?.personality?.topTraits && (
             <div className="mt-4 pt-4 border-t border-blue-200">
               <p className="text-xs text-blue-900">
-                <strong>Your Top Traits:</strong> {profile.questionnaire_answers.personality.topTraits.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
+                <strong>Your Top Traits:</strong> {questionnaire.personality.topTraits.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
               </p>
             </div>
           )}
