@@ -75,6 +75,16 @@ export const AdminTutors: React.FC = () => {
     ]);
 
     if (tutorsResult.success && tutorsResult.data) {
+      console.log('=== ALL TUTORS DATA ===');
+      tutorsResult.data.forEach(tutor => {
+        console.log({
+          name: tutor.full_name,
+          questionnaire_completed: tutor.questionnaire_completed,
+          questionnaire_answers: tutor.questionnaire_answers,
+          trait_scores: tutor.questionnaire_answers?.personality?.traitScores
+        });
+      });
+      console.log('=== END ===');
       setTutors(tutorsResult.data);
     } else {
       setError(tutorsResult.error || 'Failed to fetch tutors');
