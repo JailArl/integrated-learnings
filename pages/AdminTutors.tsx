@@ -14,6 +14,7 @@ interface TutorProfile {
   hourly_rate: number;
   verification_status: 'pending' | 'verified' | 'rejected';
   questionnaire_completed: boolean;
+  questionnaire_answers?: any;
   teaching_philosophy: string;
   why_tutoring: string;
   strengths: string;
@@ -51,6 +52,8 @@ export const AdminTutors: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTutor, setSelectedTutor] = useState<TutorProfile | null>(null);
   const [showMatchModal, setShowMatchModal] = useState(false);
+  const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false);
+  const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -314,7 +317,19 @@ export const AdminTutors: React.FC = () => {
               )}
 
               {/* Actions */}
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t space-y-2">
+                {tutor.questionnaire_answers && (
+                  <Button 
+                    onClick={() => {
+                      setSelectedQuestionnaire(tutor.questionnaire_answers);
+                      setShowQuestionnaireModal(true);
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    View Questionnaire
+                  </Button>
+                )}
                 <Button 
                   onClick={() => {
                     setSelectedTutor(tutor);
@@ -325,6 +340,7 @@ export const AdminTutors: React.FC = () => {
                 >
                   Manual Match
                 </Button>
+              </div>
               </div>
             </div>
           </Card>
@@ -408,6 +424,68 @@ export const AdminTutors: React.FC = () => {
                   ))
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Questionnaire Modal */}
+      {showQuestionnaireModal && selectedQuestionnaire && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6">
+            <h3 className="text-2xl font-bold text-primary mb-4">Profile Questionnaire & Personality</h3>
+            
+            {selectedQuestionnaire?.personality?.traitScores && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-bold text-blue-900 mb-3">Personality Profile</h4>
+                <div className="space-y-3">
+                  {Object.entries(selectedQuestionnaire.personality.traitScores).map(([trait, score]: [string, any]) => (
+                    <div key={trait}>
+                      <div className="flex justify-between mb-1">
+                        <span className="capitalize font-semibold text-blue-800">{trait}</span>
+                        <span className="font-bold text-blue-900">{score}%</span>
+                      </div>
+                      <div className="w-full bg-blue-200 rounded-full h-2">
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all"
+                          style={{ width: `${score}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {selectedQuestionnaire.personality.topTraits && (
+                  <div className="mt-4 pt-4 border-t border-blue-200">
+                    <p className="text-sm text-blue-900">
+                      <strong>Top Fit:</strong> {selectedQuestionnaire.personality.topTraits.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {selectedQuestionnaire && typeof selectedQuestionnaire === 'object' ? (
+                Object.entries(selectedQuestionnaire).map(([key, value]: [string, any]) => {
+                  if (key === 'personality' || key === 'version' || key === 'completedAt') return null;
+                  if (Array.isArray(value)) value = value.join(', ');
+                  return (
+                    <div key={key} className="border-b pb-3">
+                      <p className="text-sm font-semibold text-slate-700 mb-1">
+                        {key.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </p>
+                      <p className="text-slate-600">{String(value)}</p>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-slate-500">No questionnaire data available.</p>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <Button variant="outline" onClick={() => setShowQuestionnaireModal(false)}>
+                Close
+              </Button>
             </div>
           </div>
         </div>
