@@ -298,9 +298,17 @@ export const AdminTutors: React.FC = () => {
                 </div>
               )}
               
-              {tutor.questionnaire_completed && tutorType && (
-                <div className="text-xs text-slate-500 mt-1">
-                  Type scores: {JSON.stringify(tutor.questionnaire_answers?.personality?.traitScores).substring(0, 50)}...
+              {tutor.questionnaire_completed && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                  <p className="text-yellow-800 font-bold">Questionnaire: COMPLETED</p>
+                  {tutor.questionnaire_answers?.personality?.traitScores ? (
+                    <div className="mt-1 text-yellow-700">
+                      <p>Scores: {JSON.stringify(tutor.questionnaire_answers.personality.traitScores)}</p>
+                      <p>Type Result: {tutorType ? tutorType.label : 'NULL - function returned nothing'}</p>
+                    </div>
+                  ) : (
+                    <p className="text-yellow-700">No trait scores found</p>
+                  )}
                 </div>
               )}
 
