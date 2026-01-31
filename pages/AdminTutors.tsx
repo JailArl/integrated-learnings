@@ -250,6 +250,17 @@ export const AdminTutors: React.FC = () => {
           const tutorType = getTutorTypeLabel(
             tutor.questionnaire_answers?.personality?.traitScores
           );
+          
+          // Debug log
+          if (tutor.questionnaire_answers) {
+            console.log(`${tutor.full_name}:`, {
+              questionnaire_completed: tutor.questionnaire_completed,
+              has_questionnaire_answers: !!tutor.questionnaire_answers,
+              trait_scores: tutor.questionnaire_answers?.personality?.traitScores,
+              tutor_type: tutorType
+            });
+          }
+          
           return (
             <Card key={tutor.id} title={tutor.full_name} className="hover:shadow-lg transition">
               <div className="space-y-4">
