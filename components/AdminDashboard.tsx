@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
@@ -77,6 +78,7 @@ export default function AdminDashboard() {
           activeMatches: combined.filter(s => s.status === 'matched').length,
           verifiedTutors: tutors.filter(s => s.status === 'verified').length,
         });
+        setLastUpdated(new Date().toISOString());
       } else {
         // Fallback to local Express API
         const submissionsRes = await fetch('/api/forms/all', {
@@ -92,6 +94,7 @@ export default function AdminDashboard() {
         if (statsRes.ok) {
           setStats(await statsRes.json());
         }
+        setLastUpdated(new Date().toISOString());
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
@@ -135,6 +138,7 @@ export default function AdminDashboard() {
     setPassword('');
     setSubmissions([]);
     setStats(null);
+    setLastUpdated(null);
   };
 
   const handleExport = () => {
@@ -174,6 +178,13 @@ export default function AdminDashboard() {
 
     return matchesSearch && matchesStatus && matchesType;
   });
+
+  const hasActiveFilters = searchTerm.trim().length > 0 || filterStatus !== 'all' || filterType !== 'all';
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilterStatus('all');
+    setFilterType('all');
+  };
 
   const parentSubmissions = submissions.filter(s => s.type === 'parent');
   const tutorSubmissions = submissions.filter(s => s.type === 'tutor');
@@ -232,8 +243,16 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">IL Admin Dashboard</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">IL Admin Dashboard</h1>
+            <p className="text-sm text-gray-500">Manage requests, approvals, and matches in one place.</p>
+          </div>
           <div className="flex items-center gap-4">
+            {lastUpdated && (
+              <span className="hidden sm:inline text-xs text-gray-500">
+                Last updated {new Date(lastUpdated).toLocaleTimeString()}
+              </span>
+            )}
             <button
               onClick={fetchData}
               disabled={loading}
@@ -254,6 +273,26 @@ export default function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-6 bg-white border border-gray-200 rounded-lg p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p className="text-sm text-gray-500">Welcome back</p>
+            <h2 className="text-lg font-semibold text-gray-900">Here’s what needs attention today.</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab('submissions')}
+              className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Review submissions
+            </button>
+            <button
+              onClick={handleExport}
+              className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
+              Export CSV
+            </button>
+          </div>
+        </div>
         {/* Stats Grid */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
@@ -358,6 +397,7 @@ export default function AdminDashboard() {
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
+                  <p className="mt-1 text-xs text-gray-500">Tip: search by name, email, or submission ID.</p>
                 </div>
 
                 <div>
@@ -400,6 +440,19 @@ export default function AdminDashboard() {
                     Export CSV
                   </button>
                 </div>
+
+                {hasActiveFilters && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">&nbsp;</label>
+                    <button
+                      onClick={handleClearFilters}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition flex items-center gap-2"
+                    >
+                      <Filter size={18} />
+                      Clear filters
+                    </button>
+                  </div>
+                )}
               </div>
 
               <p className="text-sm text-gray-600">
@@ -410,8 +463,20 @@ export default function AdminDashboard() {
             {/* Submissions Table */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
               {filteredSubmissions.length === 0 ? (
-                <div className="p-8 text-center text-gray-500">
-                  No submissions found
+                <div className="p-10 text-center">
+                  <div className="mx-auto w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                    <AlertCircle size={20} className="text-gray-500" />
+                  </div>
+                  <p className="text-gray-700 font-medium">No submissions found</p>
+                  <p className="text-sm text-gray-500 mt-1">Try adjusting your search or filters.</p>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={handleClearFilters}
+                      className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                      Clear filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">

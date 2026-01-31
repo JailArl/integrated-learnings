@@ -11,6 +11,7 @@ import { ParentDashboard, TutorDashboard } from './pages/Dashboards';
 import { AdminDashboard } from './pages/AdminDashboard'; 
 import { AdminMatching } from './pages/AdminMatching';
 import { AdminTutors } from './pages/AdminTutors';
+import { AdminVerification } from './pages/AdminVerification';
 import { AdminLogin } from './pages/AdminLogin';
 import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
 import ServiceDetail from './pages/ServiceDetail';
@@ -139,6 +140,11 @@ const App: React.FC = () => {
           <Route path="/admin/tutors" element={
             <AdminRoute>
               <AdminTutors />
+            </AdminRoute>
+          } />
+          <Route path="/admin/verification" element={
+            <AdminRoute>
+              <AdminVerification />
             </AdminRoute>
           } />
 

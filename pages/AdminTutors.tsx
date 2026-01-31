@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Section, Card, Button } from '../components/Components';
 import { getAllTutors, getAllRequests, approveBid } from '../services/platformApi';
 import { User, Mail, Phone, Award, BookOpen, Calendar, CheckCircle2, XCircle, Clock } from 'lucide-react';
@@ -42,6 +43,8 @@ interface ParentRequest {
 }
 
 export const AdminTutors: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [tutors, setTutors] = useState<TutorProfile[]>([]);
   const [requests, setRequests] = useState<ParentRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,6 +156,40 @@ export const AdminTutors: React.FC = () => {
 
   return (
     <Section>
+      <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate('/admin/matching')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/matching'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Matching
+          </button>
+          <button
+            onClick={() => navigate('/admin/tutors')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/tutors'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Tutor Browser
+          </button>
+          <button
+            onClick={() => navigate('/admin/verification')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/verification'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Verification
+          </button>
+        </div>
+      </div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-primary mb-2">Tutor Management</h1>
         <p className="text-lg text-gray-600">Browse tutor profiles and create manual matches</p>

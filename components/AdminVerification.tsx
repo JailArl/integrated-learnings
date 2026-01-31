@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Section, Card, Button } from './Components';
 import { getPendingTutors, verifyTutor, getTutorCertificates } from '../services/platformApi';
 
@@ -23,6 +24,8 @@ interface Tutor {
 }
 
 export const AdminVerification: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +88,40 @@ export const AdminVerification: React.FC = () => {
 
   return (
     <Section>
+      <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => navigate('/admin/matching')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/matching'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Matching
+          </button>
+          <button
+            onClick={() => navigate('/admin/tutors')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/tutors'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Tutor Browser
+          </button>
+          <button
+            onClick={() => navigate('/admin/verification')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/verification'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Verification
+          </button>
+        </div>
+      </div>
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-primary mb-2">Tutor Verification</h2>
         <p className="text-slate-600">Review and verify tutor applications</p>

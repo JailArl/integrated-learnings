@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useTransition } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Section, Card, Button } from './Components';
 import {
   getAllRequests,
@@ -45,6 +45,7 @@ interface Bid {
 
 export const AdminMatching: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [requests, setRequests] = useState<Request[]>([]);
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null);
   const [bids, setBids] = useState<{ [key: string]: Bid[] }>({});
@@ -203,15 +204,33 @@ export const AdminMatching: React.FC = () => {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => navigate('/admin/matching')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold"
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/matching'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
             Matching
           </button>
           <button
             onClick={() => navigate('/admin/tutors')}
-            className="px-4 py-2 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-lg font-semibold"
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/tutors'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
             Tutor Browser
+          </button>
+          <button
+            onClick={() => navigate('/admin/verification')}
+            className={`px-4 py-2 rounded-lg font-semibold ${
+              location.pathname === '/admin/verification'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Verification
           </button>
         </div>
       </div>
