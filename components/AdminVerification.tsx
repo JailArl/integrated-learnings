@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Section, Card, Button } from './Components';
+import { getTutorTypeLabel } from '../constants';
 import { getPendingTutors, verifyTutor, getTutorCertificates } from '../services/platformApi';
 
 interface Tutor {
@@ -35,6 +36,9 @@ export const AdminVerification: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false);
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<any>(null);
+  const tutorTypeForModal = selectedQuestionnaire?.personality?.traitScores
+    ? getTutorTypeLabel(selectedQuestionnaire.personality.traitScores)
+    : null;
 
   useEffect(() => {
     fetchPendingTutors();
@@ -154,10 +158,14 @@ export const AdminVerification: React.FC = () => {
         </Card>
       ) : (
         <div className="space-y-6">
-          {tutors.map((tutor) => (
-            <Card key={tutor.id} title={tutor.full_name}>
-              <div className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {tutors.map((tutor) => {
+            const tutorType = getTutorTypeLabel(
+              tutor.questionnaire_answers?.personality?.traitScores
+            );
+            return (
+              <Card key={tutor.id} title={tutor.full_name}>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-slate-500">Email</p>
                     <p className="font-semibold">{tutor.email}</p>
@@ -174,6 +182,12 @@ export const AdminVerification: React.FC = () => {
                     <p className="text-sm text-slate-500">Experience</p>
                     <p className="font-semibold">{tutor.experience_years || 0} years</p>
                   </div>
+                  {tutorType && (
+                    <div>
+                      <p className="text-sm text-slate-500">Tutor Type</p>
+                      <p className="font-semibold">{tutorType.label}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-sm text-slate-500">Subjects</p>
                     <p className="font-semibold">
@@ -256,7 +270,8 @@ export const AdminVerification: React.FC = () => {
                 </div>
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -290,6 +305,14 @@ export const AdminVerification: React.FC = () => {
                     <p className="text-sm text-blue-900">
                       <strong>Top Fit:</strong> {selectedQuestionnaire.personality.topTraits.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
                     </p>
+                  </div>
+                )}
+                {tutorTypeForModal && (
+                  <div className="mt-3 p-3 bg-white border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-900">
+                      <strong>Tutor Type:</strong> {tutorTypeForModal.label}
+                    </p>
+                    <p className="text-xs text-blue-800 mt-1">{tutorTypeForModal.description}</p>
                   </div>
                 )}
               </div>

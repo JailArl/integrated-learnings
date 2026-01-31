@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Section, Card, Button } from '../components/Components';
 import { getAllTutors, getAllRequests, approveBid } from '../services/platformApi';
 import { User, Mail, Phone, Award, BookOpen, Calendar, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { getTutorTypeLabel } from '../constants';
 
 interface TutorProfile {
   id: string;
@@ -56,6 +57,9 @@ export const AdminTutors: React.FC = () => {
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const tutorTypeForModal = selectedQuestionnaire?.personality?.traitScores
+    ? getTutorTypeLabel(selectedQuestionnaire.personality.traitScores)
+    : null;
 
   useEffect(() => {
     fetchData();
@@ -242,9 +246,13 @@ export const AdminTutors: React.FC = () => {
 
       {/* Tutor Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTutors.map(tutor => (
-          <Card key={tutor.id} title={tutor.full_name} className="hover:shadow-lg transition">
-            <div className="space-y-4">
+        {filteredTutors.map((tutor) => {
+          const tutorType = getTutorTypeLabel(
+            tutor.questionnaire_answers?.personality?.traitScores
+          );
+          return (
+            <Card key={tutor.id} title={tutor.full_name} className="hover:shadow-lg transition">
+              <div className="space-y-4">
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-3">
@@ -258,6 +266,13 @@ export const AdminTutors: React.FC = () => {
                 </div>
                 {getStatusBadge(tutor.verification_status)}
               </div>
+
+              {tutorType && (
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
+                  <Award size={14} />
+                  {tutorType.label}
+                </div>
+              )}
 
               {/* Contact Info */}
               <div className="space-y-2 text-sm">
@@ -344,7 +359,8 @@ export const AdminTutors: React.FC = () => {
               </div>
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
 
       {filteredTutors.length === 0 && (
@@ -459,6 +475,14 @@ export const AdminTutors: React.FC = () => {
                     <p className="text-sm text-blue-900">
                       <strong>Top Fit:</strong> {selectedQuestionnaire.personality.topTraits.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
                     </p>
+                  </div>
+                )}
+                {tutorTypeForModal && (
+                  <div className="mt-3 p-3 bg-white border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-900">
+                      <strong>Tutor Type:</strong> {tutorTypeForModal.label}
+                    </p>
+                    <p className="text-xs text-blue-800 mt-1">{tutorTypeForModal.description}</p>
                   </div>
                 )}
               </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Section, Card, Button } from './Components';
+import { getTutorTypeLabel } from '../constants';
 import {
   getAllRequests,
   getBidsForRequest,
@@ -66,6 +67,9 @@ export const AdminMatching: React.FC = () => {
     location: '',
     notes: '',
   });
+  const tutorTypeForModal = selectedQuestionnaire?.personality?.traitScores
+    ? getTutorTypeLabel(selectedQuestionnaire.personality.traitScores)
+    : null;
 
   useEffect(() => {
     fetchRequests();
@@ -332,11 +336,15 @@ export const AdminMatching: React.FC = () => {
                       <p className="text-slate-500">No bids yet for this request.</p>
                     ) : (
                       <div className="space-y-4">
-                        {bids[request.id]?.map((bid) => (
-                          <div
-                            key={bid.id}
-                            className="bg-slate-50 p-4 rounded-lg border border-slate-200"
-                          >
+                        {bids[request.id]?.map((bid) => {
+                          const tutorType = getTutorTypeLabel(
+                            bid.tutor.questionnaire_answers?.personality?.traitScores
+                          );
+                          return (
+                            <div
+                              key={bid.id}
+                              className="bg-slate-50 p-4 rounded-lg border border-slate-200"
+                            >
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                               <div>
                                 <p className="text-sm text-slate-500">Tutor Name</p>
@@ -352,6 +360,12 @@ export const AdminMatching: React.FC = () => {
                                   {bid.tutor.experience_years || 0} years
                                 </p>
                               </div>
+                              {tutorType && (
+                                <div>
+                                  <p className="text-sm text-slate-500">Tutor Type</p>
+                                  <p className="font-semibold">{tutorType.label}</p>
+                                </div>
+                              )}
                               <div>
                                 <p className="text-sm text-slate-500">Verification Status</p>
                                 <p className="font-semibold capitalize">
@@ -415,8 +429,9 @@ export const AdminMatching: React.FC = () => {
                                   : 'Approve Match'}
                               </Button>
                             </div>
-                          </div>
-                        ))}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -457,6 +472,14 @@ export const AdminMatching: React.FC = () => {
                     <p className="text-sm text-blue-900">
                       <strong>Top Fit:</strong> {selectedQuestionnaire.personality.topTraits.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
                     </p>
+                  </div>
+                )}
+                {tutorTypeForModal && (
+                  <div className="mt-3 p-3 bg-white border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-900">
+                      <strong>Tutor Type:</strong> {tutorTypeForModal.label}
+                    </p>
+                    <p className="text-xs text-blue-800 mt-1">{tutorTypeForModal.description}</p>
                   </div>
                 )}
               </div>

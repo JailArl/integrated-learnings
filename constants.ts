@@ -292,6 +292,87 @@ export const TUTOR_SCENARIO_QUESTIONS = [
   }
 ];
 
+export interface TutorTypeInsight {
+  label: string;
+  description: string;
+}
+
+export const getTutorTypeLabel = (
+  traitScores?: Record<string, number>
+): TutorTypeInsight | null => {
+  if (!traitScores) return null;
+
+  const score = (trait: string) => traitScores?.[trait] ?? 0;
+  const has = (trait: string, min: number) => score(trait) >= min;
+
+  if (has('supportive', 75) && has('adaptive', 70)) {
+    return {
+      label: 'Patient Coach',
+      description: 'Calm, encouraging, and adapts to the student’s pace.'
+    };
+  }
+
+  if (has('energetic', 75) && has('supportive', 70)) {
+    return {
+      label: 'Fun Motivator',
+      description: 'High-energy lessons with strong confidence-building.'
+    };
+  }
+
+  if (has('analytical', 75) && has('structured', 70)) {
+    return {
+      label: 'Drill & Mastery',
+      description: 'Systematic practice focused on exam readiness.'
+    };
+  }
+
+  if (has('analytical', 70) && has('adaptive', 70)) {
+    return {
+      label: 'Diagnostic Strategist',
+      description: 'Finds learning gaps quickly and adapts instruction.'
+    };
+  }
+
+  if (has('structured', 70) && has('supportive', 70)) {
+    return {
+      label: 'Steady Builder',
+      description: 'Consistent routine with strong rapport and support.'
+    };
+  }
+
+  if (has('energetic', 70) && has('structured', 70)) {
+    return {
+      label: 'Energetic Driver',
+      description: 'Fast-paced sessions with clear structure.'
+    };
+  }
+
+  if (has('adaptive', 70) && has('energetic', 70)) {
+    return {
+      label: 'Dynamic Improviser',
+      description: 'Flexible, interactive teaching that keeps momentum.'
+    };
+  }
+
+  const sorted = Object.entries(traitScores).sort((a, b) => b[1] - a[1]);
+  const topTrait = sorted[0]?.[0];
+
+  switch (topTrait) {
+    case 'structured':
+      return { label: 'Structured Planner', description: 'Prefers clear routines and lesson flow.' };
+    case 'supportive':
+      return { label: 'Patient Coach', description: 'Supportive and confidence-focused approach.' };
+    case 'analytical':
+      return { label: 'Analytical Explainer', description: 'Breaks concepts down step-by-step.' };
+    case 'energetic':
+      return { label: 'Energetic Motivator', description: 'Brings energy and enthusiasm to lessons.' };
+    case 'adaptive':
+      return { label: 'Flexible Coach', description: 'Adjusts teaching based on student needs.' };
+    default:
+      return null;
+  }
+};
+
 export const TUTOR_CONTRACT_TEXT = `
 TUTOR REFERRAL AGREEMENT
 
