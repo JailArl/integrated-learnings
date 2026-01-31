@@ -75,16 +75,6 @@ export const AdminTutors: React.FC = () => {
     ]);
 
     if (tutorsResult.success && tutorsResult.data) {
-      console.log('=== ALL TUTORS DATA ===');
-      tutorsResult.data.forEach(tutor => {
-        console.log({
-          name: tutor.full_name,
-          questionnaire_completed: tutor.questionnaire_completed,
-          questionnaire_answers: tutor.questionnaire_answers,
-          trait_scores: tutor.questionnaire_answers?.personality?.traitScores
-        });
-      });
-      console.log('=== END ===');
       setTutors(tutorsResult.data);
     } else {
       setError(tutorsResult.error || 'Failed to fetch tutors');
@@ -260,13 +250,6 @@ export const AdminTutors: React.FC = () => {
           const tutorType = getTutorTypeLabel(
             tutor.questionnaire_answers?.personality?.traitScores
           );
-          
-          // Debug: Test the function directly with known good data
-          if (tutor.questionnaire_answers?.personality?.traitScores) {
-            const testType = getTutorTypeLabel(tutor.questionnaire_answers.personality.traitScores);
-            console.log(`${tutor.full_name} - Type function result:`, testType);
-          }
-          
           return (
             <Card key={tutor.id} title={tutor.full_name} className="hover:shadow-lg transition">
               <div className="space-y-4">
@@ -295,20 +278,6 @@ export const AdminTutors: React.FC = () => {
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
                   <Award size={14} />
                   Questionnaire Pending Analysis
-                </div>
-              )}
-              
-              {tutor.questionnaire_completed && (
-                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                  <p className="text-yellow-800 font-bold">Questionnaire: COMPLETED</p>
-                  {tutor.questionnaire_answers?.personality?.traitScores ? (
-                    <div className="mt-1 text-yellow-700">
-                      <p>Scores: {JSON.stringify(tutor.questionnaire_answers.personality.traitScores)}</p>
-                      <p>Type Result: {tutorType ? tutorType.label : 'NULL - function returned nothing'}</p>
-                    </div>
-                  ) : (
-                    <p className="text-yellow-700">No trait scores found</p>
-                  )}
                 </div>
               )}
 
