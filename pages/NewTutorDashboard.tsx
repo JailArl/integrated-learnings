@@ -731,6 +731,39 @@ const QuestionnaireForm: React.FC<{
 const QuestionnaireView: React.FC<{ profile: TutorProfile }> = ({ profile }) => {
   return (
     <div className="space-y-5">
+      {/* Personality Profile Section */}
+      {profile.questionnaire_answers?.personality?.traitScores && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+            <Award size={16} className="text-blue-600" />
+            Your Personality Profile
+          </h4>
+          <div className="space-y-3">
+            {Object.entries(profile.questionnaire_answers.personality.traitScores).map(([trait, score]: [string, any]) => (
+              <div key={trait}>
+                <div className="flex justify-between mb-1">
+                  <span className="capitalize text-sm font-semibold text-blue-800">{trait}</span>
+                  <span className="font-bold text-blue-900">{score}%</span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all"
+                    style={{ width: `${score}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+          {profile.questionnaire_answers.personality.topTraits && (
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <p className="text-xs text-blue-900">
+                <strong>Your Top Traits:</strong> {profile.questionnaire_answers.personality.topTraits.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       <div>
         <h4 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
           <BookOpen size={16} className="text-green-600" />
