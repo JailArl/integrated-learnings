@@ -67,6 +67,18 @@ export const AdminMatching: React.FC = () => {
     location: '',
     notes: '',
   });
+  const normalizeQuestionnaire = (value: any) => {
+    if (!value) return null;
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        console.error('Failed to parse questionnaire JSON:', error);
+        return null;
+      }
+    }
+    return value;
+  };
   const tutorTypeForModal = selectedQuestionnaire?.personality?.traitScores
     ? getTutorTypeLabel(selectedQuestionnaire.personality.traitScores)
     : null;
@@ -337,8 +349,9 @@ export const AdminMatching: React.FC = () => {
                     ) : (
                       <div className="space-y-4">
                         {bids[request.id]?.map((bid) => {
+                          const questionnaire = normalizeQuestionnaire(bid.tutor.questionnaire_answers);
                           const tutorType = getTutorTypeLabel(
-                            bid.tutor.questionnaire_answers?.personality?.traitScores
+                            questionnaire?.personality?.traitScores
                           );
                           return (
                             <div
@@ -392,12 +405,10 @@ export const AdminMatching: React.FC = () => {
                             </div>
 
                             <div className="flex gap-2 flex-wrap">
-                              {bid.tutor.questionnaire_answers && (
+                              {questionnaire && (
                                 <Button
                                   variant="outline"
-                                  onClick={() =>
-                                    openQuestionnaireModal(bid.tutor.questionnaire_answers)
-                                  }
+                                  onClick={() => openQuestionnaireModal(questionnaire)}
                                   className="text-sm"
                                 >
                                   View Questionnaire

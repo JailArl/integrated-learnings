@@ -36,6 +36,18 @@ export const AdminVerification: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false);
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<any>(null);
+  const normalizeQuestionnaire = (value: any) => {
+    if (!value) return null;
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        console.error('Failed to parse questionnaire JSON:', error);
+        return null;
+      }
+    }
+    return value;
+  };
   const tutorTypeForModal = selectedQuestionnaire?.personality?.traitScores
     ? getTutorTypeLabel(selectedQuestionnaire.personality.traitScores)
     : null;
@@ -159,8 +171,9 @@ export const AdminVerification: React.FC = () => {
       ) : (
         <div className="space-y-6">
           {tutors.map((tutor) => {
+            const questionnaire = normalizeQuestionnaire(tutor.questionnaire_answers);
             const tutorType = getTutorTypeLabel(
-              tutor.questionnaire_answers?.personality?.traitScores
+              questionnaire?.personality?.traitScores
             );
             return (
               <Card key={tutor.id} title={tutor.full_name}>
@@ -249,11 +262,11 @@ export const AdminVerification: React.FC = () => {
                 )}
 
                 <div className="flex gap-3 pt-3 border-t">
-                  {tutor.questionnaire_answers && (
+                  {questionnaire && (
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setSelectedQuestionnaire(tutor.questionnaire_answers);
+                        setSelectedQuestionnaire(questionnaire);
                         setShowQuestionnaireModal(true);
                       }}
                       className="text-sm"

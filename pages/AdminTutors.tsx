@@ -57,6 +57,18 @@ export const AdminTutors: React.FC = () => {
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const normalizeQuestionnaire = (value: any) => {
+    if (!value) return null;
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        console.error('Failed to parse questionnaire JSON:', error);
+        return null;
+      }
+    }
+    return value;
+  };
   const tutorTypeForModal = selectedQuestionnaire?.personality?.traitScores
     ? getTutorTypeLabel(selectedQuestionnaire.personality.traitScores)
     : null;
@@ -75,13 +87,6 @@ export const AdminTutors: React.FC = () => {
     ]);
 
     if (tutorsResult.success && tutorsResult.data) {
-      console.log('📊 TUTORS DATA FROM DB:');
-      tutorsResult.data.forEach((tutor: any) => {
-        console.log(`✓ ${tutor.full_name}:`, {
-          questionnaire_completed: tutor.questionnaire_completed,
-          questionnaire_answers: tutor.questionnaire_answers
-        });
-      });
       setTutors(tutorsResult.data);
     } else {
       setError(tutorsResult.error || 'Failed to fetch tutors');
@@ -254,8 +259,9 @@ export const AdminTutors: React.FC = () => {
       {/* Tutor Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredTutors.map((tutor) => {
+          const questionnaire = normalizeQuestionnaire(tutor.questionnaire_answers);
           const tutorType = getTutorTypeLabel(
-            tutor.questionnaire_answers?.personality?.traitScores
+            questionnaire?.personality?.traitScores
           );
           return (
             <Card key={tutor.id} title={tutor.full_name} className="hover:shadow-lg transition">
@@ -347,10 +353,10 @@ export const AdminTutors: React.FC = () => {
 
               {/* Actions */}
               <div className="pt-4 border-t space-y-2">
-                {tutor.questionnaire_answers && (
+                {questionnaire && (
                   <Button 
                     onClick={() => {
-                      setSelectedQuestionnaire(tutor.questionnaire_answers);
+                      setSelectedQuestionnaire(questionnaire);
                       setShowQuestionnaireModal(true);
                     }}
                     variant="outline"
