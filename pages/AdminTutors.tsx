@@ -93,11 +93,12 @@ export const AdminTutors: React.FC = () => {
     }
 
     if (requestsResult.success && requestsResult.data) {
+      // Show only requests that don't have a match yet
       const filtered = requestsResult.data.filter((r: ParentRequest) => 
-        r.status !== 'matched' && r.status !== 'invoiced'
+        !r.match || r.match.length === 0
       );
       console.log('Fetched requests:', requestsResult.data);
-      console.log('Filtered requests:', filtered);
+      console.log('Filtered requests without matches:', filtered);
       setRequests(filtered);
     } else {
       console.error('Failed to fetch requests:', requestsResult.error);
