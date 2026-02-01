@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, AlertCircle } from 'lucide-react';
+import { adminLogin } from '../services/adminAuth';
 
 export const AdminLogin: React.FC = () => {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,15 +16,17 @@ export const AdminLogin: React.FC = () => {
     setLoading(true);
 
     try {
-      // Simple admin authentication
-      if (username === 'admin' && password === 'admin123') {
-        // Store admin session with timestamp (24-hour expiry)
-        localStorage.setItem('adminSession', 'true');
-        localStorage.setItem('adminSessionTime', Date.now().toString());
+      // Use new backend authentication
+      const result = await adminLogin(email, password);
+      
+      if (result.success && result.token) {
+        // Store secure token in localStorage
+        localStorage.setItem('adminToken', result.token);
+        localStorage.setItem('adminTokenExpiry', (Date.now() + (result.expiresIn || 0)).toString());
         // Redirect to admin matching page
         navigate('/admin/matching');
       } else {
-        setError('Invalid admin credentials');
+        setError(result.error || 'Login failed');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
@@ -55,16 +58,16 @@ export const AdminLogin: React.FC = () => {
             )}
 
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
-                Username
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
               </label>
               <input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                placeholder="Enter admin username"
+                placeholder="Enter admin email"
                 required
               />
             </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Clock, Eye, EyeOff, LogOut, RefreshCw, Download, Search, Filter } from 'lucide-react';
+import { adminLogout } from '../services/adminAuth';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 
 interface FormSubmission {
@@ -133,10 +134,14 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => {
-    // Clear admin session
-    localStorage.removeItem('adminSession');
-    localStorage.removeItem('adminSessionTime');
+  const handleLogout = async () => {
+    const token = localStorage.getItem('adminToken');
+    if (token) {
+      await adminLogout(token);
+    }
+    // Clear session data
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminTokenExpiry');
     setIsAuthenticated(false);
     setPassword('');
     setSubmissions([]);

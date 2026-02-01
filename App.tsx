@@ -32,23 +32,21 @@ const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   return <>{children}</>;
 };
 
-// Admin Protection Wrapper with Session Validation
+// Admin Protection Wrapper with Token Validation
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const isAdminLoggedIn = localStorage.getItem('adminSession') === 'true';
-  const sessionTimestamp = localStorage.getItem('adminSessionTime');
+  const token = localStorage.getItem('adminToken');
+  const tokenExpiry = localStorage.getItem('adminTokenExpiry');
   
-  // Check if session has expired (24 hours)
-  const isSessionExpired = () => {
-    if (!sessionTimestamp) return true;
-    const sessionTime = parseInt(sessionTimestamp);
-    const now = Date.now();
-    const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
-    return (now - sessionTime) > sessionDuration;
+  // Check if token exists and hasn't expired
+  const isTokenValid = () => {
+    if (!token || !tokenExpiry) return false;
+    const expiryTime = parseInt(tokenExpiry);
+    return Date.now() < expiryTime;
   };
   
-  if (!isAdminLoggedIn || isSessionExpired()) {
-    localStorage.removeItem('adminSession');
-    localStorage.removeItem('adminSessionTime');
+  if (!isTokenValid()) {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminTokenExpiry');
     return <Navigate to="/admin/login" replace />;
   }
   
