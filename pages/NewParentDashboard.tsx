@@ -259,7 +259,10 @@ const RequestSubmissionForm: React.FC<{
   };
 
   return (
-    <Card title="Submit New Request" className="mb-8">
+    <Card title="Request Diagnostic Assessment" className="mb-8">
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <p className="text-sm text-blue-900">✓ <strong>Premium diagnostic matching included</strong> • Typically takes 2-5 business days • We accept 5-8 new families per week</p>
+      </div>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
@@ -353,9 +356,10 @@ const RequestSubmissionForm: React.FC<{
               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm font-semibold text-gray-700">
-              Book 30min diagnostic test (optional)
+              Book 30min diagnostic assessment session (optional, normally $120)
             </span>
           </label>
+          <p className="text-xs text-gray-500 ml-6 mt-1">Helps us create a more targeted tutor match</p>
         </div>
 
         {formData.diagnosticTestBooked && (
