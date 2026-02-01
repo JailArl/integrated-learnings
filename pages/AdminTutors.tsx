@@ -428,8 +428,12 @@ export const AdminTutors: React.FC = () => {
                           <p className="text-sm text-gray-600">{request.student_level}</p>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm text-gray-600">Parent: {request.parent.full_name}</div>
-                          <div className="text-xs text-gray-500">{request.parent.email}</div>
+                          {request.parent && (
+                            <>
+                              <div className="text-sm text-gray-600">Parent: {request.parent.full_name}</div>
+                              <div className="text-xs text-gray-500">{request.parent.email}</div>
+                            </>
+                          )}
                         </div>
                       </div>
 
