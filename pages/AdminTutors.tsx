@@ -376,9 +376,7 @@ export const AdminTutors: React.FC = () => {
                   Manual Match
                 </Button>
               </div>
-              </div>
-            </div>
-          </Card>
+            </Card>
           );
         })}
       </div>
