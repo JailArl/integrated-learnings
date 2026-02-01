@@ -1,5 +1,9 @@
 import { supabase } from './supabase';
-import { v4 as uuidv4 } from 'uuid';
+
+// Generate UUID without external dependency
+const generateToken = () => {
+  return crypto.randomUUID();
+};
 
 interface AdminLoginResponse {
   success: boolean;
@@ -50,7 +54,7 @@ export const adminLogin = async (
     }
 
     // Generate session token
-    const token = uuidv4();
+    const token = generateToken();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Store session
