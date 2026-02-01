@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import MainLanding from './pages/MainLanding';
 import TuitionHome from './pages/TuitionHome';
@@ -55,9 +55,8 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const App: React.FC = () => {
   return (
-    // HashRouter is required for the preview environment to work correctly.
-    // When deploying to production (e.g. Vercel) with a custom domain, you can switch this to BrowserRouter.
-    <HashRouter>
+    // BrowserRouter for clean URLs on production with custom domain
+    <BrowserRouter>
       <Layout>
         <Routes>
           {/* Main Landing Page */}
