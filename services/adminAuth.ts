@@ -29,8 +29,8 @@ export const adminLogin = async (
 ): Promise<AdminLoginResponse> => {
   // Fallback hardcoded credentials for quick access
   // TODO: Replace with proper database user after setup
-  const HARDCODED_ADMIN_EMAIL = 'admin@integrated-learnings.com';
-  const HARDCODED_ADMIN_PASSWORD = 'IntegratedAdmin2024!';
+  const HARDCODED_ADMIN_EMAIL = 'manage.integrated.learnings@gmail.com';
+  const HARDCODED_ADMIN_PASSWORD = 'Jail_123@369';
 
   if (email === HARDCODED_ADMIN_EMAIL && password === HARDCODED_ADMIN_PASSWORD) {
     const token = generateToken();
