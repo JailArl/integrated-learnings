@@ -53,12 +53,16 @@ const TuitionHome: React.FC = () => {
             
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
               <Button to="/parents" className="px-8 py-4 text-base shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
-                Request a Tutor
+                Get Diagnostic Assessment
+                <span className="block text-xs font-normal mt-1 opacity-90">Value $120 - Waived</span>
               </Button>
               <Button to="/tuition/pricing" variant="white" className="px-8 py-4 text-base shadow-xl hover:scale-105 transition-transform">
                 View Pricing
               </Button>
             </div>
+            <p className="text-slate-400 text-sm">
+              🕒 Limited to 5-8 families per week • Premium matching included
+            </p>
 
             <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-400">
               <span className="flex items-center"><CheckCircle2 size={14} className="mr-1 text-green-400" />Verified Tutors</span>
@@ -269,12 +273,15 @@ const TuitionHome: React.FC = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button to="/parents" variant="white" className="text-base px-8 py-4 shadow-2xl hover:scale-105 transition-transform">
-              Request a Tutor →
+              Get Assessment (Worth $120 - Free) →
             </Button>
             <Button to="/tuition/contact" className="text-base px-8 py-4 bg-blue-800 hover:bg-blue-900 border-2 border-white/20 hover:scale-105 transition-transform">
               Contact Us
             </Button>
           </div>
+          <p className="text-blue-200 text-xs mt-4">
+            We accept 5-8 new families weekly
+          </p>
         </div>
       </div>
     </>

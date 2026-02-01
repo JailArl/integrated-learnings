@@ -160,13 +160,14 @@ export const About: React.FC = () => (
              </div>
              <div>
                  <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
-                   Request a Tutor
+                   Get Diagnostic Assessment
+                   <span className="block text-xs font-normal mt-1">Worth $120 - Waived</span>
                  </Button>
              </div>
           </div>
 
            <p className="text-center text-slate-400 text-xs mt-6">
-             Requests reviewed within 48 hours. We prioritize quality matches and fast turnaround.
+             Limited to 5-8 families weekly • Requests reviewed within 48 hours
            </p>
        </div>
     </div>
@@ -223,8 +224,9 @@ export const About: React.FC = () => (
                Diagnostic matching is the fastest path to a tutor who actually works for your child.
              </p>
              <Button to="/parents" className="px-10 py-3 font-bold text-lg">
-               Request a Tutor
+               Get Assessment (Value $120 - Free)
              </Button>
+             <p className="text-xs text-slate-500 mt-3">We accept 5-8 new families per week</p>
            </div>
        </div>
     </Section>
@@ -270,12 +272,15 @@ export const About: React.FC = () => (
              </div>
              <div>
                  <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
-                   Request a Tutor
+                   Get Diagnostic Assessment
+                   <span className="block text-xs font-normal mt-1">Worth $120 - Waived</span>
                  </Button>
              </div>
           </div>
 
            <p className="text-center text-slate-400 text-xs mt-6">
+             Limited to 5-8 families weekly • Premium matching process
+           </p>
              Requests reviewed within 48 hours. We prioritize quality matches and fast turnaround.
            </p>
        </div>
@@ -355,8 +360,9 @@ export const About: React.FC = () => (
             Our diagnostic matching ensures your child has consistent, expert support aligned to their needs.
           </p>
           <Button to="/parents" variant="white" className="px-8 py-3 font-bold shadow-lg">
-            Request a Tutor
+            Get Assessment (Worth $120 - Free)
           </Button>
+          <p className="text-blue-200 text-xs mt-3">5-8 families accepted weekly</p>
         </div>
       </div>
     </Section>
@@ -712,8 +718,11 @@ export const Contact: React.FC = () => (
               Request a tutor and we’ll run a diagnostic to match the right educator quickly—no trial and error.
             </p>
             <div className="mt-auto">
-              <Button to="/parents" variant="white" className="w-full group-hover:scale-105 transition">📋 Request a Tutor</Button>
-              <p className="text-xs text-blue-200 mt-3 text-center">Premium diagnostic matching included</p>
+              <Button to="/parents" variant="white" className="w-full group-hover:scale-105 transition">
+                📋 Get Diagnostic Assessment
+                <span className="block text-xs font-normal mt-1">Value $120 - Waived</span>
+              </Button>
+              <p className="text-xs text-blue-200 mt-3 text-center">Limited to 5-8 families per week</p>
             </div>
           </div>
         </div>

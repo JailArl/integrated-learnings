@@ -62,9 +62,15 @@ const Home: React.FC = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
-            <Button to="/parents" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
-              Request a Tutor
-            </Button>
+            <div className="relative">
+              <Button to="/parents" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
+                Get Diagnostic Assessment
+                <span className="block text-xs font-normal mt-1 opacity-90">Value $120 - Waived</span>
+              </Button>
+              <div className="absolute -top-3 -right-3 bg-yellow-400 text-slate-900 text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                6 slots left this week
+              </div>
+            </div>
             <Button to="/tuition?section=about" variant="white" className="px-10 py-5 text-lg shadow-xl hover:scale-105 transition-transform">
               How We're Different
             </Button>
@@ -118,10 +124,11 @@ const Home: React.FC = () => {
         </div>
 
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-8 text-center">
-          <p className="text-lg font-semibold mb-4">Ready to request your tutor match?</p>
+          <p className="text-lg font-semibold mb-4">Ready to get your diagnostic assessment?</p>
           <Button to="/parents" variant="white" className="text-lg px-8 py-3">
-            Request a Tutor
+            Get Assessment (Value $120 - Waived)
           </Button>
+          <p className="text-xs text-green-100 mt-3">Limited to 5-8 new families per week</p>
         </div>
       </Section>
 
@@ -237,14 +244,15 @@ const Home: React.FC = () => {
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Button to="/parents" variant="white" className="w-full sm:w-auto text-lg px-10 py-5 shadow-2xl hover:scale-105 transition-transform">
-              Request a Tutor →
+              Get Diagnostic Assessment →
+              <span className="block text-xs font-normal mt-1">Worth $120 - Waived for you</span>
             </Button>
             <Button to="/contact" className="w-full sm:w-auto text-lg px-10 py-5 bg-blue-800 hover:bg-blue-900 border-2 border-white/20 hover:scale-105 transition-transform">
               💬 Chat With Education Consultant
             </Button>
           </div>
           <p className="text-blue-200 text-sm mt-6">
-            Premium diagnostic matching included
+            ⏱️ We accept 5-8 new families weekly • Assessment typically worth $120
           </p>
         </div>
       </div>
@@ -274,7 +282,11 @@ const Home: React.FC = () => {
               </div>
             ))}
           </div>
-          <Button to="/parents" className="w-full mt-6">Request a Tutor →</Button>
+          <Button to="/parents" className="w-full mt-6">
+            Get Your Diagnostic Assessment →
+            <span className="block text-xs font-normal mt-1">Value $120 - Complimentary</span>
+          </Button>
+          <p className="text-center text-xs text-slate-500 mt-3">Limited availability: 5-8 families accepted weekly</p>
         </div>
       </Section>
       {/* Subtle Link for Educators at bottom */}
