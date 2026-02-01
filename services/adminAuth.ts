@@ -27,6 +27,22 @@ export const adminLogin = async (
   email: string,
   password: string
 ): Promise<AdminLoginResponse> => {
+  // Fallback hardcoded credentials for quick access
+  // TODO: Replace with proper database user after setup
+  const HARDCODED_ADMIN_EMAIL = 'admin@integrated-learnings.com';
+  const HARDCODED_ADMIN_PASSWORD = 'IntegratedAdmin2024!';
+
+  if (email === HARDCODED_ADMIN_EMAIL && password === HARDCODED_ADMIN_PASSWORD) {
+    const token = generateToken();
+    localStorage.setItem('adminToken', token);
+    localStorage.setItem('adminId', 'hardcoded-admin');
+    return {
+      success: true,
+      token,
+      expiresIn: 24 * 60 * 60 * 1000, // 24 hours
+    };
+  }
+
   if (!supabase) {
     return { success: false, error: 'Supabase not configured' };
   }
