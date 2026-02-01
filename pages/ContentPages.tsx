@@ -281,8 +281,6 @@ export const About: React.FC = () => (
            <p className="text-center text-slate-400 text-xs mt-6">
              Limited to 5-8 families weekly • Premium matching process
            </p>
-             Requests reviewed within 48 hours. We prioritize quality matches and fast turnaround.
-           </p>
        </div>
     </div>
 
