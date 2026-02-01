@@ -104,11 +104,12 @@ export const AdminLogin: React.FC = () => {
           </div>
         </div>
 
-        {/* Credentials Hint (remove in production) */}
-        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4 text-center">
-          <p className="text-xs text-gray-500">
-            <strong>Demo Credentials:</strong><br />
-            Username: admin | Password: admin123
+        {/* Credentials Hint */}
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+          <p className="text-xs text-blue-700">
+            <strong>Admin Access:</strong><br />
+            Email: manage.integrated.learnings@gmail.com<br />
+            Password: (check your admin credentials)
           </p>
         </div>
       </div>
