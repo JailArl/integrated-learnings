@@ -103,15 +103,6 @@ export const AdminLogin: React.FC = () => {
             </Link>
           </div>
         </div>
-
-        {/* Credentials Hint */}
-        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-          <p className="text-xs text-blue-700">
-            <strong>Admin Access:</strong><br />
-            Email: manage.integrated.learnings@gmail.com<br />
-            Password: (check your admin credentials)
-          </p>
-        </div>
       </div>
     </div>
   );
