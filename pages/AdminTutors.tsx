@@ -93,10 +93,9 @@ export const AdminTutors: React.FC = () => {
     }
 
     if (requestsResult.success && requestsResult.data) {
-      console.log('Fetched requests:', requestsResult.data);
       setRequests(requestsResult.data);
     } else {
-      console.error('Failed to fetch requests:', requestsResult.error);
+      console.error('Failed to fetch requests');
       setError(requestsResult.error || 'Failed to fetch requests');
     }
 

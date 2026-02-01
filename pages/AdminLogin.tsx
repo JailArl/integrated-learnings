@@ -17,8 +17,9 @@ export const AdminLogin: React.FC = () => {
     try {
       // Simple admin authentication
       if (username === 'admin' && password === 'admin123') {
-        // Store admin session
+        // Store admin session with timestamp (24-hour expiry)
         localStorage.setItem('adminSession', 'true');
+        localStorage.setItem('adminSessionTime', Date.now().toString());
         // Redirect to admin matching page
         navigate('/admin/matching');
       } else {

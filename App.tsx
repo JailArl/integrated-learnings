@@ -32,11 +32,23 @@ const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   return <>{children}</>;
 };
 
-// Simple Admin Protection Wrapper
+// Admin Protection Wrapper with Session Validation
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isAdminLoggedIn = localStorage.getItem('adminSession') === 'true';
+  const sessionTimestamp = localStorage.getItem('adminSessionTime');
   
-  if (!isAdminLoggedIn) {
+  // Check if session has expired (24 hours)
+  const isSessionExpired = () => {
+    if (!sessionTimestamp) return true;
+    const sessionTime = parseInt(sessionTimestamp);
+    const now = Date.now();
+    const sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+    return (now - sessionTime) > sessionDuration;
+  };
+  
+  if (!isAdminLoggedIn || isSessionExpired()) {
+    localStorage.removeItem('adminSession');
+    localStorage.removeItem('adminSessionTime');
     return <Navigate to="/admin/login" replace />;
   }
   

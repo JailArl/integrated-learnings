@@ -134,11 +134,16 @@ export default function AdminDashboard() {
   };
 
   const handleLogout = () => {
+    // Clear admin session
+    localStorage.removeItem('adminSession');
+    localStorage.removeItem('adminSessionTime');
     setIsAuthenticated(false);
     setPassword('');
     setSubmissions([]);
     setStats(null);
     setLastUpdated(null);
+    // Redirect to login
+    window.location.href = '/admin/login';
   };
 
   const handleExport = () => {
