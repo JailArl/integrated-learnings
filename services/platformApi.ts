@@ -364,8 +364,7 @@ export const getAllRequests = async (): Promise<{
       .select(
         `
         *,
-        parent:parent_profiles(*),
-        match:matches(*)
+        parent:parent_profiles(*)
       `
       )
       .order('created_at', { ascending: false });

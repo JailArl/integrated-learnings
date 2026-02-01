@@ -42,7 +42,6 @@ interface ParentRequest {
     full_name: string;
     email: string;
   };
-  match?: any[];
 }
 
 export const AdminTutors: React.FC = () => {
