@@ -93,9 +93,15 @@ export const AdminTutors: React.FC = () => {
     }
 
     if (requestsResult.success && requestsResult.data) {
-      setRequests(requestsResult.data.filter((r: ParentRequest) => 
+      const filtered = requestsResult.data.filter((r: ParentRequest) => 
         r.status !== 'matched' && r.status !== 'invoiced'
-      ));
+      );
+      console.log('Fetched requests:', requestsResult.data);
+      console.log('Filtered requests:', filtered);
+      setRequests(filtered);
+    } else {
+      console.error('Failed to fetch requests:', requestsResult.error);
+      setError(requestsResult.error || 'Failed to fetch requests');
     }
 
     setLoading(false);
