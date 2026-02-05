@@ -109,7 +109,7 @@ export const sendInterviewMessage = async (
     // Generate dynamic system prompt based on tutor profile
     const systemPrompt = generateSystemPrompt(tutorProfile);
 
-    // Call OpenAI API
+    // Call OpenAI API directly with mode: 'no-cors'
     const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
