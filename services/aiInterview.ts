@@ -1,8 +1,5 @@
 import { supabase } from './supabase';
 
-const OPENAI_API_KEY = (import.meta as any).env?.VITE_OPENAI_API_KEY as string | undefined;
-const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
-
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -92,13 +89,6 @@ export const sendInterviewMessage = async (
   conversationHistory: Message[],
   tutorProfile?: any
 ): Promise<InterviewResponse> => {
-  if (!OPENAI_API_KEY) {
-    return {
-      success: false,
-      error: 'OpenAI API key not configured',
-    };
-  }
-
   try {
     // Build conversation messages
     const messages: Message[] = [
