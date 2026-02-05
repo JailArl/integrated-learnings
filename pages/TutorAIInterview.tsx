@@ -152,7 +152,8 @@ export const TutorAIInterview: React.FC = () => {
           </div>
         ) : tutorId ? (
           <AIInterview 
-            tutorId={tutorId} 
+            tutorId={tutorId}
+            tutorProfile={tutorProfile}
             onComplete={() => {
               setTimeout(() => navigate('/tutors'), 3000);
             }}

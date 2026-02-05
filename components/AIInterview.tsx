@@ -9,10 +9,11 @@ interface Message {
 
 interface AIInterviewProps {
   tutorId: string;
+  tutorProfile?: any;
   onComplete?: (scores: any) => void;
 }
 
-export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, onComplete }) => {
+export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile, onComplete }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,7 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, onComplete })
     setUserInput('');
 
     try {
-      const result = await sendInterviewMessage(tutorId, userMessage, messages);
+      const result = await sendInterviewMessage(tutorId, userMessage, messages, tutorProfile);
 
       if (!result.success) {
         setError(result.error || 'Failed to process response');
@@ -93,11 +94,13 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, onComplete })
         </div>
 
         {scores && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <ScoreCard label="Patience" score={scores.patience} />
             <ScoreCard label="Empathy" score={scores.empathy} />
             <ScoreCard label="Communication" score={scores.communication} />
             <ScoreCard label="Professionalism" score={scores.professionalism} />
+            <ScoreCard label="Subject Mastery" score={scores.subjectMastery} />
+            <ScoreCard label="Teaching Ability" score={scores.teachingAbility} />
             <ScoreCard label="Overall" score={scores.overall} highlight />
           </div>
         )}

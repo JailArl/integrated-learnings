@@ -12,7 +12,13 @@ ADD COLUMN IF NOT EXISTS cert_verification_status TEXT DEFAULT 'pending',
 ADD COLUMN IF NOT EXISTS ai_interview_status TEXT DEFAULT 'pending',
 ADD COLUMN IF NOT EXISTS ai_interview_score INTEGER,
 ADD COLUMN IF NOT EXISTS ai_interview_transcript TEXT,
-ADD COLUMN IF NOT EXISTS can_access_cases BOOLEAN DEFAULT false;
+ADD COLUMN IF NOT EXISTS ai_interview_assessment TEXT,
+ADD COLUMN IF NOT EXISTS can_access_cases BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS ranking_score INTEGER,
+ADD COLUMN IF NOT EXISTS ai_ranking_assessment TEXT,
+ADD COLUMN IF NOT EXISTS response_time_avg INTEGER DEFAULT 0,
+ADD COLUMN IF NOT EXISTS completion_rate DECIMAL(5,2) DEFAULT 0.00,
+ADD COLUMN IF NOT EXISTS ranking_updated_at TIMESTAMP;
 
 -- 2. Create certificates table for multiple cert uploads
 CREATE TABLE IF NOT EXISTS tutor_certificates (
@@ -51,6 +57,7 @@ CREATE POLICY "Admins can update all certificates"
 -- 5. Create index for faster queries
 CREATE INDEX IF NOT EXISTS idx_tutor_certificates_tutor_id ON tutor_certificates(tutor_id);
 CREATE INDEX IF NOT EXISTS idx_tutor_certificates_status ON tutor_certificates(verification_status);
+CREATE INDEX IF NOT EXISTS idx_tutor_profiles_ranking ON tutor_profiles(ranking_score DESC NULLS LAST);
 
 -- 6. Update existing tutors to have default onboarding status
 UPDATE tutor_profiles 

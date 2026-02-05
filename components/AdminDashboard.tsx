@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Clock, Eye, EyeOff, LogOut, RefreshCw, Download, Search, Filter } from 'lucide-react';
 import { adminLogout } from '../services/adminAuth';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
+import AdminTutorRanking from './AdminTutorRanking';
 
 interface FormSubmission {
   id: string;
@@ -25,7 +26,7 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors' | 'rankings'>('overview');
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -335,7 +336,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <div className="flex gap-0 mb-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {(['overview', 'submissions', 'parents', 'tutors'] as const).map(tab => (
+          {(['overview', 'submissions', 'parents', 'tutors', 'rankings'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -663,6 +664,10 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+        )}
+
+        {activeTab === 'rankings' && (
+          <AdminTutorRanking />
         )}
       </div>
 

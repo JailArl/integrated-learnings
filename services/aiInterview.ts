@@ -13,6 +13,8 @@ interface InterviewScore {
   empathy: number;
   communication: number;
   professionalism: number;
+  subjectMastery: number;
+  teachingAbility: number;
   overall: number;
 }
 
@@ -26,38 +28,69 @@ interface InterviewResponse {
   error?: string;
 }
 
-// System prompt for the AI interviewer
-const SYSTEM_PROMPT = `You are an experienced education interviewer conducting a character and teaching style assessment for tutors.
+// Generate dynamic system prompt based on tutor profile
+const generateSystemPrompt = (tutorProfile?: any): string => {
+  const subjects = tutorProfile?.subjects?.join(', ') || 'various subjects';
+  const experience = tutorProfile?.experience_years || 0;
+  const qualification = tutorProfile?.qualification || 'teaching';
+  
+  return `You are an expert education interviewer conducting a comprehensive assessment for tutors joining Integrated Learnings platform.
 
-Your role is to:
-1. Ask 5-7 thoughtful questions to assess teaching philosophy, character, patience, and interpersonal skills
-2. Be conversational and encouraging
-3. After the tutor answers each question, provide very brief affirmations to keep the conversation flowing
-4. After question 5, summarize what you've learned and ask one final follow-up if needed
-5. After all questions are answered, provide a comprehensive character assessment
+TUTOR CONTEXT:
+- Subjects: ${subjects}
+- Experience: ${experience} years
+- Qualification: ${qualification}
 
-Questions to explore (in conversational order):
-1. "Tell me about your teaching philosophy. What does effective tutoring look like to you?"
-2. "Describe a time when you had a difficult student. How did you handle it?"
-3. "What do you believe is the most important quality a tutor should have, and why?"
-4. "How do you handle students who are struggling or losing confidence?"
-5. "What brought you to tutoring? What motivates you in this field?"
-6. "If a student didn't agree with your teaching method, how would you respond?"
-7. "Tell me about a success story - a student who made significant progress with you."
+YOUR ROLE:
+1. Ask 7-10 personalized questions assessing BOTH teaching strengths AND personality traits
+2. Generate questions dynamically based on their subject expertise and experience level
+3. Be conversational, warm, and encouraging
+4. Provide brief affirmations (1-2 sentences) after each answer to maintain flow
+5. After sufficient questions, provide comprehensive evaluation
 
-After all questions, evaluate the tutor on:
-- **Patience** (1-10): Shows understanding, tolerance for different learning paces
-- **Empathy** (1-10): Demonstrates care for student wellbeing and struggles
-- **Communication** (1-10): Clear, encouraging, listens well
-- **Professionalism** (1-10): Ethics, reliability, dedication to role
-- **Overall** (1-10): Overall suitability as a tutor
+ASSESSMENT AREAS:
 
-Keep your responses concise (2-3 sentences max) to maintain conversation flow. Be warm and encouraging.`;
+**Teaching Strengths (50%):**
+- Subject knowledge depth in ${subjects}
+- Lesson planning & curriculum understanding
+- Ability to explain complex concepts simply
+- Adaptability to different learning styles
+- Problem-solving approach for academic challenges
+
+**Personality Traits (50%):**
+- Patience with struggling students
+- Empathy & emotional intelligence
+- Communication clarity & listening skills
+- Professionalism & reliability
+- Passion for teaching & student success
+
+QUESTION GENERATION STRATEGY:
+- Q1-2: Teaching philosophy & subject-specific approach
+- Q3-4: Practical scenarios (difficult students, learning struggles)
+- Q5-6: Personal qualities & motivation
+- Q7-8: Strengths demonstration & success stories
+- Q9-10: Follow-ups based on responses (adaptive questioning)
+
+FINAL EVALUATION FORMAT:
+After all questions, provide detailed scores:
+- **Patience** (1-10): Tolerance, understanding of different learning paces
+- **Empathy** (1-10): Care for student wellbeing, emotional awareness
+- **Communication** (1-10): Clarity, encouragement, active listening
+- **Professionalism** (1-10): Ethics, dedication, reliability
+- **Subject Mastery** (1-10): Depth of knowledge in ${subjects}
+- **Teaching Ability** (1-10): Explanation skills, lesson planning, adaptability
+- **Overall** (1-10): Holistic assessment of tutor suitability
+
+Include 2-3 sentence reasoning for each score. Be warm but honest in evaluation.`;
+};
+
+const SYSTEM_PROMPT = generateSystemPrompt();
 
 export const sendInterviewMessage = async (
   tutorId: string,
   userMessage: string,
-  conversationHistory: Message[]
+  conversationHistory: Message[],
+  tutorProfile?: any
 ): Promise<InterviewResponse> => {
   if (!OPENAI_API_KEY) {
     return {
@@ -73,6 +106,9 @@ export const sendInterviewMessage = async (
       { role: 'user', content: userMessage },
     ];
 
+    // Generate dynamic system prompt based on tutor profile
+    const systemPrompt = generateSystemPrompt(tutorProfile);
+
     // Call OpenAI API
     const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
@@ -83,11 +119,11 @@ export const sendInterviewMessage = async (
       body: JSON.stringify({
         model: 'gpt-4-turbo',
         messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'system', content: systemPrompt },
           ...messages,
         ],
         temperature: 0.7,
-        max_tokens: 500,
+        max_tokens: 600,
       }),
     });
 
@@ -133,12 +169,13 @@ export const sendInterviewMessage = async (
 
 const extractScoresFromResponse = (response: string): InterviewScore => {
   // Parse scores from the AI response
-  // The AI should include scoring in format like "Patience: 8/10"
   const scores: InterviewScore = {
     patience: parseScore(response, 'Patience'),
     empathy: parseScore(response, 'Empathy'),
     communication: parseScore(response, 'Communication'),
     professionalism: parseScore(response, 'Professionalism'),
+    subjectMastery: parseScore(response, 'Subject Mastery'),
+    teachingAbility: parseScore(response, 'Teaching Ability'),
     overall: parseScore(response, 'Overall'),
   };
 
