@@ -1,5 +1,7 @@
 import { supabase } from './supabase';
 
+const SUPABASE_EDGE_URL = (import.meta as any).env?.VITE_SUPABASE_URL?.replace('/rest/v1', '') + '/functions/v1';
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -99,22 +101,24 @@ export const sendInterviewMessage = async (
     // Generate dynamic system prompt based on tutor profile
     const systemPrompt = generateSystemPrompt(tutorProfile);
 
-    // Call Supabase Edge Function (no CORS issues)
-    const response = await supabase.functions.invoke('interview-message', {
-      body: {
-        systemPrompt,
-        messages,
-      },
-    })
-
-    if (response.error) {
-      throw new Error(response.error.message || 'Failed to get AI response')
+    // Call Supabase Edge Function via direct fetch
+    if (!SUPABASE_EDGE_URL) {
+      throw new Error('Supabase Edge Function URL not configured');
     }
 
-    const data = response.data
-    
+    const response = await fetch(`${SUPABASE_EDGE_URL}/interview-message`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${(import.meta as any).env?.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ systemPrompt, messages }),
+    });
+
+    const data = await response.json();
+
     if (!data.success) {
-      throw new Error(data.error || 'Failed to process interview response')
+      throw new Error(data.error || 'Failed to process interview response');
     }
 
     const assistantMessage = data.message;
