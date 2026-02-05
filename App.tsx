@@ -25,6 +25,7 @@ import NewParentDashboard from './pages/NewParentDashboard';
 import NewTutorDashboard from './pages/NewTutorDashboard';
 import CaseDetail from './pages/CaseDetail';
 import TutorQuestionnaire from './pages/TutorQuestionnaire';
+import TutorAIInterview from './pages/TutorAIInterview';
 
 // Protected Route for Coursework (Sec 4 only)
 const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -80,6 +81,7 @@ const App: React.FC = () => {
           <Route path="/tutors/case/:caseId" element={<CaseDetail />} />
           <Route path="/tutors/questionnaire" element={<TutorQuestionnaire />} />
           <Route path="/tutor/questionnaire" element={<TutorQuestionnaire />} />
+          <Route path="/tutors/ai-interview" element={<TutorAIInterview />} />
           
           {/* Tuition Service Routes */}
           <Route path="/tuition" element={<TuitionHome />} />
