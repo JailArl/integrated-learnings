@@ -109,32 +109,25 @@ export const sendInterviewMessage = async (
     // Generate dynamic system prompt based on tutor profile
     const systemPrompt = generateSystemPrompt(tutorProfile);
 
-    // Call OpenAI API directly from frontend
-    // Note: This works on local dev but may have CORS issues on production Vercel
-    const response = await fetch(OPENAI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
+    // Call Supabase Edge Function (no CORS issues)
+    const response = await supabase.functions.invoke('interview-message', {
+      body: {
+        systemPrompt,
+        messages,
       },
-      body: JSON.stringify({
-        model: 'gpt-4-turbo',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages,
-        ],
-        temperature: 0.7,
-        max_tokens: 600,
-      }),
-    });
+    })
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error?.message || 'OpenAI API error');
+    if (response.error) {
+      throw new Error(response.error.message || 'Failed to get AI response')
     }
 
-    const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    const data = response.data
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to process interview response')
+    }
+
+    const assistantMessage = data.message;
 
     // Check if interview is complete (look for final assessment)
     const conversationOver =
