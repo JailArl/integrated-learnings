@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { notifyParentSignup, notifyTutorSignup } from './discord';
 
 export interface UserProfile {
   id: string;
@@ -65,6 +66,14 @@ export const signUpParent = async (
     }
     
     console.log('✅ Parent profile created successfully');
+    
+    // Send Discord notification
+    await notifyParentSignup({
+      fullName,
+      email,
+      phone: phone || 'Not provided',
+    });
+    
     return { success: true, user: authData.user };
   } catch (error: any) {
     console.error('❌ Parent signup error:', error.message || error);
@@ -133,6 +142,14 @@ export const signUpTutor = async (
     }
     
     console.log('✅ Tutor profile created successfully');
+    
+    // Send Discord notification
+    await notifyTutorSignup({
+      fullName: data.fullName,
+      email,
+      phone: data.phone || 'Not provided',
+    });
+    
     return { success: true, user: authData.user };
   } catch (error: any) {
     console.error('❌ Tutor signup error:', error.message || error);
