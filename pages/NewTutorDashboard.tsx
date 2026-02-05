@@ -1166,7 +1166,7 @@ const NewTutorDashboardContent: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                  Welcome, {profile?.full_name || 'Tutor'}!
+                  Hi {profile?.full_name || 'Tutor'}, welcome back! 👋
                 </h1>
                 <p className="text-lg text-gray-600">
                   Browse cases, submit bids, and manage your profile
@@ -1370,36 +1370,35 @@ const NewTutorDashboardContent: React.FC = () => {
           )}
         </div>
 
-        {/* Profile Questionnaire Section */}
-        {tutorId && !profile?.questionnaire_completed && (
+        {/* AI Interview Section */}
+        {tutorId && profile?.ai_interview_status !== 'completed' && (
           <div className="mb-12">
-            <Card title="Complete Your Profile Questionnaire" className="max-w-4xl">
+            <Card title="Complete Your Character Interview" className="max-w-4xl">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-900">
-                  <strong>📋 Help us match you better!</strong> Complete this questionnaire to provide more details about your teaching approach and availability. This helps parents find the right tutor for their children.
+                  <strong>🎤 AI Character Interview</strong> Our AI will ask you 7-10 personalized questions about your teaching style and approach. This helps us match you with the right cases and families.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button to="/tutors/questionnaire" variant="primary" className="w-full sm:w-auto">
-                  Start Questionnaire
+                <Button to="/tutors/ai-interview" variant="primary" className="w-full sm:w-auto">
+                  Start AI Interview
                 </Button>
               </div>
             </Card>
           </div>
         )}
 
-        {/* Questionnaire Completed - View Only */}
-        {tutorId && profile?.questionnaire_completed && (
+        {/* AI Interview Completed - View Results */}
+        {tutorId && profile?.ai_interview_status === 'completed' && (
           <div className="mb-12">
-            <Card title="Your Profile Questionnaire" className="max-w-4xl">
+            <Card title="Your AI Interview Results" className="max-w-4xl">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start gap-3">
                 <CheckCircle2 className="text-green-600 mt-0.5" size={20} />
                 <div>
-                  <p className="text-sm text-green-900 font-semibold">Questionnaire Completed!</p>
-                  <p className="text-sm text-green-800">You can update this information using the "Edit Profile" button above.</p>
+                  <p className="text-sm text-green-900 font-semibold">Interview Completed! ✅</p>
+                  <p className="text-sm text-green-800">Your interview has been submitted for admin review. You'll be notified once your results are processed.</p>
                 </div>
               </div>
-              <QuestionnaireView profile={profile} />
             </Card>
           </div>
         )}
@@ -1409,6 +1408,26 @@ const NewTutorDashboardContent: React.FC = () => {
           <div className="mb-12">
             <Card title="Profile Uploads" className="max-w-4xl">
               <div className="space-y-6">
+                {/* Approved Photo Display */}
+                {profile?.photo_url && profile?.photo_verification_status === 'approved' && (
+                  <div>
+                    <h4 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
+                      <CheckCircle2 className="text-green-600" size={20} />
+                      Your Approved Profile Photo
+                    </h4>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                      <p className="text-sm text-green-800 mb-4">✅ Your photo has been verified and approved by admin</p>
+                      <div className="flex justify-center">
+                        <img 
+                          src={profile.photo_url} 
+                          alt="Approved Profile Photo" 
+                          className="h-48 w-48 rounded-lg object-cover border-2 border-green-400 shadow-lg" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <h4 className="text-lg font-bold text-primary mb-4">Profile Photo</h4>
                   <PhotoUpload
