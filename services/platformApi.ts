@@ -216,16 +216,16 @@ export const uploadCertificate = async (
 
   try {
     // Upload file to storage
-    const fileName = `${tutorId}/${Date.now()}_${file.name}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('tutor-certificates')
+    const fileName = `certificates/${tutorId}/${Date.now()}_${file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from('tutor-uploads')
       .upload(fileName, file);
 
     if (uploadError) throw uploadError;
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('tutor-certificates')
+      .from('tutor-uploads')
       .getPublicUrl(fileName);
 
     const fileUrl = urlData.publicUrl;
@@ -236,6 +236,8 @@ export const uploadCertificate = async (
         tutor_id: tutorId,
         file_url: fileUrl,
         file_name: file.name,
+        file_type: file.type,
+        verification_status: 'pending',
       },
     ]);
 
@@ -244,6 +246,71 @@ export const uploadCertificate = async (
     return { success: true, fileUrl };
   } catch (error: any) {
     console.error('Upload certificate error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const uploadTutorPhoto = async (
+  tutorId: string,
+  file: File
+): Promise<{ success: boolean; error?: string; photoUrl?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `tutor-photos/${tutorId}/${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('tutor-uploads')
+      .upload(fileName, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: urlData } = supabase.storage
+      .from('tutor-uploads')
+      .getPublicUrl(fileName);
+
+    const photoUrl = urlData.publicUrl;
+
+    const { error: updateError } = await supabase
+      .from('tutor_profiles')
+      .update({
+        photo_url: photoUrl,
+        onboarding_status: 'photo_uploaded',
+        photo_verification_status: 'pending',
+      })
+      .eq('id', tutorId);
+
+    if (updateError) throw updateError;
+
+    return { success: true, photoUrl };
+  } catch (error: any) {
+    console.error('Upload tutor photo error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateTutorPhotoStatus = async (
+  tutorId: string,
+  status: 'approved' | 'rejected' | 'pending'
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('tutor_profiles')
+      .update({ photo_verification_status: status })
+      .eq('id', tutorId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Update tutor photo status error:', error);
     return { success: false, error: error.message };
   }
 };
@@ -541,6 +608,85 @@ export const verifyTutor = async (
     return { success: true };
   } catch (error: any) {
     console.error('Verify tutor error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateCertificateStatus = async (
+  certificateId: string,
+  status: 'approved' | 'rejected',
+  adminNotes?: string
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const updateData: any = {
+      verification_status: status,
+      verified_at: new Date().toISOString(),
+    };
+
+    if (adminNotes !== undefined) {
+      updateData.admin_notes = adminNotes;
+    }
+
+    const { error } = await supabase
+      .from('tutor_certificates')
+      .update(updateData)
+      .eq('id', certificateId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Update certificate status error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const setTutorCaseAccess = async (
+  tutorId: string,
+  canAccessCases: boolean
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('tutor_profiles')
+      .update({ can_access_cases: canAccessCases })
+      .eq('id', tutorId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Set tutor case access error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+export const setTutorCertVerificationStatus = async (
+  tutorId: string,
+  status: 'approved' | 'rejected' | 'pending'
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('tutor_profiles')
+      .update({ cert_verification_status: status })
+      .eq('id', tutorId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Set tutor cert verification status error:', error);
     return { success: false, error: error.message };
   }
 };

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { signUpTutor } from '../services/auth';
 import { PageHeader, Section } from '../components/Components';
-import { Mail, Lock, Phone, User } from 'lucide-react';
+import { Mail, Lock, Phone, User, Calendar, UserCircle } from 'lucide-react';
 
 export const TutorSignup: React.FC = () => {
   const navigate = useNavigate();
@@ -12,11 +12,13 @@ export const TutorSignup: React.FC = () => {
     password: '',
     confirmPassword: '',
     phone: '',
+    dateOfBirth: '',
+    gender: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -24,7 +26,7 @@ export const TutorSignup: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (!formData.fullName || !formData.email || !formData.password) {
+    if (!formData.fullName || !formData.email || !formData.password || !formData.dateOfBirth || !formData.gender) {
       setError('Please fill in all required fields');
       return;
     }
@@ -49,6 +51,19 @@ export const TutorSignup: React.FC = () => {
       return;
     }
 
+    // Age validation
+    const birthDate = new Date(formData.dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    if (age < 18) {
+      setError('You must be at least 18 years old to register as a tutor');
+      return;
+    }
+
     setLoading(true);
 
     const result = await signUpTutor(
@@ -57,6 +72,8 @@ export const TutorSignup: React.FC = () => {
       {
         fullName: formData.fullName,
         phone: formData.phone,
+        dateOfBirth: formData.dateOfBirth,
+        gender: formData.gender,
       }
     );
 
@@ -67,7 +84,7 @@ export const TutorSignup: React.FC = () => {
       return;
     }
 
-    alert('Account created successfully! Welcome to Integrated Learnings.');
+    alert('Account created successfully! Please complete your profile by uploading photo and certificates.');
     navigate('/tutors');
   };
 
@@ -83,7 +100,7 @@ export const TutorSignup: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-200">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Educator Signup</h2>
-              <p className="text-gray-600">Quick signup - complete profile later</p>
+                <p className="text-gray-600">Quick signup - complete profile after login</p>
             </div>
 
             {error && (
@@ -127,6 +144,46 @@ export const TutorSignup: React.FC = () => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-green-600" />
+                    Date of Birth *
+                  </div>
+                </label>
+                <input
+                  type="date"
+                  name="dateOfBirth"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">Must be at least 18 years old</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <div className="flex items-center gap-2">
+                    <UserCircle size={16} className="text-green-600" />
+                    Gender *
+                  </div>
+                </label>
+                <select
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                  required
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
               </div>
 
               <div>
@@ -209,7 +266,7 @@ export const TutorSignup: React.FC = () => {
             <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-xs text-gray-700">
                 <strong>ℹ️ What's Next?</strong><br />
-                After signup, complete your profile questionnaire, set rates, and upload certificates from your dashboard.
+                 After signup, you'll upload your photo, certificates, and complete an AI interview from your dashboard before accessing cases.
               </p>
             </div>
           </div>

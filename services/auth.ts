@@ -88,6 +88,9 @@ export const signUpTutor = async (
   data: {
     fullName: string;
     phone?: string;
+    dateOfBirth?: string;
+    gender?: string;
+      photoFile?: File;
   }
 ): Promise<{ success: boolean; error?: string; user?: any }> => {
   if (!supabase) {
@@ -122,6 +125,31 @@ export const signUpTutor = async (
     
     console.log('✅ Auth user created:', authData.user.id);
 
+    // Upload photo to Supabase Storage
+    let photoUrl = null;
+    if (data.photoFile) {
+      const fileExt = data.photoFile.name.split('.').pop();
+      const fileName = `${authData.user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `tutor-photos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('tutor-uploads')
+        .upload(filePath, data.photoFile);
+
+      if (uploadError) {
+        console.error('❌ Photo upload error:', uploadError);
+        throw new Error('Failed to upload photo');
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('tutor-uploads')
+        .getPublicUrl(filePath);
+      
+      photoUrl = urlData.publicUrl;
+      console.log('✅ Photo uploaded:', photoUrl);
+    }
+
     // Create tutor profile with basic info only
     // Detailed info (qualification, subjects, levels, experience, etc.) collected later
     const { error: profileError } = await supabase
@@ -132,7 +160,12 @@ export const signUpTutor = async (
           full_name: data.fullName,
           email: email,
           phone: data.phone || null,
-          verification_status: 'pending',
+          date_of_birth: data.dateOfBirth || null,
+          gender: data.gender || null,
+          photo_url: photoUrl,
+           verification_status: 'pending',
+           onboarding_status: photoUrl ? 'photo_uploaded' : 'pending',
+          photo_verification_status: photoUrl ? 'pending' : 'missing',
         },
       ]);
 

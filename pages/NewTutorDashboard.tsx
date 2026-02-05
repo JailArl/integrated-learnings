@@ -8,10 +8,12 @@ import {
   getAvailableCases,
   getMyBids,
   uploadCertificate,
+  uploadTutorPhoto,
   getTutorProfile,
   getTutorCertificates,
   updateTutorProfile,
 } from '../services/platformApi';
+import { TutorOnboardingStatus } from '../components/TutorOnboardingStatus';
 import { getTutorTypeLabel } from '../constants';
 import {
   CheckCircle2,
@@ -73,7 +75,8 @@ interface Certificate {
   file_url: string;
   file_name: string;
   uploaded_at: string;
-  verified: boolean;
+  verification_status?: 'pending' | 'approved' | 'rejected';
+  file_type?: string;
 }
 
 interface TutorProfile {
@@ -81,6 +84,11 @@ interface TutorProfile {
   full_name: string;
   verification_status: 'pending' | 'verified' | 'rejected';
   questionnaire_completed: boolean;
+  photo_url?: string | null;
+  photo_verification_status?: 'approved' | 'rejected' | 'pending' | 'missing' | null;
+  can_access_cases?: boolean | null;
+  cert_verification_status?: 'pending' | 'approved' | 'rejected' | null;
+  ai_interview_status?: 'pending' | 'completed' | 'failed' | null;
   questionnaire_answers?: any;
   teaching_philosophy?: string;
   why_tutoring?: string;
@@ -335,52 +343,56 @@ const CertificateUpload: React.FC<{
 }> = ({ tutorId, onUploadSuccess }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError('');
-    const file = e.target.files?.[0];
+    const files = Array.from(e.target.files || []);
 
-    if (!file) {
-      setSelectedFile(null);
+    if (files.length === 0) {
+      setSelectedFiles([]);
       return;
     }
 
-    // Validate file type
-    if (!FILE_UPLOAD_CONFIG.ALLOWED_TYPES.includes(file.type)) {
-      setError('Please upload a PDF, JPG, or PNG file');
-      setSelectedFile(null);
+    const invalidType = files.find(file => !FILE_UPLOAD_CONFIG.ALLOWED_TYPES.includes(file.type));
+    if (invalidType) {
+      setError('Please upload PDF, JPG, or PNG files only');
+      setSelectedFiles([]);
       return;
     }
 
-    // Validate file size
-    if (file.size > FILE_UPLOAD_CONFIG.MAX_SIZE) {
-      setError('File size must be less than 5MB');
-      setSelectedFile(null);
+    const invalidSize = files.find(file => file.size > FILE_UPLOAD_CONFIG.MAX_SIZE);
+    if (invalidSize) {
+      setError('Each file must be less than 5MB');
+      setSelectedFiles([]);
       return;
     }
 
-    setSelectedFile(file);
+    setSelectedFiles(files);
   };
 
   const handleUpload = async () => {
-    if (!selectedFile) return;
+    if (selectedFiles.length === 0) return;
 
     setUploading(true);
     setError('');
 
-    const result = await uploadCertificate(tutorId, selectedFile);
+    try {
+      for (const file of selectedFiles) {
+        const result = await uploadCertificate(tutorId, file);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to upload certificate');
+        }
+      }
 
-    setUploading(false);
-
-    if (result.success) {
-      setSelectedFile(null);
+      setSelectedFiles([]);
       onUploadSuccess();
-      // Reset file input
       const fileInput = document.getElementById('certificate-upload') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
-    } else {
-      setError(result.error || 'Failed to upload certificate');
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload certificate');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -402,26 +414,146 @@ const CertificateUpload: React.FC<{
         <input
           id="certificate-upload"
           type="file"
+          multiple
           accept={FILE_UPLOAD_CONFIG.ALLOWED_EXTENSIONS}
           onChange={handleFileChange}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
         />
       </div>
 
-      {selectedFile && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <FileText className="text-blue-600" size={20} />
-            <span className="text-sm text-gray-700">{selectedFile.name}</span>
+      {selectedFiles.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <FileText className="text-blue-600" size={20} />
+              <span className="text-sm text-gray-700">
+                {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} selected
+              </span>
+            </div>
+            <button
+              onClick={() => setSelectedFiles([])}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X size={18} />
+            </button>
           </div>
-          <button
-            onClick={() => setSelectedFile(null)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X size={18} />
-          </button>
+          <ul className="text-xs text-gray-600 space-y-1">
+            {selectedFiles.map((file) => (
+              <li key={file.name}>{file.name}</li>
+            ))}
+          </ul>
         </div>
       )}
+
+      <button
+        onClick={handleUpload}
+        disabled={selectedFiles.length === 0 || uploading}
+        className={`inline-flex items-center space-x-2 px-6 py-3 rounded-lg font-semibold transition duration-200 text-base shadow-sm ${
+          selectedFiles.length === 0 || uploading
+            ? 'bg-gray-400 cursor-not-allowed text-white'
+            : 'bg-secondary text-white hover:bg-blue-800 shadow-blue-900/20'
+        }`}
+      >
+        <Upload size={18} />
+        <span>{uploading ? 'Uploading...' : 'Upload Certificate(s)'}</span>
+      </button>
+    </div>
+  );
+};
+
+const PhotoUpload: React.FC<{
+  tutorId: string;
+  currentPhotoUrl?: string | null;
+  onUploadSuccess: () => void;
+}> = ({ tutorId, currentPhotoUrl, onUploadSuccess }) => {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError('');
+    const file = e.target.files?.[0];
+
+    if (!file) {
+      setSelectedFile(null);
+      setPreviewUrl('');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      setSelectedFile(null);
+      setPreviewUrl('');
+      return;
+    }
+
+    if (file.size > FILE_UPLOAD_CONFIG.MAX_SIZE) {
+      setError('Photo must be less than 5MB');
+      setSelectedFile(null);
+      setPreviewUrl('');
+      return;
+    }
+
+    setSelectedFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+
+    setUploading(true);
+    setError('');
+
+    const result = await uploadTutorPhoto(tutorId, selectedFile);
+
+    setUploading(false);
+
+    if (result.success) {
+      setSelectedFile(null);
+      setPreviewUrl('');
+      onUploadSuccess();
+      const fileInput = document.getElementById('photo-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+    } else {
+      setError(result.error || 'Failed to upload photo');
+    }
+  };
+
+  const displayPhotoUrl = previewUrl || currentPhotoUrl || '';
+
+  return (
+    <div className="space-y-4">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+
+      <div className="flex items-center gap-4">
+        <div className="w-20 h-20 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
+          {displayPhotoUrl ? (
+            <img src={displayPhotoUrl} alt="Tutor" className="w-full h-full object-cover" />
+          ) : (
+            <User size={28} className="text-gray-400" />
+          )}
+        </div>
+        <div className="flex-1">
+          <label
+            htmlFor="photo-upload"
+            className="block text-sm font-semibold text-gray-700 mb-2"
+          >
+            Upload Recent Photo (JPG, PNG - Max 5MB)
+          </label>
+          <input
+            id="photo-upload"
+            type="file"
+            accept="image/*"
+            onChange={handlePhotoChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+        </div>
+      </div>
 
       <button
         onClick={handleUpload}
@@ -433,7 +565,7 @@ const CertificateUpload: React.FC<{
         }`}
       >
         <Upload size={18} />
-        <span>{uploading ? 'Uploading...' : 'Upload Certificate'}</span>
+        <span>{uploading ? 'Uploading...' : 'Upload Photo'}</span>
       </button>
     </div>
   );
@@ -466,10 +598,15 @@ const CertificateList: React.FC<{ certificates: Certificate[] }> = ({ certificat
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            {cert.verified ? (
+            {cert.verification_status === 'approved' ? (
               <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
                 <CheckCircle2 size={14} />
-                <span>Verified</span>
+                <span>Approved</span>
+              </span>
+            ) : cert.verification_status === 'rejected' ? (
+              <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                <XCircle size={14} />
+                <span>Rejected</span>
               </span>
             ) : (
               <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
@@ -1006,18 +1143,35 @@ const NewTutorDashboardContent: React.FC = () => {
     return matchesQuery && matchesSubject && matchesLevel;
   });
 
+  const hasPhoto = profile?.photo_verification_status === 'approved';
+  const certCount = certificates.length;
+  const certVerified = certificates.some((cert) => cert.verification_status === 'approved') ||
+    profile?.cert_verification_status === 'approved';
+  const aiInterviewCompleted = profile?.ai_interview_status === 'completed';
+  const canAccessCases = profile?.can_access_cases === true;
+  const needsUploads = !profile?.photo_url || certCount === 0;
+
   return (
     <>
       <Section>
         <div className="mb-8">
           <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                Welcome, {profile?.full_name || 'Tutor'}!
-              </h1>
-              <p className="text-lg text-gray-600">
-                Browse cases, submit bids, and manage your profile
-              </p>
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
+                {profile?.photo_url ? (
+                  <img src={profile.photo_url} alt="Tutor" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={28} className="text-gray-400" />
+                )}
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
+                  Welcome, {profile?.full_name || 'Tutor'}!
+                </h1>
+                <p className="text-lg text-gray-600">
+                  Browse cases, submit bids, and manage your profile
+                </p>
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               {profile && (
@@ -1057,8 +1211,8 @@ const NewTutorDashboardContent: React.FC = () => {
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-6 py-4 rounded-lg mb-6">
               <p className="font-semibold">Your profile is pending verification</p>
               <p className="text-sm mt-1">
-                Upload your certificates below to speed up the verification process. You can still
-                browse cases and submit bids.
+                Upload your photo and certificates below to speed up verification. Case access will
+                unlock after admin approval and interview completion.
               </p>
             </div>
           )}
@@ -1071,12 +1225,40 @@ const NewTutorDashboardContent: React.FC = () => {
               </p>
             </div>
           )}
+
+          {needsUploads && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-800 px-6 py-4 rounded-lg mb-6">
+              <p className="font-semibold">Complete your uploads to move faster</p>
+              <p className="text-sm mt-1">
+                {profile?.photo_url ? 'Upload your certificates' : 'Upload your photo and certificates'} to begin verification.
+              </p>
+            </div>
+          )}
+
+          {profile && (
+            <div className="mb-10">
+              <TutorOnboardingStatus
+                hasPhoto={hasPhoto}
+                certCount={certCount}
+                certVerified={!!certVerified}
+                aiInterviewCompleted={!!aiInterviewCompleted}
+                canAccessCases={canAccessCases}
+              />
+            </div>
+          )}
         </div>
 
         {/* Available Cases Section */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-primary mb-4">Available Cases</h2>
-          {availableCases.length === 0 ? (
+          {!canAccessCases ? (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-6 py-6 rounded-lg">
+              <p className="font-semibold mb-2">Case access is locked</p>
+              <p className="text-sm">
+                Complete your onboarding (photo, certificates, and interview) and wait for admin approval to view and bid on cases.
+              </p>
+            </div>
+          ) : availableCases.length === 0 ? (
             <div className="bg-gray-50 border border-gray-200 text-gray-600 px-6 py-8 rounded-lg text-center">
               <FileText size={48} className="mx-auto mb-4 text-gray-400" />
               <p className="text-lg font-semibold mb-2">No available cases</p>
@@ -1166,7 +1348,12 @@ const NewTutorDashboardContent: React.FC = () => {
         {/* My Bids Section */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-primary mb-4">My Bids</h2>
-          {myBids.length === 0 ? (
+          {!canAccessCases ? (
+            <div className="bg-gray-50 border border-gray-200 text-gray-600 px-6 py-6 rounded-lg text-center">
+              <p className="text-lg font-semibold mb-2">Bidding locked</p>
+              <p className="text-sm">Complete onboarding to start bidding on cases.</p>
+            </div>
+          ) : myBids.length === 0 ? (
             <div className="bg-gray-50 border border-gray-200 text-gray-600 px-6 py-8 rounded-lg text-center">
               <FileText size={48} className="mx-auto mb-4 text-gray-400" />
               <p className="text-lg font-semibold mb-2">No bids yet</p>
@@ -1217,12 +1404,25 @@ const NewTutorDashboardContent: React.FC = () => {
           </div>
         )}
 
-        {/* Certificate Upload Section */}
+        {/* Uploads Section */}
         {tutorId && (
           <div className="mb-12">
-            <Card title="Certificates" className="max-w-4xl">
+            <Card title="Profile Uploads" className="max-w-4xl">
               <div className="space-y-6">
-                <CertificateUpload tutorId={tutorId} onUploadSuccess={loadData} />
+                <div>
+                  <h4 className="text-lg font-bold text-primary mb-4">Profile Photo</h4>
+                  <PhotoUpload
+                    tutorId={tutorId}
+                    currentPhotoUrl={profile?.photo_url}
+                    onUploadSuccess={loadData}
+                  />
+                </div>
+
+                <div className="border-t border-gray-200 pt-6">
+                  <h4 className="text-lg font-bold text-primary mb-4">Certificates</h4>
+                  <CertificateUpload tutorId={tutorId} onUploadSuccess={loadData} />
+                </div>
+
                 <div className="border-t border-gray-200 pt-6">
                   <h4 className="text-lg font-bold text-primary mb-4">Uploaded Certificates</h4>
                   <CertificateList certificates={certificates} />

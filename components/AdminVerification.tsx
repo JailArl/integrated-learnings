@@ -2,7 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Section, Card, Button } from './Components';
 import { getTutorTypeLabel } from '../constants';
-import { getPendingTutors, verifyTutor, getTutorCertificates } from '../services/platformApi';
+import {
+  getPendingTutors,
+  verifyTutor,
+  getTutorCertificates,
+  getTutorProfile,
+  updateCertificateStatus,
+  setTutorCaseAccess,
+  setTutorCertVerificationStatus,
+  updateTutorPhotoStatus,
+} from '../services/platformApi';
 
 interface Tutor {
   id: string;
@@ -15,6 +24,9 @@ interface Tutor {
   levels: string[];
   hourly_rate: number | null;
   verification_status: string;
+  photo_url?: string | null;
+  photo_verification_status?: 'approved' | 'rejected' | 'pending' | 'missing' | null;
+  can_access_cases?: boolean | null;
   questionnaire_completed?: boolean;
   questionnaire_answers?: any;
   created_at: string;
@@ -22,6 +34,8 @@ interface Tutor {
     id: string;
     file_url: string;
     file_name: string;
+    verification_status?: 'pending' | 'approved' | 'rejected';
+    admin_notes?: string | null;
     uploaded_at: string;
   }>;
 }
@@ -69,6 +83,33 @@ export const AdminVerification: React.FC = () => {
     setLoading(false);
   };
 
+  const evaluateCaseAccess = async (tutorId: string) => {
+    const [profileResult, certsResult] = await Promise.all([
+      getTutorProfile(tutorId),
+      getTutorCertificates(tutorId),
+    ]);
+
+    if (!profileResult.success || !profileResult.data || !certsResult.success) return;
+
+    const profile = profileResult.data;
+    const certs = certsResult.data || [];
+
+    const hasApprovedCert = certs.some((cert: any) => cert.verification_status === 'approved');
+    const photoApproved = profile.photo_verification_status === 'approved';
+    const questionnaireDone = !!profile.questionnaire_completed;
+    const verified = profile.verification_status === 'verified';
+
+    const allowAccess = hasApprovedCert && photoApproved && questionnaireDone && verified;
+    await setTutorCaseAccess(tutorId, allowAccess);
+
+    const certStatus = hasApprovedCert
+      ? 'approved'
+      : certs.some((cert: any) => cert.verification_status === 'rejected')
+      ? 'rejected'
+      : 'pending';
+    await setTutorCertVerificationStatus(tutorId, certStatus);
+  };
+
   const handleVerifyTutor = async (tutorId: string, status: 'verified' | 'rejected') => {
     const confirmMessage =
       status === 'verified'
@@ -88,9 +129,66 @@ export const AdminVerification: React.FC = () => {
         `Tutor ${status === 'verified' ? 'approved' : 'rejected'} successfully!`
       );
       setTimeout(() => setSuccessMessage(null), 3000);
+      if (status === 'verified') {
+        await evaluateCaseAccess(tutorId);
+      }
       fetchPendingTutors();
     } else {
       setError(result.error || 'Failed to update tutor status');
+    }
+
+    setProcessingTutor(null);
+  };
+
+  const handleCertificateStatus = async (
+    tutorId: string,
+    certificateId: string,
+    status: 'approved' | 'rejected'
+  ) => {
+    setProcessingTutor(tutorId);
+    setError(null);
+
+    const result = await updateCertificateStatus(certificateId, status);
+
+    if (result.success) {
+      await evaluateCaseAccess(tutorId);
+      fetchPendingTutors();
+    } else {
+      setError(result.error || 'Failed to update certificate status');
+    }
+
+    setProcessingTutor(null);
+  };
+
+  const handlePhotoStatus = async (
+    tutorId: string,
+    status: 'approved' | 'rejected'
+  ) => {
+    setProcessingTutor(tutorId);
+    setError(null);
+
+    const result = await updateTutorPhotoStatus(tutorId, status);
+
+    if (result.success) {
+      await evaluateCaseAccess(tutorId);
+      fetchPendingTutors();
+    } else {
+      setError(result.error || 'Failed to update photo status');
+    }
+
+    setProcessingTutor(null);
+  };
+
+  const handleCaseAccess = async (tutorId: string, allowAccess: boolean) => {
+    setProcessingTutor(tutorId);
+    setError(null);
+
+    const result = await setTutorCaseAccess(tutorId, allowAccess);
+
+    if (result.success) {
+      fetchPendingTutors();
+    } else {
+      setError(result.error || 'Failed to update case access');
     }
 
     setProcessingTutor(null);
@@ -178,6 +276,42 @@ export const AdminVerification: React.FC = () => {
             return (
               <Card key={tutor.id} title={tutor.full_name}>
                 <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-full bg-gray-100 border border-gray-200 overflow-hidden flex items-center justify-center">
+                      {tutor.photo_url ? (
+                        <img src={tutor.photo_url} alt="Tutor" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-sm text-gray-500">No Photo</div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Photo</p>
+                      <p className="font-semibold">
+                        {tutor.photo_verification_status || (tutor.photo_url ? 'pending' : 'missing')}
+                      </p>
+                      {tutor.photo_url && (
+                        <div className="mt-2 flex gap-2">
+                          <Button
+                            variant="primary"
+                            onClick={() => handlePhotoStatus(tutor.id, 'approved')}
+                            disabled={processingTutor === tutor.id}
+                            className="text-xs px-3 py-1"
+                          >
+                            Approve Photo
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => handlePhotoStatus(tutor.id, 'rejected')}
+                            disabled={processingTutor === tutor.id}
+                            className="text-xs px-3 py-1 border-red-500 text-red-600 hover:bg-red-50"
+                          >
+                            Reject Photo
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-slate-500">Email</p>
@@ -230,17 +364,39 @@ export const AdminVerification: React.FC = () => {
                 <div className="border-t pt-4 mt-4">
                   <p className="text-sm font-semibold text-slate-700 mb-3">Certificates</p>
                   {tutor.certificates && tutor.certificates.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-3">
                       {tutor.certificates.map((cert) => (
-                        <a
-                          key={cert.id}
-                          href={cert.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 text-blue-700 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
-                        >
-                          📄 {cert.file_name || 'Certificate'}
-                        </a>
+                        <div key={cert.id} className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-slate-50 border border-slate-200 rounded-lg p-3">
+                          <a
+                            href={cert.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-blue-700 hover:text-blue-800 text-sm font-medium"
+                          >
+                            📄 {cert.file_name || 'Certificate'}
+                          </a>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-slate-600">
+                              {cert.verification_status || 'pending'}
+                            </span>
+                            <Button
+                              variant="primary"
+                              onClick={() => handleCertificateStatus(tutor.id, cert.id, 'approved')}
+                              disabled={processingTutor === tutor.id}
+                              className="text-xs px-3 py-1"
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleCertificateStatus(tutor.id, cert.id, 'rejected')}
+                              disabled={processingTutor === tutor.id}
+                              className="text-xs px-3 py-1 border-red-500 text-red-600 hover:bg-red-50"
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        </div>
                       ))}
                     </div>
                   ) : (
@@ -281,6 +437,14 @@ export const AdminVerification: React.FC = () => {
                     className="text-sm"
                   >
                     {processingTutor === tutor.id ? 'Processing...' : '✓ Approve'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCaseAccess(tutor.id, true)}
+                    disabled={processingTutor === tutor.id}
+                    className="text-sm border-green-500 text-green-600 hover:bg-green-50"
+                  >
+                    {processingTutor === tutor.id ? 'Processing...' : 'Unlock Cases'}
                   </Button>
                   <Button
                     variant="outline"
