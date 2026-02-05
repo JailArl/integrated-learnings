@@ -1,6 +1,8 @@
 import { supabase } from './supabase';
 
-const SUPABASE_EDGE_URL = (import.meta as any).env?.VITE_SUPABASE_URL?.replace('/rest/v1', '') + '/functions/v1';
+const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL as string | undefined;
+const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string | undefined;
+const SUPABASE_EDGE_URL = SUPABASE_URL ? `${SUPABASE_URL}/functions/v1` : undefined;
 
 interface Message {
   role: 'user' | 'assistant';
@@ -102,7 +104,7 @@ export const sendInterviewMessage = async (
     const systemPrompt = generateSystemPrompt(tutorProfile);
 
     // Call Supabase Edge Function via direct fetch
-    if (!SUPABASE_EDGE_URL) {
+    if (!SUPABASE_EDGE_URL || !SUPABASE_ANON_KEY) {
       throw new Error('Supabase Edge Function URL not configured');
     }
 
@@ -110,7 +112,8 @@ export const sendInterviewMessage = async (
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${(import.meta as any).env?.VITE_SUPABASE_ANON_KEY}`,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': SUPABASE_ANON_KEY,
       },
       body: JSON.stringify({ systemPrompt, messages }),
     });
