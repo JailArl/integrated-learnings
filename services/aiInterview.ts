@@ -109,31 +109,30 @@ export const sendInterviewMessage = async (
     // Generate dynamic system prompt based on tutor profile
     const systemPrompt = generateSystemPrompt(tutorProfile);
 
-    // Call OpenAI API directly with mode: 'no-cors'
-    const response = await fetch(OPENAI_API_URL, {
+    // Call Vercel API endpoint (avoids CORS issues)
+    const response = await fetch('/api/interview', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4-turbo',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          ...messages,
-        ],
-        temperature: 0.7,
-        max_tokens: 600,
+        systemPrompt,
+        messages,
       }),
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error?.message || 'OpenAI API error');
+      throw new Error(error.error || 'Failed to get AI response');
     }
 
     const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Failed to process interview response');
+    }
+
+    const assistantMessage = data.message;
 
     // Check if interview is complete (look for final assessment)
     const conversationOver =
