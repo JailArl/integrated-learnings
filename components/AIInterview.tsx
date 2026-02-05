@@ -80,6 +80,15 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
     }
   };
 
+  const handleRetakeInterview = () => {
+    // Reset all state to restart interview
+    setInterviewComplete(false);
+    setScores(null);
+    setMessages([{ role: 'assistant', content: getInitialQuestion() }]);
+    setUserInput('');
+    setError('');
+  };
+
   if (interviewComplete && scores) {
     return (
       <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-8 border border-green-200">
@@ -109,6 +118,21 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
           <p className="text-sm text-blue-900">
             ✅ Your interview has been submitted to our admin team for review. You'll be notified once your results are processed.
           </p>
+        </div>
+
+        <div className="mt-6 flex gap-3 justify-center">
+          <button
+            onClick={handleRetakeInterview}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md"
+          >
+            Retake Interview
+          </button>
+          <a
+            href="/tutors/dashboard"
+            className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md text-center"
+          >
+            Back to Dashboard
+          </a>
         </div>
       </div>
     );
