@@ -202,11 +202,21 @@ const saveInterviewToDatabase = async (
       (scores.patience + scores.empathy + scores.communication + scores.professionalism) / 4
     );
 
+    // Get current attempt count
+    const { data: tutorData } = await supabase
+      .from('tutor_profiles')
+      .select('ai_interview_attempts')
+      .eq('id', tutorId)
+      .single();
+
+    const currentAttempts = tutorData?.ai_interview_attempts || 0;
+
     await supabase.from('tutor_profiles').update({
       ai_interview_status: 'completed',
       ai_interview_transcript: transcript,
       ai_interview_score: overallScore,
       ai_interview_assessment: finalAssessment,
+      ai_interview_attempts: currentAttempts + 1,
     }).eq('id', tutorId);
 
     console.log('✅ Interview saved to database');

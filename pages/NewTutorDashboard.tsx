@@ -89,6 +89,9 @@ interface TutorProfile {
   can_access_cases?: boolean | null;
   cert_verification_status?: 'pending' | 'approved' | 'rejected' | null;
   ai_interview_status?: 'pending' | 'completed' | 'failed' | null;
+  ai_interview_score?: number | null;
+  ai_interview_assessment?: string | null;
+  ai_interview_attempts?: number | null;
   questionnaire_answers?: any;
   teaching_philosophy?: string;
   why_tutoring?: string;
@@ -1399,6 +1402,22 @@ const NewTutorDashboardContent: React.FC = () => {
                   <p className="text-sm text-green-800">Your interview has been submitted for admin review. You'll be notified once your results are processed.</p>
                 </div>
               </div>
+              
+              {/* Overall Score */}
+              {profile?.ai_interview_score !== null && profile?.ai_interview_score !== undefined && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <p className="text-sm text-blue-900 font-semibold mb-2">Overall Score</p>
+                  <p className="text-4xl font-bold text-blue-600">{profile.ai_interview_score}/10</p>
+                </div>
+              )}
+
+              {/* Assessment */}
+              {profile?.ai_interview_assessment && (
+                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Assessment</p>
+                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{profile.ai_interview_assessment}</p>
+                </div>
+              )}
             </Card>
           </div>
         )}

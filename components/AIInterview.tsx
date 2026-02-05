@@ -11,9 +11,10 @@ interface AIInterviewProps {
   tutorId: string;
   tutorProfile?: any;
   onComplete?: (scores: any) => void;
+  retakeCount?: number;
 }
 
-export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile, onComplete }) => {
+export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile, onComplete, retakeCount = 0 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,8 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [scores, setScores] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const maxRetakes = 1;
+  const canRetake = retakeCount < maxRetakes;
 
   // Initialize with first question
   useEffect(() => {
@@ -120,13 +123,19 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
           </p>
         </div>
 
-        <div className="mt-6 flex gap-3 justify-center">
-          <button
-            onClick={handleRetakeInterview}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md"
-          >
-            Retake Interview
-          </button>
+        <div className="mt-6 flex gap-3 justify-center flex-wrap">
+          {canRetake ? (
+            <button
+              onClick={handleRetakeInterview}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md"
+            >
+              Retake Interview
+            </button>
+          ) : (
+            <div className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold text-center">
+              ℹ️ You've used your retake attempt. Submit this score for review.
+            </div>
+          )}
           <a
             href="/tutors/dashboard"
             className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md text-center"

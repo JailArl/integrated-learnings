@@ -154,6 +154,7 @@ export const TutorAIInterview: React.FC = () => {
           <AIInterview 
             tutorId={tutorId}
             tutorProfile={tutorProfile}
+            retakeCount={tutorProfile?.ai_interview_attempts || 0}
             onComplete={() => {
               setTimeout(() => navigate('/tutors'), 3000);
             }}
