@@ -20,6 +20,7 @@ import { ParentLogin } from './pages/ParentLogin';
 import { ParentSignup } from './pages/ParentSignup';
 import { TutorLogin } from './pages/TutorLogin';
 import { TutorSignup } from './pages/TutorSignup';
+import { ResetPassword } from './pages/ResetPassword';
 import NewParentDashboard from './pages/NewParentDashboard';
 import NewTutorDashboard from './pages/NewTutorDashboard';
 import CaseDetail from './pages/CaseDetail';
@@ -71,6 +72,7 @@ const App: React.FC = () => {
           <Route path="/tutor-signup" element={<TutorSignup />} />
           <Route path="/tutors/login" element={<TutorLogin />} />
           <Route path="/tutors/signup" element={<TutorSignup />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Protected Dashboards */}
           <Route path="/parents" element={<NewParentDashboard />} />
