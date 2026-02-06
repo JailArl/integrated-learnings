@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { sendDiscordMessage } from './discord';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -23,6 +24,13 @@ interface InterviewResponse {
     scores?: InterviewScore;
   };
   error?: string;
+}
+
+interface InterviewAppealInput {
+  tutorId: string;
+  reason: string;
+  overallScore?: number | null;
+  interviewAttempt?: number | null;
 }
 
 // Generate dynamic system prompt based on tutor profile
@@ -208,4 +216,48 @@ const saveInterviewToDatabase = async (
 
 export const getInitialQuestion = (): string => {
   return "Welcome to your Integrated Learnings character interview! This is a conversation where we'll explore your teaching philosophy, approach with students, and personal qualities as an educator.\n\nLet's start with our first question:\n\n**Tell me about your teaching philosophy. What does effective tutoring look like to you?**";
+};
+
+export const submitInterviewAppeal = async (
+  input: InterviewAppealInput
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { error } = await supabase.from('ai_interview_appeals').insert([
+      {
+        tutor_id: input.tutorId,
+        reason: input.reason,
+        overall_score: input.overallScore ?? null,
+        interview_attempt: input.interviewAttempt ?? null,
+        status: 'pending',
+      },
+    ]);
+
+    if (error) throw error;
+
+    await sendDiscordMessage({
+      embeds: [
+        {
+          title: 'Appeal Requested: AI Interview',
+          description: 'A tutor has requested a score appeal.',
+          color: 0xf59e0b,
+          fields: [
+            { name: 'Tutor ID', value: input.tutorId, inline: false },
+            { name: 'Overall Score', value: String(input.overallScore ?? 'N/A'), inline: true },
+            { name: 'Attempt', value: String(input.interviewAttempt ?? 'N/A'), inline: true },
+            { name: 'Reason', value: input.reason || 'Not provided', inline: false },
+          ],
+          timestamp: new Date().toISOString(),
+        },
+      ],
+    });
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Interview appeal error:', error);
+    return { success: false, error: error.message || 'Failed to submit appeal' };
+  }
 };

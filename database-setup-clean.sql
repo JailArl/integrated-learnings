@@ -71,6 +71,16 @@ CREATE TABLE IF NOT EXISTS matches (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS ai_interview_appeals (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  tutor_id UUID REFERENCES tutor_profiles,
+  interview_attempt INTEGER,
+  overall_score INTEGER,
+  reason TEXT,
+  status TEXT DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Enable Row Level Security
 ALTER TABLE parent_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tutor_profiles ENABLE ROW LEVEL SECURITY;
@@ -78,6 +88,7 @@ ALTER TABLE tutor_certificates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE parent_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tutor_bids ENABLE ROW LEVEL SECURITY;
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_interview_appeals ENABLE ROW LEVEL SECURITY;
 
 -- Drop existing policies safely (only if they exist)
 DO $$ BEGIN
@@ -106,6 +117,9 @@ DO $$ BEGIN
   DROP POLICY IF EXISTS "Parents can view their matches" ON matches;
   DROP POLICY IF EXISTS "Tutors can view their matches" ON matches;
   DROP POLICY IF EXISTS "Admin can view all matches" ON matches;
+
+  DROP POLICY IF EXISTS "Tutors can submit their own appeals" ON ai_interview_appeals;
+  DROP POLICY IF EXISTS "Admin can view all appeals" ON ai_interview_appeals;
 END $$;
 
 -- RLS Policies for parent_profiles
@@ -198,6 +212,15 @@ CREATE POLICY "Tutors can view their matches"
 
 CREATE POLICY "Admin can view all matches"
   ON matches FOR SELECT
+  USING (true);
+
+-- RLS Policies for ai_interview_appeals
+CREATE POLICY "Tutors can submit their own appeals"
+  ON ai_interview_appeals FOR INSERT
+  WITH CHECK (auth.uid() = tutor_id);
+
+CREATE POLICY "Admin can view all appeals"
+  ON ai_interview_appeals FOR SELECT
   USING (true);
 
 -- Create indexes for better performance

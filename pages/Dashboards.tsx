@@ -374,6 +374,7 @@ const TutorSignupWizard: React.FC<{
       const result = await signUpTutor(email, password, {
         fullName,
         phone,
+        experienceYears,
       });
       
       setLoading(false);

@@ -90,7 +90,8 @@ export const signUpTutor = async (
     phone?: string;
     dateOfBirth?: string;
     gender?: string;
-      photoFile?: File;
+    experienceYears?: number;
+    photoFile?: File;
   }
 ): Promise<{ success: boolean; error?: string; user?: any }> => {
   if (!supabase) {
@@ -162,6 +163,7 @@ export const signUpTutor = async (
           phone: data.phone || null,
           date_of_birth: data.dateOfBirth || null,
           gender: data.gender || null,
+          experience_years: typeof data.experienceYears === 'number' ? data.experienceYears : null,
           photo_url: photoUrl,
            verification_status: 'pending',
            onboarding_status: photoUrl ? 'photo_uploaded' : 'pending',

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Loader, CheckCircle, MessageCircle } from 'lucide-react';
-import { sendInterviewMessage, getInitialQuestion } from '../services/aiInterview';
+import { sendInterviewMessage, getInitialQuestion, submitInterviewAppeal } from '../services/aiInterview';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -21,9 +21,15 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
   const [error, setError] = useState('');
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [scores, setScores] = useState<any>(null);
+  const [appealReason, setAppealReason] = useState('');
+  const [appealSubmitting, setAppealSubmitting] = useState(false);
+  const [appealSubmitted, setAppealSubmitted] = useState(false);
+  const [appealError, setAppealError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const maxRetakes = 1;
   const canRetake = retakeCount < maxRetakes;
+  const lowScoreThreshold = 7;
+  const isLowScore = typeof scores?.overall === 'number' && scores.overall < lowScoreThreshold;
 
   // Initialize with first question
   useEffect(() => {
@@ -87,12 +93,43 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
     // Reset all state to restart interview
     setInterviewComplete(false);
     setScores(null);
+    setAppealReason('');
+    setAppealSubmitting(false);
+    setAppealSubmitted(false);
+    setAppealError('');
     setMessages([{ role: 'assistant', content: getInitialQuestion() }]);
     setUserInput('');
     setError('');
   };
 
-  if (interviewComplete && scores) {
+  const handleSubmitAppeal = async () => {
+    if (!appealReason.trim()) {
+      setAppealError('Please tell us why you want an appeal.');
+      return;
+    }
+
+    setAppealError('');
+    setAppealSubmitting(true);
+
+    const attemptNumber = retakeCount + 1;
+    const result = await submitInterviewAppeal({
+      tutorId,
+      reason: appealReason.trim(),
+      overallScore: scores?.overall ?? null,
+      interviewAttempt: attemptNumber,
+    });
+
+    setAppealSubmitting(false);
+
+    if (!result.success) {
+      setAppealError(result.error || 'Failed to submit appeal');
+      return;
+    }
+
+    setAppealSubmitted(true);
+  };
+
+  if (interviewComplete) {
     return (
       <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-8 border border-green-200">
         <div className="text-center mb-6">
@@ -105,7 +142,7 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
           </p>
         </div>
 
-        {scores && (
+        {scores ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <ScoreCard label="Patience" score={scores.patience} />
             <ScoreCard label="Empathy" score={scores.empathy} />
@@ -115,6 +152,10 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
             <ScoreCard label="Teaching Ability" score={scores.teachingAbility} />
             <ScoreCard label="Overall" score={scores.overall} highlight />
           </div>
+        ) : (
+          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-900">
+            ⚠️ We could not display your score breakdown. Our team can still review your interview transcript.
+          </div>
         )}
 
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -122,6 +163,37 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
             ✅ Your interview has been submitted to our admin team for review. You'll be notified once your results are processed.
           </p>
         </div>
+
+        {isLowScore && (
+          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-900 font-semibold mb-2">Not satisfied with your score?</p>
+            <p className="text-sm text-amber-900 mb-3">
+              You can submit an appeal for a manual review (one request per interview).
+            </p>
+            <textarea
+              value={appealReason}
+              onChange={(e) => setAppealReason(e.target.value)}
+              placeholder="Share why you believe your score should be reviewed..."
+              rows={3}
+              disabled={appealSubmitted || appealSubmitting}
+              className="w-full px-3 py-2 border border-amber-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-gray-100"
+            />
+            {appealError && (
+              <div className="mt-2 text-sm text-red-700">{appealError}</div>
+            )}
+            {appealSubmitted ? (
+              <div className="mt-3 text-sm text-green-700">✅ Appeal submitted. We will review and update you.</div>
+            ) : (
+              <button
+                onClick={handleSubmitAppeal}
+                disabled={appealSubmitting}
+                className="mt-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white px-4 py-2 rounded-lg font-semibold text-sm"
+              >
+                {appealSubmitting ? 'Submitting...' : 'Submit Appeal'}
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="mt-6 flex gap-3 justify-center flex-wrap">
           {canRetake ? (
