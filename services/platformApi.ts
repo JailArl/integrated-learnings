@@ -175,8 +175,7 @@ export const getMyBids = async (
       .select(
         `
         *,
-        request:parent_requests(*),
-        match:matches!tutor_bids_tutor_id_fkey(*)
+        request:parent_requests(*)
       `
       )
       .eq('tutor_id', tutorId)

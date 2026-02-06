@@ -28,3 +28,6 @@ dist-ssr
 *.sln
 *.sw?
 examples/
+
+# Supabase CLI
+supabase/.temp/
