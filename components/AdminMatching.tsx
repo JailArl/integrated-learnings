@@ -17,10 +17,14 @@ interface Request {
   status: string;
   diagnostic_test_booked: boolean;
   diagnostic_test_completed: boolean;
+  diagnostic_test_date: string | null;
+  first_class_date?: string | null;
+  first_class_location?: string | null;
   created_at: string;
   parent: {
     full_name: string;
     email: string;
+    phone?: string | null;
   };
 }
 
@@ -82,6 +86,18 @@ export const AdminMatching: React.FC = () => {
   const tutorTypeForModal = selectedQuestionnaire?.personality?.traitScores
     ? getTutorTypeLabel(selectedQuestionnaire.personality.traitScores)
     : null;
+
+  const formatDateTime = (value?: string | null) => {
+    if (!value) return 'N/A';
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? value : parsed.toLocaleString();
+  };
+
+  const toWhatsAppLink = (phone?: string | null) => {
+    if (!phone) return null;
+    const digits = phone.replace(/\D/g, '');
+    return digits.length > 0 ? `https://wa.me/${digits}` : null;
+  };
 
   useEffect(() => {
     fetchRequests();
@@ -285,6 +301,23 @@ export const AdminMatching: React.FC = () => {
                     <p className="font-semibold">{request.parent?.full_name || 'N/A'}</p>
                   </div>
                   <div>
+                    <p className="text-sm text-slate-500">Parent Contact</p>
+                    <p className="font-semibold">
+                      {request.parent?.email || 'N/A'}
+                      {request.parent?.phone ? ` • ${request.parent.phone}` : ''}
+                    </p>
+                    {toWhatsAppLink(request.parent?.phone) && (
+                      <a
+                        className="text-sm text-blue-600 hover:underline"
+                        href={toWhatsAppLink(request.parent?.phone) as string}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Start WhatsApp
+                      </a>
+                    )}
+                  </div>
+                  <div>
                     <p className="text-sm text-slate-500">Student</p>
                     <p className="font-semibold">{request.student_name}</p>
                   </div>
@@ -317,6 +350,18 @@ export const AdminMatching: React.FC = () => {
                     <p className="font-semibold">
                       {request.diagnostic_test_booked ? '✓ Booked' : '✗ Not Booked'}
                     </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Diagnostic Test Date</p>
+                    <p className="font-semibold">{formatDateTime(request.diagnostic_test_date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Preferred First Class Date</p>
+                    <p className="font-semibold">{formatDateTime(request.first_class_date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-500">Preferred First Class Location</p>
+                    <p className="font-semibold">{request.first_class_location || 'N/A'}</p>
                   </div>
                 </div>
 
