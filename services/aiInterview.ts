@@ -188,7 +188,12 @@ const saveInterviewToDatabase = async (
   try {
     const transcript = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n');
     const overallScore = Math.round(
-      (scores.patience + scores.empathy + scores.communication + scores.professionalism) / 4
+      scores.patience * 0.125 + 
+      scores.empathy * 0.125 + 
+      scores.communication * 0.125 + 
+      scores.professionalism * 0.125 + 
+      scores.subjectMastery * 0.25 + 
+      scores.teachingAbility * 0.25
     );
 
     // Get current attempt count
