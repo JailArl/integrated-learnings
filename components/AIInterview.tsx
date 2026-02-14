@@ -26,6 +26,7 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
   const [appealSubmitted, setAppealSubmitted] = useState(false);
   const [appealError, setAppealError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const MAX_INPUT_CHARS = 400;
   const maxRetakes = 1;
   const canRetake = retakeCount < maxRetakes;
   const lowScoreThreshold = 7;
@@ -45,6 +46,10 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userInput.trim()) return;
+    if (userInput.length > MAX_INPUT_CHARS) {
+      setError(`Please keep answers under ${MAX_INPUT_CHARS} characters.`);
+      return;
+    }
 
     setError('');
     setLoading(true);
@@ -209,22 +214,44 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
             </div>
           )}
           <a
+            href="/tutors/interview-results"
+            className="bg-white border border-blue-200 text-blue-700 px-6 py-3 rounded-lg font-semibold transition shadow-md text-center"
+          >
+            View Detailed Results
+          </a>
+          <a
             href="/tutors/dashboard"
             className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md text-center"
           >
             Back to Dashboard
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden flex flex-col h-full">
+          <div className="flex-1">
+            <input 
+              type="text" 
+              value={userInput} 
+              onChange={(e) => {
+                const nextValue = e.target.value;
+                setUserInput(nextValue);
+                if (error && nextValue.length <= MAX_INPUT_CHARS) {
+                  setError('');
+                }
+              }}
+              placeholder="Answer briefly (A/B/C/D for MCQ + one sentence)"
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                userInput.length > MAX_INPUT_CHARS ? 'border-red-300' : 'border-gray-200'
+              }`}
+              disabled={loading}
+            />
+            <div className="mt-1 flex justify-between text-xs text-gray-500">
+              <span>Keep answers concise (max {MAX_INPUT_CHARS} chars).</span>
+              <span className={userInput.length > MAX_INPUT_CHARS ? 'text-red-600' : ''}>
+                {userInput.length}/{MAX_INPUT_CHARS}
+              </span>
+            </div>
+          </div>
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
-        <div className="flex items-center gap-3 mb-2">
-          <MessageCircle size={24} />
+            disabled={loading || userInput.length > MAX_INPUT_CHARS}
+            className="ml-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white p-3 rounded-lg transition"
           <h2 className="text-2xl font-bold">Character Interview</h2>
         </div>
         <p className="text-blue-100">

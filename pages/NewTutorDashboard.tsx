@@ -1249,6 +1249,21 @@ const NewTutorDashboardContent: React.FC = () => {
               />
             </div>
           )}
+
+          {aiInterviewCompleted && (
+            <div className="mb-10 bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <h3 className="text-lg font-bold text-blue-900 mb-2">Your Interview Results</h3>
+              <p className="text-sm text-blue-800 mb-4">
+                See your strengths across patience, empathy, communication, and more.
+              </p>
+              <button
+                onClick={() => navigate('/tutors/interview-results')}
+                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold"
+              >
+                View Detailed Scores
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Available Cases Section */}

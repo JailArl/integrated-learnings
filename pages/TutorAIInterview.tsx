@@ -133,6 +133,8 @@ export const TutorAIInterview: React.FC = () => {
             <ul className="list-disc list-inside space-y-1">
               <li>7-10 conversational questions about your teaching philosophy</li>
               <li>Questions explore your character, patience, and approach with students</li>
+              <li>Some questions are MCQ (reply with A/B/C/D + one short sentence)</li>
+              <li>Keep answers concise (max 400 characters)</li>
               <li>Takes about 10-15 minutes</li>
               <li>Your responses are reviewed by our admin team for final approval</li>
               <li>Once approved, you'll unlock access to browse and bid on cases</li>
@@ -156,7 +158,7 @@ export const TutorAIInterview: React.FC = () => {
             tutorProfile={tutorProfile}
             retakeCount={tutorProfile?.ai_interview_attempts || 0}
             onComplete={() => {
-              setTimeout(() => navigate('/tutors'), 3000);
+              setTimeout(() => navigate('/tutors/interview-results'), 5000);
             }}
           />
         ) : null}
