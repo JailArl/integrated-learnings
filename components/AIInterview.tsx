@@ -224,39 +224,25 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
             className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md text-center"
           >
             Back to Dashboard
-          <div className="flex-1">
-            <input 
-              type="text" 
-              value={userInput} 
-              onChange={(e) => {
-                const nextValue = e.target.value;
-                setUserInput(nextValue);
-                if (error && nextValue.length <= MAX_INPUT_CHARS) {
-                  setError('');
-                }
-              }}
-              placeholder="Answer briefly (A/B/C/D for MCQ + one sentence)"
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                userInput.length > MAX_INPUT_CHARS ? 'border-red-300' : 'border-gray-200'
-              }`}
-              disabled={loading}
-            />
-            <div className="mt-1 flex justify-between text-xs text-gray-500">
-              <span>Keep answers concise (max {MAX_INPUT_CHARS} chars).</span>
-              <span className={userInput.length > MAX_INPUT_CHARS ? 'text-red-600' : ''}>
-                {userInput.length}/{MAX_INPUT_CHARS}
-              </span>
-            </div>
-          </div>
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden flex flex-col min-h-[600px]">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
-            disabled={loading || userInput.length > MAX_INPUT_CHARS}
-            className="ml-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white p-3 rounded-lg transition"
-          <h2 className="text-2xl font-bold">Character Interview</h2>
+        <div className="flex items-center gap-3">
+          <MessageCircle className="text-blue-100" size={24} />
+          <div>
+            <h2 className="text-2xl font-bold">Character Interview</h2>
+            <p className="text-blue-100">
+              Let's have a conversation about your teaching style and character
+            </p>
+          </div>
         </div>
-        <p className="text-blue-100">
-          Let's have a conversation about your teaching style and character
-        </p>
       </div>
 
       {/* Messages */}
