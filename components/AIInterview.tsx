@@ -27,7 +27,7 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
   const [appealError, setAppealError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const MAX_INPUT_CHARS = 400;
-  const maxRetakes = 1;
+  const maxRetakes = 2;
   const canRetake = retakeCount < maxRetakes;
   const lowScoreThreshold = 7;
   const isLowScore = typeof scores?.overall === 'number' && scores.overall < lowScoreThreshold;
