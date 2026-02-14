@@ -1249,21 +1249,6 @@ const NewTutorDashboardContent: React.FC = () => {
               />
             </div>
           )}
-
-          {aiInterviewCompleted && (
-            <div className="mb-10 bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <h3 className="text-lg font-bold text-blue-900 mb-2">Your Interview Results</h3>
-              <p className="text-sm text-blue-800 mb-4">
-                See your strengths across patience, empathy, communication, and more.
-              </p>
-              <button
-                onClick={() => navigate('/tutors/interview-results')}
-                className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg font-semibold"
-              >
-                View Detailed Scores
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Available Cases Section */}
@@ -1398,7 +1383,11 @@ const NewTutorDashboardContent: React.FC = () => {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button to="/tutors/ai-interview" variant="primary" className="w-full sm:w-auto">
+                <Button
+                  to="/tutors/ai-interview"
+                  variant="primary"
+                  className="w-full sm:w-auto"
+                >
                   Start AI Interview
                 </Button>
               </div>
@@ -1409,7 +1398,7 @@ const NewTutorDashboardContent: React.FC = () => {
         {/* AI Interview Completed - View Results */}
         {tutorId && profile?.ai_interview_status === 'completed' && (
           <div className="mb-12">
-            <Card title="Your AI Interview Results" className="max-w-4xl">
+            <Card title="Your AI Interview" className="max-w-4xl">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start gap-3">
                 <CheckCircle2 className="text-green-600 mt-0.5" size={20} />
                 <div>
@@ -1417,22 +1406,11 @@ const NewTutorDashboardContent: React.FC = () => {
                   <p className="text-sm text-green-800">Your interview has been submitted for admin review. You'll be notified once your results are processed.</p>
                 </div>
               </div>
-              
-              {/* Overall Score */}
-              {profile?.ai_interview_score !== null && profile?.ai_interview_score !== undefined && (
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                  <p className="text-sm text-blue-900 font-semibold mb-2">Overall Score</p>
-                  <p className="text-4xl font-bold text-blue-600">{profile.ai_interview_score}/10</p>
-                </div>
-              )}
-
-              {/* Assessment */}
-              {profile?.ai_interview_assessment && (
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Assessment</p>
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{profile.ai_interview_assessment}</p>
-                </div>
-              )}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button to="/tutors/interview-results" variant="outline" className="w-full sm:w-auto">
+                  View Interview Status
+                </Button>
+              </div>
             </Card>
           </div>
         )}

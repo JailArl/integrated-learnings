@@ -50,11 +50,15 @@ YOUR ROLE:
 1. Ask 7-10 personalized questions assessing BOTH teaching strengths AND character traits
 2. Generate questions dynamically based on their subject expertise and experience level
 3. Mix formats: 3-4 MCQ questions + short-answer questions
-4. Use simple, clear English. Avoid jargon and "cheem" phrases
-5. Ask one clear question at a time in short sentences
-6. Be conversational, warm, and encouraging
-7. Provide brief affirmations (1-2 sentences) after each answer to maintain flow
-8. After sufficient questions, provide comprehensive evaluation
+4. Use simple, clear English. Avoid jargon and complex words
+5. Keep each question under 20 words
+6. Ask one clear question at a time in short sentences
+7. Number each question as Q1, Q2, Q3, etc.
+8. Be conversational, warm, and encouraging
+9. Provide brief affirmations (1-2 sentences) after each answer to maintain flow
+10. Randomize question selection and vary wording so different tutors get different sets
+11. Do not repeat questions within a session
+12. After sufficient questions, provide comprehensive evaluation
 
 ASSESSMENT AREAS:
 
@@ -73,10 +77,10 @@ ASSESSMENT AREAS:
 - Integrity, mentorship, and growth mindset
 
 QUESTION GENERATION STRATEGY:
-- Q1-2: Teaching philosophy & subject-specific approach
-- Q3-4: Practical scenarios (difficult students, learning struggles)
-- Q5-6: Character-building scenarios (integrity, patience, empathy)
-- Q7-8: Strengths demonstration & success stories
+- Q1-2: Teaching style & lesson approach
+- Q3-4: Practical classroom scenarios (struggling students, motivation)
+- Q5-6: Character test scenarios (integrity, accountability, patience, empathy)
+- Q7-8: Communication & relationship with parents/students
 - Q9-10: Follow-ups based on responses (adaptive questioning)
 
 MCQ FORMAT:
@@ -98,7 +102,38 @@ After all questions, provide detailed scores:
 - **Teaching Ability** (1-10): Explanation skills, lesson planning, adaptability
 - **Overall** (1-10): Holistic assessment of tutor suitability
 
-Include 2-3 sentence reasoning for each score. Be warm but honest in evaluation.`;
+Include 2-3 sentence reasoning for each score. Be warm but honest in evaluation.
+
+Then include a strict JSON block labeled INTERVIEW_BREAKDOWN_JSON with this schema:
+{
+  "overallScore": <number 1-10>,
+  "categoryScores": {
+    "patience": <1-10>,
+    "empathy": <1-10>,
+    "communication": <1-10>,
+    "professionalism": <1-10>,
+    "subjectMastery": <1-10>,
+    "teachingAbility": <1-10>,
+    "overall": <1-10>
+  },
+  "fitRecommendation": {
+    "summary": "<1-2 sentence summary of best-fit student types>",
+    "bestWith": ["<short student type>", "<short student type>"],
+    "avoid": ["<short student type>"],
+    "notes": "<optional short note>"
+  },
+  "questionBreakdown": [
+    {
+      "questionNumber": "Q1",
+      "question": "<exact question text>",
+      "answerSummary": "<short 1-2 sentence summary>",
+      "category": "Patience|Empathy|Communication|Professionalism|Subject Mastery|Teaching Ability",
+      "score": <1-10>,
+      "rationale": "<short reason>"
+    }
+  ]
+}
+Do not include any trailing commas. Keep the JSON valid.`;
 };
 
 const SYSTEM_PROMPT = generateSystemPrompt();
@@ -232,7 +267,7 @@ const saveInterviewToDatabase = async (
 };
 
 export const getInitialQuestion = (): string => {
-  return "Welcome to your Integrated Learnings character interview! This is a conversation where we'll explore your teaching philosophy, approach with students, and personal qualities as an educator.\n\nLet's start with our first question:\n\n**Tell me about your teaching philosophy. What does effective tutoring look like to you?**";
+  return "Welcome to your Integrated Learnings character interview! This is a conversation where we'll explore your teaching approach and personal qualities as an educator.\n\nLet's start with our first question:\n\n**In 2-4 sentences, how do you support a student who is struggling with a topic?**";
 };
 
 export const submitInterviewAppeal = async (

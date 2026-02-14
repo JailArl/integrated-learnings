@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Section, Card, Button } from '../components/Components';
-import { getAllTutors, getAllRequests, approveBid } from '../services/platformApi';
+import { getAllTutors, getAllRequests, approveBid, getTutorCertificates } from '../services/platformApi';
 import { User, Mail, Phone, Award, BookOpen, Calendar, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { getTutorTypeLabel } from '../constants';
 
@@ -14,6 +14,13 @@ interface TutorProfile {
   experience_years: number;
   hourly_rate: number;
   verification_status: 'pending' | 'verified' | 'rejected';
+  photo_url?: string | null;
+  photo_verification_status?: 'approved' | 'rejected' | 'pending' | 'missing' | null;
+  cert_verification_status?: 'pending' | 'approved' | 'rejected' | null;
+  ai_interview_status?: 'pending' | 'completed' | 'failed' | null;
+  ai_interview_score?: number | null;
+  ai_interview_assessment?: string | null;
+  ai_interview_attempts?: number | null;
   questionnaire_completed: boolean;
   questionnaire_answers?: any;
   teaching_philosophy: string;
@@ -26,6 +33,78 @@ interface TutorProfile {
   max_students: number;
   created_at: string;
 }
+
+interface InterviewQuestionBreakdownItem {
+  questionNumber: string;
+  question: string;
+  answerSummary: string;
+  category: string;
+  score: number;
+  rationale: string;
+}
+
+interface InterviewBreakdown {
+  overallScore: number;
+  categoryScores: {
+    patience: number;
+    empathy: number;
+    communication: number;
+    professionalism: number;
+    subjectMastery: number;
+    teachingAbility: number;
+    overall: number;
+  };
+  fitRecommendation?: {
+    summary?: string;
+    bestWith?: string[];
+    avoid?: string[];
+    notes?: string;
+  };
+  questionBreakdown: InterviewQuestionBreakdownItem[];
+}
+
+const extractJsonObject = (text: string, startIndex: number): string | null => {
+  let depth = 0;
+  let started = false;
+
+  for (let i = startIndex; i < text.length; i += 1) {
+    const char = text[i];
+    if (char === '{') {
+      depth += 1;
+      started = true;
+    }
+    if (char === '}') {
+      depth -= 1;
+      if (started && depth === 0) {
+        return text.slice(startIndex, i + 1);
+      }
+    }
+  }
+
+  return null;
+};
+
+const parseInterviewBreakdown = (assessment?: string | null): InterviewBreakdown | null => {
+  if (!assessment) return null;
+  const marker = 'INTERVIEW_BREAKDOWN_JSON';
+  const markerIndex = assessment.indexOf(marker);
+  if (markerIndex === -1) return null;
+
+  const jsonStart = assessment.indexOf('{', markerIndex);
+  if (jsonStart === -1) return null;
+
+  const jsonText = extractJsonObject(assessment, jsonStart);
+  if (!jsonText) return null;
+
+  try {
+    const parsed = JSON.parse(jsonText) as InterviewBreakdown;
+    if (!parsed || !Array.isArray(parsed.questionBreakdown)) return null;
+    return parsed;
+  } catch (error) {
+    console.error('Failed to parse interview breakdown JSON:', error);
+    return null;
+  }
+};
 
 interface ParentRequest {
   id: string;
@@ -52,9 +131,13 @@ export const AdminTutors: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTutor, setSelectedTutor] = useState<TutorProfile | null>(null);
+  const [selectedTutorDetails, setSelectedTutorDetails] = useState<TutorProfile | null>(null);
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [showQuestionnaireModal, setShowQuestionnaireModal] = useState(false);
+  const [showTutorDetailsModal, setShowTutorDetailsModal] = useState(false);
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<any>(null);
+  const [selectedTutorCertificates, setSelectedTutorCertificates] = useState<any[]>([]);
+  const [loadingTutorCertificates, setLoadingTutorCertificates] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const normalizeQuestionnaire = (value: any) => {
@@ -116,6 +199,21 @@ export const AdminTutors: React.FC = () => {
     }
   };
 
+  const openTutorDetails = async (tutor: TutorProfile) => {
+    setSelectedTutorDetails(tutor);
+    setShowTutorDetailsModal(true);
+    setLoadingTutorCertificates(true);
+
+    const certResult = await getTutorCertificates(tutor.id);
+    if (certResult.success && certResult.data) {
+      setSelectedTutorCertificates(certResult.data);
+    } else {
+      setSelectedTutorCertificates([]);
+    }
+
+    setLoadingTutorCertificates(false);
+  };
+
   const getStatusBadge = (status: string) => {
     const configs: Record<string, any> = {
       pending: {
@@ -148,6 +246,38 @@ export const AdminTutors: React.FC = () => {
       <span className={`inline-flex items-center space-x-1 px-3 py-1 rounded-full ${config.bgColor} ${config.borderColor} ${config.textColor} text-xs font-semibold border`}>
         <Icon size={14} />
         <span>{config.text}</span>
+      </span>
+    );
+  };
+
+  const getInterviewBadge = (status?: string | null) => {
+    const configs: Record<string, any> = {
+      completed: {
+        text: 'Interview Completed',
+        bgColor: 'bg-green-50',
+        borderColor: 'border-green-200',
+        textColor: 'text-green-700',
+      },
+      pending: {
+        text: 'Interview Pending',
+        bgColor: 'bg-amber-50',
+        borderColor: 'border-amber-200',
+        textColor: 'text-amber-700',
+      },
+      failed: {
+        text: 'Interview Failed',
+        bgColor: 'bg-red-50',
+        borderColor: 'border-red-200',
+        textColor: 'text-red-700',
+      },
+    };
+
+    const key = status || 'pending';
+    const config = configs[key] || configs.pending;
+
+    return (
+      <span className={`inline-flex items-center px-3 py-1 rounded-full ${config.bgColor} ${config.borderColor} ${config.textColor} text-xs font-semibold border`}>
+        {config.text}
       </span>
     );
   };
@@ -278,7 +408,10 @@ export const AdminTutors: React.FC = () => {
                     <p className="text-sm text-gray-600">{tutor.qualification}</p>
                   </div>
                 </div>
-                {getStatusBadge(tutor.verification_status)}
+                <div className="flex flex-col items-end gap-2">
+                  {getStatusBadge(tutor.verification_status)}
+                  {getInterviewBadge(tutor.ai_interview_status)}
+                </div>
               </div>
 
               {tutorType && (
@@ -354,6 +487,13 @@ export const AdminTutors: React.FC = () => {
 
               {/* Actions */}
               <div className="pt-4 border-t space-y-2">
+                <Button
+                  onClick={() => openTutorDetails(tutor)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  View Full Details
+                </Button>
                 {questionnaire && (
                   <Button 
                     onClick={() => {
@@ -386,6 +526,189 @@ export const AdminTutors: React.FC = () => {
       {filteredTutors.length === 0 && (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-gray-600">No tutors found matching your filters</p>
+        </div>
+      )}
+
+      {/* Tutor Details Modal */}
+      {showTutorDetailsModal && selectedTutorDetails && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Tutor Details</h2>
+                <p className="text-sm text-gray-600">{selectedTutorDetails.full_name}</p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowTutorDetailsModal(false);
+                  setSelectedTutorDetails(null);
+                  setSelectedTutorCertificates([]);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-gray-900">Profile Summary</h3>
+                  <p className="text-sm text-gray-600">Email: {selectedTutorDetails.email}</p>
+                  <p className="text-sm text-gray-600">Phone: {selectedTutorDetails.phone}</p>
+                  <p className="text-sm text-gray-600">Qualification: {selectedTutorDetails.qualification}</p>
+                  <p className="text-sm text-gray-600">Experience: {selectedTutorDetails.experience_years} years</p>
+                  <p className="text-sm text-gray-600">Rate: ${selectedTutorDetails.hourly_rate}/hr</p>
+                  <p className="text-sm text-gray-600">
+                    Joined: {new Date(selectedTutorDetails.created_at).toLocaleDateString()}
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    {getStatusBadge(selectedTutorDetails.verification_status)}
+                    {getInterviewBadge(selectedTutorDetails.ai_interview_status)}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-gray-900">Teaching Preferences</h3>
+                  <p className="text-sm text-gray-600">
+                    Subjects: {selectedTutorDetails.teaching_subjects?.length ? selectedTutorDetails.teaching_subjects.join(', ') : 'N/A'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Preferred Levels: {selectedTutorDetails.preferred_student_levels?.length ? selectedTutorDetails.preferred_student_levels.join(', ') : 'N/A'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Availability: {selectedTutorDetails.availability_days?.length ? selectedTutorDetails.availability_days.join(', ') : 'N/A'}
+                  </p>
+                  {selectedTutorDetails.availability_notes && (
+                    <p className="text-sm text-gray-600">Notes: {selectedTutorDetails.availability_notes}</p>
+                  )}
+                  <p className="text-sm text-gray-600">Max Students: {selectedTutorDetails.max_students}</p>
+                </div>
+              </div>
+
+              {selectedTutorDetails.photo_url && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Profile Photo</h3>
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={selectedTutorDetails.photo_url}
+                      alt="Tutor"
+                      className="w-24 h-24 rounded-lg object-cover border border-gray-200"
+                    />
+                    <div className="text-sm text-gray-600">
+                      Photo status: {selectedTutorDetails.photo_verification_status || 'pending'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Interview Assessment</h3>
+                {selectedTutorDetails.ai_interview_status === 'completed' ? (() => {
+                  const breakdown = parseInterviewBreakdown(selectedTutorDetails.ai_interview_assessment);
+                  if (!breakdown) {
+                    return (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900 text-sm">
+                        Interview breakdown data is not available yet.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <p className="text-sm text-blue-900 font-semibold">Overall Score</p>
+                        <p className="text-3xl font-bold text-blue-700 mt-1">
+                          {breakdown.overallScore || selectedTutorDetails.ai_interview_score || 'N/A'}/10
+                        </p>
+                      </div>
+
+                      {breakdown.fitRecommendation && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
+                          <p className="font-semibold">Student Fit Recommendation</p>
+                          {breakdown.fitRecommendation.summary && (
+                            <p className="mt-1">{breakdown.fitRecommendation.summary}</p>
+                          )}
+                          {breakdown.fitRecommendation.bestWith?.length ? (
+                            <p className="mt-2">
+                              <span className="font-semibold">Best with:</span> {breakdown.fitRecommendation.bestWith.join(', ')}
+                            </p>
+                          ) : null}
+                          {breakdown.fitRecommendation.avoid?.length ? (
+                            <p className="mt-1">
+                              <span className="font-semibold">Avoid:</span> {breakdown.fitRecommendation.avoid.join(', ')}
+                            </p>
+                          ) : null}
+                          {breakdown.fitRecommendation.notes && (
+                            <p className="mt-1">{breakdown.fitRecommendation.notes}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {breakdown.questionBreakdown?.length ? (
+                        <div className="space-y-3">
+                          <p className="text-sm font-semibold text-gray-700">Question Breakdown</p>
+                          {breakdown.questionBreakdown.map((item) => (
+                            <div key={`${item.questionNumber}-${item.score}`} className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex flex-wrap items-center gap-3 mb-2">
+                                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                                  {item.questionNumber}
+                                </span>
+                                <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-full">
+                                  {item.category}
+                                </span>
+                                <span className="text-xs font-semibold text-gray-700">
+                                  Score: {item.score}/10
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-900 font-semibold">{item.question}</p>
+                              <p className="text-sm text-gray-600 mt-2">Answer summary: {item.answerSummary}</p>
+                              <p className="text-xs text-gray-500 mt-2">Reason: {item.rationale}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900 text-sm">
+                          Interview question-by-question scoring is not available yet.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })() : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-gray-700 text-sm">
+                    Interview status: {selectedTutorDetails.ai_interview_status || 'pending'}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">Certificates</h3>
+                {loadingTutorCertificates ? (
+                  <div className="text-sm text-gray-500">Loading certificates...</div>
+                ) : selectedTutorCertificates.length === 0 ? (
+                  <div className="text-sm text-gray-500">No certificates uploaded yet.</div>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedTutorCertificates.map((cert) => (
+                      <div key={cert.id} className="border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">{cert.file_name}</p>
+                          <p className="text-xs text-gray-500">Status: {cert.verification_status}</p>
+                        </div>
+                        <a
+                          href={cert.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:text-blue-700 text-sm font-semibold"
+                        >
+                          View
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

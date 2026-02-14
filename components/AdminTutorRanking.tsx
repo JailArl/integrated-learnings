@@ -26,11 +26,84 @@ interface RankedTutor {
   rankingScore: number;
   aiRankingAssessment: any;
   aiInterviewScore: number;
+  aiInterviewAssessment?: string | null;
   approvedCertificates: number;
   responseTimeAvg: number;
   completionRate: number;
   rankingUpdatedAt: string;
 }
+
+interface InterviewQuestionBreakdownItem {
+  questionNumber: string;
+  question: string;
+  answerSummary: string;
+  category: string;
+  score: number;
+  rationale: string;
+}
+
+interface InterviewBreakdown {
+  overallScore: number;
+  categoryScores: {
+    patience: number;
+    empathy: number;
+    communication: number;
+    professionalism: number;
+    subjectMastery: number;
+    teachingAbility: number;
+    overall: number;
+  };
+  fitRecommendation?: {
+    summary?: string;
+    bestWith?: string[];
+    avoid?: string[];
+    notes?: string;
+  };
+  questionBreakdown: InterviewQuestionBreakdownItem[];
+}
+
+const extractJsonObject = (text: string, startIndex: number): string | null => {
+  let depth = 0;
+  let started = false;
+
+  for (let i = startIndex; i < text.length; i += 1) {
+    const char = text[i];
+    if (char === '{') {
+      depth += 1;
+      started = true;
+    }
+    if (char === '}') {
+      depth -= 1;
+      if (started && depth === 0) {
+        return text.slice(startIndex, i + 1);
+      }
+    }
+  }
+
+  return null;
+};
+
+const parseInterviewBreakdown = (assessment?: string | null): InterviewBreakdown | null => {
+  if (!assessment) return null;
+  const marker = 'INTERVIEW_BREAKDOWN_JSON';
+  const markerIndex = assessment.indexOf(marker);
+  if (markerIndex === -1) return null;
+
+  const jsonStart = assessment.indexOf('{', markerIndex);
+  if (jsonStart === -1) return null;
+
+  const jsonText = extractJsonObject(assessment, jsonStart);
+  if (!jsonText) return null;
+
+  try {
+    const parsed = JSON.parse(jsonText) as InterviewBreakdown;
+    if (!parsed || !Array.isArray(parsed.questionBreakdown)) return null;
+    return parsed;
+  } catch (error) {
+    console.error('Failed to parse interview breakdown JSON:', error);
+    return null;
+  }
+};
 
 export const AdminTutorRanking: React.FC = () => {
   const [rankedTutors, setRankedTutors] = useState<RankedTutor[]>([]);
@@ -62,6 +135,7 @@ export const AdminTutorRanking: React.FC = () => {
           ranking_score,
           ai_ranking_assessment,
           ai_interview_score,
+          ai_interview_assessment,
           response_time_avg,
           completion_rate,
           ranking_updated_at
@@ -89,6 +163,7 @@ export const AdminTutorRanking: React.FC = () => {
             rankingScore: tutor.ranking_score,
             aiRankingAssessment: tutor.ai_ranking_assessment,
             aiInterviewScore: tutor.ai_interview_score,
+            aiInterviewAssessment: tutor.ai_interview_assessment,
             responseTimeAvg: tutor.response_time_avg,
             completionRate: tutor.completion_rate,
             rankingUpdatedAt: tutor.ranking_updated_at,
@@ -491,6 +566,70 @@ export const AdminTutorRanking: React.FC = () => {
                       </p>
                     </div>
                   </>
+                );
+              })()}
+
+              {selectedTutor.aiInterviewAssessment && (() => {
+                const breakdown = parseInterviewBreakdown(selectedTutor.aiInterviewAssessment);
+                if (!breakdown) {
+                  return (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900 text-sm">
+                      Interview breakdown data is not available yet.
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="bg-white border border-slate-200 rounded-xl p-6">
+                    <h5 className="font-semibold text-gray-900 mb-4">Interview Breakdown</h5>
+                    {breakdown.fitRecommendation && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900 mb-4">
+                        <p className="font-semibold">Student Fit Recommendation</p>
+                        {breakdown.fitRecommendation.summary && (
+                          <p className="mt-1">{breakdown.fitRecommendation.summary}</p>
+                        )}
+                        {breakdown.fitRecommendation.bestWith?.length ? (
+                          <p className="mt-2">
+                            <span className="font-semibold">Best with:</span> {breakdown.fitRecommendation.bestWith.join(', ')}
+                          </p>
+                        ) : null}
+                        {breakdown.fitRecommendation.avoid?.length ? (
+                          <p className="mt-1">
+                            <span className="font-semibold">Avoid:</span> {breakdown.fitRecommendation.avoid.join(', ')}
+                          </p>
+                        ) : null}
+                        {breakdown.fitRecommendation.notes && (
+                          <p className="mt-1">{breakdown.fitRecommendation.notes}</p>
+                        )}
+                      </div>
+                    )}
+                    {breakdown.questionBreakdown?.length ? (
+                      <div className="space-y-4">
+                        {breakdown.questionBreakdown.map((item) => (
+                          <div key={`${item.questionNumber}-${item.score}`} className="border border-slate-200 rounded-lg p-4">
+                            <div className="flex flex-wrap items-center gap-3 mb-2">
+                              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                {item.questionNumber}
+                              </span>
+                              <span className="text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-1 rounded-full">
+                                {item.category}
+                              </span>
+                              <span className="text-xs font-semibold text-slate-700">
+                                Score: {item.score}/10
+                              </span>
+                            </div>
+                            <p className="text-sm text-slate-900 font-semibold">{item.question}</p>
+                            <p className="text-sm text-slate-600 mt-2">Answer summary: {item.answerSummary}</p>
+                            <p className="text-xs text-slate-500 mt-2">Reason: {item.rationale}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900 text-sm">
+                        Interview question-by-question scoring is not available yet.
+                      </div>
+                    )}
+                  </div>
                 );
               })()}
 

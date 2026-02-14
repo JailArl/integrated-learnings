@@ -42,10 +42,6 @@ export const TutorAIInterview: React.FC = () => {
       if (profileError) throw profileError;
       setTutorProfile(profile);
 
-      // Check if tutor is eligible for interview
-      if (!profile.photo_url || profile.photo_verification_status !== 'approved') {
-        setError('You must upload and get your photo approved before taking the interview.');
-      }
     } catch (err: any) {
       console.error('Error loading tutor data:', err);
       setError(err.message || 'Failed to load profile');
@@ -53,10 +49,6 @@ export const TutorAIInterview: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const canTakeInterview =
-    tutorProfile?.photo_verification_status === 'approved' &&
-    tutorProfile?.has_approved_certificate !== false;
 
   if (loading) {
     return (
@@ -70,7 +62,7 @@ export const TutorAIInterview: React.FC = () => {
     );
   }
 
-  if (error && !isFullyEligible) {
+  if (error) {
     return (
       <Section className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-4xl mx-auto">
@@ -131,8 +123,8 @@ export const TutorAIInterview: React.FC = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2 text-sm text-blue-800">
             <p className="font-semibold">What to expect:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>7-10 conversational questions about your teaching philosophy</li>
-              <li>Questions explore your character, patience, and approach with students</li>
+              <li>7-10 conversational questions about your teaching approach</li>
+              <li>Questions explore character traits like integrity, patience, and empathy</li>
               <li>Some questions are MCQ (reply with A/B/C/D + one short sentence)</li>
               <li>Keep answers concise (max 400 characters)</li>
               <li>Takes about 10-15 minutes</li>
@@ -166,11 +158,5 @@ export const TutorAIInterview: React.FC = () => {
     </Section>
   );
 };
-
-// Helper function to check eligibility
-function isFullyEligible(): boolean {
-  // This would come from tutorProfile in real implementation
-  return true;
-}
 
 export default TutorAIInterview;
