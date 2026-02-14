@@ -107,6 +107,14 @@ export const TutorInterviewResults: React.FC = () => {
               <p className="text-slate-600">
                 Thank you for completing the interview. Our admin team will review your responses and follow up with next steps.
               </p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                <span className="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full">
+                  Status: Under Review
+                </span>
+                <span className="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full">
+                  ETA: 24-48 hours
+                </span>
+              </div>
             </div>
           </div>
 
