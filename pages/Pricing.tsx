@@ -38,7 +38,7 @@ const Pricing: React.FC = () => {
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full">OUR EDGE</div>
                 <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
                 <h4 className="font-bold mb-2">Diagnostic Matching Call</h4>
-                <p className="text-sm text-blue-100">30-min session to assess learning style, pace, and fit in real-time</p>
+                <p className="text-sm text-blue-100">30-minute Diagnostic Matching Call to uncover what your child needs, how they learn, and which tutor will deliver results</p>
               </div>
               
               {/* Step 3 */}
@@ -163,7 +163,7 @@ const Pricing: React.FC = () => {
               
               <div className="space-y-3">
                 <Button 
-                  to="/parents" 
+                  to="/tuition/parents" 
                   className="w-full bg-secondary hover:bg-blue-800 text-white font-bold py-3"
                 >
                   Parent Sign-Up / Login

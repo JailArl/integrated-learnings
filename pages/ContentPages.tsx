@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PageHeader, Section, Button, Card } from '../components/Components';
 import { Phone, Mail, Clock, Shield, FileText, AlertCircle, Users, DollarSign, Microscope, Target, BarChart3, CheckCircle2, TrendingUp, Calendar } from 'lucide-react';
 import { POLICY_CONTENT, PRIVACY_POLICY_TEXT } from '../constants';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const About: React.FC = () => (
   <div>
@@ -159,7 +159,7 @@ export const About: React.FC = () => (
                 </p>
              </div>
              <div>
-                 <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
+                 <Button to="/tuition/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
                    Get Diagnostic Assessment
                    <span className="block text-xs font-normal mt-1">Worth $120 - Waived</span>
                  </Button>
@@ -223,7 +223,7 @@ export const About: React.FC = () => (
              <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
                Diagnostic matching is the fastest path to a tutor who actually works for your child.
              </p>
-             <Button to="/parents" className="px-10 py-3 font-bold text-lg">
+             <Button to="/tuition/parents" className="px-10 py-3 font-bold text-lg">
                Get Assessment (Value $120 - Free)
              </Button>
              <p className="text-xs text-slate-500 mt-3">We accept 5-8 new families per week</p>
@@ -271,7 +271,7 @@ export const About: React.FC = () => (
                  </p>
              </div>
              <div>
-                 <Button to="/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
+                 <Button to="/tuition/parents" variant="white" className="px-12 py-4 text-lg font-bold shadow-xl shadow-blue-900/50">
                    Get Diagnostic Assessment
                    <span className="block text-xs font-normal mt-1">Worth $120 - Waived</span>
                  </Button>
@@ -357,7 +357,7 @@ export const About: React.FC = () => (
             From PSLE to O-Levels to polytechnic—each transition is an opportunity to build momentum or lose it. 
             Our diagnostic matching ensures your child has consistent, expert support aligned to their needs.
           </p>
-          <Button to="/parents" variant="white" className="px-8 py-3 font-bold shadow-lg">
+          <Button to="/tuition/parents" variant="white" className="px-8 py-3 font-bold shadow-lg">
             Get Assessment (Worth $120 - Free)
           </Button>
           <p className="text-blue-200 text-xs mt-3">5-8 families accepted weekly</p>
@@ -694,7 +694,7 @@ export const CourseworkSupport: React.FC = () => (
       </div>
       
       <div className="text-center">
-        <Button to="/parents">Sign Up for Coursework Support</Button>
+        <Button to="/tuition/parents">Sign Up for Coursework Support</Button>
       </div>
     </Section>
   </>
@@ -716,7 +716,7 @@ export const Contact: React.FC = () => (
               Request a tutor and we’ll run a diagnostic to match the right educator quickly—no trial and error.
             </p>
             <div className="mt-auto">
-              <Button to="/parents" variant="white" className="w-full group-hover:scale-105 transition">
+              <Button to="/tuition/parents" variant="white" className="w-full group-hover:scale-105 transition">
                 📋 Get Diagnostic Assessment
                 <span className="block text-xs font-normal mt-1">Value $120 - Waived</span>
               </Button>
@@ -763,7 +763,7 @@ export const Contact: React.FC = () => (
             <h4 className="font-bold text-sm text-primary mb-1">Book Call</h4>
             <p className="text-xs text-slate-500 mb-3">15-min consultation</p>
             <div className="mt-auto">
-              <Button to="/parents" variant="outline" className="text-xs py-1 px-3">View Times</Button>
+              <Button to="/tuition/parents" variant="outline" className="text-xs py-1 px-3">View Times</Button>
             </div>
           </div>
 
@@ -774,7 +774,7 @@ export const Contact: React.FC = () => (
             <h4 className="font-bold text-sm text-primary mb-1">Tutor Request Form</h4>
             <p className="text-xs text-slate-500 mb-3">Tell us your needs</p>
             <div className="mt-auto">
-              <Button to="/parents" variant="outline" className="text-xs py-1 px-3">Submit Request</Button>
+              <Button to="/tuition/parents" variant="outline" className="text-xs py-1 px-3">Submit Request</Button>
             </div>
           </div>
 
@@ -907,7 +907,7 @@ export const ExtraLearnings: React.FC = () => (
               <h3 className="text-2xl font-bold text-primary">{item.title}</h3>
               <p className="text-secondary font-semibold mb-3">{item.subtitle}</p>
               <p className="text-slate-600 leading-relaxed mb-6">{item.desc}</p>
-              <Button to="/parents">Sign Up Now</Button>
+              <Button to="/tuition/parents">Sign Up Now</Button>
             </div>
           </div>
         ))}
@@ -954,7 +954,7 @@ export const HolidayPrograms: React.FC = () => (
                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded font-bold">{prog.time}</span>
              </div>
              <p className="text-slate-600 mb-6">{prog.desc}</p>
-             <Button to="/parents">Sign Up Now</Button>
+             <Button to="/tuition/parents">Sign Up Now</Button>
            </div>
          ))}
        </div>
@@ -963,7 +963,9 @@ export const HolidayPrograms: React.FC = () => (
 );
 
 export const TutorRequest: React.FC = () => {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
   const [formData, setFormData] = useState({
     studentName: '',
     level: '',
@@ -977,6 +979,13 @@ export const TutorRequest: React.FC = () => {
     teachingStyle: 'any',
     details: ''
   });
+  const [formErrors, setFormErrors] = useState<{
+    studentName?: string;
+    level?: string;
+    postalCode?: string;
+    address?: string;
+    subjects?: string;
+  }>({});
 
   const handleSubjectToggle = (subject: string) => {
     const current = formData.subjects;
@@ -984,6 +993,9 @@ export const TutorRequest: React.FC = () => {
       setFormData({ ...formData, subjects: current.filter(s => s !== subject) });
     } else {
       setFormData({ ...formData, subjects: [...current, subject] });
+    }
+    if (formErrors.subjects) {
+      setFormErrors({ ...formErrors, subjects: undefined });
     }
   };
 
@@ -994,13 +1006,41 @@ export const TutorRequest: React.FC = () => {
     'Economics', 'History', 'Geography', 'Literature'
   ];
 
+  const validateStepOne = () => {
+    const nextErrors: typeof formErrors = {};
+    if (!formData.studentName.trim()) {
+      nextErrors.studentName = 'Student name is required.';
+    }
+    if (!formData.level) {
+      nextErrors.level = 'Academic level is required.';
+    }
+    if (!formData.postalCode.trim()) {
+      nextErrors.postalCode = 'Postal code is required.';
+    } else if (!/^[0-9]{6}$/.test(formData.postalCode.trim())) {
+      nextErrors.postalCode = 'Postal code must be 6 digits.';
+    }
+    if (!formData.address.trim()) {
+      nextErrors.address = 'Address is required.';
+    }
+    setFormErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const validateStepThree = () => {
+    const nextErrors: typeof formErrors = {};
+    if (formData.subjects.length === 0) {
+      nextErrors.subjects = 'Select at least one subject.';
+    }
+    setFormErrors({ ...formErrors, ...nextErrors });
+    return Object.keys(nextErrors).length === 0;
+  };
+
   const handleSubmit = () => {
-    if (!formData.postalCode || !formData.address) {
-      alert('Please fill in your address and postal code.');
+    if (!validateStepThree()) {
       return;
     }
-    alert('Request submitted successfully! We will contact you within 24 hours to confirm the best tutor match.');
-    window.location.href = '/#/parents';
+
+    setSubmitSuccess(true);
   };
 
   return (
@@ -1011,6 +1051,42 @@ export const TutorRequest: React.FC = () => {
       />
       <Section>
         <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+          {submitSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-bold text-green-900 mb-2">Request submitted successfully!</h3>
+              <p className="text-sm text-green-800">
+                Our team will contact you within 24 hours to confirm the best tutor match.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                <Button onClick={() => navigate('/tuition/parents')} variant="outline" className="flex-1">
+                  Go to Dashboard
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSubmitSuccess(false);
+                    setStep(1);
+                    setFormErrors({});
+                    setFormData({
+                      studentName: '',
+                      level: '',
+                      subjects: [] as string[],
+                      classType: 'one-to-one',
+                      postalCode: '',
+                      address: '',
+                      needsCoursework: false,
+                      tutorGender: 'any',
+                      preferredExperience: 'any',
+                      teachingStyle: 'any',
+                      details: ''
+                    });
+                  }}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  Submit Another Request
+                </Button>
+              </div>
+            </div>
+          )}
           
           {/* Progress Bar */}
           <div className="mb-8">
@@ -1026,24 +1102,45 @@ export const TutorRequest: React.FC = () => {
 
           <h2 className="text-2xl font-bold text-primary mb-6">Tutor Request Form</h2>
 
-          {step === 1 && (
+          {step === 1 && !submitSuccess && (
             <div className="space-y-4">
               <h3 className="font-bold text-lg text-slate-700 mb-4">About Your Child</h3>
               <div>
                 <label className="block text-sm font-bold mb-1">Student Name *</label>
                 <input 
+                  id="tutor-request-student-name"
                   className="w-full border p-2 rounded"
                   placeholder="Student's Name"
                   value={formData.studentName}
-                  onChange={(e) => setFormData({...formData, studentName: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({ ...formData, studentName: e.target.value });
+                    if (formErrors.studentName) {
+                      setFormErrors({ ...formErrors, studentName: undefined });
+                    }
+                  }}
+                  aria-invalid={!!formErrors.studentName}
+                  aria-describedby={formErrors.studentName ? 'tutor-request-student-name-error' : undefined}
                 />
+                {formErrors.studentName && (
+                  <p id="tutor-request-student-name-error" className="text-xs text-red-600 mt-1">
+                    {formErrors.studentName}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-bold mb-1">Academic Level *</label>
                 <select 
+                  id="tutor-request-level"
                   className="w-full border p-2 rounded"
                   value={formData.level}
-                  onChange={(e) => setFormData({...formData, level: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({ ...formData, level: e.target.value });
+                    if (formErrors.level) {
+                      setFormErrors({ ...formErrors, level: undefined });
+                    }
+                  }}
+                  aria-invalid={!!formErrors.level}
+                  aria-describedby={formErrors.level ? 'tutor-request-level-error' : undefined}
                 >
                   <option value="">Select Level</option>
                   <option value="Primary 1-3">Primary 1-3</option>
@@ -1052,6 +1149,11 @@ export const TutorRequest: React.FC = () => {
                   <option value="Secondary 3-4 (O-Level)">Secondary 3-4 (O-Level)</option>
                   <option value="Junior College">Junior College</option>
                 </select>
+                {formErrors.level && (
+                  <p id="tutor-request-level-error" className="text-xs text-red-600 mt-1">
+                    {formErrors.level}
+                  </p>
+                )}
               </div>
 
               <hr className="my-6" />
@@ -1060,21 +1162,47 @@ export const TutorRequest: React.FC = () => {
               <div>
                 <label className="block text-sm font-bold mb-1">Postal Code *</label>
                 <input 
+                  id="tutor-request-postal-code"
                   className="w-full border p-2 rounded"
                   placeholder="E.g. 560123"
                   value={formData.postalCode}
-                  onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({ ...formData, postalCode: e.target.value });
+                    if (formErrors.postalCode) {
+                      setFormErrors({ ...formErrors, postalCode: undefined });
+                    }
+                  }}
                   maxLength={6}
+                  aria-invalid={!!formErrors.postalCode}
+                  aria-describedby={formErrors.postalCode ? 'tutor-request-postal-code-error' : undefined}
                 />
+                {formErrors.postalCode && (
+                  <p id="tutor-request-postal-code-error" className="text-xs text-red-600 mt-1">
+                    {formErrors.postalCode}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-bold mb-1">Full Address *</label>
                 <textarea 
+                  id="tutor-request-address"
                   className="w-full border p-2 rounded h-16" 
                   placeholder="Your home address (helps us find tutors nearby)"
                   value={formData.address}
-                  onChange={(e) => setFormData({...formData, address: e.target.value})}
+                  onChange={(e) => {
+                    setFormData({ ...formData, address: e.target.value });
+                    if (formErrors.address) {
+                      setFormErrors({ ...formErrors, address: undefined });
+                    }
+                  }}
+                  aria-invalid={!!formErrors.address}
+                  aria-describedby={formErrors.address ? 'tutor-request-address-error' : undefined}
                 />
+                {formErrors.address && (
+                  <p id="tutor-request-address-error" className="text-xs text-red-600 mt-1">
+                    {formErrors.address}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -1111,11 +1239,20 @@ export const TutorRequest: React.FC = () => {
                 </div>
               </div>
 
-              <Button onClick={() => setStep(2)} className="w-full mt-6">Next: Tutor Preferences</Button>
+              <Button
+                onClick={() => {
+                  if (validateStepOne()) {
+                    setStep(2);
+                  }
+                }}
+                className="w-full mt-6"
+              >
+                Next: Tutor Preferences
+              </Button>
             </div>
           )}
 
-          {step === 2 && (
+          {step === 2 && !submitSuccess && (
             <div className="space-y-4">
               <h3 className="font-bold text-lg text-slate-700 mb-4">Tutor Preferences</h3>
               
@@ -1161,11 +1298,19 @@ export const TutorRequest: React.FC = () => {
                 </select>
               </div>
 
-              <Button onClick={() => setStep(3)} className="w-full mt-6">Next: Subjects & Details</Button>
+              <Button
+                onClick={() => {
+                  setFormErrors({});
+                  setStep(3);
+                }}
+                className="w-full mt-6"
+              >
+                Next: Subjects & Details
+              </Button>
             </div>
           )}
 
-          {step === 3 && (
+          {step === 3 && !submitSuccess && (
             <div className="space-y-4">
               <h3 className="font-bold text-lg text-slate-700 mb-4">Subjects & Additional Notes</h3>
               
@@ -1175,6 +1320,7 @@ export const TutorRequest: React.FC = () => {
                   {subjects.map(subject => (
                     <button
                       key={subject}
+                      type="button"
                       onClick={() => handleSubjectToggle(subject)}
                       className={`p-2 text-sm rounded border text-left transition ${
                         formData.subjects.includes(subject) 
@@ -1186,6 +1332,9 @@ export const TutorRequest: React.FC = () => {
                     </button>
                   ))}
                 </div>
+                {formErrors.subjects && (
+                  <p className="text-xs text-red-600 mt-2">{formErrors.subjects}</p>
+                )}
               </div>
 
               <div>
@@ -1227,6 +1376,7 @@ export const TutorRequest: React.FC = () => {
 };
 
 export const SpecializedRequest: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -1234,6 +1384,12 @@ export const SpecializedRequest: React.FC = () => {
     serviceType: '',
     details: ''
   });
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    email?: string;
+    serviceType?: string;
+  }>({});
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const serviceOptions = [
     'Holiday Programs (Head-start bootcamps & intensive revision)',
@@ -1244,12 +1400,26 @@ export const SpecializedRequest: React.FC = () => {
   ];
 
   const handleSubmit = () => {
-    if (!formData.name || !formData.email || !formData.serviceType) {
-      alert('Please fill in all required fields');
+    const nextErrors: typeof fieldErrors = {};
+    if (!formData.name.trim()) {
+      nextErrors.name = 'Name is required.';
+    }
+    if (!formData.email.trim()) {
+      nextErrors.email = 'Email is required.';
+    } else if (!formData.email.includes('@')) {
+      nextErrors.email = 'Enter a valid email address.';
+    }
+    if (!formData.serviceType) {
+      nextErrors.serviceType = 'Please select a service.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
       return;
     }
-    alert('Request submitted successfully! We will contact you within 24 hours.');
-    window.location.href = '/#/parents';
+
+    setFieldErrors({});
+    setSubmitSuccess(true);
   };
 
   return (
@@ -1260,28 +1430,84 @@ export const SpecializedRequest: React.FC = () => {
       />
       <Section>
         <div className="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-200">
+          {submitSuccess && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-bold text-green-900 mb-2">Request submitted successfully!</h3>
+              <p className="text-sm text-green-800">
+                Our team will contact you within 24 hours with tailored recommendations.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                <Button onClick={() => navigate('/tuition/parents')} variant="outline" className="flex-1">
+                  Go to Dashboard
+                </Button>
+                <Button
+                  onClick={() => {
+                    setSubmitSuccess(false);
+                    setFieldErrors({});
+                    setFormData({
+                      name: '',
+                      email: '',
+                      phone: '',
+                      serviceType: '',
+                      details: ''
+                    });
+                  }}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  Submit Another Request
+                </Button>
+              </div>
+            </div>
+          )}
+
           <h2 className="text-2xl font-bold text-primary mb-6">Specialized Services Request</h2>
 
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-bold mb-1">Your Name *</label>
               <input 
+                id="specialized-request-name"
                 className="w-full border p-2 rounded"
                 placeholder="Parent's Name"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => {
+                  setFormData({ ...formData, name: e.target.value });
+                  if (fieldErrors.name) {
+                    setFieldErrors({ ...fieldErrors, name: undefined });
+                  }
+                }}
+                aria-invalid={!!fieldErrors.name}
+                aria-describedby={fieldErrors.name ? 'specialized-request-name-error' : undefined}
               />
+              {fieldErrors.name && (
+                <p id="specialized-request-name-error" className="text-xs text-red-600 mt-1">
+                  {fieldErrors.name}
+                </p>
+              )}
             </div>
 
             <div>
               <label className="block text-sm font-bold mb-1">Email Address *</label>
               <input 
                 type="email"
+                id="specialized-request-email"
                 className="w-full border p-2 rounded"
                 placeholder="your@email.com"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => {
+                  setFormData({ ...formData, email: e.target.value });
+                  if (fieldErrors.email) {
+                    setFieldErrors({ ...fieldErrors, email: undefined });
+                  }
+                }}
+                aria-invalid={!!fieldErrors.email}
+                aria-describedby={fieldErrors.email ? 'specialized-request-email-error' : undefined}
               />
+              {fieldErrors.email && (
+                <p id="specialized-request-email-error" className="text-xs text-red-600 mt-1">
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             <div>
@@ -1298,15 +1524,28 @@ export const SpecializedRequest: React.FC = () => {
             <div>
               <label className="block text-sm font-bold mb-2">What Service Are You Looking For? *</label>
               <select 
+                id="specialized-request-service"
                 className="w-full border p-2 rounded"
                 value={formData.serviceType}
-                onChange={(e) => setFormData({...formData, serviceType: e.target.value})}
+                onChange={(e) => {
+                  setFormData({ ...formData, serviceType: e.target.value });
+                  if (fieldErrors.serviceType) {
+                    setFieldErrors({ ...fieldErrors, serviceType: undefined });
+                  }
+                }}
+                aria-invalid={!!fieldErrors.serviceType}
+                aria-describedby={fieldErrors.serviceType ? 'specialized-request-service-error' : undefined}
               >
                 <option value="">Select a Service</option>
                 {serviceOptions.map((option, idx) => (
                   <option key={idx} value={option}>{option}</option>
                 ))}
               </select>
+              {fieldErrors.serviceType && (
+                <p id="specialized-request-service-error" className="text-xs text-red-600 mt-1">
+                  {fieldErrors.serviceType}
+                </p>
+              )}
             </div>
 
             <div>
@@ -1326,7 +1565,7 @@ export const SpecializedRequest: React.FC = () => {
             </div>
 
             <div className="flex gap-4">
-              <Button onClick={() => window.location.href = '/#/parents'} variant="outline" className="flex-1">Back to Dashboard</Button>
+              <Button onClick={() => navigate('/tuition/parents')} variant="outline" className="flex-1">Back to Dashboard</Button>
               <Button onClick={handleSubmit} className="flex-1 bg-green-600 hover:bg-green-700">Submit Request</Button>
             </div>
           </div>

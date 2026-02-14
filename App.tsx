@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import MainLanding from './pages/MainLanding';
 import TuitionHome from './pages/TuitionHome';
@@ -32,6 +32,13 @@ const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   // Note: This is a demo. In production, check actual user session/state
   // For now, show the content but with a note that it's for Sec 4 parents
   return <>{children}</>;
+};
+
+const LegacyRoadmapRedirect: React.FC = () => {
+  const { topicId } = useParams();
+  const targetPath = topicId ? `/tuition/roadmap/${topicId}` : '/tuition/roadmap';
+
+  return <Navigate to={targetPath} replace />;
 };
 
 // Admin Protection Wrapper with Token Validation
@@ -128,7 +135,7 @@ const App: React.FC = () => {
           
           {/* Legacy routes - redirect to tuition for backward compatibility */}
           <Route path="/roadmap" element={<Navigate to="/tuition/roadmap" replace />} />
-          <Route path="/roadmap/:topicId" element={<Navigate to="/tuition/roadmap/:topicId" replace />} />
+          <Route path="/roadmap/:topicId" element={<LegacyRoadmapRedirect />} />
           <Route path="/pricing" element={<Navigate to="/tuition/pricing" replace />} />
           <Route path="/teach" element={<Navigate to="/tuition/teach" replace />} />
           <Route path="/about" element={<Navigate to="/tuition" replace />} />

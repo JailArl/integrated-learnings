@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown, Phone } from 'lucide-react';
 
@@ -12,18 +12,29 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   const handleNav = (path: string) => {
     setIsMenuOpen(false);
     navigate(path);
   };
 
   const isActive = (path: string) => location.pathname === path;
-  const isAdminPage = location.pathname === '/admin';
+  const isAdminPage = location.pathname.startsWith('/admin');
   
   // Determine current section
   const isTuitionSection = location.pathname.startsWith('/tuition');
   const isEnrichmentSection = location.pathname.startsWith('/enrichment');
   const isMainLanding = location.pathname === '/';
+  const mobileMenuId = isEnrichmentSection
+    ? 'mobile-menu-enrichment'
+    : isMainLanding
+    ? 'mobile-menu-main'
+    : isTuitionSection
+    ? 'mobile-menu-tuition'
+    : 'mobile-menu';
 
   // Hide header/footer for admin page
   if (isAdminPage) {
@@ -55,14 +66,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </Link>
               </nav>
               
-              <button className="md:hidden text-slate-600" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              <button
+                className="md:hidden text-slate-600"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isMenuOpen}
+                aria-controls={mobileMenuId}
+              >
                 {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
               </button>
             </div>
           </div>
           
           {isMenuOpen && (
-            <div className="md:hidden bg-white border-b border-slate-200 shadow-lg">
+            <div id={mobileMenuId} className="md:hidden bg-white border-b border-slate-200 shadow-lg">
               <div className="px-4 py-6 space-y-4">
                 <button onClick={() => handleNav('/enrichment')} className="block w-full text-left py-2 font-medium text-slate-700">Program Overview</button>
                 <button onClick={() => handleNav('/enrichment/login')} className="block w-full text-center bg-green-600 text-white py-3 rounded-lg font-medium mt-4">Student Login</button>
@@ -145,7 +162,13 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
 
             {/* Mobile Menu Button */}
-            <button className="md:hidden text-slate-600" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <button
+              className="md:hidden text-slate-600"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isMenuOpen}
+              aria-controls={mobileMenuId}
+            >
               {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
           </div>
@@ -153,7 +176,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Mobile Menu - Main Landing */}
         {isMenuOpen && isMainLanding && (
-          <div className="md:hidden bg-white border-b border-slate-200 shadow-lg">
+          <div id={mobileMenuId} className="md:hidden bg-white border-b border-slate-200 shadow-lg">
             <div className="px-4 py-6 space-y-4">
               <button onClick={() => handleNav('/tuition')} className="block w-full text-left py-2 font-medium text-slate-700">For Families</button>
               <button onClick={() => handleNav('/enrichment')} className="block w-full text-left py-2 font-medium text-slate-700">School Programs</button>
@@ -164,7 +187,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Mobile Menu - Tuition Section */}
         {isMenuOpen && isTuitionSection && (
-          <div className="md:hidden bg-white border-b border-slate-200 shadow-lg">
+          <div id={mobileMenuId} className="md:hidden bg-white border-b border-slate-200 shadow-lg">
             <div className="px-4 py-6 space-y-4">
               <button onClick={() => handleNav('/tuition')} className="block w-full text-left py-2 font-medium text-slate-700">Home</button>
               <hr className="border-slate-100" />

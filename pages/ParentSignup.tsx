@@ -13,41 +13,55 @@ export const ParentSignup: React.FC = () => {
     confirmPassword: '',
     phone: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    phone?: string;
+  }>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (fieldErrors[e.target.name as keyof typeof fieldErrors]) {
+      setFieldErrors({ ...fieldErrors, [e.target.name]: undefined });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!formData.fullName || !formData.email || !formData.password) {
-      setError('Please fill in all required fields');
-      return;
+    const nextErrors: typeof fieldErrors = {};
+    if (!formData.fullName.trim()) {
+      nextErrors.fullName = 'Full name is required.';
     }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
+    if (!formData.email.trim()) {
+      nextErrors.email = 'Email is required.';
+    } else if (!formData.email.includes('@')) {
+      nextErrors.email = 'Enter a valid email address.';
     }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
+    if (!formData.password) {
+      nextErrors.password = 'Password is required.';
+    } else if (formData.password.length < 6) {
+      nextErrors.password = 'Password must be at least 6 characters.';
     }
-
-    if (!formData.email.includes('@')) {
-      setError('Please enter a valid email address');
-      return;
+    if (!formData.confirmPassword) {
+      nextErrors.confirmPassword = 'Please confirm your password.';
+    } else if (formData.password !== formData.confirmPassword) {
+      nextErrors.confirmPassword = 'Passwords do not match.';
     }
-
     if (!formData.phone.trim()) {
-      setError('Please enter a valid phone number');
+      nextErrors.phone = 'Phone number is required.';
+    }
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
       return;
     }
+    setFieldErrors({});
 
     setLoading(true);
 
@@ -66,7 +80,7 @@ export const ParentSignup: React.FC = () => {
     }
 
     alert('Account created successfully! Welcome to Integrated Learnings.');
-    navigate('/parents');
+    navigate('/tuition/parents');
   };
 
   return (
@@ -99,14 +113,22 @@ export const ParentSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="parent-signup-full-name"
                   type="text"
                   name="fullName"
                   placeholder="Enter your full name"
                   value={formData.fullName}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.fullName}
+                  aria-describedby={fieldErrors.fullName ? 'parent-signup-full-name-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required
                 />
+                {fieldErrors.fullName && (
+                  <p id="parent-signup-full-name-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.fullName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -117,14 +139,22 @@ export const ParentSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="parent-signup-email"
                   type="email"
                   name="email"
                   placeholder="your.email@example.com"
                   value={formData.email}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.email}
+                  aria-describedby={fieldErrors.email ? 'parent-signup-email-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required
                 />
+                {fieldErrors.email && (
+                  <p id="parent-signup-email-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -135,15 +165,23 @@ export const ParentSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="parent-signup-password"
                   type="password"
                   name="password"
                   placeholder="Minimum 6 characters"
                   value={formData.password}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.password}
+                  aria-describedby={fieldErrors.password ? 'parent-signup-password-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters long</p>
+                {fieldErrors.password && (
+                  <p id="parent-signup-password-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -154,14 +192,22 @@ export const ParentSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="parent-signup-confirm-password"
                   type="password"
                   name="confirmPassword"
                   placeholder="Re-enter your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.confirmPassword}
+                  aria-describedby={fieldErrors.confirmPassword ? 'parent-signup-confirm-password-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required
                 />
+                {fieldErrors.confirmPassword && (
+                  <p id="parent-signup-confirm-password-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.confirmPassword}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -172,14 +218,22 @@ export const ParentSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="parent-signup-phone"
                   type="tel"
                   name="phone"
                   placeholder="+65 XXXX XXXX"
                   value={formData.phone}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.phone}
+                  aria-describedby={fieldErrors.phone ? 'parent-signup-phone-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                   required
                 />
+                {fieldErrors.phone && (
+                  <p id="parent-signup-phone-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.phone}
+                  </p>
+                )}
               </div>
 
               <button

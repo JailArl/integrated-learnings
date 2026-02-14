@@ -58,11 +58,11 @@ export const AIAssistant: React.FC = () => {
     } 
     else if (lowerText.includes("tutor") || lowerText.includes("find") || lowerText.includes("match")) {
       aiResponse.text = "I can help you find a tutor. To get the best AI match, we need to know your child's learning style.";
-      aiResponse.actions = [{ label: "Start Request", action: () => navigate('/parents') }];
+      aiResponse.actions = [{ label: "Start Request", action: () => navigate('/tuition/parents') }];
     }
     else if (lowerText.includes("fail") || lowerText.includes("weak") || lowerText.includes("bad grade")) {
       aiResponse.text = "It sounds like there might be a foundational gap. Our premium diagnostic matching helps us find the right tutor quickly.";
-      aiResponse.actions = [{ label: "How Premium Matching Works", action: () => navigate('/tuition?section=about') }, { label: "Request a Tutor", action: () => navigate('/parents') }];
+      aiResponse.actions = [{ label: "How Premium Matching Works", action: () => navigate('/tuition?section=about') }, { label: "Request a Tutor", action: () => navigate('/tuition/parents') }];
     }
     else if (lowerText.includes("roadmap") || lowerText.includes("plan")) {
       aiResponse.text = "The Singapore Education Roadmap is complex. Which stage is your child in?";

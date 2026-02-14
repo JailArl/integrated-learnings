@@ -25,18 +25,20 @@ const MainLanding: React.FC = () => {
             </p>
             
             <div className="flex flex-col md:flex-row gap-6 justify-center max-w-3xl mx-auto">
-              <Link to="/tuition" className="flex-1">
-                <button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 px-8 rounded-xl font-bold text-lg shadow-2xl shadow-blue-900/50 hover:shadow-3xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 group">
-                  For Families
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
+              <Link
+                to="/tuition"
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-4 px-8 rounded-xl font-bold text-lg shadow-2xl shadow-blue-900/50 hover:shadow-3xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 group"
+              >
+                For Families
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              <Link to="/enrichment" className="flex-1">
-                <button className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-4 px-8 rounded-xl font-bold text-lg shadow-2xl shadow-emerald-900/50 hover:shadow-3xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 group">
-                  For Schools
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
+              <Link
+                to="/enrichment"
+                className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white py-4 px-8 rounded-xl font-bold text-lg shadow-2xl shadow-emerald-900/50 hover:shadow-3xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2 group"
+              >
+                For Schools
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>

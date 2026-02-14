@@ -10,17 +10,34 @@ export const TutorLogin: React.FC = () => {
     email: '',
     password: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (fieldErrors[e.target.name as 'email' | 'password']) {
+      setFieldErrors({ ...fieldErrors, [e.target.name]: undefined });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const nextErrors: { email?: string; password?: string } = {};
+    if (!formData.email.trim()) {
+      nextErrors.email = 'Email is required.';
+    }
+    if (!formData.password.trim()) {
+      nextErrors.password = 'Password is required.';
+    }
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
+      return;
+    }
+    setFieldErrors({});
 
     if (!formData.email || !formData.password) {
       setError('Please fill in all fields');
@@ -77,14 +94,22 @@ export const TutorLogin: React.FC = () => {
                     Email or Username
                   </label>
                   <input
+                    id="tutor-login-email"
                     type="text"
                     name="email"
                     placeholder="your.email@example.com or admin"
                     value={formData.email}
                     onChange={handleChange}
+                    aria-invalid={!!fieldErrors.email}
+                    aria-describedby={fieldErrors.email ? 'tutor-login-email-error' : undefined}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
+                  {fieldErrors.email && (
+                    <p id="tutor-login-email-error" className="text-xs text-red-600 mt-1">
+                      {fieldErrors.email}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -92,13 +117,21 @@ export const TutorLogin: React.FC = () => {
                     Password
                   </label>
                   <input
+                    id="tutor-login-password"
                     type="password"
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    aria-invalid={!!fieldErrors.password}
+                    aria-describedby={fieldErrors.password ? 'tutor-login-password-error' : undefined}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     required
                   />
+                  {fieldErrors.password && (
+                    <p id="tutor-login-password-error" className="text-xs text-red-600 mt-1">
+                      {fieldErrors.password}
+                    </p>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}

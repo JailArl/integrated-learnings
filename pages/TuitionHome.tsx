@@ -27,6 +27,25 @@ const TuitionHome: React.FC = () => {
     }
   ];
 
+  const testimonials = [
+    {
+      quote: "The diagnostic session was clear and practical. We got a tutor who matched my daughter's learning style on the first try.",
+      name: "May Yee, Parent",
+    },
+    {
+      quote: "Fast response and a structured plan. My son finally feels confident going into tests.",
+      name: "Angeline, Parent",
+    },
+    {
+      quote: "No more trial-and-error. The tutor fit our timing and expectations from week one.",
+      name: "Lina, Parent",
+    },
+    {
+      quote: "Professional, responsive, and transparent. We felt supported throughout the process.",
+      name: "Claren, Parent",
+    },
+  ];
+
   return (
     <>
       {/* Hero Section */}
@@ -52,7 +71,7 @@ const TuitionHome: React.FC = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
-              <Button to="/parents" className="px-8 py-4 text-base shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
+              <Button to="/tuition/parents" className="px-8 py-4 text-base shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
                 Get Diagnostic Assessment
                 <span className="block text-xs font-normal mt-1 opacity-90">Value $120 - Waived</span>
               </Button>
@@ -124,6 +143,24 @@ const TuitionHome: React.FC = () => {
         </div>
       </Section>
 
+      {/* Testimonials */}
+      <Section className="bg-white">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-3">What Parents Say</h2>
+            <p className="text-slate-600">Real experiences from families we have helped.</p>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {testimonials.map((item, idx) => (
+              <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-6 shadow-sm">
+                <p className="text-slate-700 italic leading-relaxed">"{item.quote}"</p>
+                <p className="text-sm font-semibold text-slate-900 mt-4">{item.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
       {/* How It Works */}
       <Section className="bg-slate-50">
         <div className="max-w-5xl mx-auto">
@@ -168,7 +205,7 @@ const TuitionHome: React.FC = () => {
           {SERVICES.map((service) => (
             <Link key={service.id} to={service.link} className="group flex flex-col rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 bg-white hover:-translate-y-1">
               <div className="h-48 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 relative">
-                <img src={service.image} alt={service.title} className="w-full h-full object-cover transform group-hover:scale-110 transition duration-700" />
+                <img src={service.image} alt={service.title} loading="lazy" decoding="async" className="w-full h-full object-cover transform group-hover:scale-110 transition duration-700" />
               </div>
               <div className="p-6 flex-1 flex flex-col">
                 <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-blue-600 transition">{service.title}</h3>
@@ -245,14 +282,23 @@ const TuitionHome: React.FC = () => {
             {faqs.map((faq, idx) => (
               <div key={idx} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
                 <button
+                  type="button"
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
                   className="w-full px-5 py-4 flex items-center justify-between hover:bg-slate-50 transition font-semibold text-slate-800 text-left"
+                  aria-expanded={openFaq === idx}
+                  aria-controls={`tuition-faq-${idx}`}
+                  id={`tuition-faq-${idx}-button`}
                 >
                   <span className="text-sm md:text-base">{faq.q}</span>
                   <ChevronDown size={18} className={`transition flex-shrink-0 ml-4 ${openFaq === idx ? 'rotate-180' : ''}`} />
                 </button>
                 {openFaq === idx && (
-                  <div className="px-5 py-4 bg-slate-50 border-t border-slate-200 text-slate-700 text-sm leading-relaxed">
+                  <div
+                    id={`tuition-faq-${idx}`}
+                    role="region"
+                    aria-labelledby={`tuition-faq-${idx}-button`}
+                    className="px-5 py-4 bg-slate-50 border-t border-slate-200 text-slate-700 text-sm leading-relaxed"
+                  >
                     {faq.a}
                   </div>
                 )}
@@ -272,7 +318,7 @@ const TuitionHome: React.FC = () => {
             Join 250+ Singapore families who trust our diagnostic-driven matching
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button to="/parents" variant="white" className="text-base px-8 py-4 shadow-2xl hover:scale-105 transition-transform">
+            <Button to="/tuition/parents" variant="white" className="text-base px-8 py-4 shadow-2xl hover:scale-105 transition-transform">
               Get Assessment (Worth $120 - Free) →
             </Button>
             <Button to="/tuition/contact" className="text-base px-8 py-4 bg-blue-800 hover:bg-blue-900 border-2 border-white/20 hover:scale-105 transition-transform">

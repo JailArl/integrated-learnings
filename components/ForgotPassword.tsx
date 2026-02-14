@@ -9,6 +9,7 @@ interface ForgotPasswordProps {
 
 export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, userType }) => {
   const [email, setEmail] = useState('');
+  const [fieldError, setFieldError] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -18,14 +19,16 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, userType
     setError('');
 
     if (!email.trim()) {
-      setError('Please enter your email address');
+      setFieldError('Email is required.');
       return;
     }
 
     if (!email.includes('@')) {
-      setError('Please enter a valid email address');
+      setFieldError('Enter a valid email address.');
       return;
     }
+
+    setFieldError('');
 
     setLoading(true);
 
@@ -100,13 +103,26 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, userType
             Email Address
           </label>
           <input
+            id="forgot-password-email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              if (fieldError) {
+                setFieldError('');
+              }
+            }}
             placeholder="your.email@example.com"
+            aria-invalid={!!fieldError}
+            aria-describedby={fieldError ? 'forgot-password-email-error' : undefined}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             required
           />
+          {fieldError && (
+            <p id="forgot-password-email-error" className="text-xs text-red-600 mt-1">
+              {fieldError}
+            </p>
+          )}
         </div>
 
         <button

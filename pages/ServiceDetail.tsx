@@ -35,7 +35,7 @@ export const ServiceDetail: React.FC = () => {
       
       <Section className="bg-gradient-to-br from-blue-50 to-slate-50">
         <div className="max-w-4xl mx-auto">
-          <img src={service.image} alt={service.title} className="w-full h-80 object-cover rounded-2xl shadow-lg mb-12" />
+          <img src={service.image} alt={service.title} loading="lazy" decoding="async" className="w-full h-80 object-cover rounded-2xl shadow-lg mb-12" />
           
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             <div>
@@ -57,10 +57,10 @@ export const ServiceDetail: React.FC = () => {
                   <p className="text-slate-700 mb-6">
                     You're logged in! Proceed to request your tutor match for this service.
                   </p>
-                  <Button to="/parents" className="w-full mb-4">
+                  <Button to="/tuition/parents" className="w-full mb-4">
                     View Your Dashboard
                   </Button>
-                  <Button to="/parents" variant="outline" className="w-full">
+                  <Button to="/tuition/parents" variant="outline" className="w-full">
                     Request Tutor Match
                   </Button>
                 </>
@@ -120,7 +120,7 @@ export const ServiceDetail: React.FC = () => {
               Join hundreds of Singapore families who've found success through diagnostic-driven education.
             </p>
             {isLoggedIn ? (
-              <Button to="/parents" variant="white" className="px-10 py-3 text-lg font-bold">
+              <Button to="/tuition/parents" variant="white" className="px-10 py-3 text-lg font-bold">
                 Request Tutor Match
               </Button>
             ) : (

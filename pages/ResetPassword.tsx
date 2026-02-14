@@ -9,6 +9,7 @@ export const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{ password?: string; confirmPassword?: string }>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -19,20 +20,22 @@ export const ResetPassword: React.FC = () => {
     e.preventDefault();
     setError('');
 
-    if (!password || !confirmPassword) {
-      setError('Please fill in all fields');
+    const nextErrors: { password?: string; confirmPassword?: string } = {};
+    if (!password) {
+      nextErrors.password = 'New password is required.';
+    } else if (password.length < 6) {
+      nextErrors.password = 'Password must be at least 6 characters.';
+    }
+    if (!confirmPassword) {
+      nextErrors.confirmPassword = 'Please confirm your password.';
+    } else if (password !== confirmPassword) {
+      nextErrors.confirmPassword = 'Passwords do not match.';
+    }
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
       return;
     }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
+    setFieldErrors({});
 
     setLoading(true);
 
@@ -94,13 +97,26 @@ export const ResetPassword: React.FC = () => {
                 New Password
               </label>
               <input
+                id="reset-password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) {
+                    setFieldErrors({ ...fieldErrors, password: undefined });
+                  }
+                }}
                 placeholder="At least 6 characters"
+                aria-invalid={!!fieldErrors.password}
+                aria-describedby={fieldErrors.password ? 'reset-password-error' : undefined}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
+              {fieldErrors.password && (
+                <p id="reset-password-error" className="text-xs text-red-600 mt-1">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
             <div>
@@ -108,13 +124,26 @@ export const ResetPassword: React.FC = () => {
                 Confirm Password
               </label>
               <input
+                id="reset-password-confirm"
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  if (fieldErrors.confirmPassword) {
+                    setFieldErrors({ ...fieldErrors, confirmPassword: undefined });
+                  }
+                }}
                 placeholder="Re-enter your password"
+                aria-invalid={!!fieldErrors.confirmPassword}
+                aria-describedby={fieldErrors.confirmPassword ? 'reset-password-confirm-error' : undefined}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
+              {fieldErrors.confirmPassword && (
+                <p id="reset-password-confirm-error" className="text-xs text-red-600 mt-1">
+                  {fieldErrors.confirmPassword}
+                </p>
+              )}
             </div>
 
             <button

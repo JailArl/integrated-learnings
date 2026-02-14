@@ -160,10 +160,11 @@ const EnrichmentHome: React.FC = () => {
             <p className="text-green-100 mb-6 text-lg">
               Enter your school-issued access code to begin your financial literacy journey
             </p>
-            <Link to="/enrichment/login">
-              <button className="bg-white text-green-600 hover:bg-green-50 font-semibold py-3 px-8 rounded-lg transition-colors duration-200">
-                Student Login
-              </button>
+            <Link
+              to="/enrichment/login"
+              className="inline-flex items-center justify-center bg-white text-green-600 hover:bg-green-50 font-semibold py-3 px-8 rounded-lg transition-colors duration-200"
+            >
+              Student Login
             </Link>
           </div>
         </div>

@@ -287,7 +287,7 @@ export const Calendar: React.FC = () => {
                 Download Schedule
               </button>
               <button 
-                onClick={() => window.location.href = '#/parents'}
+                onClick={() => window.location.href = '#/tuition/parents'}
                 className="w-full text-left px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-lg font-bold text-sm text-slate-700 transition"
               >
                 Back to Dashboard

@@ -63,7 +63,7 @@ const Home: React.FC = () => {
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
             <div className="relative">
-              <Button to="/parents" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
+              <Button to="/tuition/parents" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
                 Get Diagnostic Assessment
                 <span className="block text-xs font-normal mt-1 opacity-90">Value $120 - Waived</span>
               </Button>
@@ -125,7 +125,7 @@ const Home: React.FC = () => {
 
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-8 text-center">
           <p className="text-lg font-semibold mb-4">Ready to get your diagnostic assessment?</p>
-          <Button to="/parents" variant="white" className="text-lg px-8 py-3">
+          <Button to="/tuition/parents" variant="white" className="text-lg px-8 py-3">
             Get Assessment (Value $120 - Waived)
           </Button>
           <p className="text-xs text-green-100 mt-3">Limited to 5-8 new families per week</p>
@@ -179,7 +179,7 @@ const Home: React.FC = () => {
           {SERVICES.map((service) => (
             <Link key={service.id} to={service.link} className="group flex flex-col rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-100 bg-white hover:-translate-y-2">
               <div className="h-56 overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 relative">
-                <img src={service.image} alt={service.title} className="w-full h-full object-cover transform group-hover:scale-110 transition duration-700" />
+                <img src={service.image} alt={service.title} loading="lazy" decoding="async" className="w-full h-full object-cover transform group-hover:scale-110 transition duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
               </div>
               <div className="p-8 flex-1 flex flex-col bg-white">
@@ -243,11 +243,11 @@ const Home: React.FC = () => {
             Join Singapore families who trust diagnostic-driven learning.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button to="/parents" variant="white" className="w-full sm:w-auto text-lg px-10 py-5 shadow-2xl hover:scale-105 transition-transform">
+            <Button to="/tuition/parents" variant="white" className="w-full sm:w-auto text-lg px-10 py-5 shadow-2xl hover:scale-105 transition-transform">
               Get Diagnostic Assessment →
               <span className="block text-xs font-normal mt-1">Worth $120 - Waived for you</span>
             </Button>
-            <Button to="/contact" className="w-full sm:w-auto text-lg px-10 py-5 bg-blue-800 hover:bg-blue-900 border-2 border-white/20 hover:scale-105 transition-transform">
+            <Button to="/tuition/contact" className="w-full sm:w-auto text-lg px-10 py-5 bg-blue-800 hover:bg-blue-900 border-2 border-white/20 hover:scale-105 transition-transform">
               💬 Chat With Education Consultant
             </Button>
           </div>
@@ -268,21 +268,30 @@ const Home: React.FC = () => {
             {parentFaqs.map((faq, idx) => (
               <div key={idx} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
                 <button
+                  type="button"
                   onClick={() => setOpenFaqParent(openFaqParent === idx ? null : idx)}
                   className="w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition font-bold text-slate-800 text-left"
+                  aria-expanded={openFaqParent === idx}
+                  aria-controls={`parent-faq-${idx}`}
+                  id={`parent-faq-${idx}-button`}
                 >
                   {faq.q}
                   <ChevronDown size={18} className={`transition ${openFaqParent === idx ? 'rotate-180' : ''}`} />
                 </button>
                 {openFaqParent === idx && (
-                  <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-slate-700 text-sm leading-relaxed">
+                  <div
+                    id={`parent-faq-${idx}`}
+                    role="region"
+                    aria-labelledby={`parent-faq-${idx}-button`}
+                    className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-slate-700 text-sm leading-relaxed"
+                  >
                     {faq.a}
                   </div>
                 )}
               </div>
             ))}
           </div>
-          <Button to="/parents" className="w-full mt-6">
+          <Button to="/tuition/parents" className="w-full mt-6">
             Get Your Diagnostic Assessment →
             <span className="block text-xs font-normal mt-1">Value $120 - Complimentary</span>
           </Button>
@@ -292,7 +301,7 @@ const Home: React.FC = () => {
       {/* Subtle Link for Educators at bottom */}
       <div className="bg-slate-50 py-12 text-center border-t border-slate-100">
          <p className="text-slate-500 text-sm mb-4">Are you a qualified educator looking for students?</p>
-         <Link to="/teach" className="text-secondary font-bold hover:underline text-sm">Apply to join our Tutor Network &rarr;</Link>
+         <Link to="/tuition/teach" className="text-secondary font-bold hover:underline text-sm">Apply to join our Tutor Network &rarr;</Link>
       </div>
     </>
   );

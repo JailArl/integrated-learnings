@@ -15,54 +15,77 @@ export const TutorSignup: React.FC = () => {
     dateOfBirth: '',
     gender: '',
   });
+  const [fieldErrors, setFieldErrors] = useState<{
+    fullName?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    phone?: string;
+    dateOfBirth?: string;
+    gender?: string;
+  }>({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (fieldErrors[e.target.name as keyof typeof fieldErrors]) {
+      setFieldErrors({ ...fieldErrors, [e.target.name]: undefined });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!formData.fullName || !formData.email || !formData.password || !formData.dateOfBirth || !formData.gender) {
-      setError('Please fill in all required fields');
-      return;
+    const nextErrors: typeof fieldErrors = {};
+    if (!formData.fullName.trim()) {
+      nextErrors.fullName = 'Full name is required.';
     }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
+    if (!formData.email.trim()) {
+      nextErrors.email = 'Email is required.';
+    } else if (!formData.email.includes('@')) {
+      nextErrors.email = 'Enter a valid email address.';
     }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
+    if (!formData.dateOfBirth) {
+      nextErrors.dateOfBirth = 'Date of birth is required.';
     }
-
-    if (!formData.email.includes('@')) {
-      setError('Please enter a valid email address');
-      return;
+    if (!formData.gender) {
+      nextErrors.gender = 'Please select a gender.';
     }
-
+    if (!formData.password) {
+      nextErrors.password = 'Password is required.';
+    } else if (formData.password.length < 6) {
+      nextErrors.password = 'Password must be at least 6 characters.';
+    }
+    if (!formData.confirmPassword) {
+      nextErrors.confirmPassword = 'Please confirm your password.';
+    } else if (formData.password !== formData.confirmPassword) {
+      nextErrors.confirmPassword = 'Passwords do not match.';
+    }
     if (!formData.phone.trim()) {
-      setError('Please enter a valid phone number');
-      return;
+      nextErrors.phone = 'Phone number is required.';
     }
 
     // Age validation
-    const birthDate = new Date(formData.dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    if (formData.dateOfBirth) {
+      const birthDate = new Date(formData.dateOfBirth);
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      if (age < 18) {
+        nextErrors.dateOfBirth = 'You must be at least 18 years old to register.';
+      }
     }
-    if (age < 18) {
-      setError('You must be at least 18 years old to register as a tutor');
+
+    if (Object.keys(nextErrors).length > 0) {
+      setFieldErrors(nextErrors);
       return;
     }
+    setFieldErrors({});
 
     setLoading(true);
 
@@ -118,14 +141,22 @@ export const TutorSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="tutor-signup-full-name"
                   type="text"
                   name="fullName"
                   placeholder="Enter your full name"
                   value={formData.fullName}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.fullName}
+                  aria-describedby={fieldErrors.fullName ? 'tutor-signup-full-name-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   required
                 />
+                {fieldErrors.fullName && (
+                  <p id="tutor-signup-full-name-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.fullName}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -136,14 +167,22 @@ export const TutorSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="tutor-signup-email"
                   type="email"
                   name="email"
                   placeholder="your.email@example.com"
                   value={formData.email}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.email}
+                  aria-describedby={fieldErrors.email ? 'tutor-signup-email-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   required
                 />
+                {fieldErrors.email && (
+                  <p id="tutor-signup-email-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -154,15 +193,23 @@ export const TutorSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="tutor-signup-dob"
                   type="date"
                   name="dateOfBirth"
                   value={formData.dateOfBirth}
                   onChange={handleChange}
                   max={new Date(new Date().setFullYear(new Date().getFullYear() - 18)).toISOString().split('T')[0]}
+                  aria-invalid={!!fieldErrors.dateOfBirth}
+                  aria-describedby={fieldErrors.dateOfBirth ? 'tutor-signup-dob-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">Must be at least 18 years old</p>
+                {fieldErrors.dateOfBirth && (
+                  <p id="tutor-signup-dob-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.dateOfBirth}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -173,9 +220,12 @@ export const TutorSignup: React.FC = () => {
                   </div>
                 </label>
                 <select
+                  id="tutor-signup-gender"
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.gender}
+                  aria-describedby={fieldErrors.gender ? 'tutor-signup-gender-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   required
                 >
@@ -184,6 +234,11 @@ export const TutorSignup: React.FC = () => {
                   <option value="Female">Female</option>
                   <option value="Prefer not to say">Prefer not to say</option>
                 </select>
+                {fieldErrors.gender && (
+                  <p id="tutor-signup-gender-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.gender}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -194,15 +249,23 @@ export const TutorSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="tutor-signup-password"
                   type="password"
                   name="password"
                   placeholder="Minimum 6 characters"
                   value={formData.password}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.password}
+                  aria-describedby={fieldErrors.password ? 'tutor-signup-password-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters long</p>
+                {fieldErrors.password && (
+                  <p id="tutor-signup-password-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -213,14 +276,22 @@ export const TutorSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="tutor-signup-confirm-password"
                   type="password"
                   name="confirmPassword"
                   placeholder="Re-enter your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.confirmPassword}
+                  aria-describedby={fieldErrors.confirmPassword ? 'tutor-signup-confirm-password-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   required
                 />
+                {fieldErrors.confirmPassword && (
+                  <p id="tutor-signup-confirm-password-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.confirmPassword}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -231,14 +302,22 @@ export const TutorSignup: React.FC = () => {
                   </div>
                 </label>
                 <input
+                  id="tutor-signup-phone"
                   type="tel"
                   name="phone"
                   placeholder="+65 XXXX XXXX"
                   value={formData.phone}
                   onChange={handleChange}
+                  aria-invalid={!!fieldErrors.phone}
+                  aria-describedby={fieldErrors.phone ? 'tutor-signup-phone-error' : undefined}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
                   required
                 />
+                {fieldErrors.phone && (
+                  <p id="tutor-signup-phone-error" className="text-xs text-red-600 mt-1">
+                    {fieldErrors.phone}
+                  </p>
+                )}
               </div>
 
               <button
