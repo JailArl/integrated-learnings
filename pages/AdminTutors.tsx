@@ -469,13 +469,13 @@ export const AdminTutors: React.FC = () => {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Tutor Browser
+            Tutor Review
           </button>
         </div>
       </div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-primary mb-2">Tutor Management</h1>
-        <p className="text-lg text-gray-600">Browse tutor profiles and create manual matches</p>
+        <h1 className="text-3xl font-bold text-primary mb-2">Tutor Review</h1>
+        <p className="text-lg text-gray-600">Review tutor profiles, interview details, and verification in one place</p>
       </div>
 
       {error && (

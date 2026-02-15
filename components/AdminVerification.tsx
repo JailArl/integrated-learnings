@@ -226,7 +226,7 @@ export const AdminVerification: React.FC = () => {
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            Tutor Browser
+            Tutor Review
           </button>
           <button
             onClick={() => navigate('/admin/verification')}
