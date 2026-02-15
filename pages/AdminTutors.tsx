@@ -845,8 +845,33 @@ export const AdminTutors: React.FC = () => {
                   const breakdown = parseInterviewBreakdown(selectedTutorDetails.ai_interview_assessment);
                   if (!breakdown) {
                     return (
-                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900 text-sm">
-                        Interview breakdown data is not available yet.
+                      <div className="space-y-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                          <p className="text-sm text-blue-900 font-semibold">Overall Score</p>
+                          <p className="text-3xl font-bold text-blue-700 mt-1">
+                            {selectedTutorDetails.ai_interview_score ?? 'N/A'}/10
+                          </p>
+                          {selectedTutorDetails.ai_interview_attempts !== null && selectedTutorDetails.ai_interview_attempts !== undefined && (
+                            <p className="text-xs text-blue-800 mt-2">Attempts: {selectedTutorDetails.ai_interview_attempts}</p>
+                          )}
+                        </div>
+
+                        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-amber-900 text-sm">
+                          Structured interview breakdown is not available for this tutor. Showing available assessment notes below.
+                        </div>
+
+                        {selectedTutorDetails.ai_interview_assessment ? (
+                          <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                            <p className="text-sm font-semibold text-gray-700 mb-2">Full Assessment Notes</p>
+                            <p className="text-xs text-gray-600 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                              {selectedTutorDetails.ai_interview_assessment}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-gray-700 text-sm">
+                            No assessment notes are available yet.
+                          </div>
+                        )}
                       </div>
                     );
                   }
