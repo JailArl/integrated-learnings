@@ -254,16 +254,6 @@ export const AdminMatching: React.FC = () => {
           >
             Tutor Browser
           </button>
-          <button
-            onClick={() => navigate('/admin/verification')}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              location.pathname === '/admin/verification'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Verification
-          </button>
         </div>
       </div>
 

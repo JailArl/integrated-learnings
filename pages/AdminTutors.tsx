@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Section, Card, Button } from '../components/Components';
-import { getAllTutors, getAllRequests, approveBid, getTutorCertificates } from '../services/platformApi';
+import {
+  getAllTutors,
+  getAllRequests,
+  approveBid,
+  getTutorCertificates,
+  verifyTutor,
+  updateCertificateStatus,
+  setTutorCaseAccess,
+  setTutorCertVerificationStatus,
+  updateTutorPhotoStatus,
+  getTutorProfile,
+} from '../services/platformApi';
 import { User, Mail, Phone, Award, BookOpen, Calendar, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { getTutorTypeLabel } from '../constants';
 
@@ -17,6 +28,7 @@ interface TutorProfile {
   photo_url?: string | null;
   photo_verification_status?: 'approved' | 'rejected' | 'pending' | 'missing' | null;
   cert_verification_status?: 'pending' | 'approved' | 'rejected' | null;
+  can_access_cases?: boolean | null;
   ai_interview_status?: 'pending' | 'completed' | 'failed' | null;
   ai_interview_score?: number | null;
   ai_interview_assessment?: string | null;
@@ -138,8 +150,12 @@ export const AdminTutors: React.FC = () => {
   const [selectedQuestionnaire, setSelectedQuestionnaire] = useState<any>(null);
   const [selectedTutorCertificates, setSelectedTutorCertificates] = useState<any[]>([]);
   const [loadingTutorCertificates, setLoadingTutorCertificates] = useState(false);
+  const [processingTutor, setProcessingTutor] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
   const normalizeQuestionnaire = (value: any) => {
     if (!value) return null;
     if (typeof value === 'string') {
@@ -160,6 +176,10 @@ export const AdminTutors: React.FC = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, pageSize]);
+
   const fetchData = async () => {
     setLoading(true);
     setError(null);
@@ -171,6 +191,10 @@ export const AdminTutors: React.FC = () => {
 
     if (tutorsResult.success && tutorsResult.data) {
       setTutors(tutorsResult.data);
+      if (selectedTutorDetails) {
+        const refreshedTutor = tutorsResult.data.find((item) => item.id === selectedTutorDetails.id) || null;
+        setSelectedTutorDetails(refreshedTutor);
+      }
     } else {
       setError(tutorsResult.error || 'Failed to fetch tutors');
     }
@@ -183,6 +207,119 @@ export const AdminTutors: React.FC = () => {
     }
 
     setLoading(false);
+  };
+
+  const evaluateCaseAccess = async (tutorId: string) => {
+    const [profileResult, certsResult] = await Promise.all([
+      getTutorProfile(tutorId),
+      getTutorCertificates(tutorId),
+    ]);
+
+    if (!profileResult.success || !profileResult.data || !certsResult.success) return;
+
+    const profile = profileResult.data;
+    const certs = certsResult.data || [];
+
+    const hasApprovedCert = certs.some((cert: any) => cert.verification_status === 'approved');
+    const photoApproved = profile.photo_verification_status === 'approved';
+    const questionnaireDone = !!profile.questionnaire_completed;
+    const verified = profile.verification_status === 'verified';
+
+    const allowAccess = hasApprovedCert && photoApproved && questionnaireDone && verified;
+    await setTutorCaseAccess(tutorId, allowAccess);
+
+    const certStatus = hasApprovedCert
+      ? 'approved'
+      : certs.some((cert: any) => cert.verification_status === 'rejected')
+      ? 'rejected'
+      : 'pending';
+
+    await setTutorCertVerificationStatus(tutorId, certStatus);
+  };
+
+  const handleVerifyTutor = async (tutorId: string, status: 'verified' | 'rejected') => {
+    const confirmMessage =
+      status === 'verified'
+        ? 'Are you sure you want to approve this tutor?'
+        : 'Are you sure you want to reject this tutor?';
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setProcessingTutor(tutorId);
+    setError(null);
+    setSuccessMessage(null);
+
+    const result = await verifyTutor(tutorId, status);
+
+    if (result.success) {
+      setSuccessMessage(`Tutor ${status === 'verified' ? 'approved' : 'rejected'} successfully.`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+      await evaluateCaseAccess(tutorId);
+      await fetchData();
+    } else {
+      setError(result.error || 'Failed to update tutor status');
+    }
+
+    setProcessingTutor(null);
+  };
+
+  const handlePhotoStatus = async (tutorId: string, status: 'approved' | 'rejected') => {
+    setProcessingTutor(tutorId);
+    setError(null);
+
+    const result = await updateTutorPhotoStatus(tutorId, status);
+
+    if (result.success) {
+      await evaluateCaseAccess(tutorId);
+      await fetchData();
+      if (selectedTutorDetails?.id === tutorId) {
+        await openTutorDetails({ ...selectedTutorDetails, photo_verification_status: status });
+      }
+    } else {
+      setError(result.error || 'Failed to update photo status');
+    }
+
+    setProcessingTutor(null);
+  };
+
+  const handleCertificateStatus = async (
+    tutorId: string,
+    certificateId: string,
+    status: 'approved' | 'rejected'
+  ) => {
+    setProcessingTutor(tutorId);
+    setError(null);
+
+    const result = await updateCertificateStatus(certificateId, status);
+
+    if (result.success) {
+      await evaluateCaseAccess(tutorId);
+      await fetchData();
+      if (selectedTutorDetails?.id === tutorId) {
+        await openTutorDetails(selectedTutorDetails);
+      }
+    } else {
+      setError(result.error || 'Failed to update certificate status');
+    }
+
+    setProcessingTutor(null);
+  };
+
+  const handleCaseAccess = async (tutorId: string, allowAccess: boolean) => {
+    setProcessingTutor(tutorId);
+    setError(null);
+
+    const result = await setTutorCaseAccess(tutorId, allowAccess);
+
+    if (result.success) {
+      setSuccessMessage(`Case access ${allowAccess ? 'enabled' : 'disabled'} successfully.`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+      await fetchData();
+    } else {
+      setError(result.error || 'Failed to update case access');
+    }
+
+    setProcessingTutor(null);
   };
 
   const handleManualMatch = async (requestId: string, tutorId: string) => {
@@ -293,6 +430,12 @@ export const AdminTutors: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const totalFilteredTutors = filteredTutors.length;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredTutors / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pageStartIndex = (safeCurrentPage - 1) * pageSize;
+  const paginatedTutors = filteredTutors.slice(pageStartIndex, pageStartIndex + pageSize);
+
   if (loading) {
     return (
       <Section>
@@ -328,16 +471,6 @@ export const AdminTutors: React.FC = () => {
           >
             Tutor Browser
           </button>
-          <button
-            onClick={() => navigate('/admin/verification')}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              location.pathname === '/admin/verification'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Verification
-          </button>
         </div>
       </div>
       <div className="mb-8">
@@ -351,9 +484,15 @@ export const AdminTutors: React.FC = () => {
         </div>
       )}
 
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
+          {successMessage}
+        </div>
+      )}
+
       {/* Filters */}
       <Card title="Filters" className="mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Search</label>
             <input
@@ -384,19 +523,39 @@ export const AdminTutors: React.FC = () => {
               Refresh
             </Button>
           </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Rows Per Page</label>
+            <select
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value={12}>12</option>
+              <option value={24}>24</option>
+              <option value={48}>48</option>
+            </select>
+          </div>
         </div>
       </Card>
 
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
+        <p>
+          Showing {totalFilteredTutors === 0 ? 0 : pageStartIndex + 1}-{Math.min(pageStartIndex + pageSize, totalFilteredTutors)} of {totalFilteredTutors} tutors
+        </p>
+        <p>Page {safeCurrentPage} of {totalPages}</p>
+      </div>
+
       {/* Tutor Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredTutors.map((tutor) => {
+        {paginatedTutors.map((tutor) => {
           const questionnaire = normalizeQuestionnaire(tutor.questionnaire_answers);
           const tutorType = getTutorTypeLabel(
             questionnaire?.personality?.traitScores
           );
           return (
-            <Card key={tutor.id} title={tutor.full_name} className="hover:shadow-lg transition">
-              <div className="space-y-4">
+            <Card key={tutor.id} title={tutor.full_name} className="hover:shadow-lg transition cursor-pointer">
+              <div className="space-y-4" onClick={() => openTutorDetails(tutor)}>
               {/* Header */}
               <div className="flex items-start justify-between">
                 <div className="flex items-start space-x-3">
@@ -486,13 +645,13 @@ export const AdminTutors: React.FC = () => {
               )}
 
               {/* Actions */}
-              <div className="pt-4 border-t space-y-2">
+              <div className="pt-4 border-t space-y-2" onClick={(e) => e.stopPropagation()}>
                 <Button
                   onClick={() => openTutorDetails(tutor)}
                   variant="outline"
                   className="w-full"
                 >
-                  View Full Details
+                  Open Full Review
                 </Button>
                 {questionnaire && (
                   <Button 
@@ -526,6 +685,26 @@ export const AdminTutors: React.FC = () => {
       {filteredTutors.length === 0 && (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <p className="text-gray-600">No tutors found matching your filters</p>
+        </div>
+      )}
+
+      {totalFilteredTutors > 0 && (
+        <div className="mt-6 flex items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={safeCurrentPage === 1}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-gray-700">Page {safeCurrentPage} / {totalPages}</span>
+          <Button
+            variant="outline"
+            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+            disabled={safeCurrentPage >= totalPages}
+          >
+            Next
+          </Button>
         </div>
       )}
 
@@ -565,6 +744,9 @@ export const AdminTutors: React.FC = () => {
                   <div className="flex flex-wrap gap-2 pt-2">
                     {getStatusBadge(selectedTutorDetails.verification_status)}
                     {getInterviewBadge(selectedTutorDetails.ai_interview_status)}
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${selectedTutorDetails.can_access_cases ? 'bg-green-50 border-green-200 text-green-700' : 'bg-gray-50 border-gray-200 text-gray-700'}`}>
+                      Cases: {selectedTutorDetails.can_access_cases ? 'Unlocked' : 'Locked'}
+                    </span>
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -585,6 +767,44 @@ export const AdminTutors: React.FC = () => {
                 </div>
               </div>
 
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                <h3 className="text-lg font-semibold text-gray-900">Verification Actions</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="primary"
+                    onClick={() => handleVerifyTutor(selectedTutorDetails.id, 'verified')}
+                    disabled={processingTutor === selectedTutorDetails.id}
+                    className="text-sm"
+                  >
+                    {processingTutor === selectedTutorDetails.id ? 'Processing...' : 'Approve Tutor'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleVerifyTutor(selectedTutorDetails.id, 'rejected')}
+                    disabled={processingTutor === selectedTutorDetails.id}
+                    className="text-sm border-red-500 text-red-500 hover:bg-red-50"
+                  >
+                    {processingTutor === selectedTutorDetails.id ? 'Processing...' : 'Reject Tutor'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCaseAccess(selectedTutorDetails.id, true)}
+                    disabled={processingTutor === selectedTutorDetails.id}
+                    className="text-sm border-green-500 text-green-600 hover:bg-green-50"
+                  >
+                    Unlock Cases
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleCaseAccess(selectedTutorDetails.id, false)}
+                    disabled={processingTutor === selectedTutorDetails.id}
+                    className="text-sm"
+                  >
+                    Lock Cases
+                  </Button>
+                </div>
+              </div>
+
               {selectedTutorDetails.photo_url && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Profile Photo</h3>
@@ -596,6 +816,24 @@ export const AdminTutors: React.FC = () => {
                     />
                     <div className="text-sm text-gray-600">
                       Photo status: {selectedTutorDetails.photo_verification_status || 'pending'}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="primary"
+                        onClick={() => handlePhotoStatus(selectedTutorDetails.id, 'approved')}
+                        disabled={processingTutor === selectedTutorDetails.id}
+                        className="text-xs px-3 py-1"
+                      >
+                        Approve Photo
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handlePhotoStatus(selectedTutorDetails.id, 'rejected')}
+                        disabled={processingTutor === selectedTutorDetails.id}
+                        className="text-xs px-3 py-1 border-red-500 text-red-600 hover:bg-red-50"
+                      >
+                        Reject Photo
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -620,11 +858,23 @@ export const AdminTutors: React.FC = () => {
                         <p className="text-3xl font-bold text-blue-700 mt-1">
                           {breakdown.overallScore || selectedTutorDetails.ai_interview_score || 'N/A'}/10
                         </p>
+                        {selectedTutorDetails.ai_interview_attempts !== null && selectedTutorDetails.ai_interview_attempts !== undefined && (
+                          <p className="text-xs text-blue-800 mt-2">Attempts: {selectedTutorDetails.ai_interview_attempts}</p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {Object.entries(breakdown.categoryScores || {}).map(([category, value]) => (
+                          <div key={category} className="bg-white border border-slate-200 rounded-lg p-3">
+                            <p className="text-xs uppercase tracking-wide text-slate-500">{category}</p>
+                            <p className="text-lg font-bold text-slate-900">{value as number}/10</p>
+                          </div>
+                        ))}
                       </div>
 
                       {breakdown.fitRecommendation && (
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
-                          <p className="font-semibold">Student Fit Recommendation</p>
+                          <p className="font-semibold">AI Recommendation</p>
                           {breakdown.fitRecommendation.summary && (
                             <p className="mt-1">{breakdown.fitRecommendation.summary}</p>
                           )}
@@ -641,6 +891,15 @@ export const AdminTutors: React.FC = () => {
                           {breakdown.fitRecommendation.notes && (
                             <p className="mt-1">{breakdown.fitRecommendation.notes}</p>
                           )}
+                        </div>
+                      )}
+
+                      {selectedTutorDetails.ai_interview_assessment && (
+                        <div className="border border-gray-200 rounded-lg p-4 bg-white">
+                          <p className="text-sm font-semibold text-gray-700 mb-2">Full Assessment Notes</p>
+                          <p className="text-xs text-gray-600 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                            {selectedTutorDetails.ai_interview_assessment}
+                          </p>
                         </div>
                       )}
 
@@ -694,14 +953,32 @@ export const AdminTutors: React.FC = () => {
                           <p className="text-sm font-semibold text-gray-800">{cert.file_name}</p>
                           <p className="text-xs text-gray-500">Status: {cert.verification_status}</p>
                         </div>
-                        <a
-                          href={cert.file_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-700 text-sm font-semibold"
-                        >
-                          View
-                        </a>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={cert.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-700 text-sm font-semibold"
+                          >
+                            View
+                          </a>
+                          <Button
+                            variant="primary"
+                            onClick={() => handleCertificateStatus(selectedTutorDetails.id, cert.id, 'approved')}
+                            disabled={processingTutor === selectedTutorDetails.id}
+                            className="text-xs px-3 py-1"
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={() => handleCertificateStatus(selectedTutorDetails.id, cert.id, 'rejected')}
+                            disabled={processingTutor === selectedTutorDetails.id}
+                            className="text-xs px-3 py-1 border-red-500 text-red-600 hover:bg-red-50"
+                          >
+                            Reject
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
