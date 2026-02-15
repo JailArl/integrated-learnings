@@ -1373,13 +1373,13 @@ const NewTutorDashboardContent: React.FC = () => {
           )}
         </div>
 
-        {/* AI Interview Section */}
+        {/* Tutor Questionnaire Section */}
         {tutorId && profile?.ai_interview_status !== 'completed' && (
           <div className="mb-12">
-            <Card title="Complete Your Character Interview" className="max-w-4xl">
+            <Card title="Complete Your Tutor Questionnaire" className="max-w-4xl">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-900">
-                  <strong>🎤 AI Character Interview</strong> Our AI will ask you 7-10 personalized questions about your teaching style and approach. This helps us match you with the right cases and families.
+                  <strong>📝 Tutor Questionnaire</strong> You will answer 7-10 personalized questions about your teaching style and approach. This helps us match you with the right cases and families.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -1388,27 +1388,27 @@ const NewTutorDashboardContent: React.FC = () => {
                   variant="primary"
                   className="w-full sm:w-auto"
                 >
-                  Start AI Interview
+                  Start Tutor Questionnaire
                 </Button>
               </div>
             </Card>
           </div>
         )}
 
-        {/* AI Interview Completed - View Results */}
+        {/* Tutor Questionnaire Completed - View Results */}
         {tutorId && profile?.ai_interview_status === 'completed' && (
           <div className="mb-12">
-            <Card title="Your AI Interview" className="max-w-4xl">
+            <Card title="Your Tutor Questionnaire" className="max-w-4xl">
               <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-start gap-3">
                 <CheckCircle2 className="text-green-600 mt-0.5" size={20} />
                 <div>
-                  <p className="text-sm text-green-900 font-semibold">Interview Completed! ✅</p>
-                  <p className="text-sm text-green-800">Your interview has been submitted for admin review. You'll be notified once your results are processed.</p>
+                  <p className="text-sm text-green-900 font-semibold">Questionnaire Submitted! ✅</p>
+                  <p className="text-sm text-green-800">Your questionnaire has been submitted for admin review. You'll be notified once your results are processed.</p>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button to="/tutors/interview-results" variant="outline" className="w-full sm:w-auto">
-                  View Interview Status
+                  View Questionnaire Status
                 </Button>
               </div>
             </Card>

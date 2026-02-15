@@ -7,8 +7,13 @@ import { AlertCircle, CheckCircle } from 'lucide-react';
 export const TutorInterviewResults: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [retakeLoading, setRetakeLoading] = useState(false);
   const [error, setError] = useState('');
   const [status, setStatus] = useState<string | null>(null);
+  const [attempts, setAttempts] = useState(0);
+
+  const MAX_RETAKES = 2;
+  const MAX_TOTAL_ATTEMPTS = 1 + MAX_RETAKES;
 
   useEffect(() => {
     const loadResults = async () => {
@@ -27,13 +32,17 @@ export const TutorInterviewResults: React.FC = () => {
 
         const { data: profile, error: profileError } = await supabase
           .from('tutor_profiles')
-          .select('ai_interview_status')
+          .select('ai_interview_status, ai_interview_attempts')
           .eq('id', authData.user.id)
           .single();
 
         if (profileError) throw profileError;
 
         setStatus(profile?.ai_interview_status ?? null);
+
+        const completedAttempts =
+          profile?.ai_interview_attempts ?? (profile?.ai_interview_status === 'completed' ? 1 : 0);
+        setAttempts(completedAttempts);
       } catch (err: any) {
         console.error('Failed to load interview results:', err);
         setError(err.message || 'Failed to load interview results');
@@ -44,6 +53,59 @@ export const TutorInterviewResults: React.FC = () => {
 
     loadResults();
   }, [navigate]);
+
+  const retakesUsed = Math.max(attempts - 1, 0);
+  const retakesRemaining = Math.max(MAX_RETAKES - retakesUsed, 0);
+
+  const handleRetakeInterview = async () => {
+    if (!supabase || retakesRemaining <= 0) return;
+
+    setRetakeLoading(true);
+    setError('');
+
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) {
+        navigate('/tutors/login');
+        return;
+      }
+
+      const { data: latestProfile, error: latestProfileError } = await supabase
+        .from('tutor_profiles')
+        .select('ai_interview_status, ai_interview_attempts')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (latestProfileError) throw latestProfileError;
+
+      const latestAttempts =
+        latestProfile?.ai_interview_attempts ?? (latestProfile?.ai_interview_status === 'completed' ? 1 : 0);
+
+      if (latestAttempts >= MAX_TOTAL_ATTEMPTS) {
+        setError('You have reached the maximum of 2 questionnaire retakes. Please contact admin for assistance.');
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from('tutor_profiles')
+        .update({
+          ai_interview_status: 'pending',
+          ai_interview_transcript: null,
+          ai_interview_score: null,
+          ai_interview_assessment: null,
+        })
+        .eq('id', authData.user.id);
+
+      if (updateError) throw updateError;
+
+      navigate('/tutors/ai-interview');
+    } catch (err: any) {
+      console.error('Failed to start questionnaire retake:', err);
+      setError(err.message || 'Failed to start questionnaire retake');
+    } finally {
+      setRetakeLoading(false);
+    }
+  };
 
 
   if (loading) {
@@ -103,9 +165,9 @@ export const TutorInterviewResults: React.FC = () => {
               <CheckCircle className="text-green-600" size={24} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-primary">Interview Submitted</h1>
+              <h1 className="text-3xl font-bold text-primary">Questionnaire Submitted</h1>
               <p className="text-slate-600">
-                Thank you for completing the interview. Our admin team will review your responses and follow up with next steps.
+                Thank you for completing the tutor questionnaire. Our admin team will review your responses and follow up with next steps.
               </p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                 <span className="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full">
@@ -120,7 +182,10 @@ export const TutorInterviewResults: React.FC = () => {
 
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
             <p className="text-sm text-blue-900">
-              You will be notified once your interview is reviewed (usually within 24-48 hours). We will also reach out if we need any clarification.
+              You will be notified once your questionnaire is reviewed (usually within 24-48 hours). We will also reach out if we need any clarification.
+            </p>
+            <p className="text-xs text-blue-800 mt-2">
+              Retakes remaining: {retakesRemaining} of {MAX_RETAKES}
             </p>
           </div>
 
@@ -132,10 +197,15 @@ export const TutorInterviewResults: React.FC = () => {
               Back to Dashboard
             </button>
             <button
-              onClick={() => navigate('/tutors/ai-interview')}
-              className="flex-1 bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-lg font-semibold"
+              onClick={handleRetakeInterview}
+              disabled={retakeLoading || retakesRemaining <= 0}
+              className="flex-1 bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Review Interview Flow
+              {retakeLoading
+                ? 'Starting Retake...'
+                : retakesRemaining > 0
+                  ? 'Retake Questionnaire'
+                  : 'Retake Limit Reached'}
             </button>
           </div>
         </div>

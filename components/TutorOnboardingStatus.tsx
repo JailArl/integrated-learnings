@@ -54,8 +54,8 @@ export const TutorOnboardingStatus: React.FC<TutorOnboardingStatusProps> = ({
     },
     {
       id: 'interview',
-      title: 'AI Interview',
-      description: aiInterviewCompleted ? 'Interview completed' : 'Complete AI interview',
+      title: 'Tutor Questionnaire',
+      description: aiInterviewCompleted ? 'Questionnaire completed' : 'Complete tutor questionnaire',
       completed: aiInterviewCompleted,
       current: certVerified && !aiInterviewCompleted,
       icon: MessageSquare,

@@ -345,7 +345,7 @@ export const TutorSignup: React.FC = () => {
             <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-4">
               <p className="text-xs text-gray-700">
                 <strong>ℹ️ What's Next?</strong><br />
-                 After signup, you'll upload your photo, certificates, and complete an AI interview from your dashboard before accessing cases.
+                 After signup, you'll upload your photo, certificates, and complete a tutor questionnaire from your dashboard before accessing cases.
               </p>
             </div>
           </div>
