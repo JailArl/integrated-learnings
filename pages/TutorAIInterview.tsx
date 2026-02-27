@@ -123,13 +123,13 @@ export const TutorAIInterview: React.FC = () => {
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2 text-sm text-blue-800">
             <p className="font-semibold">What to expect:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>7-10 conversational questions about your teaching approach</li>
-              <li>Questions explore character traits like integrity, patience, and empathy</li>
-              <li>Some questions are MCQ (reply with A/B/C/D + one short sentence)</li>
-              <li>Keep answers concise (max 400 characters)</li>
+              <li>8-10 quick multiple-choice and short-answer questions</li>
+              <li>Questions are randomized (different questions each time if you retake)</li>
+              <li>We use this to understand your teaching style better</li>
+              <li>Simple, straightforward language - no complicated questions</li>
               <li>Takes about 10-15 minutes</li>
-              <li>Your responses are reviewed by our admin team for final approval</li>
-              <li>Once approved, you'll unlock access to browse and bid on cases</li>
+              <li>Your responses help us match you with ideal student cases</li>
+              <li>Results are used internally by our team for matching</li>
             </ul>
           </div>
         </div>

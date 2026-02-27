@@ -141,87 +141,22 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="text-green-600" size={32} />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Interview Complete!</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Questionnaire Submitted!</h2>
           <p className="text-gray-600">
-            Thank you for completing your character interview. Your scores have been saved.
+            Thank you for completing the questionnaire. We'll use this to better understand your teaching style and match you with the right leads.
           </p>
         </div>
-
-        {scores ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <ScoreCard label="Patience" score={scores.patience} />
-            <ScoreCard label="Empathy" score={scores.empathy} />
-            <ScoreCard label="Communication" score={scores.communication} />
-            <ScoreCard label="Professionalism" score={scores.professionalism} />
-            <ScoreCard label="Subject Mastery" score={scores.subjectMastery} />
-            <ScoreCard label="Teaching Ability" score={scores.teachingAbility} />
-            <ScoreCard label="Overall" score={scores.overall} highlight />
-          </div>
-        ) : (
-          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-900">
-            ⚠️ We could not display your score breakdown. Our team can still review your interview transcript.
-          </div>
-        )}
 
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-900">
-            ✅ Your interview has been submitted to our admin team for review. You'll be notified once your results are processed.
+            ✅ Our team will review your responses and use them to understand your teaching style better. This helps us match you with ideal student cases.
           </p>
         </div>
 
-        {isLowScore && (
-          <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-900 font-semibold mb-2">Not satisfied with your score?</p>
-            <p className="text-sm text-amber-900 mb-3">
-              You can submit an appeal for a manual review (one request per interview).
-            </p>
-            <textarea
-              value={appealReason}
-              onChange={(e) => setAppealReason(e.target.value)}
-              placeholder="Share why you believe your score should be reviewed..."
-              rows={3}
-              disabled={appealSubmitted || appealSubmitting}
-              className="w-full px-3 py-2 border border-amber-300 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:bg-gray-100"
-            />
-            {appealError && (
-              <div className="mt-2 text-sm text-red-700">{appealError}</div>
-            )}
-            {appealSubmitted ? (
-              <div className="mt-3 text-sm text-green-700">✅ Appeal submitted. We will review and update you.</div>
-            ) : (
-              <button
-                onClick={handleSubmitAppeal}
-                disabled={appealSubmitting}
-                className="mt-3 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-400 text-white px-4 py-2 rounded-lg font-semibold text-sm"
-              >
-                {appealSubmitting ? 'Submitting...' : 'Submit Appeal'}
-              </button>
-            )}
-          </div>
-        )}
-
         <div className="mt-6 flex gap-3 justify-center flex-wrap">
-          {canRetake ? (
-            <button
-              onClick={handleRetakeInterview}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md"
-            >
-              Retake Interview
-            </button>
-          ) : (
-            <div className="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold text-center">
-              ℹ️ You've used your retake attempt. Submit this score for review.
-            </div>
-          )}
           <a
-            href="/tutors/interview-results"
-            className="bg-white border border-blue-200 text-blue-700 px-6 py-3 rounded-lg font-semibold transition shadow-md text-center"
-          >
-            View Detailed Results
-          </a>
-          <a
-            href="/tutors/dashboard"
-            className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md text-center"
+            href="/tutors"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition shadow-md text-center"
           >
             Back to Dashboard
           </a>

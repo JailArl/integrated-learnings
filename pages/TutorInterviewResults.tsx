@@ -138,9 +138,9 @@ export const TutorInterviewResults: React.FC = () => {
             <div className="flex items-start gap-3">
               <AlertCircle size={24} />
               <div>
-                <h2 className="text-lg font-bold mb-2">Interview Results Not Available</h2>
+                <h2 className="text-lg font-bold mb-2">Questionnaire Not Yet Submitted</h2>
                 <p className="text-sm">
-                  Complete your character interview to unlock your score breakdown.
+                  Complete your questionnaire to proceed. Your responses help us understand your teaching style better.
                 </p>
                 <button
                   onClick={() => navigate('/tutors')}
@@ -167,11 +167,11 @@ export const TutorInterviewResults: React.FC = () => {
             <div>
               <h1 className="text-3xl font-bold text-primary">Questionnaire Submitted</h1>
               <p className="text-slate-600">
-                Thank you for completing the tutor questionnaire. Our admin team will review your responses and follow up with next steps.
+                Thank you for completing the questionnaire. We've received your responses and will use them to match you with ideal student cases.
               </p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-                <span className="bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-full">
-                  Status: Under Review
+                <span className="bg-green-50 border border-green-200 text-green-700 px-3 py-1 rounded-full">
+                  Status: Submitted
                 </span>
                 <span className="bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full">
                   ETA: 24-48 hours
@@ -182,10 +182,7 @@ export const TutorInterviewResults: React.FC = () => {
 
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
             <p className="text-sm text-blue-900">
-              You will be notified once your questionnaire is reviewed (usually within 24-48 hours). We will also reach out if we need any clarification.
-            </p>
-            <p className="text-xs text-blue-800 mt-2">
-              Retakes remaining: {retakesRemaining} of {MAX_RETAKES}
+              Our team will review your responses carefully. Once approved, you'll have access to browse and bid on student cases that match your profile and teaching style.
             </p>
           </div>
 
@@ -195,17 +192,6 @@ export const TutorInterviewResults: React.FC = () => {
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
             >
               Back to Dashboard
-            </button>
-            <button
-              onClick={handleRetakeInterview}
-              disabled={retakeLoading || retakesRemaining <= 0}
-              className="flex-1 bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {retakeLoading
-                ? 'Starting Retake...'
-                : retakesRemaining > 0
-                  ? 'Retake Questionnaire'
-                  : 'Retake Limit Reached'}
             </button>
           </div>
         </div>

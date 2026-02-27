@@ -106,6 +106,34 @@ export const getMyMatch = async (
   }
 };
 
+// Save diagnostic test results
+export const saveDiagnosticResults = async (
+  requestId: string,
+  results: string,
+  notes: string
+): Promise<{ success: boolean; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('parent_requests')
+      .update({
+        diagnostic_test_results: results || null,
+        diagnostic_test_notes: notes || null,
+      })
+      .eq('id', requestId);
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Save diagnostic results error:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 // ============================================================================
 // TUTOR API FUNCTIONS
 // ============================================================================

@@ -2,11 +2,13 @@ import React, { useEffect, useState, useTransition } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Section, Card, Button } from './Components';
 import { getTutorTypeLabel } from '../constants';
+import { AdminMatchingAssistant } from './AdminMatchingAssistant';
 import {
   getAllRequests,
   getBidsForRequest,
   approveBid,
   markTestComplete,
+  saveDiagnosticResults,
 } from '../services/platformApi';
 
 interface Request {
@@ -71,6 +73,13 @@ export const AdminMatching: React.FC = () => {
     location: '',
     notes: '',
   });
+  const [diagnosticResults, setDiagnosticResults] = useState({
+    results: '',
+    notes: '',
+  });
+  const [showAssistant, setShowAssistant] = useState(false);
+  const [selectedTutorForAssistant, setSelectedTutorForAssistant] = useState<any>(null);
+  const [selectedRequestForAssistant, setSelectedRequestForAssistant] = useState<any>(null);
   const normalizeQuestionnaire = (value: any) => {
     if (!value) return null;
     if (typeof value === 'string') {
@@ -146,6 +155,22 @@ export const AdminMatching: React.FC = () => {
     // Perform the approval without blocking
     requestAnimationFrame(async () => {
       try {
+        // Step 1: Save diagnostic results if they exist
+        if (diagnosticResults.results || diagnosticResults.notes) {
+          const diagResult = await saveDiagnosticResults(
+            requestId,
+            diagnosticResults.results,
+            diagnosticResults.notes
+          );
+          
+          if (!diagResult.success) {
+            setError('Failed to save diagnostic results. ' + (diagResult.error || ''));
+            setApprovingBid(null);
+            return;
+          }
+        }
+
+        // Step 2: Approve the match
         const result = await approveBid(requestId, tutorId, {
           date: firstClassSchedule.date || undefined,
           location: firstClassSchedule.location || undefined,
@@ -156,8 +181,9 @@ export const AdminMatching: React.FC = () => {
           setSuccessMessage('Match approved successfully!');
           setTimeout(() => setSuccessMessage(null), 3000);
           
-          // Reset first class schedule
+          // Reset forms
           setFirstClassSchedule({ date: '', location: '', notes: '' });
+          setDiagnosticResults({ results: '', notes: '' });
           
           // Use startTransition for non-urgent state updates
           startTransition(() => {
@@ -356,13 +382,21 @@ export const AdminMatching: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3 pt-3 border-t">
-                  {request.status === 'test_booked' && !request.diagnostic_test_completed && (
+                  {request.diagnostic_test_booked && !request.diagnostic_test_completed && (
                     <Button
                       variant="outline"
                       onClick={() => handleMarkTestComplete(request.id)}
                       className="text-sm"
                     >
                       Mark Test Complete
+                    </Button>
+                  )}
+                  {request.diagnostic_test_booked && request.diagnostic_test_completed && (
+                    <Button
+                      variant="outline"
+                      className="text-sm bg-green-50 text-green-700 border-green-200"
+                    >
+                      ✓ Test Completed
                     </Button>
                   )}
                   {request.status !== 'matched' && (
@@ -375,6 +409,23 @@ export const AdminMatching: React.FC = () => {
                     </Button>
                   )}
                 </div>
+
+                {expandedRequest === request.id && request.diagnostic_test_booked && request.diagnostic_test_completed && (
+                  <div className="mt-4 border-t pt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-3">📋 Diagnostic Test Results</h4>
+                    <p className="text-sm text-gray-600 mb-3">Record the diagnostic test findings to help with matching</p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Test Results Summary</label>
+                        <textarea
+                          placeholder="e.g., Weak in algebra, strong in geometry. Gaps in fractions. Good problem-solving skills."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {expandedRequest === request.id && (
                   <div className="mt-4 border-t pt-4">
@@ -464,6 +515,17 @@ export const AdminMatching: React.FC = () => {
                                   ))}
                                 </div>
                               )}
+                              <Button
+                                variant="primary"
+                                onClick={() => {
+                                  setSelectedTutorForAssistant(bid.tutor);
+                                  setSelectedRequestForAssistant(request);
+                                  setShowAssistant(true);
+                                }}
+                                className="text-sm"
+                              >
+                                ✨ AI Match Analysis
+                              </Button>
                               <Button
                                 variant="primary"
                                 onClick={() => showConfirmApproval(request.id, bid.tutor.id)}
@@ -568,7 +630,41 @@ export const AdminMatching: React.FC = () => {
             </p>
 
             <div className="border-t border-gray-200 pt-4 mb-6">
-              <h4 className="text-md font-semibold text-gray-900 mb-3">Schedule First Class (Optional)</h4>
+              <h4 className="text-md font-semibold text-gray-900 mb-3">📋 Diagnostic Test Results (Optional)</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                If available, enter the diagnostic test results to help the tutor understand the student better.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Test Findings
+                  </label>
+                  <textarea
+                    value={diagnosticResults.results}
+                    onChange={(e) => setDiagnosticResults({ ...diagnosticResults, results: e.target.value })}
+                    placeholder="e.g., Weak algebraic thinking, strong geometry. Assessment gaps in fractions..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Admin Notes
+                  </label>
+                  <textarea
+                    value={diagnosticResults.notes}
+                    onChange={(e) => setDiagnosticResults({ ...diagnosticResults, notes: e.target.value })}
+                    placeholder="Any additional notes about the student's learning style, strengths, or recommendations for the tutor..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-200 pt-4 mb-6">
               <p className="text-sm text-gray-600 mb-4">
                 You can schedule the first class now, or leave it blank and the parent/tutor can arrange later.
               </p>
@@ -628,6 +724,21 @@ export const AdminMatching: React.FC = () => {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Admin Matching Assistant Panel */}
+      {showAssistant && (
+        <div className="fixed bottom-6 right-6 w-80 md:w-96 z-40">
+          <AdminMatchingAssistant
+            tutor={selectedTutorForAssistant}
+            student={selectedRequestForAssistant}
+            onClose={() => {
+              setShowAssistant(false);
+              setSelectedTutorForAssistant(null);
+              setSelectedRequestForAssistant(null);
+            }}
+          />
         </div>
       )}
     </Section>
