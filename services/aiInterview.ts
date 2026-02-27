@@ -110,6 +110,78 @@ B) Listening, explaining clearly, and checking they understand
 C) Being strict about rules
 D) Avoiding difficult questions
 
+MCQ9: A student says they don't understand anything. You:
+A) Simplify and break it into smaller steps
+B) Repeat the same explanation louder
+C) Tell them to read the textbook
+D) Move to a different topic
+
+MCQ10: How do you handle a student who is not doing homework?
+A) Punish them
+B) Understand why and work out a solution together
+C) Stop teaching them
+D) Tell their parents immediately
+
+MCQ11: What makes you excited about teaching?
+A) Salary and benefits
+B) Seeing students grow and understand
+C) Having authority over students
+D) Easy job with minimal effort
+
+MCQ12: How do you explain a difficult concept?
+A) Use complex terminology to sound smart
+B) Break it down, use examples, and check understanding
+C) Give them a textbook reference
+D) Skip difficult topics
+
+MCQ13: A student has a different learning style than most. You:
+A) Force them to learn like everyone else
+B) Adapt your teaching to suit their style
+C) Say they're not suitable for tuition
+D) Give them extra assignments
+
+MCQ14: How important is building trust with a student?
+A) Not important, just teach the content
+B) Very important - it helps them learn better
+C) Only important with high-performing students
+D) Waste of time
+
+MCQ15: You notice a student is struggling emotionally. You:
+A) Ignore it and focus on academics
+B) Show care, listen, and encourage them
+C) Refer them away
+D) Tell them to talk to a counselor
+
+MCQ16: How do you stay updated in your subject area?
+A) Use old textbooks only
+B) Read, take courses, and keep learning
+C) Students should just memorize
+D) Experience is enough
+
+MCQ17: A student asks why a topic is important. You:
+A) Because it's in the exam
+B) Connect it to real life and show relevance
+C) Just because
+D) Don't answer such questions
+
+MCQ18: How do you handle a parent who disagrees with your methods?
+A) Argue and defend
+B) Listen, explain, and work together
+C) Ignore their opinions
+D) Ask them to find another tutor
+
+MCQ19: What's your approach to making a lesson interesting?
+A) Just read from textbook
+B) Use examples, stories, and activities
+C) Lectures only
+D) Whatever is fastest
+
+MCQ20: How many hours per week are you realistically available?
+A) Less than 2 hours
+B) 5-10 hours
+C) 10-20 hours
+D) 20+ hours
+
 **SHORT-ANSWER QUESTIONS (Pick 2-3 of these randomly):**
 
 SA1: Tell us about a time when you helped a student make real progress. What did you do?
@@ -121,6 +193,26 @@ SA3: What do you think makes a great tutor-student relationship?
 SA4: Describe how you would help a student who is losing confidence in their studies.
 
 SA5: What subjects are you most comfortable teaching and why?
+
+SA6: How do you know if a student has truly understood a topic?
+
+SA7: Tell us about your experience with different age groups. Which do you prefer?
+
+SA8: What's the most challenging situation you've faced as a tutor? How did you handle it?
+
+SA9: How do you prepare lessons? Walk us through your process.
+
+SA10: What would your previous students say about you as a tutor?
+
+SA11: How do you balance being friendly with maintaining boundaries as a tutor?
+
+SA12: Describe a time when a student disagreed with you. How did you respond?
+
+SA13: What's your biggest strength as an educator and why?
+
+SA14: If a student has given up on a subject, how would you re-engage them?
+
+SA15: Tell us about your qualifications and how they help you teach better?
 
 AFTER ALL QUESTIONS:
 Provide these scores (1-10 each):

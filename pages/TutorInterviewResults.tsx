@@ -186,13 +186,46 @@ export const TutorInterviewResults: React.FC = () => {
             </p>
           </div>
 
+          {/* Retakes Info Section */}
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <p className="text-sm font-semibold text-yellow-900 mb-2">
+              ✏️ Retake your questionnaire to improve your profile
+            </p>
+            <p className="text-sm text-yellow-800">
+              Retakes remaining: <strong>{retakesRemaining} of {MAX_RETAKES}</strong>
+            </p>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => navigate('/tutors')}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
-            >
-              Back to Dashboard
-            </button>
+            {retakesRemaining > 0 ? (
+              <>
+                <button
+                  onClick={handleRetakeInterview}
+                  disabled={retakeLoading}
+                  className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition"
+                >
+                  {retakeLoading ? 'Loading...' : '📝 Retake Questionnaire'}
+                </button>
+                <button
+                  onClick={() => navigate('/tutors')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
+                >
+                  Back to Dashboard
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex-1 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-semibold">
+                  ❌ No retakes remaining. You've reached the maximum of 3 attempts.
+                </div>
+                <button
+                  onClick={() => navigate('/tutors')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
+                >
+                  Back to Dashboard
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
