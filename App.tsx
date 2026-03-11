@@ -26,6 +26,7 @@ import CaseDetail from './pages/CaseDetail';
 import TutorQuestionnaire from './pages/TutorQuestionnaire';
 import TutorAIInterview from './pages/TutorAIInterview';
 import TutorInterviewResults from './pages/TutorInterviewResults';
+import TutorOnboarding from './pages/TutorOnboarding';
 
 // Protected Route for Coursework (Sec 4 only)
 const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -88,6 +89,7 @@ const App: React.FC = () => {
           <Route path="/tutors/case/:caseId" element={<CaseDetail />} />
           <Route path="/tutors/questionnaire" element={<TutorQuestionnaire />} />
           <Route path="/tutor/questionnaire" element={<TutorQuestionnaire />} />
+          <Route path="/tutors/onboarding" element={<TutorOnboarding />} />
           <Route path="/tutors/ai-interview" element={<TutorAIInterview />} />
           <Route path="/tutors/interview-results" element={<TutorInterviewResults />} />
           

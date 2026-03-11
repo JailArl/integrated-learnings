@@ -9,7 +9,7 @@ interface FormSubmission {
   type: 'parent' | 'tutor';
   data: any;
   submittedAt: string;
-  status: 'pending' | 'approved' | 'matched' | 'verified' | 'cancelled' | 'rejected';
+  status: string;
   notes?: string;
 }
 
@@ -76,9 +76,9 @@ export default function AdminDashboard() {
           totalSubmissions: combined.length,
           parentRequests: parents.length,
           tutorApplications: tutors.length,
-          pendingApprovals: combined.filter(s => s.status === 'pending').length,
-          activeMatches: combined.filter(s => s.status === 'matched').length,
-          verifiedTutors: tutors.filter(s => s.status === 'verified').length,
+          pendingApprovals: combined.filter(s => s.status === 'new' || s.status === 'pending' || s.status === 'pending_review').length,
+          activeMatches: combined.filter(s => s.status === 'matching' || s.status === 'matched' || s.status === 'converted').length,
+          verifiedTutors: tutors.filter(s => s.status === 'approved' || s.status === 'active' || s.status === 'verified').length,
         });
         setLastUpdated(new Date().toISOString());
       } else {
@@ -567,102 +567,238 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'parents' && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            {parentSubmissions.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">No parent submissions yet</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Parent Name</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Child / Level</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Phone</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Package</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {parentSubmissions.map(s => (
-                      <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="px-6 py-3 text-sm font-medium text-gray-900">{s.data.parentName}</td>
-                        <td className="px-6 py-3 text-sm text-gray-700">
-                          {s.data.childName} ({s.data.level})
-                        </td>
-                        <td className="px-6 py-3 text-sm text-gray-600">{s.data.email}</td>
-                        <td className="px-6 py-3 text-sm text-gray-600">{s.data.phone}</td>
-                        <td className="px-6 py-3 text-sm">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
-                            {s.data.assignmentType}
-                          </span>
-                        </td>
-                        <td className="px-6 py-3 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            s.status === 'matched'
-                              ? 'bg-green-100 text-green-800'
-                              : s.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-gray-100 text-gray-800'
-                          }`}>
-                            {s.status}
-                          </span>
-                        </td>
+          <div className="space-y-4">
+            {/* Parent Status Filter */}
+            <div className="bg-white rounded-lg shadow p-4 flex flex-wrap gap-2">
+              {['all', 'new', 'contacted', 'diagnostic_booked', 'matching', 'converted', 'follow_up', 'lost'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                    filterStatus === status
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {status === 'all' ? 'All' : status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  {status !== 'all' && (
+                    <span className="ml-1 opacity-75">
+                      ({parentSubmissions.filter(s => s.status === status || s.data.status === status).length})
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              {parentSubmissions.filter(s => filterStatus === 'all' || s.status === filterStatus || s.data.status === filterStatus).length === 0 ? (
+                <div className="p-8 text-center text-gray-500">No parent submissions found</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Parent</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Contact</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Level</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Subjects</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Mode</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Budget</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Submitted</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {parentSubmissions
+                        .filter(s => filterStatus === 'all' || s.status === filterStatus || s.data.status === filterStatus)
+                        .map(s => (
+                        <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm">
+                            <div className="font-medium text-gray-900">{s.data.parent_name || s.data.parentName}</div>
+                            <div className="text-xs text-gray-500">{s.data.email}</div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{s.data.contact_number || s.data.phone}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{s.data.student_level || s.data.level}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">
+                            <div className="flex flex-wrap gap-1">
+                              {(Array.isArray(s.data.subjects) ? s.data.subjects : []).slice(0, 3).map((subj: string) => (
+                                <span key={subj} className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">
+                                  {subj}
+                                </span>
+                              ))}
+                              {Array.isArray(s.data.subjects) && s.data.subjects.length > 3 && (
+                                <span className="text-xs text-gray-400">+{s.data.subjects.length - 3}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{s.data.preferred_mode || s.data.assignmentType || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{s.data.budget_range || '—'}</td>
+                          <td className="px-4 py-3 text-sm">
+                            <select
+                              value={s.status}
+                              onChange={(e) => handleStatusUpdate(s.id, e.target.value)}
+                              className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
+                                s.status === 'new' ? 'bg-blue-100 text-blue-800' :
+                                s.status === 'contacted' ? 'bg-yellow-100 text-yellow-800' :
+                                s.status === 'diagnostic_booked' ? 'bg-purple-100 text-purple-800' :
+                                s.status === 'matching' ? 'bg-indigo-100 text-indigo-800' :
+                                s.status === 'converted' ? 'bg-green-100 text-green-800' :
+                                s.status === 'follow_up' ? 'bg-orange-100 text-orange-800' :
+                                s.status === 'lost' ? 'bg-red-100 text-red-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              <option value="new">New</option>
+                              <option value="contacted">Contacted</option>
+                              <option value="diagnostic_booked">Diagnostic Booked</option>
+                              <option value="matching">Matching</option>
+                              <option value="converted">Converted</option>
+                              <option value="follow_up">Follow Up</option>
+                              <option value="lost">Lost</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-500">
+                            {new Date(s.submittedAt).toLocaleDateString()}
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <button
+                              onClick={() => { setSelectedSubmission(s); setShowDetailsModal(true); }}
+                              className="text-blue-600 hover:text-blue-900 font-medium"
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {activeTab === 'tutors' && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            {tutorSubmissions.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">No tutor applications yet</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tutor Name</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Email</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Phone</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Experience</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Subjects</th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tutorSubmissions.map(s => (
-                      <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="px-6 py-3 text-sm font-medium text-gray-900">{s.data.fullName}</td>
-                        <td className="px-6 py-3 text-sm text-gray-600">{s.data.email}</td>
-                        <td className="px-6 py-3 text-sm text-gray-600">{s.data.phone}</td>
-                        <td className="px-6 py-3 text-sm text-gray-700">{s.data.experienceYears} years</td>
-                        <td className="px-6 py-3 text-sm text-gray-700">
-                          {Array.isArray(s.data.subjects) ? s.data.subjects.join(', ') : 'N/A'}
-                        </td>
-                        <td className="px-6 py-3 text-sm">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            s.status === 'verified' || s.status === 'approved'
-                              ? 'bg-green-100 text-green-800'
-                              : s.status === 'pending'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : s.status === 'matched'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {s.status}
-                          </span>
-                        </td>
+          <div className="space-y-4">
+            {/* Tutor Status Filter */}
+            <div className="bg-white rounded-lg shadow p-4 flex flex-wrap gap-2">
+              {['all', 'account_created', 'profile_incomplete', 'pending_review', 'more_info_requested', 'approved', 'rejected', 'active', 'inactive'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                    filterStatus === status
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {status === 'all' ? 'All' : status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                  {status !== 'all' && (
+                    <span className="ml-1 opacity-75">
+                      ({tutorSubmissions.filter(s => s.status === status || s.data.status === status).length})
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              {tutorSubmissions.filter(s => filterStatus === 'all' || s.status === filterStatus || s.data.status === filterStatus).length === 0 ? (
+                <div className="p-8 text-center text-gray-500">No tutor applications found</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tutor</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Contact</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Experience</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Subjects</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Documents</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Interview</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {tutorSubmissions
+                        .filter(s => filterStatus === 'all' || s.status === filterStatus || s.data.status === filterStatus)
+                        .map(s => (
+                        <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm">
+                            <div className="font-medium text-gray-900">{s.data.fullName || s.data.full_name || s.data.name}</div>
+                            <div className="text-xs text-gray-500">{s.data.email}</div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{s.data.phone || s.data.contact_number || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{s.data.experienceYears || s.data.experience_years || '—'} yrs</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">
+                            <div className="flex flex-wrap gap-1">
+                              {(Array.isArray(s.data.subjects) ? s.data.subjects : []).slice(0, 3).map((subj: string) => (
+                                <span key={subj} className="px-1.5 py-0.5 bg-green-50 text-green-700 rounded text-xs">
+                                  {subj}
+                                </span>
+                              ))}
+                              {Array.isArray(s.data.subjects) && s.data.subjects.length > 3 && (
+                                <span className="text-xs text-gray-400">+{s.data.subjects.length - 3}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              s.data.documents_uploaded ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {s.data.documents_uploaded ? '✓ Uploaded' : 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`px-2 py-0.5 rounded text-xs ${
+                              s.data.ai_interview_completed ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                            }`}>
+                              {s.data.ai_interview_completed ? '✓ Done' : 'Pending'}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <select
+                              value={s.status}
+                              onChange={(e) => handleStatusUpdate(s.id, e.target.value)}
+                              className={`px-2 py-1 rounded text-xs font-medium border-0 cursor-pointer ${
+                                s.status === 'account_created' ? 'bg-gray-100 text-gray-800' :
+                                s.status === 'profile_incomplete' ? 'bg-yellow-100 text-yellow-800' :
+                                s.status === 'pending_review' ? 'bg-blue-100 text-blue-800' :
+                                s.status === 'more_info_requested' ? 'bg-orange-100 text-orange-800' :
+                                s.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                s.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                s.status === 'active' ? 'bg-emerald-100 text-emerald-800' :
+                                s.status === 'inactive' ? 'bg-gray-200 text-gray-600' :
+                                'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              <option value="account_created">Account Created</option>
+                              <option value="profile_incomplete">Profile Incomplete</option>
+                              <option value="pending_review">Pending Review</option>
+                              <option value="more_info_requested">More Info Requested</option>
+                              <option value="approved">Approved</option>
+                              <option value="rejected">Rejected</option>
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                            </select>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <button
+                              onClick={() => { setSelectedSubmission(s); setShowDetailsModal(true); }}
+                              className="text-blue-600 hover:text-blue-900 font-medium"
+                            >
+                              View
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
