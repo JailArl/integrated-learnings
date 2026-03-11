@@ -1,29 +1,17 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { PageHeader, Section, Button } from '../components/Components';
 import { PRICING_DATA } from '../constants';
-import { AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Pricing: React.FC = () => {
-  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  
-  // Check if user is logged in (in demo, we'll assume not logged in)
-  const isLoggedIn = false;
-
-  const handleRequestClick = () => {
-    if (!isLoggedIn) {
-      setShowLoginPrompt(true);
-    } else {
-      window.location.href = '/#/request';
-    }
-  };
   return (
     <>
       <PageHeader title="Transparent Pricing" subtitle="Fair rates for quality education. No hidden fees, pay only for completed lessons." />
       
-      {/* Diagnostic Matching Banner */}
+      {/* Diagnostic Advisory Banner */}
       <div className="bg-gradient-to-br from-blue-50 to-slate-50 border-b border-blue-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h3 className="text-2xl font-bold text-center text-slate-900 mb-6">Our Diagnostic Matching Process</h3>
+          <h3 className="text-2xl font-bold text-center text-slate-900 mb-6">Our Diagnostic Advisory Process</h3>
           <div className="max-w-3xl mx-auto">
             <div className="grid md:grid-cols-3 gap-6 mb-6">
               {/* Step 1 */}
@@ -38,22 +26,22 @@ const Pricing: React.FC = () => {
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full">OUR EDGE</div>
                 <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
                 <h4 className="font-bold mb-2">Diagnostic Matching Call</h4>
-                <p className="text-sm text-blue-100">30-minute Diagnostic Matching Call to uncover what your child needs, how they learn, and which tutor will deliver results</p>
+                <p className="text-sm text-blue-100">30-minute Diagnostic Advisory Call to uncover what your child needs, how they learn, and which learning pathway will deliver results</p>
               </div>
               
               {/* Step 3 */}
               <div className="bg-white rounded-xl border-2 border-slate-200 p-6 text-center">
                 <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold text-green-700">3</div>
-                <h4 className="font-bold text-slate-900 mb-2">Perfect Match</h4>
-                <p className="text-sm text-slate-600">Based on compatibility data, not just profiles. Start paid lessons with confidence.</p>
+                <h4 className="font-bold text-slate-900 mb-2">Right Learning Path</h4>
+                <p className="text-sm text-slate-600">Based on diagnostic data, not guesswork. Start your child's learning journey with confidence.</p>
               </div>
             </div>
             
             <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">
               <p className="text-sm text-green-900 mb-4">
-                <strong>Why this works:</strong> Other agencies match on paper. We match on compatibility. That's why our students improve faster and parents are more satisfied.
+                <strong>Why this works:</strong> Other agencies match on paper. We diagnose learning needs first and recommend the right pathway. That's why our students improve faster and parents are more satisfied.
               </p>
-              <Button onClick={handleRequestClick} className="w-full text-lg py-3">Start Tutor Request</Button>
+              <Button to="/tuition#parent-inquiry" className="w-full text-lg py-3">Start Learning Assessment</Button>
             </div>
           </div>
         </div>
@@ -107,7 +95,7 @@ const Pricing: React.FC = () => {
           <div className="bg-green-50 border border-green-200 rounded-xl p-6">
             <h3 className="text-lg font-bold text-green-900 mb-4">How Payment Works</h3>
             <ol className="space-y-3 text-sm text-green-800">
-              <li><strong>1. Get Matched</strong> - We run diagnostic matching and connect you with the best-fit tutor</li>
+              <li><strong>1. Get Assessed</strong> - We run a diagnostic assessment and recommend the right learning pathway</li>
               <li><strong>2. First Month</strong> - You pay 50% of your first month's tuition to us as a matching fee</li>
               <li><strong>3. Month 2 Onwards</strong> - Pay tutor directly via PayNow/bank transfer. No intermediaries.</li>
               <li><strong>4. Flexible & Transparent</strong> - Cancel anytime with 1 week notice. No lock-in contracts.</li>
@@ -127,62 +115,17 @@ const Pricing: React.FC = () => {
         
         {/* CTA Section */}
         <div className="mt-16 bg-gradient-to-r from-secondary to-blue-700 p-8 rounded-2xl text-white text-center">
-           <h2 className="text-2xl font-bold mb-3">Ready to Find the Right Tutor?</h2>
+           <h2 className="text-2xl font-bold mb-3">Ready to Start Your Child's Learning Journey?</h2>
            <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-              Submit your request now. We'll match your child with the best-fit tutor based on qualifications, experience, and teaching style.
+              Tell us about your child's learning needs. We'll assess and recommend the right pathway — no account needed.
            </p>
-           <button 
-             onClick={handleRequestClick}
-             className="px-8 py-3 font-bold shadow-lg bg-white hover:bg-slate-100 text-secondary rounded-full transition"
+           <Link 
+             to="/tuition#parent-inquiry"
+             className="inline-block px-8 py-3 font-bold shadow-lg bg-white hover:bg-slate-100 text-secondary rounded-full transition"
            >
-              📝 Submit Tutor Request →
-           </button>
+              📝 Start Learning Assessment →
+           </Link>
         </div>
-
-        {/* Login Prompt Modal */}
-        {showLoginPrompt && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
-              <button 
-                onClick={() => setShowLoginPrompt(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl"
-              >
-                ×
-              </button>
-              
-              <div className="flex justify-center mb-6">
-                <div className="bg-blue-100 p-4 rounded-full">
-                  <AlertCircle className="text-secondary" size={32} />
-                </div>
-              </div>
-              
-              <h3 className="text-2xl font-bold text-primary text-center mb-3">Sign Up to Continue</h3>
-              <p className="text-slate-600 text-center mb-6">
-                Create a free account to submit your tutor request and track your matches in real-time.
-              </p>
-              
-              <div className="space-y-3">
-                <Button 
-                  to="/tuition/parents" 
-                  className="w-full bg-secondary hover:bg-blue-800 text-white font-bold py-3"
-                >
-                  Parent Sign-Up / Login
-                </Button>
-                
-                <button 
-                  onClick={() => setShowLoginPrompt(false)}
-                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition"
-                >
-                  Continue Browsing Pricing
-                </button>
-              </div>
-              
-              <p className="text-xs text-slate-500 text-center mt-4">
-                It takes less than 2 minutes to sign up. Your child's learning journey starts here.
-              </p>
-            </div>
-          </div>
-        )}
         
         {/* Simple Policy Link */}
         <div className="mt-12 text-center">

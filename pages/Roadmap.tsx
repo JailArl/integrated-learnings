@@ -421,7 +421,7 @@ const RoadmapLanding: React.FC = () => {
           
            {/* CTA for Sec 2 - Redirect to Parents */}
           <div className="mt-8 text-center">
-             <Button to="/tuition/parents">Book Subject Combination Consultation</Button>
+             <Button to="/tuition#parent-inquiry">Book Subject Combination Consultation</Button>
           </div>
         </div>
 
@@ -496,7 +496,7 @@ const RoadmapDetail: React.FC = () => {
             <p className="text-slate-300 mb-8 text-lg">
               Don't wait until the grades drop. Our specialist tutors are ready to help with this specific stage.
             </p>
-            <Button to="/tuition/parents" variant="white" className="px-8 py-4 text-lg font-bold">Find a Specialist for {topic.title}</Button>
+            <Button to="/tuition#parent-inquiry" variant="white" className="px-8 py-4 text-lg font-bold">Get Assessment for {topic.title}</Button>
           </div>
         </div>
       </Section>

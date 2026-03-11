@@ -52,7 +52,7 @@ const Home: React.FC = () => {
               <span className="bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent">Measurable Excellence.</span>
             </h1>
             <p className="mt-6 max-w-3xl mx-auto text-xl md:text-2xl text-slate-300 leading-relaxed font-light">
-              From <strong className="text-white font-semibold">diagnostic-driven tutor matching</strong> to long-term academic planning—we engineer success, not hope for it.
+              From <strong className="text-white font-semibold">diagnostic-driven learning guidance</strong> to long-term academic planning—we engineer success, not hope for it.
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-6 text-sm text-slate-400">
               <span className="flex items-center"><CheckCircle2 size={16} className="mr-2 text-green-400" />Trusted by Singapore families</span>
@@ -63,9 +63,9 @@ const Home: React.FC = () => {
           
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
             <div className="relative">
-              <Button to="/tuition/parents" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
-                Get Diagnostic Assessment
-                <span className="block text-xs font-normal mt-1 opacity-90">Value $120 - Waived</span>
+              <Button to="/tuition#parent-inquiry" className="px-10 py-5 text-lg shadow-2xl shadow-blue-900/50 hover:scale-105 transition-transform">
+                Get Learning Assessment
+                <span className="block text-xs font-normal mt-1 opacity-90">Free — no account needed</span>
               </Button>
               <div className="absolute -top-3 -right-3 bg-yellow-400 text-slate-900 text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                 6 slots left this week
@@ -80,7 +80,7 @@ const Home: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mt-16">
             <div className="text-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
               <p className="text-2xl font-bold text-blue-200 mb-2">Verified</p>
-              <p className="text-xs text-slate-300 uppercase tracking-wide">Tutor Network</p>
+              <p className="text-xs text-slate-300 uppercase tracking-wide">Educator Network</p>
             </div>
             <div className="text-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
               <p className="text-2xl font-bold text-blue-200 mb-2">Growing</p>
@@ -88,7 +88,7 @@ const Home: React.FC = () => {
             </div>
             <div className="text-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
               <p className="text-2xl font-bold text-blue-200 mb-2">Premium</p>
-              <p className="text-xs text-slate-300 uppercase tracking-wide">Matching Service</p>
+              <p className="text-xs text-slate-300 uppercase tracking-wide">Advisory Service</p>
             </div>
             <div className="text-center bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6">
               <p className="text-2xl font-bold text-blue-200 mb-2">Fast</p>
@@ -124,11 +124,11 @@ const Home: React.FC = () => {
         </div>
 
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl p-8 text-center">
-          <p className="text-lg font-semibold mb-4">Ready to get your diagnostic assessment?</p>
-          <Button to="/tuition/parents" variant="white" className="text-lg px-8 py-3">
-            Get Assessment (Value $120 - Waived)
+          <p className="text-lg font-semibold mb-4">Ready to get your learning assessment?</p>
+          <Button to="/tuition#parent-inquiry" variant="white" className="text-lg px-8 py-3">
+            Get Free Learning Assessment
           </Button>
-          <p className="text-xs text-green-100 mt-3">Limited to 5-8 new families per week</p>
+          <p className="text-xs text-green-100 mt-3">No account needed — fill in the inquiry form</p>
         </div>
       </Section>
 
@@ -150,14 +150,14 @@ const Home: React.FC = () => {
               After 10+ years in tuition, I realized we could systematize matching. That moment with my son crystallized it: <strong>diagnose learning needs, pinpoint root causes, match with intent</strong>—not luck.
             </p>
             <p className="text-lg leading-relaxed font-semibold text-blue-200">
-              Integrated Learnings is that system—practical, evidence-led tutor matching designed to save time and protect confidence.
+              Integrated Learnings is that system—practical, evidence-led learning guidance designed to save time and protect confidence.
             </p>
           </div>
 
           <div className="text-center">
-            <p className="text-slate-300 mb-6">Today, we've helped 250+ families get it right the first time. Our mission: <strong>eliminate tutor-shopping waste.</strong></p>
+            <p className="text-slate-300 mb-6">Today, we've helped 250+ families get it right the first time. Our mission: <strong>eliminate wasted time from the wrong learning approach.</strong></p>
             <Button to="/tuition?section=about" variant="white" className="px-8 py-3 text-lg">
-              How Premium Matching Works
+              How Our Advisory Works
             </Button>
           </div>
         </div>
@@ -202,17 +202,17 @@ const Home: React.FC = () => {
                <div className="inline-block bg-white border border-blue-200 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider mb-4 text-secondary">
                  The Integrated Learnings Difference
                </div>
-               <h2 className="text-4xl md:text-5xl font-extrabold text-primary mb-6">Premium Tutor Matching, Done Right</h2>
+               <h2 className="text-4xl md:text-5xl font-extrabold text-primary mb-6">Professional Learning Guidance, Done Right</h2>
                <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-                 We don’t just list tutors. We run a premium diagnostic-driven matching service so parents can request the right tutor quickly—then we track progress with clarity.
+                 We don't just list tutors. We run a professional diagnostic-driven advisory so parents get the right learning pathway for their child—then we track progress with clarity.
                </p>
             </div>
             <div className="grid md:grid-cols-2 gap-6">
               {[
-                { title: "Premium Diagnostic Matching", desc: "Included when you request a tutor—no extra fees" },
+                { title: "Diagnostic-First Advisory", desc: "Included free — understand the problem before choosing a solution" },
                 { title: "Singapore Education Expertise", desc: "FSBB/SBB, DSA, O-Level, PSLE pathway specialists" },
-                { title: "Character-Vetted Tutors", desc: "80% rejection rate • Only qualified educators with proven track records" },
-                { title: "Real-Time Dashboards", desc: "Parents see lesson schedules, progress reports, and payment history" },
+                { title: "Character-Vetted Educators", desc: "80% rejection rate • Only qualified educators with proven track records" },
+                { title: "Guided Progress Tracking", desc: "Regular check-ins, milestone updates, and parent reviews" },
                 { title: "Strategic Academic Planning", desc: "DSA-Sec & DSA-JC portfolio guidance with timeline tracking" },
                 { title: "Holistic Development", desc: "Holiday boot camps, skills training, and exam rescue sessions" },
                 { title: "Transparent Communication", desc: "WhatsApp support, 4-hour response time, monthly parent reviews" },
@@ -243,9 +243,9 @@ const Home: React.FC = () => {
             Join Singapore families who trust diagnostic-driven learning.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button to="/tuition/parents" variant="white" className="w-full sm:w-auto text-lg px-10 py-5 shadow-2xl hover:scale-105 transition-transform">
-              Get Diagnostic Assessment →
-              <span className="block text-xs font-normal mt-1">Worth $120 - Waived for you</span>
+            <Button to="/tuition#parent-inquiry" variant="white" className="w-full sm:w-auto text-lg px-10 py-5 shadow-2xl hover:scale-105 transition-transform">
+              Get Learning Assessment →
+              <span className="block text-xs font-normal mt-1">Free — no account needed</span>
             </Button>
             <Button to="/tuition/contact" className="w-full sm:w-auto text-lg px-10 py-5 bg-blue-800 hover:bg-blue-900 border-2 border-white/20 hover:scale-105 transition-transform">
               💬 Chat With Education Consultant
@@ -291,7 +291,7 @@ const Home: React.FC = () => {
               </div>
             ))}
           </div>
-          <Button to="/tuition/parents" className="w-full mt-6">
+          <Button to="/tuition#parent-inquiry" className="w-full mt-6">
             Get Your Diagnostic Assessment →
             <span className="block text-xs font-normal mt-1">Value $120 - Complimentary</span>
           </Button>

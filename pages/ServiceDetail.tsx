@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PageHeader, Section, Button } from '../components/Components';
 import { SERVICES } from '../constants';
@@ -6,13 +6,6 @@ import { SERVICES } from '../constants';
 export const ServiceDetail: React.FC = () => {
   const { serviceId } = useParams<{ serviceId: string }>();
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-
-  useEffect(() => {
-    // Check if user is logged in by looking for auth token in localStorage
-    const token = localStorage.getItem('auth_token');
-    setIsLoggedIn(!!token);
-  }, []);
 
   const service = SERVICES.find(s => s.id === serviceId);
 
@@ -51,32 +44,13 @@ export const ServiceDetail: React.FC = () => {
             
             <div className="bg-white p-8 rounded-2xl shadow-lg border border-blue-200">
               <h3 className="text-2xl font-bold text-primary mb-6">Get Started</h3>
-              
-              {isLoggedIn ? (
-                <>
-                  <p className="text-slate-700 mb-6">
-                    You're logged in! Proceed to request your tutor match for this service.
-                  </p>
-                  <Button to="/tuition/parents" className="w-full mb-4">
-                    View Your Dashboard
-                  </Button>
-                  <Button to="/tuition/parents" variant="outline" className="w-full">
-                    Request Tutor Match
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <p className="text-slate-700 mb-6">
-                    Ready to explore {service.title.toLowerCase()}? Start by logging in or creating an account to request your tutor match.
-                  </p>
-                  <Button to="/parents/login" className="w-full mb-3">
-                    Parent Login
-                  </Button>
-                  <Button to="/parents/signup" variant="outline" className="w-full">
-                    Create Account
-                  </Button>
-                </>
-              )}
+              <p className="text-slate-700 mb-6">
+                Tell us about your child's needs for {service.title.toLowerCase()} and we'll recommend the right learning pathway — no account needed.
+              </p>
+              <Button to="/tuition#parent-inquiry" className="w-full mb-4">
+                Get Learning Assessment
+              </Button>
+              <p className="text-xs text-slate-500 text-center">Free — no signup required</p>
             </div>
           </div>
           
@@ -87,7 +61,7 @@ export const ServiceDetail: React.FC = () => {
                 <div className="text-2xl text-secondary flex-shrink-0">✓</div>
                 <div>
                   <h4 className="font-bold text-slate-900 mb-2">Expert-Led Diagnostics</h4>
-                  <p className="text-slate-600">Our diagnostic matching identifies your child's specific needs and learning style.</p>
+                  <p className="text-slate-600">Our diagnostic assessment identifies your child's specific needs and learning style.</p>
                 </div>
               </div>
               <div className="flex gap-4">
@@ -119,20 +93,9 @@ export const ServiceDetail: React.FC = () => {
             <p className="mb-6 text-blue-100">
               Join hundreds of Singapore families who've found success through diagnostic-driven education.
             </p>
-            {isLoggedIn ? (
-              <Button to="/tuition/parents" variant="white" className="px-10 py-3 text-lg font-bold">
-                Request Tutor Match
-              </Button>
-            ) : (
-              <>
-                <Button to="/parents/login" variant="white" className="px-10 py-3 text-lg font-bold mr-4">
-                  Login
-                </Button>
-                <Button to="/parents/signup" className="px-10 py-3 text-lg font-bold bg-blue-800 hover:bg-blue-900 border-2 border-blue-500">
-                  Sign Up
-                </Button>
-              </>
-            )}
+            <Button to="/tuition#parent-inquiry" variant="white" className="px-10 py-3 text-lg font-bold">
+              Get Learning Assessment
+            </Button>
           </div>
         </div>
       </Section>

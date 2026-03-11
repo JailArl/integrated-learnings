@@ -140,20 +140,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Link to="/tuition" className={`${isActive('/tuition') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Home</Link>
                 <Link to="/tuition/pricing" className={`${isActive('/tuition/pricing') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Pricing</Link>
 
-                <div className="relative group h-full flex items-center">
-                  <button className="flex items-center text-slate-600 hover:text-secondary transition text-sm py-2">
-                    Login <ChevronDown size={14} className="ml-1" />
-                  </button>
-                  <div className="absolute right-0 top-full pt-2 w-56 hidden group-hover:block z-50">
-                    <div className="bg-white border border-slate-100 shadow-lg rounded-lg overflow-hidden">
-                      <div className="px-4 py-2 bg-slate-50 font-bold text-xs text-slate-700 uppercase">Parents</div>
-                      <Link to="/tuition/parents" className="block px-4 py-3 hover:bg-blue-50 text-sm text-slate-700 border-b border-slate-100">👨‍👩‍👧 Parent Dashboard</Link>
-                      
-                      <div className="px-4 py-2 bg-slate-50 font-bold text-xs text-slate-700 uppercase">Tutors</div>
-                      <Link to="/tuition/tutors" className="block px-4 py-3 hover:bg-green-50 text-sm text-slate-700">🎓 Tutor Dashboard</Link>
-                    </div>
-                  </div>
-                </div>
+                <Link to="/tutors/login" className="text-slate-600 hover:text-secondary transition text-sm">Educator Login</Link>
 
                 <Link to="/tuition/contact" className="bg-secondary hover:bg-blue-800 text-white px-5 py-2 rounded-full text-sm font-medium transition shadow-lg shadow-blue-900/20">
                   Contact Us
@@ -191,8 +178,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="px-4 py-6 space-y-4">
               <button onClick={() => handleNav('/tuition')} className="block w-full text-left py-2 font-medium text-slate-700">Home</button>
               <hr className="border-slate-100" />
-              <button onClick={() => handleNav('/tuition/parents')} className="block w-full text-left py-2 text-slate-600">Parent Login</button>
-              <button onClick={() => handleNav('/tuition/tutors')} className="block w-full text-left py-2 text-slate-600">Tutor Login</button>
+              <button onClick={() => handleNav('/tutors/login')} className="block w-full text-left py-2 text-slate-600">Educator Login</button>
               <button onClick={() => handleNav('/tuition/contact')} className="block w-full text-center bg-secondary text-white py-3 rounded-lg font-medium mt-4">Contact Us</button>
             </div>
           </div>
@@ -211,20 +197,20 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <h3 className="text-white font-bold text-lg mb-4">Integrated Learnings</h3>
             <p className="text-sm leading-relaxed mb-4 text-slate-400 max-w-sm">
               {isTuitionSection 
-                ? "Singapore's premier tuition agency. We specialize in strategic academic planning, holistic development, and high-performance tuition matching."
-                : "Comprehensive educational solutions for Singapore - from personalized tuition to interactive school enrichment programs."
+                ? "Singapore's professional learning advisory. We diagnose learning needs, guide families to the right pathway, and connect them with verified educators when tutoring is the right fit."
+                : "Comprehensive educational solutions for Singapore — from professional learning advisory to interactive school enrichment programs."
               }
             </p>
           </div>
           <div>
             <h4 className="text-white font-semibold mb-4">
-              {isTuitionSection ? 'Portals' : 'Our Services'}
+              {isTuitionSection ? 'Quick Links' : 'Our Services'}
             </h4>
             <ul className="space-y-2 text-sm">
               {isTuitionSection ? (
                 <>
-                  <li><Link to="/tuition/parents" className="hover:text-white transition">Parent / Student Login</Link></li>
-                  <li><Link to="/tuition/tutors" className="hover:text-white transition">Tutor Partner Login</Link></li>
+                  <li><Link to="/tuition#parent-inquiry" className="hover:text-white transition">Request Learning Assessment</Link></li>
+                  <li><Link to="/tutors/login" className="hover:text-white transition">Educator Login</Link></li>
                 </>
               ) : (
                 <>
