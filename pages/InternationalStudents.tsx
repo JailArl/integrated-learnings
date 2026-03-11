@@ -155,10 +155,10 @@ const InternationalStudents: React.FC = () => {
         }`}
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6">
-          <a href="#" className="flex items-center gap-2">
+          <Link to="/zh" className="flex items-center gap-2">
             <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-sky-600 px-2.5 py-1.5 text-sm font-black text-white shadow">IL</div>
             <span className={`font-bold text-sm transition ${scrolled ? 'text-slate-800' : 'text-slate-700'}`}>Integrated Learnings</span>
-          </a>
+          </Link>
 
           {/* Desktop links */}
           <div className="hidden md:flex items-center gap-1">
