@@ -40,6 +40,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   if (isAdminPage) {
     return <>{children}</>;
   }
+
+  // Chinese pages have their own navbar and footer
+  const isChinesePage = location.pathname.startsWith('/zh') || location.pathname === '/international' || location.pathname === '/personality';
+  if (isChinesePage) {
+    return <>{children}</>;
+  }
   
   // Hide header/footer for enrichment section (MOE compliance - no tuition promotion)
   if (isEnrichmentSection) {
