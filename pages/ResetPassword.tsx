@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Lock } from 'lucide-react';
+import { Lock, Loader2 } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { Section } from '../components/Components';
 
@@ -13,12 +13,41 @@ export const ResetPassword: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
 
   const userType = (searchParams.get('type') as 'tutor' | 'parent') || 'tutor';
+
+  // Listen for Supabase PASSWORD_RECOVERY event when user arrives via reset link
+  useEffect(() => {
+    if (!supabase) {
+      setError('Authentication service is not configured. Please contact support.');
+      return;
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setSessionReady(true);
+      }
+    });
+
+    // Also check if session already exists (e.g. page was refreshed)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSessionReady(true);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!supabase) {
+      setError('Authentication service is not configured.');
+      return;
+    }
 
     const nextErrors: { password?: string; confirmPassword?: string } = {};
     if (!password) {
@@ -72,6 +101,21 @@ export const ResetPassword: React.FC = () => {
             <p className="text-gray-600">
               Your password has been reset. Redirecting to login...
             </p>
+          </div>
+        </div>
+      </Section>
+    );
+  }
+
+  // Show loading spinner while waiting for Supabase to process the recovery token
+  if (!sessionReady && !error) {
+    return (
+      <Section className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
+            <h1 className="text-xl font-bold text-gray-900 mb-2">Verifying Reset Link</h1>
+            <p className="text-gray-600">Please wait while we verify your password reset link...</p>
           </div>
         </div>
       </Section>
