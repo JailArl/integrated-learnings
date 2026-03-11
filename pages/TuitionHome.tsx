@@ -453,6 +453,8 @@ const TuitionHome: React.FC = () => {
               Use the inquiry form below — just mention your child's current curriculum and we'll tailor our guidance.
               <br />
               <Link to="/zh" className="text-sky-600 font-semibold hover:underline">🇨🇳 中文页面 · View in Chinese</Link>
+              <span className="mx-2 text-slate-300">|</span>
+              <Link to="/personality" className="text-purple-600 font-semibold hover:underline">✨ Personality Decode · 性格解码</Link>
             </p>
           </div>
         </div>

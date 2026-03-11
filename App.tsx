@@ -14,6 +14,7 @@ import { AdminTutors } from './pages/AdminTutors';
 import { AdminLogin } from './pages/AdminLogin';
 import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
 import InternationalStudents from './pages/InternationalStudents';
+import PersonalityDecode from './pages/PersonalityDecode';
 import ServiceDetail from './pages/ServiceDetail';
 import { Calendar } from './pages/Calendar';
 import { ParentLogin } from './pages/ParentLogin';
@@ -109,6 +110,8 @@ const App: React.FC = () => {
           <Route path="/tuition/specialized-request" element={<Navigate to="/tuition#parent-inquiry" replace />} />
           <Route path="/tuition/extra" element={<ExtraLearnings />} />
           <Route path="/zh" element={<InternationalStudents />} />
+          <Route path="/zh/fortune" element={<PersonalityDecode />} />
+          <Route path="/personality" element={<PersonalityDecode />} />
           <Route path="/international" element={<InternationalStudents />} />
           <Route path="/tuition/holiday" element={<HolidayPrograms />} />
           <Route path="/tuition/calendar" element={<Calendar />} />
