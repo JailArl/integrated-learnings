@@ -107,8 +107,8 @@ export const TutorSignup: React.FC = () => {
       return;
     }
 
-    alert('Account created successfully! Please complete your profile by uploading photo and certificates.');
-    navigate('/tutors');
+    alert('Account created successfully! Please complete your profile.');
+    navigate('/tutors/onboarding');
   };
 
   return (

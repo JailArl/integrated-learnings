@@ -33,6 +33,10 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, userType
     setLoading(true);
 
     try {
+      if (!supabase) {
+        throw new Error('Authentication service is not configured. Please contact support.');
+      }
+
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password?type=${userType}`,
       });
