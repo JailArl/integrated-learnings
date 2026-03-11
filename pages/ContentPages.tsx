@@ -147,7 +147,7 @@ export const About: React.FC = () => (
                 <h4 className="font-bold text-white mb-2">Who It’s For</h4>
                 <div className="text-slate-300 text-sm space-y-2">
                   <p>Primary to JC/IB/IGCSE students who need the right learning guidance.</p>
-                  <p className="text-slate-400 text-xs italic">We also support enrichment and specialized needs—just tell us what you’re looking for.</p>
+                  <p className="text-slate-400 text-xs italic">We also support enrichment, specialised needs, and international students adapting to Singapore’s curriculum.</p>
                 </div>
              </div>
           </div>
@@ -259,7 +259,7 @@ export const About: React.FC = () => (
                 <h4 className="font-bold text-white mb-2">Who It’s For</h4>
                 <div className="text-slate-300 text-sm space-y-2">
                   <p>Primary to JC/IB/IGCSE students who need the right learning guidance.</p>
-                  <p className="text-slate-400 text-xs italic">We also support enrichment and specialized needs—just tell us what you’re looking for.</p>
+                  <p className="text-slate-400 text-xs italic">We also support enrichment, specialised needs, and international students adapting to Singapore’s curriculum.</p>
                 </div>
              </div>
           </div>

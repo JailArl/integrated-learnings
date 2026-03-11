@@ -415,7 +415,47 @@ const TuitionHome: React.FC = () => {
       </Section>
 
       {/* ================================================================
-          SECTION 7: PARENT INQUIRY FORM
+          INTERNATIONAL STUDENTS
+          ================================================================ */}
+      <Section className="bg-gradient-to-b from-sky-50 to-white">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-8 text-center">
+            <p className="mb-2 inline-block rounded-full bg-sky-100 px-4 py-1 text-xs font-bold uppercase tracking-wider text-sky-700">Also Available</p>
+            <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Support for International Students in Singapore</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-slate-600">
+              Moving to Singapore or already here on an international curriculum? We help students bridge gaps, build confidence, and thrive academically.
+            </p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
+            {[
+              { icon: <BookOpen className="text-sky-600" size={22} />, title: 'Syllabus Bridging', desc: 'Targeted support to help students adapt to the Singapore MOE, IB, or IGCSE curriculum from their home country\'s syllabus.' },
+              { icon: <Target className="text-sky-600" size={22} />, title: 'Subject Tutoring', desc: 'One-to-one guidance in Maths, Science, English, and other subjects — matched to the student\'s current level and goals.' },
+              { icon: <ClipboardList className="text-sky-600" size={22} />, title: 'Exam Preparation', desc: 'Structured revision and practice for PSLE, O-Levels, A-Levels, IB, or IGCSE — with Singapore-specific exam strategy.' },
+              { icon: <Brain className="text-sky-600" size={22} />, title: 'Study Strategy Guidance', desc: 'Help with study habits, time management, and learning approaches suited to the Singapore academic environment.' },
+            ].map((item, idx) => (
+              <div key={idx} className="flex items-start gap-4 rounded-xl border border-sky-100 bg-white p-5 shadow-sm">
+                <div className="mt-0.5 flex-shrink-0 rounded-lg bg-sky-50 p-2">{item.icon}</div>
+                <div>
+                  <h3 className="font-bold text-slate-900">{item.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-slate-600">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 text-center">
+            <a href="#parent-inquiry" className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-8 py-3 font-semibold text-white shadow transition hover:bg-sky-700">
+              Enquire About International Student Support
+              <ArrowRight size={16} />
+            </a>
+            <p className="mt-3 text-xs text-slate-500">Use the inquiry form below — just mention your child's current curriculum and we'll tailor our guidance.</p>
+          </div>
+        </div>
+      </Section>
+
+      {/* ================================================================
+          PARENT INQUIRY FORM
           ================================================================ */}
       <Section id="parent-inquiry" className="bg-gradient-to-b from-blue-50 to-white">
         <div className="mx-auto max-w-3xl">
