@@ -31,54 +31,54 @@ const TuitionHome: React.FC = () => {
 
   const faqs = [
     {
-      q: 'How long does the matching process take?',
-      a: 'Usually 2-5 business days. We analyze your needs, screen candidates, and match the right tutor based on learning style and expertise.',
+      q: 'What happens during the diagnostic assessment?',
+      a: 'We assess your child\'s learning style, confidence gaps, study habits, and academic profile — then recommend a personalised learning pathway, which may include 1-to-1 tutoring, study skills coaching, or exam strategy support.',
     },
     {
-      q: 'What are the typical rates?',
-      a: 'Primary: $35-55/hr | Secondary: $45-80/hr | JC: $65-130/hr. One-to-one at your home. No upfront agency fees — pay per lesson.',
+      q: 'Is Integrated Learnings a tuition agency?',
+      a: 'No. We\'re a learning advisory service. Tutoring is one of several solutions we may recommend after diagnosing your child\'s needs. Our role is to guide families toward the most effective learning pathway.',
     },
     {
-      q: 'What if the tutor isn\'t a good fit?',
+      q: 'What are the typical rates if tutoring is recommended?',
+      a: 'Primary: $35-55/hr | Secondary: $45-80/hr | JC: $65-130/hr. One-to-one at your home. No upfront advisory fees — pay per lesson only if tutoring is part of the plan.',
+    },
+    {
+      q: 'What if the recommended tutor isn\'t a good fit?',
       a: 'Free tutor swap within the first 2 lessons, no questions asked. Your child\'s progress is our priority.',
-    },
-    {
-      q: 'Can I cancel or pause lessons?',
-      a: 'Yes. Flexible monthly contracts. Pause or cancel with 1 week notice. No lock-in periods.',
     },
     {
       q: 'Do parents need to create an account?',
       a: 'No. Simply fill in the inquiry form on this page and we will reach out to you directly. No login required.',
     },
     {
-      q: 'How do you vet your tutors?',
-      a: 'All tutors go through identity verification, certificate review, an AI-powered personality interview, and a background check before gaining access to cases.',
+      q: 'How do you vet your educators?',
+      a: 'All educators go through identity verification, credential review, an AI-powered character interview, and a background check before joining our network.',
     },
   ];
 
   const testimonials = [
     {
-      quote: 'The diagnostic session was clear and practical. We got a tutor who matched my daughter\'s learning style on the first try.',
+      quote: 'The diagnostic session gave us clarity on what our daughter actually needed — it wasn\'t just about finding a tutor, it was about understanding her learning gaps.',
       name: 'May Yee, Parent',
     },
     {
-      quote: 'Fast response and a structured plan. My son finally feels confident going into tests.',
+      quote: 'They didn\'t just throw a tutor at us. They created a proper learning plan and my son finally feels confident going into tests.',
       name: 'Angeline, Parent',
     },
     {
-      quote: 'No more trial-and-error. The tutor fit our timing and expectations from week one.',
+      quote: 'The guidance was practical and personalised. We understood the \'why\' behind every recommendation.',
       name: 'Lina, Parent',
     },
     {
-      quote: 'Professional, responsive, and transparent. We felt supported throughout the process.',
+      quote: 'Professional, responsive, and transparent. We felt supported throughout the entire learning journey.',
       name: 'Claren, Parent',
     },
   ];
 
   const SUBJECT_LEVELS = [
-    { level: 'Primary (P1-P6)', subjects: ['English', 'Mathematics', 'Science', 'Chinese', 'Malay', 'Tamil'], color: 'blue' },
-    { level: 'Secondary (S1-S5)', subjects: ['E/A Math', 'Pure/Combined Science', 'English', 'Humanities', 'Chinese', 'Literature'], color: 'indigo' },
-    { level: 'JC / IB / IGCSE', subjects: ['H1/H2 Math', 'H2 Physics', 'H2 Chemistry', 'H2 Biology', 'General Paper', 'Economics'], color: 'purple' },
+    { level: 'Primary Pathway (P1-P6)', subjects: ['English', 'Mathematics', 'Science', 'Chinese', 'Malay', 'Tamil'], color: 'blue' },
+    { level: 'Secondary Pathway (S1-S5)', subjects: ['E/A Math', 'Pure/Combined Science', 'English', 'Humanities', 'Chinese', 'Literature'], color: 'indigo' },
+    { level: 'JC / IB / IGCSE Pathway', subjects: ['H1/H2 Math', 'H2 Physics', 'H2 Chemistry', 'H2 Biology', 'General Paper', 'Economics'], color: 'purple' },
   ];
 
   return (
@@ -99,43 +99,43 @@ const TuitionHome: React.FC = () => {
           <div>
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-200/30 bg-orange-100/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-orange-200">
               <Sparkles size={14} />
-              Singapore's Diagnostic-First Tuition Matching
+              Singapore's Professional Learning Advisory
             </div>
             <h1 className="text-4xl font-black leading-[1.08] text-white md:text-6xl">
               Stop Guessing.
               <span className="mt-2 block bg-gradient-to-r from-orange-300 via-amber-200 to-teal-200 bg-clip-text text-transparent">
-                Start Learning.
+                Start Understanding.
               </span>
             </h1>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300 md:text-xl">
-              We diagnose how your child learns, then match a vetted tutor who fits their subject needs, pace, and personality. No trial-and-error.
+              We diagnose how your child learns, identify gaps, and guide your family to the right learning pathway — whether that's targeted tutoring, study skills coaching, or exam strategy support.
             </p>
 
             <div className="mt-9 flex flex-col gap-4 sm:flex-row">
               <a href="#parent-inquiry" className="group inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-base font-semibold text-white shadow-xl shadow-blue-900/30 transition hover:bg-blue-700">
-                Get Free Diagnostic Assessment
+                Get Free Learning Assessment
                 <ArrowRight size={17} className="ml-2 transition-transform group-hover:translate-x-1" />
               </a>
               <Link to="/tutors/signup" className="inline-flex items-center justify-center rounded-lg border-2 border-white/20 bg-white/10 px-8 py-4 text-base font-semibold text-white backdrop-blur transition hover:bg-white/20">
                 <UserPlus size={17} className="mr-2" />
-                I'm a Tutor
+                I'm an Educator
               </Link>
             </div>
 
             <div className="mt-8 flex flex-wrap gap-x-5 gap-y-3 text-sm text-slate-300">
               <span className="flex items-center"><BadgeCheck size={15} className="mr-2 text-emerald-300" />Verified Educators</span>
-              <span className="flex items-center"><Clock3 size={15} className="mr-2 text-emerald-300" />2-5 Day Match</span>
+              <span className="flex items-center"><Clock3 size={15} className="mr-2 text-emerald-300" />Respond Within 2 Days</span>
               <span className="flex items-center"><ShieldCheck size={15} className="mr-2 text-emerald-300" />No Lock-in Contract</span>
             </div>
           </div>
 
           {/* Hero right — quick stats + blueprint */}
           <div className="rounded-2xl border border-white/15 bg-white/10 p-6 backdrop-blur-xl md:p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-200">Your Match Blueprint</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-200">Your Learning Blueprint</p>
             <div className="mt-5 space-y-4">
               {[
                 { label: 'Learning Diagnosis', detail: 'Study habits, confidence blockers, exam profile' },
-                { label: 'Tutor Persona Fit', detail: 'Teaching style, pace, communication match' },
+                { label: 'Pathway Recommendation', detail: 'Personalised plan: tutoring, coaching, or self-directed strategies' },
                 { label: 'Structured 12-Week Plan', detail: 'Milestones, parent updates, revision rhythm' },
               ].map((step, idx) => (
                 <div key={step.label} className="rounded-xl border border-white/15 bg-slate-900/30 p-4">
@@ -147,7 +147,7 @@ const TuitionHome: React.FC = () => {
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-white/15 bg-white/10 p-4 text-center">
                 <p className="text-2xl font-black text-white">250+</p>
-                <p className="text-xs text-slate-200">Families Matched</p>
+                <p className="text-xs text-slate-200">Families Guided</p>
               </div>
               <div className="rounded-xl border border-white/15 bg-white/10 p-4 text-center">
                 <p className="text-2xl font-black text-white">95%</p>
@@ -175,15 +175,15 @@ const TuitionHome: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold text-slate-900">I'm a Parent</h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                Looking for a tutor? Fill out our inquiry form below — no account needed. We'll diagnose your child's learning needs and match them with a vetted educator within 2-5 days.
+                Not sure where to start? Fill out our inquiry form below — no account needed. We'll assess your child's learning needs and recommend the right pathway, whether that's tutoring, coaching, or guided self-study.
               </p>
               <ul className="mt-4 space-y-2 text-sm text-slate-600">
                 <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-blue-500" />No signup required</li>
-                <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-blue-500" />Free diagnostic assessment</li>
-                <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-blue-500" />Pay per lesson — no upfront fees</li>
+                <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-blue-500" />Free learning assessment</li>
+                <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-blue-500" />Personalised pathway recommendation</li>
               </ul>
               <a href="#parent-inquiry" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition group-hover:gap-3">
-                Fill Inquiry Form <ArrowRight size={16} />
+                Start Learning Assessment <ArrowRight size={16} />
               </a>
             </div>
 
@@ -192,14 +192,14 @@ const TuitionHome: React.FC = () => {
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
                 <GraduationCap size={24} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">I'm a Tutor</h3>
+              <h3 className="text-xl font-bold text-slate-900">I'm an Educator</h3>
               <p className="mt-3 text-sm leading-relaxed text-slate-600">
-                Join our educator network. Create an account, complete your profile, upload credentials, and take our AI interview — then start receiving matched cases.
+                Join our learning advisory network. Create an account, complete your profile, upload credentials, and take our AI interview — then start receiving cases matched to your expertise.
               </p>
               <ul className="mt-4 space-y-2 text-sm text-slate-600">
                 <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-emerald-500" />Create free account</li>
                 <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-emerald-500" />AI-powered character interview</li>
-                <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-emerald-500" />Get matched with students in your area</li>
+                <li className="flex items-center"><CheckCircle2 size={15} className="mr-2 flex-shrink-0 text-emerald-500" />Receive cases aligned to your teaching strengths</li>
               </ul>
               <Link to="/tutors/signup" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-emerald-600 transition group-hover:gap-3">
                 Create Tutor Account <ArrowRight size={16} />
@@ -216,14 +216,14 @@ const TuitionHome: React.FC = () => {
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
             <h2 className="text-3xl font-black text-slate-900 md:text-4xl">How The Process Works</h2>
-            <p className="mt-3 text-slate-600">Fast, structured, and transparent from first inquiry to first lesson.</p>
+            <p className="mt-3 text-slate-600">Fast, structured, and transparent from first inquiry to first session.</p>
           </div>
           <div className="grid gap-5 md:grid-cols-4">
             {[
               { icon: ClipboardList, title: 'Share Child Profile', desc: 'Level, subject concerns, learning challenges, and goals in a quick form.' },
-              { icon: Stethoscope, title: 'Receive Diagnosis', desc: 'We map study habits, confidence gaps, and learning preferences.' },
-              { icon: Target, title: 'Tutor Shortlist', desc: 'You get best-fit educators with clear rationale for each match.' },
-              { icon: CalendarClock, title: 'Start Lessons', desc: 'Begin with structure, milestones, and regular progress updates.' },
+              { icon: Stethoscope, title: 'Receive Diagnosis', desc: 'We assess study habits, confidence gaps, and learning style to understand the full picture.' },
+              { icon: Target, title: 'Get Your Learning Plan', desc: 'We recommend the right pathway — tutoring, coaching, study strategy, or a combination.' },
+              { icon: CalendarClock, title: 'Begin Your Journey', desc: 'Start with structure, milestones, and regular progress updates.' },
             ].map((item, idx) => (
               <div key={item.title} className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">{idx + 1}</div>
@@ -242,8 +242,8 @@ const TuitionHome: React.FC = () => {
       <Section className="bg-white">
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
-            <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Subjects &amp; Levels We Cover</h2>
-            <p className="mt-3 text-slate-600">From Primary foundation to JC exam mastery. All core and elective subjects.</p>
+            <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Learning Pathways We Support</h2>
+            <p className="mt-3 text-slate-600">From Primary foundation to JC exam mastery. Guidance across all core and elective subjects.</p>
           </div>
 
           <div className="grid gap-6 md:grid-cols-3">
@@ -323,22 +323,22 @@ const TuitionHome: React.FC = () => {
       <Section className="bg-gradient-to-b from-orange-50 to-white">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">Diagnostic-Driven Matching</p>
-            <h2 className="mt-3 text-3xl font-black text-slate-900 md:text-4xl">Not Just Any Tutor. The Right Tutor.</h2>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-orange-600">Diagnostic-Driven Guidance</p>
+            <h2 className="mt-3 text-3xl font-black text-slate-900 md:text-4xl">Not Just Tutoring. The Right Learning Path.</h2>
             <p className="mx-auto mt-4 max-w-2xl text-slate-600">
-              Our advisory layer is what separates us from tutor directories. We don't just list educators — we diagnose learner needs and match with intent.
+              Our advisory approach is what separates us from tutor directories. We don't just list educators — we diagnose learner needs and recommend the pathway that will make the biggest difference.
             </p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             <div className="rounded-2xl border border-orange-100 bg-white p-6">
               <Brain className="mb-4 text-orange-600" size={28} />
               <h3 className="text-lg font-bold text-slate-900">Learning Style Calibration</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">We identify whether your child is a visual, auditory, or kinesthetic learner before selecting a tutor.</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">We identify whether your child is a visual, auditory, or kinesthetic learner before recommending a pathway.</p>
             </div>
             <div className="rounded-2xl border border-sky-100 bg-white p-6">
               <Target className="mb-4 text-sky-700" size={28} />
-              <h3 className="text-lg font-bold text-slate-900">Precision Match Criteria</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">Beyond looking at grades, we screen for teaching method, consistency, and student temperament compatibility.</p>
+              <h3 className="text-lg font-bold text-slate-900">Holistic Needs Assessment</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">Beyond grades, we assess motivation, study environment, and temperament to recommend the most effective support structure.</p>
             </div>
             <div className="rounded-2xl border border-emerald-100 bg-white p-6">
               <LineChart className="mb-4 text-emerald-700" size={28} />
@@ -355,7 +355,7 @@ const TuitionHome: React.FC = () => {
             <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
               <Users size={30} className="mx-auto mb-3 text-orange-600" />
               <p className="text-3xl font-black text-slate-900">250+</p>
-              <p className="mt-1 text-sm font-medium text-slate-600">Families matched successfully</p>
+              <p className="mt-1 text-sm font-medium text-slate-600">Families guided successfully</p>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
               <Star size={30} className="mx-auto mb-3 text-orange-600" />
@@ -372,8 +372,8 @@ const TuitionHome: React.FC = () => {
       <Section className="bg-white">
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
-            <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Parents Trust Our Process</h2>
-            <p className="mt-3 text-slate-600">Real outcomes from families who switched to diagnostic matching.</p>
+            <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Parents Trust Our Guidance</h2>
+            <p className="mt-3 text-slate-600">Real outcomes from families who chose diagnostic-first learning advisory.</p>
           </div>
 
           {/* Testimonials */}
@@ -395,12 +395,12 @@ const TuitionHome: React.FC = () => {
           {/* Why choose us */}
           <div className="mt-12 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[
-              { title: 'Diagnostic Matching', desc: 'Included free — no trial and error, just precision matching' },
-              { title: 'Verified Tutors Only', desc: 'Character-vetted educators with proven track records' },
+              { title: 'Diagnostic-First Advisory', desc: 'Included free — understand the problem before choosing a solution' },
+              { title: 'Verified Educators Only', desc: 'Character-vetted professionals with proven track records' },
               { title: 'Flexible Contracts', desc: 'No lock-in. Pause or cancel with 1 week notice' },
-              { title: 'Free Tutor Swap', desc: 'Within first 2 lessons if the fit isn\'t right' },
+              { title: 'Free Educator Swap', desc: 'Within first 2 sessions if the fit isn\'t right' },
               { title: 'Real-Time Dashboard', desc: 'Track lessons, progress reports, and payments' },
-              { title: 'Fast Response', desc: 'Matching within 2-5 days, support within 4 hours' },
+              { title: 'Fast Response', desc: 'Assessment within 2 days, support within 4 hours' },
             ].map((item, idx) => (
               <div key={idx} className="flex items-start rounded-xl border border-slate-200 bg-slate-50 p-5">
                 <CheckCircle2 className="mr-3 mt-0.5 flex-shrink-0 text-blue-600" size={18} />
@@ -420,8 +420,8 @@ const TuitionHome: React.FC = () => {
       <Section id="parent-inquiry" className="bg-gradient-to-b from-blue-50 to-white">
         <div className="mx-auto max-w-3xl">
           <div className="mb-8 text-center">
-            <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Find the Right Tutor</h2>
-            <p className="mt-3 text-slate-600">Fill in the form below. No account needed. We'll reach out within 1-2 business days.</p>
+            <h2 className="text-3xl font-black text-slate-900 md:text-4xl">Start Your Learning Assessment</h2>
+            <p className="mt-3 text-slate-600">Tell us about your child's learning needs. No account needed. Our advisor will reach out within 1-2 business days with a personalised recommendation.</p>
           </div>
           <div className="rounded-2xl border border-blue-200 bg-white p-6 shadow-sm md:p-8">
             <ParentInquiryForm />
@@ -440,14 +440,14 @@ const TuitionHome: React.FC = () => {
           </div>
           <h2 className="text-3xl font-black md:text-4xl">Join Our Educator Network</h2>
           <p className="mx-auto mt-4 max-w-2xl text-slate-300">
-            Create your free account, complete your profile, and start receiving matched cases from families in your area. Our onboarding takes less than 15 minutes.
+            Create your free account, complete your profile, and start receiving cases from families in your area. Our onboarding takes less than 15 minutes.
           </p>
 
           <div className="mt-8 grid gap-4 text-left sm:grid-cols-3">
             {[
               { step: '1', title: 'Create Account', desc: 'Quick signup with email and password.' },
               { step: '2', title: 'Complete Profile', desc: 'Add subjects, qualifications, and upload documents.' },
-              { step: '3', title: 'AI Interview', desc: 'Take our character interview and start receiving cases.' },
+              { step: '3', title: 'AI Interview', desc: 'Take our character interview and join our advisory network.' },
             ].map((item) => (
               <div key={item.step} className="rounded-xl border border-slate-700 bg-slate-800/80 p-5">
                 <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-500 text-sm font-bold text-white">{item.step}</div>
