@@ -225,6 +225,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             <ul className="space-y-2 text-sm">
               {isTuitionSection && <li><Link to="/tuition/policies" className="hover:text-white transition">Policies & Terms</Link></li>}
               <li><Link to={isTuitionSection ? "/tuition/contact" : "/"} className="hover:text-white transition">Contact Us</Link></li>
+              <li><Link to="/zh" className="hover:text-white transition">国际学生 International</Link></li>
             </ul>
           </div>
         </div>

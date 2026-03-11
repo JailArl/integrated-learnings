@@ -449,7 +449,11 @@ const TuitionHome: React.FC = () => {
               Enquire About International Student Support
               <ArrowRight size={16} />
             </a>
-            <p className="mt-3 text-xs text-slate-500">Use the inquiry form below — just mention your child's current curriculum and we'll tailor our guidance.</p>
+            <p className="mt-3 text-xs text-slate-500">
+              Use the inquiry form below — just mention your child's current curriculum and we'll tailor our guidance.
+              <br />
+              <Link to="/zh" className="text-sky-600 font-semibold hover:underline">🇨🇳 中文页面 · View in Chinese</Link>
+            </p>
           </div>
         </div>
       </Section>
