@@ -52,10 +52,7 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       if (isSupabaseConfigured && supabase) {
-        const [parentsRes, tutorsRes] = await Promise.all([
-          supabase.from('parent_submissions').select('*'),
-          supabase.from('tutor_submissions').select('*'),
-        ]);
+        const parentsRes = await supabase.from('parent_submissions').select('*');
         const parents = (parentsRes.data || []).map((p: any) => ({
           id: p.id,
           type: 'parent' as const,
@@ -63,22 +60,15 @@ export default function AdminDashboard() {
           submittedAt: p.submittedAt || p.submitted_at || new Date().toISOString(),
           status: p.status || 'pending',
         }));
-        const tutors = (tutorsRes.data || []).map((t: any) => ({
-          id: t.id,
-          type: 'tutor' as const,
-          data: t,
-          submittedAt: t.submittedAt || t.submitted_at || new Date().toISOString(),
-          status: t.status || 'pending',
-        }));
-        const combined = [...parents, ...tutors];
+        const combined = [...parents];
         setSubmissions(combined);
         setStats({
           totalSubmissions: combined.length,
           parentRequests: parents.length,
-          tutorApplications: tutors.length,
+          tutorApplications: 0,
           pendingApprovals: combined.filter(s => s.status === 'new' || s.status === 'pending' || s.status === 'pending_review').length,
           activeMatches: combined.filter(s => s.status === 'matching' || s.status === 'matched' || s.status === 'converted').length,
-          verifiedTutors: tutors.filter(s => s.status === 'approved' || s.status === 'active' || s.status === 'verified').length,
+          verifiedTutors: 0,
         });
         setLastUpdated(new Date().toISOString());
       } else {
@@ -107,11 +97,8 @@ export default function AdminDashboard() {
   const handleStatusUpdate = async (submissionId: string, newStatus: string) => {
     try {
       if (isSupabaseConfigured && supabase) {
-        const [updParent, updTutor] = await Promise.all([
-          supabase.from('parent_submissions').update({ status: newStatus }).eq('id', submissionId),
-          supabase.from('tutor_submissions').update({ status: newStatus }).eq('id', submissionId),
-        ]);
-        const ok = (!updParent.error && (updParent.data || updParent.count)) || (!updTutor.error && (updTutor.data || updTutor.count));
+        const updParent = await supabase.from('parent_submissions').update({ status: newStatus }).eq('id', submissionId);
+        const ok = !updParent.error;
         if (ok) {
           setSubmissions(submissions.map(s => s.id === submissionId ? { ...s, status: newStatus as any } : s));
           alert('Status updated successfully');

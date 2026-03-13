@@ -86,26 +86,10 @@ export const submitParentForm = async (data: ParentFormData): Promise<{ success:
 
 /**
  * Submit tutor form data
+ * Note: Tutor signup now uses auth.ts → tutor_profiles. This is a legacy fallback.
  */
 export const submitTutorForm = async (data: TutorFormData): Promise<{ success: boolean; id?: string; error?: string }> => {
   try {
-    // If Supabase is configured, insert directly (store file name only for now)
-    if (isSupabaseConfigured && supabase) {
-      const payload = {
-        ...data,
-        certificationFile: data.certificationFile ? (data.certificationFile as File).name : undefined,
-        submittedAt: new Date().toISOString(),
-        status: data.status || 'pending',
-      };
-      const { data: inserted, error } = await supabase
-        .from('tutor_submissions')
-        .insert(payload)
-        .select()
-        .single();
-      if (error) throw error;
-      return { success: true, id: inserted.id };
-    }
-
     // Fallback to local Express API with multipart
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
@@ -126,14 +110,7 @@ export const submitTutorForm = async (data: TutorFormData): Promise<{ success: b
     return { success: true, id: result.id };
   } catch (error: any) {
     console.error('Tutor form submission error:', error);
-    const message = error?.message || 'Unknown error';
-    if (/invalid api key/i.test(message)) {
-      return {
-        success: false,
-        error: 'Supabase API key is invalid. Update VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.',
-      };
-    }
-    return { success: false, error: message };
+    return { success: false, error: error?.message || 'Unknown error' };
   }
 };
 
@@ -142,12 +119,8 @@ export const submitTutorForm = async (data: TutorFormData): Promise<{ success: b
  */
 export const getSubmissions = async (adminToken: string): Promise<FormSubmission[]> => {
   try {
-    // If Supabase configured, aggregate parent + tutor submissions
     if (isSupabaseConfigured && supabase) {
-      const [parentsRes, tutorsRes] = await Promise.all([
-        supabase.from('parent_submissions').select('*'),
-        supabase.from('tutor_submissions').select('*'),
-      ]);
+      const parentsRes = await supabase.from('parent_submissions').select('*');
       const parents = (parentsRes.data || []).map((p: any) => ({
         id: p.id,
         type: 'parent' as const,
@@ -155,14 +128,7 @@ export const getSubmissions = async (adminToken: string): Promise<FormSubmission
         submittedAt: p.submittedAt || p.submitted_at || new Date().toISOString(),
         status: p.status || 'pending',
       }));
-      const tutors = (tutorsRes.data || []).map((t: any) => ({
-        id: t.id,
-        type: 'tutor' as const,
-        data: t,
-        submittedAt: t.submittedAt || t.submitted_at || new Date().toISOString(),
-        status: t.status || 'pending',
-      }));
-      return [...parents, ...tutors];
+      return parents;
     }
 
     // Fallback: backend API
@@ -187,13 +153,8 @@ export const updateSubmissionStatus = async (
 ): Promise<boolean> => {
   try {
     if (isSupabaseConfigured && supabase) {
-      // Try updating both tables; one should match
-      const updates = await Promise.all([
-        supabase.from('parent_submissions').update({ status }).eq('id', submissionId),
-        supabase.from('tutor_submissions').update({ status }).eq('id', submissionId),
-      ]);
-      const success = updates.some(u => !u.error && (u.data || u.count));
-      return !!success;
+      const result = await supabase.from('parent_submissions').update({ status }).eq('id', submissionId);
+      return !result.error;
     }
 
     const response = await fetch(`/api/forms/${submissionId}`, {

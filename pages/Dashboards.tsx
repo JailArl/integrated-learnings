@@ -5,7 +5,6 @@ import { StudentProfile, TutorProfile } from '../types';
 import { TUTOR_CONTRACT_TEXT, TUTOR_SCENARIO_QUESTIONS, POLICY_CONTENT } from '../constants';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, CreditCard, Calendar, BookOpen, Cpu, Shield, AlertCircle, User, MapPin, DollarSign, Clock, Briefcase, FileCheck, Landmark, CheckCircle2, Wallet, QrCode, FileText, Download, Filter, Edit2, PlusCircle, X, Search, File, Receipt, MessageSquare, Users } from 'lucide-react';
-import { submitTutorForm } from '../services/formHandler';
 import { signUpTutor } from '../services/auth';
 
 
