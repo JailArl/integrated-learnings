@@ -424,6 +424,39 @@ const TuitionHome: React.FC = () => {
       </Section>
 
       {/* ================================================================
+          SECTION 8B: EDUCATION ROADMAP CTA
+          ================================================================ */}
+      <Section className="bg-gradient-to-br from-blue-600 to-indigo-700">
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200">Free Resource</p>
+          <h2 className="mt-3 text-3xl font-black text-white md:text-4xl">Singapore&rsquo;s Education Roadmap</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-blue-100">
+            From Primary to JC &mdash; understand every key milestone, streaming path, and exam your child will face. 
+            Knowing what&rsquo;s ahead helps you plan the right support at the right time.
+          </p>
+          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              to="/tuition/roadmap"
+              className="group inline-flex items-center justify-center rounded-lg bg-white px-8 py-3.5 text-base font-semibold text-blue-700 shadow-lg transition hover:bg-blue-50"
+            >
+              <BookOpen size={18} className="mr-2" />
+              Explore the Roadmap
+              <ArrowRight size={17} className="ml-2 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <a
+              href="#parent-inquiry"
+              className="inline-flex items-center justify-center rounded-lg border-2 border-white/30 px-8 py-3.5 text-base font-semibold text-white transition hover:border-white/60 hover:bg-white/10"
+            >
+              Find a Tutor Now
+            </a>
+          </div>
+          <p className="mt-4 text-sm text-blue-200/80">
+            The earlier you start, the smoother the journey.
+          </p>
+        </div>
+      </Section>
+
+      {/* ================================================================
           SECTION 9: FAQ
           ================================================================ */}
       <Section className="bg-slate-50">
