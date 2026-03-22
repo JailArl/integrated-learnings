@@ -641,7 +641,7 @@ export default function AdminDashboard() {
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Level</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Subjects</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Mode</th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Budget</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tutor Type</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Submitted</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
