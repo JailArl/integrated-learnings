@@ -9,11 +9,11 @@ export interface ParentSubmissionData {
   student_level: string;
   subjects: string[];
   preferred_mode: string;
-  location: string;
-  budget_range: string;
-  current_challenge: string;
-  goals: string;
-  preferred_contact_timing: string;
+  postal_code: string;
+  address: string;
+  learning_needs: string;
+  tutor_type: string;
+  preferred_schedule: string;
   additional_notes: string;
 }
 
@@ -36,11 +36,11 @@ export const submitParentInquiry = async (
           student_level: data.student_level,
           subjects: data.subjects,
           preferred_mode: data.preferred_mode,
-          location: data.location || null,
-          budget_range: data.budget_range || null,
-          current_challenge: data.current_challenge || null,
-          goals: data.goals || null,
-          preferred_contact_timing: data.preferred_contact_timing || null,
+          location: [data.postal_code, data.address].filter(Boolean).join(' – ') || null,
+          budget_range: data.tutor_type || null,
+          current_challenge: data.learning_needs || null,
+          goals: null,
+          preferred_contact_timing: data.preferred_schedule || null,
           additional_notes: data.additional_notes || null,
           status: 'new',
         },
