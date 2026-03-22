@@ -683,49 +683,215 @@ const InternationalStudents: React.FC = () => {
       </section>
 
       {/* ═══════════════════════════════════════════════
-          升学路径 · EDUCATION PATHWAY
+          升学路径 · EDUCATION PATHWAY (DETAILED)
           ═══════════════════════════════════════════════ */}
       <section id="pathway" className="bg-gradient-to-b from-sky-50 to-white scroll-mt-20">
         <div ref={fadePathway} className="mx-auto max-w-5xl px-4 py-24 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-600">EDUCATION PATHWAY</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-black text-slate-900">新加坡教育体系简介</h2>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-black text-slate-900">新加坡升学完整路线图</h2>
             <div className="mx-auto mt-4 h-1 w-16 rounded-full bg-gradient-to-r from-emerald-400 to-sky-400" />
             <p className="mt-5 text-slate-600 max-w-2xl mx-auto">
-              了解升学路径，才能帮孩子做出正确的选择。我们的顾问可以帮您梳理最适合的路线。
+              了解升学路径，才能帮孩子做出正确的选择。以下是新加坡教育体系的完整解析。
             </p>
           </div>
 
-          {/* Visual pathway with connecting arrows */}
-          <div className="relative">
-            <div className="absolute left-[50%] top-0 bottom-0 hidden w-0.5 bg-gradient-to-b from-emerald-300 via-sky-300 to-purple-300 lg:block" />
+          {/* ── VISUAL FLOW CHART ── */}
+          <div className="relative mb-16">
+            {/* Vertical connector line */}
+            <div className="absolute left-6 sm:left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-300 via-sky-300 via-amber-300 to-purple-300" />
 
-            <div className="grid gap-6 lg:grid-cols-2">
-              {[
-                { level: '小学', levelEn: 'Primary (P1-P6)', exam: 'PSLE', desc: '六年制，P6参加PSLE考试。成绩决定中学分流。国际学生通常通过AEIS考试入学。', gradient: 'from-emerald-500 to-emerald-600', bg: 'bg-emerald-50 border-emerald-200' },
-                { level: '中学', levelEn: 'Secondary (Sec 1-4/5)', exam: 'O-Level', desc: '4-5年。Sec 4参加O-Level考试，决定升JC还是Poly。关键的分水岭。', gradient: 'from-sky-500 to-sky-600', bg: 'bg-sky-50 border-sky-200' },
-                { level: '初级学院', levelEn: 'Junior College (JC1-2)', exam: 'A-Level', desc: '两年制大学预科。A-Level考试难度高，需要针对性备考策略。目标大学的主要路线。', gradient: 'from-amber-500 to-amber-600', bg: 'bg-amber-50 border-amber-200' },
-                { level: '理工学院', levelEn: 'Polytechnic (3 years)', exam: 'Diploma', desc: '三年制文凭课程，注重实践。毕业后可工作或申请大学。适合有明确职业方向的学生。', gradient: 'from-purple-500 to-purple-600', bg: 'bg-purple-50 border-purple-200' },
-              ].map((item, idx) => (
-                <div key={idx} className={`group relative rounded-2xl border p-6 ${item.bg} transition-all duration-300 hover:shadow-lg hover:-translate-y-1`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} text-white text-sm font-black shadow`}>
-                        {idx + 1}
-                      </div>
-                      <h3 className="text-lg font-bold text-slate-900">{item.level}</h3>
-                    </div>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-slate-600 shadow-sm">{item.exam}</span>
-                  </div>
-                  <p className="text-xs text-slate-400 mb-2">{item.levelEn}</p>
-                  <p className="text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+            {/* Phase 1: Primary */}
+            <div className="relative pl-16 sm:pl-20 pb-10">
+              <div className="absolute left-3 sm:left-5 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-black ring-4 ring-emerald-100">1</div>
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-black text-slate-900">小学 <span className="text-sm font-normal text-slate-500">Primary School (P1-P6)</span></h3>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-emerald-700 shadow-sm">6年</span>
                 </div>
-              ))}
+                <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                  国际学生通常通过 <strong>AEIS 考试</strong>入学。P1-P3为基础阶段，P4开始<strong>科目分流 (Subject-Based Banding)</strong>：
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3 mb-3">
+                  <div className="rounded-xl bg-white p-3 border border-emerald-100">
+                    <p className="text-xs font-bold text-emerald-700 mb-1">Standard 标准课程</p>
+                    <p className="text-xs text-slate-500">适合掌握较好的学生，按正常进度学习</p>
+                  </div>
+                  <div className="rounded-xl bg-white p-3 border border-emerald-100">
+                    <p className="text-xs font-bold text-emerald-700 mb-1">Foundation 基础课程</p>
+                    <p className="text-xs text-slate-500">简化课程，巩固基础。会影响PSLE最高分</p>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-3">
+                  <p className="text-xs font-bold text-amber-700 mb-1">⚠️ P5 是难度跳跃最大的一年</p>
+                  <p className="text-xs text-slate-500">引入完整考试格式和新题型（面积/体积/速率），成绩通常下降10-15%</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Phase 2: PSLE */}
+            <div className="relative pl-16 sm:pl-20 pb-10">
+              <div className="absolute left-3 sm:left-5 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-white text-xs font-black ring-4 ring-slate-200">★</div>
+              <div className="rounded-2xl border border-slate-300 bg-white p-5 sm:p-6 shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-black text-slate-900">PSLE 小六会考</h3>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">国家考试</span>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                  第一次全国统考，成绩决定中学分流。采用 <strong>AL 积分制</strong>（Achievement Level）：
+                </p>
+                <div className="grid sm:grid-cols-3 gap-3 mb-3">
+                  <div className="rounded-xl bg-blue-50 p-3 border border-blue-200 text-center">
+                    <p className="text-xs font-bold text-blue-700">AL 4-20</p>
+                    <p className="text-xs text-slate-500">G3 快捷课程</p>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 p-3 border border-emerald-200 text-center">
+                    <p className="text-xs font-bold text-emerald-700">AL 21-25</p>
+                    <p className="text-xs text-slate-500">G2 普通学术</p>
+                  </div>
+                  <div className="rounded-xl bg-amber-50 p-3 border border-amber-200 text-center">
+                    <p className="text-xs font-bold text-amber-700">AL 26-30</p>
+                    <p className="text-xs text-slate-500">G1 普通工艺</p>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-sky-50 border border-sky-200 p-3">
+                  <p className="text-xs font-bold text-sky-700 mb-1">💡 DSA 直接招生计划</p>
+                  <p className="text-xs text-slate-500">可在PSLE放榜前凭才艺（体育、艺术、学术）提前锁定中学名额</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Phase 3: Secondary */}
+            <div className="relative pl-16 sm:pl-20 pb-10">
+              <div className="absolute left-3 sm:left-5 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-sky-500 text-white text-xs font-black ring-4 ring-sky-100">2</div>
+              <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5 sm:p-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-black text-slate-900">中学 <span className="text-sm font-normal text-slate-500">Secondary (Sec 1-4/5)</span></h3>
+                  <span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-sky-700 shadow-sm">4-5年</span>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                  实行<strong>全面科目编班 FSBB (Full Subject-Based Banding)</strong>，学生可跨级别选科：
+                </p>
+                <div className="grid sm:grid-cols-3 gap-3 mb-3">
+                  <div className="rounded-xl bg-white p-3 border border-blue-200">
+                    <p className="text-xs font-bold text-blue-700 mb-1">G3 快捷</p>
+                    <p className="text-xs text-slate-500">O-Level 进度</p>
+                  </div>
+                  <div className="rounded-xl bg-white p-3 border border-emerald-200">
+                    <p className="text-xs font-bold text-emerald-700 mb-1">G2 普通学术</p>
+                    <p className="text-xs text-slate-500">N-Level 进度</p>
+                  </div>
+                  <div className="rounded-xl bg-white p-3 border border-amber-200">
+                    <p className="text-xs font-bold text-amber-700 mb-1">G1 普通工艺</p>
+                    <p className="text-xs text-slate-500">N(T)-Level 进度</p>
+                  </div>
+                </div>
+                <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 mb-3">
+                  <p className="text-xs font-bold text-amber-700 mb-1">⚠️ Sec 2 选科很关键</p>
+                  <p className="text-xs text-slate-500">决定高年级科目组合，影响是否能修纯科学 (Pure Sciences) 和高级数学 (A-Math)。选错会限制升学选择</p>
+                </div>
+                <div className="rounded-xl bg-sky-100 border border-sky-200 p-3">
+                  <p className="text-xs font-bold text-sky-700 mb-1">📋 G2学生的N-Level后路径</p>
+                  <div className="text-xs text-slate-500 space-y-1 mt-1">
+                    <p>• <strong>Sec 5</strong>：读多一年考O-Level（N-Level成绩达标）</p>
+                    <p>• <strong>PFP</strong>：免O-Level，直入理工学院预科（ELMAB3 ≤ 12）</p>
+                    <p>• <strong>DPP</strong>：直入ITE Higher Nitec → 保证Poly名额</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Phase 4: O-Levels */}
+            <div className="relative pl-16 sm:pl-20 pb-10">
+              <div className="absolute left-3 sm:left-5 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-blue-800 text-white text-xs font-black ring-4 ring-blue-200">★</div>
+              <div className="rounded-2xl border border-blue-300 bg-white p-5 sm:p-6 shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-black text-slate-900">O-Level 考试</h3>
+                  <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700 shadow-sm">关键考试</span>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed mb-3">
+                  升JC还是Poly的分水岭。成绩按 <strong>L1R5</strong>（1门语言 + 5门相关科目）录取JC，<strong>ELR2B2</strong> 录取Poly。
+                </p>
+                <div className="grid sm:grid-cols-2 gap-3 mb-3">
+                  <div className="rounded-xl bg-blue-50 p-3 border border-blue-200">
+                    <p className="text-xs font-bold text-blue-700 mb-1">📅 关键时间节点</p>
+                    <div className="text-xs text-slate-500 space-y-0.5">
+                      <p>6月：母语笔试（提前考完可专注其他科）</p>
+                      <p>8月：校内预考 (Prelim)</p>
+                      <p>10-11月：正式O-Level笔试</p>
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-purple-50 p-3 border border-purple-200">
+                    <p className="text-xs font-bold text-purple-700 mb-1">🎯 加分项 Bonus Points</p>
+                    <div className="text-xs text-slate-500 space-y-0.5">
+                      <p>CCA 表现优异：-2分</p>
+                      <p>高级母语 (HMT) 及格：-2分</p>
+                      <p>附属学校 (Affiliation)：-2分</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Phase 5: Post-Secondary split */}
+            <div className="relative pl-16 sm:pl-20 pb-10">
+              <div className="absolute left-3 sm:left-5 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-amber-500 text-white text-xs font-black ring-4 ring-amber-100">3</div>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 sm:p-6">
+                <h3 className="text-lg font-black text-slate-900 mb-4">升学分叉 — 三条通往大学的路</h3>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="rounded-xl bg-white p-4 border border-indigo-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <GraduationCap size={16} className="text-indigo-600" />
+                      <p className="text-sm font-bold text-indigo-700">初级学院 JC</p>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-2">2年 → A-Level → 大学</p>
+                    <p className="text-xs text-slate-500">节奏快、学术性强。是进入本地大学（NUS/NTU/SMU）的最直接路线。</p>
+                  </div>
+                  <div className="rounded-xl bg-white p-4 border border-indigo-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Award size={16} className="text-indigo-600" />
+                      <p className="text-sm font-bold text-indigo-700">理工学院 Poly</p>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-2">3年 → 文凭 → 大学/就业</p>
+                    <p className="text-xs text-slate-500">注重实践。GPA &gt; 3.8 有机会进本地大学。适合有明确职业方向的学生。</p>
+                  </div>
+                  <div className="rounded-xl bg-white p-4 border border-emerald-200">
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp size={16} className="text-emerald-600" />
+                      <p className="text-sm font-bold text-emerald-700">工艺教育学院 ITE</p>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-2">Nitec → Higher Nitec → Poly</p>
+                    <p className="text-xs text-slate-500">路径较长，但可逐步提升。很多ITE毕业生最终成功进入Poly甚至大学。</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Phase 6: University */}
+            <div className="relative pl-16 sm:pl-20">
+              <div className="absolute left-3 sm:left-5 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-purple-600 text-white text-xs font-black ring-4 ring-purple-100">🎓</div>
+              <div className="rounded-2xl border border-purple-200 bg-purple-50 p-5 sm:p-6">
+                <h3 className="text-lg font-black text-slate-900 mb-2">大学 <span className="text-sm font-normal text-slate-500">University</span></h3>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  新加坡有6所本地公立大学（NUS、NTU、SMU、SUTD、SIT、SUSS）。条条大路通罗马 —— 无论JC、Poly还是ITE毕业，都有机会升读大学。关键在于每一步的成绩和规划。
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="mt-10 text-center">
-            <a href="#inquiry-form" className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-8 py-4 font-bold text-white shadow-lg transition hover:shadow-xl hover:-translate-y-0.5">
+          {/* CTA: Link to interactive English roadmap + Inquiry */}
+          <div className="mt-12 grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+            <Link
+              to="/tuition/roadmap"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-sky-600 to-blue-600 px-6 py-4 font-bold text-white shadow-lg transition hover:shadow-xl hover:-translate-y-0.5"
+            >
+              <Target size={18} />
+              查看完整互动路线图 (英文)
+            </Link>
+            <a
+              href="#inquiry-form"
+              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-4 font-bold text-white shadow-lg transition hover:shadow-xl hover:-translate-y-0.5"
+            >
               <Zap size={18} />
               不确定？免费咨询顾问帮您分析
             </a>
