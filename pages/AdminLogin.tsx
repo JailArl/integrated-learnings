@@ -23,8 +23,8 @@ export const AdminLogin: React.FC = () => {
         // Store secure token in localStorage
         localStorage.setItem('adminToken', result.token);
         localStorage.setItem('adminTokenExpiry', (Date.now() + (result.expiresIn || 0)).toString());
-        // Redirect to admin matching page
-        navigate('/admin/matching');
+        // Redirect to admin dashboard
+        navigate('/admin');
       } else {
         setError(result.error || 'Login failed');
       }
