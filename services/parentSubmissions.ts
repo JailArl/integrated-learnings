@@ -11,6 +11,7 @@ export interface ParentSubmissionData {
   preferred_mode: string;
   postal_code: string;
   address: string;
+  unit_number: string;
   learning_needs: string;
   tutor_type: string;
   preferred_schedule: string;
@@ -36,7 +37,7 @@ export const submitParentInquiry = async (
           student_level: data.student_level,
           subjects: data.subjects,
           preferred_mode: data.preferred_mode,
-          location: [data.postal_code, data.address].filter(Boolean).join(' – ') || null,
+          location: [data.postal_code, data.unit_number, data.address].filter(Boolean).join(' – ') || null,
           budget_range: data.tutor_type || null,
           current_challenge: data.learning_needs || null,
           goals: null,

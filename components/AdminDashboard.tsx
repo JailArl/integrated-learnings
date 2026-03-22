@@ -1,9 +1,123 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { AlertCircle, Clock, Eye, EyeOff, LogOut, RefreshCw, Download, Search, Filter } from 'lucide-react';
+import { AlertCircle, Clock, Eye, EyeOff, LogOut, RefreshCw, Download, Search, Filter, MapPin } from 'lucide-react';
 import { adminLogout } from '../services/adminAuth';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 import AdminTutorRanking from './AdminTutorRanking';
+
+// ─── Singapore Postal District → Area Mapping ───
+const SG_AREA_MAP: Record<string, string> = {
+  '01': 'Central (Raffles Place, Marina)',
+  '02': 'Central (Raffles Place, Marina)',
+  '03': 'Central (Raffles Place, Marina)',
+  '04': 'Central (Telok Blangah, HarbourFront)',
+  '05': 'Central (Telok Blangah, HarbourFront)',
+  '06': 'Central (City Hall, Clarke Quay)',
+  '07': 'Central (Beach Road, Bugis)',
+  '08': 'Central (Little India, Farrer Park)',
+  '09': 'Central (Orchard, River Valley)',
+  '10': 'Central (Tanglin, Holland)',
+  '11': 'Central (Newton, Novena)',
+  '12': 'Central (Toa Payoh, Balestier)',
+  '13': 'Central (Macpherson, Potong Pasir)',
+  '14': 'East (Eunos, Geylang)',
+  '15': 'East (Katong, Marine Parade)',
+  '16': 'East (Bedok, Upper East Coast)',
+  '17': 'East (Changi, Loyang)',
+  '18': 'East (Pasir Ris, Tampines)',
+  '19': 'North-East (Hougang, Sengkang)',
+  '20': 'Central (Bishan, Ang Mo Kio)',
+  '21': 'West (Clementi, Upper Bukit Timah)',
+  '22': 'West (Jurong, Boon Lay)',
+  '23': 'West (Bukit Batok, Hillview)',
+  '24': 'North (Lim Chu Kang, Tengah)',
+  '25': 'North (Woodlands, Kranji)',
+  '26': 'North (Mandai, Upper Thomson)',
+  '27': 'North (Yishun, Sembawang)',
+  '28': 'North-East (Seletar, Yio Chu Kang)',
+  '29': 'Central (Serangoon, Upper Paya Lebar)',
+  '30': 'Central (Serangoon, Upper Paya Lebar)',
+  '31': 'Central (Bishan, Ang Mo Kio)',
+  '32': 'Central (Bishan, Ang Mo Kio)',
+  '33': 'North-East (Sengkang, Punggol)',
+  '34': 'North-East (Sengkang, Punggol)',
+  '35': 'West (Jurong East, Jurong West)',
+  '36': 'West (Jurong East, Jurong West)',
+  '37': 'West (Bukit Batok, Bukit Panjang)',
+  '38': 'West (Bukit Batok, Bukit Panjang)',
+  '39': 'East (Pasir Ris, Tampines)',
+  '40': 'East (Pasir Ris, Tampines)',
+  '41': 'East (Pasir Ris, Tampines)',
+  '42': 'North (Admiralty, Woodlands)',
+  '43': 'East (Katong, Marine Parade)',
+  '44': 'East (Katong, Marine Parade)',
+  '45': 'East (Katong, Marine Parade)',
+  '46': 'East (Bedok, Upper East Coast)',
+  '47': 'East (Bedok, Upper East Coast)',
+  '48': 'East (Bedok, Upper East Coast)',
+  '49': 'East (Changi, Loyang)',
+  '50': 'East (Changi, Loyang)',
+  '51': 'West (Jurong, Bukit Batok)',
+  '52': 'West (Jurong, Bukit Batok)',
+  '53': 'North-East (Hougang, Sengkang)',
+  '54': 'North-East (Hougang, Sengkang)',
+  '55': 'North-East (Hougang, Sengkang)',
+  '56': 'Central (Bishan, Ang Mo Kio)',
+  '57': 'Central (Bishan, Ang Mo Kio)',
+  '58': 'West (Upper Bukit Timah)',
+  '59': 'West (Upper Bukit Timah)',
+  '60': 'West (Jurong, Tuas)',
+  '61': 'West (Jurong, Tuas)',
+  '62': 'West (Jurong, Tuas)',
+  '63': 'West (Jurong, Tuas)',
+  '64': 'West (Jurong, Tuas)',
+  '65': 'West (Jurong, Tuas)',
+  '66': 'West (Jurong West)',
+  '67': 'West (Choa Chu Kang)',
+  '68': 'West (Choa Chu Kang)',
+  '69': 'North (Lim Chu Kang)',
+  '70': 'North (Lim Chu Kang)',
+  '71': 'North (Lim Chu Kang)',
+  '72': 'North (Kranji, Woodlands)',
+  '73': 'North (Kranji, Woodlands)',
+  '75': 'North (Yishun, Sembawang)',
+  '76': 'North (Yishun, Sembawang)',
+  '77': 'North (Yishun, Sembawang)',
+  '78': 'North (Yishun, Sembawang)',
+  '79': 'North-East (Seletar)',
+  '80': 'North-East (Seletar)',
+  '81': 'East (Changi)',
+  '82': 'North-East (Punggol)',
+};
+
+function getAreaFromLocation(location: string | null | undefined): string {
+  if (!location) return '';
+  const match = location.match(/\b(\d{6})\b/);
+  if (!match) return '';
+  const district = match[1].substring(0, 2);
+  return SG_AREA_MAP[district] || '';
+}
+
+function getAreaBadgeColor(area: string): string {
+  if (area.startsWith('Central')) return 'bg-blue-50 text-blue-700';
+  if (area.startsWith('East')) return 'bg-emerald-50 text-emerald-700';
+  if (area.startsWith('West')) return 'bg-amber-50 text-amber-700';
+  if (area.startsWith('North-East')) return 'bg-purple-50 text-purple-700';
+  if (area.startsWith('North')) return 'bg-orange-50 text-orange-700';
+  return 'bg-gray-50 text-gray-600';
+}
+
+function getAreaShort(area: string): string {
+  if (!area) return '—';
+  const m = area.match(/^([\w-]+)\s*\((.+?)\)/);
+  return m ? m[1] : area;
+}
+
+function getAreaDetail(area: string): string {
+  if (!area) return '';
+  const m = area.match(/\((.+?)\)/);
+  return m ? m[1] : '';
+}
 
 interface FormSubmission {
   id: string;
@@ -37,6 +151,7 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
+  const [filterArea, setFilterArea] = useState<string>('all');
   const [selectedSubmission, setSelectedSubmission] = useState<FormSubmission | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
@@ -628,8 +743,40 @@ export default function AdminDashboard() {
               ))}
             </div>
 
+            {/* Area Filter */}
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <MapPin size={14} className="text-gray-500" />
+                <span className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Filter by Area</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {['all', 'Central', 'East', 'West', 'North-East', 'North'].map(area => {
+                  const count = area === 'all'
+                    ? parentSubmissions.length
+                    : parentSubmissions.filter(s => getAreaFromLocation(s.data.location).startsWith(area)).length;
+                  return (
+                    <button
+                      key={area}
+                      onClick={() => setFilterArea(area)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                        filterArea === area
+                          ? 'bg-blue-600 text-white'
+                          : area !== 'all' ? `${getAreaBadgeColor(area)} hover:opacity-80` : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {area === 'all' ? 'All Areas' : area}
+                      <span className="ml-1 opacity-75">({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="bg-white rounded-lg shadow overflow-hidden">
-              {parentSubmissions.filter(s => filterStatus === 'all' || s.status === filterStatus || s.data.status === filterStatus).length === 0 ? (
+              {parentSubmissions
+                .filter(s => filterStatus === 'all' || s.status === filterStatus || s.data.status === filterStatus)
+                .filter(s => filterArea === 'all' || getAreaFromLocation(s.data.location).startsWith(filterArea))
+                .length === 0 ? (
                 <div className="p-8 text-center text-gray-500">No parent submissions found</div>
               ) : (
                 <div className="overflow-x-auto">
@@ -640,6 +787,7 @@ export default function AdminDashboard() {
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Contact</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Level</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Subjects</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Area</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Mode</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Tutor Type</th>
                         <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
@@ -650,7 +798,10 @@ export default function AdminDashboard() {
                     <tbody>
                       {parentSubmissions
                         .filter(s => filterStatus === 'all' || s.status === filterStatus || s.data.status === filterStatus)
-                        .map(s => (
+                        .filter(s => filterArea === 'all' || getAreaFromLocation(s.data.location).startsWith(filterArea))
+                        .map(s => {
+                        const area = getAreaFromLocation(s.data.location);
+                        return (
                         <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
                           <td className="px-4 py-3 text-sm">
                             <div className="font-medium text-gray-900">{s.data.parent_name || s.data.parentName}</div>
@@ -669,6 +820,18 @@ export default function AdminDashboard() {
                                 <span className="text-xs text-gray-400">+{s.data.subjects.length - 3}</span>
                               )}
                             </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            {area ? (
+                              <div>
+                                <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold ${getAreaBadgeColor(area)}`}>
+                                  {getAreaShort(area)}
+                                </span>
+                                <div className="text-[10px] text-gray-400 mt-0.5">{getAreaDetail(area)}</div>
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">{s.data.preferred_mode || s.data.assignmentType || '—'}</td>
                           <td className="px-4 py-3 text-sm text-gray-600">{s.data.budget_range || '—'}</td>
@@ -708,7 +871,8 @@ export default function AdminDashboard() {
                             </button>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>

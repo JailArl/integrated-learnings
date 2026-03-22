@@ -181,6 +181,7 @@ const ParentInquiryForm: React.FC = () => {
   const [preferredMode, setPreferredMode] = useState('home');
   const [postalCode, setPostalCode] = useState('');
   const [address, setAddress] = useState('');
+  const [unitNumber, setUnitNumber] = useState('');
   const [learningNeeds, setLearningNeeds] = useState('');
   const [tutorType, setTutorType] = useState('');
   const [preferredSchedule, setPreferredSchedule] = useState('');
@@ -264,6 +265,8 @@ const ParentInquiryForm: React.FC = () => {
       return 'Please enter a valid email address.';
     if (!studentLevel) return 'Student level is required.';
     if (selectedSubjects.length === 0) return 'Select at least one subject.';
+    if (!tutorType) return 'Please select a preferred tutor type.';
+    if (!preferredSchedule) return 'Please select a preferred lesson schedule.';
     return null;
   };
 
@@ -309,6 +312,7 @@ const ParentInquiryForm: React.FC = () => {
       preferred_mode: preferredMode,
       postal_code: postalCode,
       address: address.trim(),
+      unit_number: unitNumber.trim(),
       learning_needs: learningNeeds.trim(),
       tutor_type: tutorType,
       preferred_schedule: preferredSchedule,
@@ -561,7 +565,7 @@ const ParentInquiryForm: React.FC = () => {
 
       {/* ─── Tutor Type (replaces budget) ─── */}
       <div>
-        <label className="mb-2 block text-sm font-semibold text-slate-700">Preferred Tutor Type</label>
+        <label className="mb-2 block text-sm font-semibold text-slate-700">Preferred Tutor Type *</label>
         <div className="grid gap-2 sm:grid-cols-2">
           {TUTOR_TYPES.map((type) => {
             const rate = getRateForLevel(type.rates, studentLevel);
@@ -598,10 +602,10 @@ const ParentInquiryForm: React.FC = () => {
         <p className="mt-1.5 text-xs text-slate-400">Rates shown are indicative starting prices per hour and may vary.</p>
       </div>
 
-      {/* ─── Location (Postal Code + Address) ─── */}
+      {/* ─── Location (Postal Code + Address + Unit) ─── */}
       <div>
         <label className="mb-1.5 block text-sm font-semibold text-slate-700">Location</label>
-        <div className="grid gap-3 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-3">
           <div className="relative">
             <input
               type="text"
@@ -623,7 +627,14 @@ const ParentInquiryForm: React.FC = () => {
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
-            placeholder={postalCode.length === 6 ? 'Address (auto-filled — edit if needed)' : 'Or type your address / area'}
+            placeholder={postalCode.length === 6 ? 'Address (auto-filled)' : 'Or type your address / area'}
+            className={inputClass}
+          />
+          <input
+            type="text"
+            value={unitNumber}
+            onChange={(e) => setUnitNumber(e.target.value)}
+            placeholder="Unit no. (optional) e.g. #12-34"
             className={inputClass}
           />
         </div>
@@ -631,7 +642,7 @@ const ParentInquiryForm: React.FC = () => {
 
       {/* ─── Lesson Schedule ─── */}
       <div>
-        <label className="mb-1.5 block text-sm font-semibold text-slate-700">Preferred Lesson Schedule</label>
+        <label className="mb-1.5 block text-sm font-semibold text-slate-700">Preferred Lesson Schedule *</label>
         <select
           value={preferredSchedule}
           onChange={(e) => setPreferredSchedule(e.target.value)}
