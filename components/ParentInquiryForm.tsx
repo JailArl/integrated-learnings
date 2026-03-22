@@ -82,31 +82,34 @@ const DEFAULT_VARIANT: Record<LevelGroup, string> = {
   other: '',
 };
 
-// ─── Tutor Types with Indicative Rates ───
-const TUTOR_TYPES = [
+// ─── Tutor Types with Indicative Rates per Level Tier ───
+// Tiers: lowerPri (P1-3), upperPri (P4-6), lowerSec (S1-2), upperSec (S3-5), jc, other (Poly/ITE)
+type RateTier = { lowerPri: string; upperPri: string; lowerSec: string; upperSec: string; jc: string; other: string };
+
+const TUTOR_TYPES: { value: string; label: string; desc: string; rates: RateTier | null }[] = [
   {
     value: 'undergraduate',
     label: 'Undergraduate Tutor',
     desc: 'Current uni students with strong academic results',
-    rates: { primary: '$25', secondary: '$30', jc: '$40' },
+    rates: { lowerPri: '$20', upperPri: '$25', lowerSec: '$28', upperSec: '$30', jc: '$40', other: '$30' },
   },
   {
     value: 'part-time',
     label: 'Part-time Tutor',
     desc: 'Working professionals who tutor regularly',
-    rates: { primary: '$30', secondary: '$40', jc: '$55' },
+    rates: { lowerPri: '$25', upperPri: '$30', lowerSec: '$35', upperSec: '$40', jc: '$55', other: '$40' },
   },
   {
     value: 'full-time',
     label: 'Full-time Tutor',
     desc: 'Dedicated career tutors with proven track records',
-    rates: { primary: '$45', secondary: '$55', jc: '$75' },
+    rates: { lowerPri: '$35', upperPri: '$45', lowerSec: '$50', upperSec: '$55', jc: '$75', other: '$55' },
   },
   {
     value: 'ex-moe',
     label: 'Ex/Current MOE Teacher',
     desc: 'NIE-trained school teachers',
-    rates: { primary: '$60', secondary: '$70', jc: '$100' },
+    rates: { lowerPri: '$50', upperPri: '$60', lowerSec: '$65', upperSec: '$70', jc: '$100', other: '$70' },
   },
   {
     value: 'no-preference',
@@ -116,14 +119,18 @@ const TUTOR_TYPES = [
   },
 ];
 
-const getRateForLevel = (
-  rates: { primary: string; secondary: string; jc: string } | null,
-  studentLevel: string,
-): string => {
-  if (!rates) return '';
-  if (studentLevel.startsWith('Primary')) return rates.primary;
-  if (studentLevel.startsWith('JC')) return rates.jc;
-  return rates.secondary;
+const getRateTier = (studentLevel: string): keyof RateTier => {
+  if (['Primary 1', 'Primary 2', 'Primary 3'].includes(studentLevel)) return 'lowerPri';
+  if (studentLevel.startsWith('Primary')) return 'upperPri';
+  if (['Secondary 1', 'Secondary 2'].includes(studentLevel)) return 'lowerSec';
+  if (studentLevel.startsWith('Secondary')) return 'upperSec';
+  if (studentLevel.startsWith('JC')) return 'jc';
+  return 'other';
+};
+
+const getRateForLevel = (rates: RateTier | null, studentLevel: string): string => {
+  if (!rates || !studentLevel) return '';
+  return rates[getRateTier(studentLevel)];
 };
 
 // ─── Other Options ───
@@ -586,8 +593,9 @@ const ParentInquiryForm: React.FC = () => {
           })}
         </div>
         {!studentLevel && (
-          <p className="mt-1.5 text-xs text-slate-400">Select a student level to see indicative rates.</p>
+          <p className="mt-1.5 text-xs text-slate-400">Select a student level above to see indicative rates.</p>
         )}
+        <p className="mt-1.5 text-xs text-slate-400">Rates shown are indicative starting prices per hour and may vary.</p>
       </div>
 
       {/* ─── Location (Postal Code + Address) ─── */}
