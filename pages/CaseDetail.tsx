@@ -46,6 +46,7 @@ const CaseDetailContent: React.FC = () => {
   const [bidMessage, setBidMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [alreadyBid, setAlreadyBid] = useState(false);
+  const [tutorProfile, setTutorProfile] = useState<any>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -93,6 +94,22 @@ const CaseDetailContent: React.FC = () => {
     loadData();
   }, [caseId]);
 
+  useEffect(() => {
+    const loadTutorProfile = async () => {
+      if (!tutorId) return;
+      try {
+        const { getTutorProfile } = await import('../services/platformApi');
+        const result = await getTutorProfile(tutorId);
+        if (result.success && result.data) {
+          setTutorProfile(result.data);
+        }
+      } catch (err) {
+        console.error('Failed to load tutor profile:', err);
+      }
+    };
+    loadTutorProfile();
+  }, [tutorId]);
+
   const handleSubmitBid = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -111,7 +128,6 @@ const CaseDetailContent: React.FC = () => {
     setSubmitting(false);
 
     if (result.success) {
-      alert('Bid submitted successfully!');
       setBidMessage('');
       setAlreadyBid(true);
     } else {
@@ -147,24 +163,6 @@ const CaseDetailContent: React.FC = () => {
     );
   }
 
-  const [tutorProfile, setTutorProfile] = useState<any>(null);
-
-  useEffect(() => {
-    const loadTutorProfile = async () => {
-      if (!tutorId) return;
-      try {
-        const { getTutorProfile } = await import('../services/platformApi');
-        const result = await getTutorProfile(tutorId);
-        if (result.success && result.data) {
-          setTutorProfile(result.data);
-        }
-      } catch (err) {
-        console.error('Failed to load tutor profile:', err);
-      }
-    };
-    loadTutorProfile();
-  }, [tutorId]);
-
   return (
     <Section>
       <div className="max-w-4xl mx-auto">
@@ -178,15 +176,15 @@ const CaseDetailContent: React.FC = () => {
         </button>
 
         {/* Blocking alerts */}
-        {tutorProfile && !tutorProfile.questionnaire_completed && (
+        {tutorProfile && tutorProfile.ai_interview_status !== 'completed' && (
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-300 text-yellow-800 rounded-lg flex items-start gap-3">
             <span className="text-lg">⚠️</span>
             <div>
-              <p className="font-semibold">Complete Your Questionnaire First</p>
-              <p className="text-sm mt-1">You need to complete the tutor profile questionnaire before you can bid on cases.</p>
-              <a href="#/tutors/questionnaire" className="text-sm font-semibold text-yellow-900 hover:underline mt-2 inline-block">
-                Go to Questionnaire →
-              </a>
+              <p className="font-semibold">Complete Your Interview First</p>
+              <p className="text-sm mt-1">You need to complete the getting-to-know-you chat before you can bid on cases.</p>
+              <button onClick={() => navigate('/tutors/ai-interview')} className="text-sm font-semibold text-yellow-900 hover:underline mt-2 inline-block">
+                Go to Interview →
+              </button>
             </div>
           </div>
         )}
@@ -321,15 +319,15 @@ const CaseDetailContent: React.FC = () => {
                     placeholder="Introduce yourself, explain why you're a good fit for this student, and your expected rate..."
                     rows={6}
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    disabled={submitting || !tutorProfile?.questionnaire_completed || tutorProfile?.verification_status !== 'verified'}
+                    disabled={submitting || tutorProfile?.ai_interview_status !== 'completed' || tutorProfile?.verification_status !== 'verified'}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={submitting || !bidMessage.trim() || !tutorProfile?.questionnaire_completed || tutorProfile?.verification_status !== 'verified'}
+                  disabled={submitting || !bidMessage.trim() || tutorProfile?.ai_interview_status !== 'completed' || tutorProfile?.verification_status !== 'verified'}
                   className={`inline-flex items-center space-x-2 px-8 py-3 rounded-lg font-semibold text-white transition duration-200 ${
-                    submitting || !bidMessage.trim() || !tutorProfile?.questionnaire_completed || tutorProfile?.verification_status !== 'verified'
+                    submitting || !bidMessage.trim() || tutorProfile?.ai_interview_status !== 'completed' || tutorProfile?.verification_status !== 'verified'
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700 active:bg-blue-800'
                   }`}

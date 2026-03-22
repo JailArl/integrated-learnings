@@ -1051,10 +1051,12 @@ const NewTutorDashboardContent: React.FC = () => {
         setError(profileResult.error || 'Failed to load tutor profile');
       }
 
-      // Load available cases
-      const casesResult = await getAvailableCases();
-      if (casesResult.success && casesResult.data) {
-        setAvailableCases(casesResult.data);
+      // Load available cases only if tutor has case access
+      if (profileResult.success && profileResult.data?.can_access_cases) {
+        const casesResult = await getAvailableCases();
+        if (casesResult.success && casesResult.data) {
+          setAvailableCases(casesResult.data);
+        }
       }
 
       // Load my bids

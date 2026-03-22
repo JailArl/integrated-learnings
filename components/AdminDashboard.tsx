@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, CheckCircle, Clock, Eye, EyeOff, LogOut, RefreshCw, Download, Search, Filter } from 'lucide-react';
+import { AlertCircle, Clock, Eye, EyeOff, LogOut, RefreshCw, Download, Search, Filter } from 'lucide-react';
 import { adminLogout } from '../services/adminAuth';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 import AdminTutorRanking from './AdminTutorRanking';
@@ -37,14 +37,32 @@ export default function AdminDashboard() {
   const [selectedSubmission, setSelectedSubmission] = useState<FormSubmission | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Auto-check auth and fetch on mount
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    const expiry = localStorage.getItem('adminTokenExpiry');
+    if (token && expiry && Date.now() < parseInt(expiry)) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchData();
+    }
+  }, [isAuthenticated]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin123') {
+    const token = localStorage.getItem('adminToken');
+    if (token) {
       setIsAuthenticated(true);
       setPassword('');
       fetchData();
     } else {
-      alert('Invalid password');
+      setPassword('');
+      alert('Please log in through the admin login page.');
+      window.location.href = '/admin/login';
     }
   };
 
@@ -53,35 +71,39 @@ export default function AdminDashboard() {
     try {
       if (isSupabaseConfigured && supabase) {
         const parentsRes = await supabase.from('parent_submissions').select('*');
+        const tutorsRes = await supabase.from('tutor_profiles').select('id, verification_status');
         const parents = (parentsRes.data || []).map((p: any) => ({
           id: p.id,
           type: 'parent' as const,
           data: p,
-          submittedAt: p.submittedAt || p.submitted_at || new Date().toISOString(),
+          submittedAt: p.created_at || new Date().toISOString(),
           status: p.status || 'pending',
         }));
+        const tutorCount = tutorsRes.data?.length || 0;
+        const verifiedCount = tutorsRes.data?.filter((t: any) => t.verification_status === 'verified').length || 0;
         const combined = [...parents];
         setSubmissions(combined);
         setStats({
-          totalSubmissions: combined.length,
+          totalSubmissions: combined.length + tutorCount,
           parentRequests: parents.length,
-          tutorApplications: 0,
+          tutorApplications: tutorCount,
           pendingApprovals: combined.filter(s => s.status === 'new' || s.status === 'pending' || s.status === 'pending_review').length,
           activeMatches: combined.filter(s => s.status === 'matching' || s.status === 'matched' || s.status === 'converted').length,
-          verifiedTutors: 0,
+          verifiedTutors: verifiedCount,
         });
         setLastUpdated(new Date().toISOString());
       } else {
         // Fallback to local Express API
+        const adminToken = localStorage.getItem('adminToken') || '';
         const submissionsRes = await fetch('/api/forms/all', {
-          headers: { 'Authorization': `Bearer admin123` },
+          headers: { 'Authorization': `Bearer ${adminToken}` },
         });
         if (submissionsRes.ok) {
           const subs = await submissionsRes.json();
           setSubmissions(subs);
         }
         const statsRes = await fetch('/api/admin/stats', {
-          headers: { 'Authorization': `Bearer admin123` },
+          headers: { 'Authorization': `Bearer ${adminToken}` },
         });
         if (statsRes.ok) {
           setStats(await statsRes.json());
@@ -100,7 +122,7 @@ export default function AdminDashboard() {
         const updParent = await supabase.from('parent_submissions').update({ status: newStatus }).eq('id', submissionId);
         const ok = !updParent.error;
         if (ok) {
-          setSubmissions(submissions.map(s => s.id === submissionId ? { ...s, status: newStatus as any } : s));
+          setSubmissions(submissions.map(s => s.id === submissionId ? { ...s, status: newStatus } : s));
           alert('Status updated successfully');
         }
       } else {
@@ -108,12 +130,12 @@ export default function AdminDashboard() {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer admin123`,
+            'Authorization': `Bearer ${localStorage.getItem('adminToken') || ''}`,
           },
           body: JSON.stringify({ status: newStatus }),
         });
         if (res.ok) {
-          setSubmissions(submissions.map(s => s.id === submissionId ? { ...s, status: newStatus as any } : s));
+          setSubmissions(submissions.map(s => s.id === submissionId ? { ...s, status: newStatus } : s));
           alert('Status updated successfully');
         }
       }
@@ -154,7 +176,7 @@ export default function AdminDashboard() {
     const rows = data.map(s => [
       s.id,
       s.type,
-      s.data.parentName || s.data.fullName || 'N/A',
+      s.data.parent_name || s.data.full_name || 'N/A',
       s.data.email || 'N/A',
       s.status,
       new Date(s.submittedAt).toLocaleDateString(),
@@ -166,8 +188,8 @@ export default function AdminDashboard() {
 
   const filteredSubmissions = submissions.filter(s => {
     const matchesSearch = 
-      s.data.parentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.data.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.data.parent_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.data.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.data.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.id.toLowerCase().includes(searchTerm.toLowerCase());
 
@@ -419,7 +441,9 @@ export default function AdminDashboard() {
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="all">All Statuses</option>
+                    <option value="new">New</option>
                     <option value="pending">Pending</option>
+                    <option value="contacted">Contacted</option>
                     <option value="approved">Approved</option>
                     <option value="verified">Verified</option>
                     <option value="matched">Matched</option>
@@ -504,7 +528,7 @@ export default function AdminDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-3 text-sm text-gray-700">
-                            {submission.data.parentName || submission.data.fullName}
+                            {submission.data.parent_name || submission.data.full_name}
                           </td>
                           <td className="px-6 py-3 text-sm text-gray-600">{submission.data.email}</td>
                           <td className="px-6 py-3 text-sm">
@@ -800,7 +824,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-96 overflow-y-auto">
             <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-6 py-4 flex justify-between items-center">
               <h2 className="text-lg font-bold text-gray-900">
-                {selectedSubmission.type === 'parent' ? selectedSubmission.data.parentName : selectedSubmission.data.fullName}
+                {selectedSubmission.type === 'parent' ? selectedSubmission.data.parent_name : selectedSubmission.data.full_name}
               </h2>
               <button
                 onClick={() => setShowDetailsModal(false)}
@@ -826,7 +850,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 uppercase font-semibold">Phone</p>
-                  <p className="text-gray-900">{selectedSubmission.data.phone}</p>
+                  <p className="text-gray-900">{selectedSubmission.data.contact_number || selectedSubmission.data.phone}</p>
                 </div>
               </div>
 

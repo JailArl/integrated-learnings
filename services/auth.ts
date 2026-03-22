@@ -1,84 +1,113 @@
 import { supabase } from './supabase';
-import { notifyParentSignup, notifyTutorSignup } from './discord';
+import { notifyTutorSignup } from './discord';
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  fullName: string;
-  phone?: string;
-  role: 'parent' | 'tutor';
-}
+type AuthResult = { success: boolean; error?: string; user?: any; needsEmailVerification?: boolean };
 
-// Sign up a parent
-export const signUpParent = async (
+const getEmailRedirectUrl = (): string | undefined => {
+  if (typeof window === 'undefined') return undefined;
+  return `${window.location.origin}/tutors/login`;
+};
+
+const formatAuthError = (message?: string): string => {
+  if (!message) return 'Unknown error';
+  const lower = message.toLowerCase();
+
+  if (lower.includes('user already registered')) {
+    return 'An account with this email already exists. Please log in instead.';
+  }
+  if (lower.includes('password')) {
+    return 'Password must be at least 6 characters.';
+  }
+  if (lower.includes('invalid login credentials')) {
+    return 'Invalid email or password.';
+  }
+
+  return message;
+};
+
+const ensureParentProfile = async (
+  userId: string,
   email: string,
-  password: string,
-  fullName: string,
+  fullName?: string,
   phone?: string
-): Promise<{ success: boolean; error?: string; user?: any }> => {
-  if (!supabase) {
-    const msg = 'Supabase not configured';
-    console.error('❌', msg);
-    return { success: false, error: msg };
+): Promise<{ success: boolean; error?: string }> => {
+  // Check if profile already exists
+  const { data: existing } = await supabase!
+    .from('parent_profiles')
+    .select('id')
+    .eq('id', userId)
+    .single();
+
+  if (existing) {
+    return { success: true };
   }
 
-  try {
-    console.log('📝 Starting parent signup with:', { email, fullName, phone });
-    
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          role: 'parent',
-          full_name: fullName,
-        },
+  const { error } = await supabase!
+    .from('parent_profiles')
+    .insert([
+      {
+        id: userId,
+        email,
+        full_name: fullName || '',
+        phone: phone || null,
       },
-    });
+    ]);
 
-    if (authError) {
-      console.error('❌ Auth error:', authError);
-      throw authError;
-    }
-    if (!authData.user) {
-      console.error('❌ No user returned from auth signup');
-      throw new Error('User creation failed');
-    }
-    
-    console.log('✅ Auth user created:', authData.user.id);
-
-    // Create parent profile
-    const { error: profileError } = await supabase
-      .from('parent_profiles')
-      .insert([
-        {
-          id: authData.user.id,
-          full_name: fullName,
-          email: email,
-          phone: phone || null,
-        },
-      ]);
-
-    if (profileError) {
-      console.error('❌ Profile insert error:', profileError);
-      throw profileError;
-    }
-    
-    console.log('✅ Parent profile created successfully');
-    
-    // Send Discord notification
-    await notifyParentSignup({
-      fullName,
-      email,
-      phone: phone || 'Not provided',
-    });
-    
-    return { success: true, user: authData.user };
-  } catch (error: any) {
-    console.error('❌ Parent signup error:', error.message || error);
-    return { success: false, error: error.message || 'Unknown error' };
+  if (error) {
+    return { success: false, error: error.message };
   }
+
+  return { success: true };
+};
+
+const ensureTutorProfile = async (
+  userId: string,
+  email: string,
+  data: {
+    fullName?: string;
+    phone?: string;
+    dateOfBirth?: string;
+    gender?: string;
+    experienceYears?: number;
+    photoUrl?: string | null;
+  }
+): Promise<{ success: boolean; error?: string }> => {
+  // Check if profile already exists — never overwrite status fields on login
+  const { data: existing } = await supabase!
+    .from('tutor_profiles')
+    .select('id')
+    .eq('id', userId)
+    .single();
+
+  if (existing) {
+    // Profile exists — only update basic contact info if provided during signup
+    return { success: true };
+  }
+
+  // First time: create profile with initial status
+  const { error } = await supabase!
+    .from('tutor_profiles')
+    .insert([
+      {
+        id: userId,
+        full_name: data.fullName || '',
+        email,
+        phone: data.phone || null,
+        date_of_birth: data.dateOfBirth || null,
+        gender: data.gender || null,
+        experience_years: typeof data.experienceYears === 'number' ? data.experienceYears : null,
+        photo_url: data.photoUrl || null,
+        verification_status: 'pending',
+        onboarding_status: data.photoUrl ? 'photo_uploaded' : 'pending',
+        photo_verification_status: data.photoUrl ? 'pending' : 'missing',
+      },
+    ]);
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
 };
 
 // Sign up a tutor (simplified - detailed info collected later)
@@ -91,9 +120,8 @@ export const signUpTutor = async (
     dateOfBirth?: string;
     gender?: string;
     experienceYears?: number;
-    photoFile?: File;
   }
-): Promise<{ success: boolean; error?: string; user?: any }> => {
+): Promise<AuthResult> => {
   if (!supabase) {
     const msg = 'Supabase not configured';
     console.error('❌', msg);
@@ -101,16 +129,20 @@ export const signUpTutor = async (
   }
 
   try {
-    console.log('📝 Starting tutor signup with:', { email, fullName: data.fullName, phone: data.phone });
+    console.log('📝 Starting tutor signup for:', email);
     
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: getEmailRedirectUrl(),
         data: {
           role: 'tutor',
           full_name: data.fullName,
+          phone: data.phone,
+          date_of_birth: data.dateOfBirth,
+          gender: data.gender,
         },
       },
     });
@@ -126,57 +158,24 @@ export const signUpTutor = async (
     
     console.log('✅ Auth user created:', authData.user.id);
 
-    // Upload photo to Supabase Storage
-    let photoUrl = null;
-    if (data.photoFile) {
-      const fileExt = data.photoFile.name.split('.').pop();
-      const fileName = `${authData.user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `tutor-photos/${fileName}`;
+    const hasSession = !!authData.session;
+    if (hasSession) {
+      const ensureResult = await ensureTutorProfile(authData.user.id, email, {
+        fullName: data.fullName,
+        phone: data.phone,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+        experienceYears: data.experienceYears,
+      });
 
-      const { error: uploadError } = await supabase.storage
-        .from('tutor-uploads')
-        .upload(filePath, data.photoFile);
-
-      if (uploadError) {
-        console.error('❌ Photo upload error:', uploadError);
-        throw new Error('Failed to upload photo');
+      if (!ensureResult.success) {
+        console.error('❌ Profile upsert error:', ensureResult.error);
+        throw new Error(ensureResult.error || 'Failed to save tutor profile');
       }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('tutor-uploads')
-        .getPublicUrl(filePath);
-      
-      photoUrl = urlData.publicUrl;
-      console.log('✅ Photo uploaded:', photoUrl);
+      console.log('✅ Tutor profile created successfully');
+    } else {
+      console.log('ℹ️ Email confirmation required before profile can be created.');
     }
-
-    // Create tutor profile with basic info only
-    // Detailed info (qualification, subjects, levels, experience, etc.) collected later
-    const { error: profileError } = await supabase
-      .from('tutor_profiles')
-      .insert([
-        {
-          id: authData.user.id,
-          full_name: data.fullName,
-          email: email,
-          phone: data.phone || null,
-          date_of_birth: data.dateOfBirth || null,
-          gender: data.gender || null,
-          experience_years: typeof data.experienceYears === 'number' ? data.experienceYears : null,
-          photo_url: photoUrl,
-           verification_status: 'pending',
-           onboarding_status: photoUrl ? 'photo_uploaded' : 'pending',
-          photo_verification_status: photoUrl ? 'pending' : 'missing',
-        },
-      ]);
-
-    if (profileError) {
-      console.error('❌ Profile insert error:', profileError);
-      throw profileError;
-    }
-    
-    console.log('✅ Tutor profile created successfully');
     
     // Send Discord notification
     await notifyTutorSignup({
@@ -185,10 +184,10 @@ export const signUpTutor = async (
       phone: data.phone || 'Not provided',
     });
     
-    return { success: true, user: authData.user };
+    return { success: true, user: authData.user, needsEmailVerification: !hasSession };
   } catch (error: any) {
     console.error('❌ Tutor signup error:', error.message || error);
-    return { success: false, error: error.message || 'Unknown error' };
+    return { success: false, error: formatAuthError(error.message || 'Unknown error') };
   }
 };
 
@@ -213,10 +212,34 @@ export const signIn = async (
     // Get role from user metadata
     const role = data.user.user_metadata?.role || null;
 
+    if (role === 'parent') {
+      const profileResult = await ensureParentProfile(
+        data.user.id,
+        data.user.email || email,
+        data.user.user_metadata?.full_name,
+        data.user.user_metadata?.phone
+      );
+      if (!profileResult.success) {
+        throw new Error(profileResult.error || 'Unable to initialize parent profile');
+      }
+    }
+
+    if (role === 'tutor') {
+      const profileResult = await ensureTutorProfile(data.user.id, data.user.email || email, {
+        fullName: data.user.user_metadata?.full_name,
+        phone: data.user.user_metadata?.phone,
+        dateOfBirth: data.user.user_metadata?.date_of_birth,
+        gender: data.user.user_metadata?.gender,
+      });
+      if (!profileResult.success) {
+        throw new Error(profileResult.error || 'Unable to initialize tutor profile');
+      }
+    }
+
     return { success: true, user: data.user, role };
   } catch (error: any) {
     console.error('Sign in error:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: formatAuthError(error.message) };
   }
 };
 
@@ -256,8 +279,4 @@ export const getCurrentUser = async (): Promise<{
   }
 };
 
-// Check if user is authenticated
-export const isAuthenticated = async (): Promise<boolean> => {
-  const { user } = await getCurrentUser();
-  return !!user;
-};
+

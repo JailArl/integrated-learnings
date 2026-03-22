@@ -2,109 +2,8 @@ import { supabase } from './supabase';
 // import jsPDF from 'jspdf'; // TODO: Install jspdf package when needed
 
 // ============================================================================
-// PARENT API FUNCTIONS
+// TUTOR / ADMIN API FUNCTIONS
 // ============================================================================
-
-export const submitParentRequest = async (data: {
-  parentId: string;
-  studentName: string;
-  studentLevel: string;
-  subjects: string[];
-  address: string;
-  postalCode: string;
-  tutorType?: string;
-  preferredRate?: string;
-  diagnosticTestBooked: boolean;
-  diagnosticTestDate?: string;
-  firstClassDate?: string;
-  firstClassLocation?: string;
-}): Promise<{ success: boolean; error?: string; requestId?: string }> => {
-  if (!supabase) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
-  try {
-    const { data: result, error } = await supabase
-      .from('parent_requests')
-      .insert([
-        {
-          parent_id: data.parentId,
-          student_name: data.studentName,
-          student_level: data.studentLevel,
-          subjects: data.subjects,
-          address: data.address,
-          postal_code: data.postalCode,
-          tutor_type: data.tutorType || null,
-          preferred_rate: data.preferredRate ? parseFloat(data.preferredRate) : null,
-          diagnostic_test_booked: data.diagnosticTestBooked,
-          diagnostic_test_date: data.diagnosticTestDate || null,
-          first_class_date: data.firstClassDate || null,
-          first_class_location: data.firstClassLocation || null,
-          status: data.diagnosticTestBooked ? 'test_booked' : 'pending',
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return { success: true, requestId: result.id };
-  } catch (error: any) {
-    console.error('Submit parent request error:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-export const getMyRequests = async (
-  parentId: string
-): Promise<{ success: boolean; data?: any[]; error?: string }> => {
-  if (!supabase) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('parent_requests')
-      .select('*')
-      .eq('parent_id', parentId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    return { success: true, data: data || [] };
-  } catch (error: any) {
-    console.error('Get my requests error:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-export const getMyMatch = async (
-  requestId: string
-): Promise<{ success: boolean; data?: any; error?: string }> => {
-  if (!supabase) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
-  try {
-    const { data, error } = await supabase
-      .from('matches')
-      .select(
-        `
-        *,
-        tutor:tutor_profiles(*)
-      `
-      )
-      .eq('request_id', requestId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
-
-    return { success: true, data: data || null };
-  } catch (error: any) {
-    console.error('Get my match error:', error);
-    return { success: false, error: error.message };
-  }
-};
 
 // Save diagnostic test results
 export const saveDiagnosticResults = async (
@@ -391,6 +290,7 @@ export const getTutorCertificates = async (
 export const updateTutorProfile = async (
   tutorId: string,
   updates: {
+    bio?: string;
     teachingPhilosophy?: string;
     whyTutoring?: string;
     strengths?: string;
@@ -403,6 +303,13 @@ export const updateTutorProfile = async (
     hourlyRate?: number;
     availabilityNotes?: string;
     teachingSubjects?: string[];
+    subjects?: string[];
+    levels?: string[];
+    rates?: string;
+    teachingMode?: string;
+    travelLocations?: string;
+    availability?: string;
+    experienceYears?: number;
   }
 ): Promise<{ success: boolean; error?: string }> => {
   if (!supabase) {
@@ -412,6 +319,7 @@ export const updateTutorProfile = async (
   try {
     const updateData: any = {};
     
+    if (updates.bio !== undefined) updateData.bio = updates.bio;
     if (updates.teachingPhilosophy !== undefined) updateData.teaching_philosophy = updates.teachingPhilosophy;
     if (updates.whyTutoring !== undefined) updateData.why_tutoring = updates.whyTutoring;
     if (updates.strengths !== undefined) updateData.strengths = updates.strengths;
@@ -424,6 +332,13 @@ export const updateTutorProfile = async (
     if (updates.hourlyRate !== undefined) updateData.hourly_rate = updates.hourlyRate;
     if (updates.availabilityNotes !== undefined) updateData.availability_notes = updates.availabilityNotes;
     if (updates.teachingSubjects !== undefined) updateData.teaching_subjects = updates.teachingSubjects;
+    if (updates.subjects !== undefined) { updateData.subjects = updates.subjects; updateData.teaching_subjects = updates.subjects; }
+    if (updates.levels !== undefined) { updateData.levels = updates.levels; updateData.preferred_student_levels = updates.levels; }
+    if (updates.rates !== undefined) updateData.rates = updates.rates;
+    if (updates.teachingMode !== undefined) updateData.teaching_mode = updates.teachingMode;
+    if (updates.travelLocations !== undefined) updateData.travel_locations = updates.travelLocations;
+    if (updates.availability !== undefined) updateData.availability = updates.availability;
+    if (updates.experienceYears !== undefined) updateData.experience_years = updates.experienceYears;
 
     const { error } = await supabase
       .from('tutor_profiles')

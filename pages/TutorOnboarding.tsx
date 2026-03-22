@@ -19,7 +19,8 @@ import {
 
 const FILE_UPLOAD_CONFIG = {
   MAX_SIZE: 5 * 1024 * 1024,
-  ALLOWED_TYPES: ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
+  ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/jpg'],
+  ALLOWED_DOC_TYPES: ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'],
 };
 
 interface OnboardingStep {
@@ -54,16 +55,6 @@ const TutorOnboarding: React.FC = () => {
     travel_locations: '',
     availability: '',
   });
-
-  // AI Interview form state
-  const [interviewAnswers, setInterviewAnswers] = useState<Record<string, string>>({});
-
-  const AI_INTERVIEW_QUESTIONS = [
-    { id: 'q1', question: 'How do you explain difficult concepts to weaker students?' },
-    { id: 'q2', question: 'How do you motivate a student with low confidence?' },
-    { id: 'q3', question: 'How do you adapt teaching to different learners?' },
-    { id: 'q4', question: 'How do you prepare students for exams?' },
-  ];
 
   const SUBJECTS_LIST = [
     'English', 'Mathematics', 'Science', 'Chinese', 'Malay', 'Tamil',
@@ -117,7 +108,6 @@ const TutorOnboarding: React.FC = () => {
   const hasPhoto = profile?.photo_url;
   const hasProfile = profile?.teaching_philosophy && profile?.subjects?.length > 0;
   const hasCertificates = certificates.length > 0;
-  const hasQuestionnaire = profile?.questionnaire_completed;
   const hasInterview = profile?.ai_interview_status === 'completed';
 
   const steps: OnboardingStep[] = [
@@ -143,16 +133,9 @@ const TutorOnboarding: React.FC = () => {
       icon: <FileText size={20} />,
     },
     {
-      id: 'questionnaire',
-      title: 'Teaching Questionnaire',
-      description: 'Complete the personality and teaching-style questionnaire.',
-      completed: !!hasQuestionnaire,
-      icon: <ClipboardList size={20} />,
-    },
-    {
       id: 'interview',
-      title: 'AI Interview',
-      description: 'Answer 4 short questions about your teaching approach.',
+      title: 'Getting-to-Know-You Chat',
+      description: 'A quick 10-minute AI conversation about your teaching style and personality.',
       completed: !!hasInterview,
       icon: <Brain size={20} />,
     },
@@ -167,6 +150,11 @@ const TutorOnboarding: React.FC = () => {
 
     if (file.size > FILE_UPLOAD_CONFIG.MAX_SIZE) {
       setError('Photo must be under 5MB.');
+      return;
+    }
+
+    if (!FILE_UPLOAD_CONFIG.ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      setError('Photo must be a JPEG or PNG image.');
       return;
     }
 
@@ -190,6 +178,11 @@ const TutorOnboarding: React.FC = () => {
 
     if (file.size > FILE_UPLOAD_CONFIG.MAX_SIZE) {
       setError('File must be under 5MB.');
+      return;
+    }
+
+    if (!FILE_UPLOAD_CONFIG.ALLOWED_DOC_TYPES.includes(file.type)) {
+      setError('File must be a PDF, JPEG, or PNG.');
       return;
     }
 
@@ -227,7 +220,7 @@ const TutorOnboarding: React.FC = () => {
       teachingMode: profileForm.teaching_mode,
       travelLocations: profileForm.travel_locations,
       availability: profileForm.availability,
-    } as any);
+    });
 
     setSaving(false);
 
@@ -244,40 +237,6 @@ const TutorOnboarding: React.FC = () => {
       setTimeout(() => setSuccess(''), 3000);
     } else {
       setError(result.error || 'Failed to save profile.');
-    }
-  };
-
-  const handleInterviewSubmit = async () => {
-    if (!tutorId) return;
-    const unanswered = AI_INTERVIEW_QUESTIONS.filter((q) => !interviewAnswers[q.id]?.trim());
-    if (unanswered.length > 0) {
-      setError('Please answer all interview questions.');
-      return;
-    }
-
-    setSaving(true);
-    setError('');
-
-    // Save interview answers to tutor_ai_interviews via platformApi
-    const answers = AI_INTERVIEW_QUESTIONS.map((q) => ({
-      question: q.question,
-      answer: interviewAnswers[q.id],
-    }));
-
-    const result = await updateTutorProfile(tutorId, {
-      aiInterviewStatus: 'completed',
-      aiInterviewTranscript: JSON.stringify(answers),
-      aiInterviewAssessment: 'Completed onboarding interview',
-    } as any);
-
-    setSaving(false);
-
-    if (result.success) {
-      setProfile((p: any) => ({ ...p, ai_interview_status: 'completed' }));
-      setSuccess('Interview submitted! Your profile is now under review.');
-      setTimeout(() => setSuccess(''), 4000);
-    } else {
-      setError(result.error || 'Failed to submit interview.');
     }
   };
 
@@ -498,64 +457,24 @@ const TutorOnboarding: React.FC = () => {
               </div>
             )}
 
-            {/* QUESTIONNAIRE */}
-            {activeSection === 'questionnaire' && (
-              <div>
-                <h2 className="mb-1 text-xl font-bold text-slate-900">Teaching Questionnaire</h2>
-                <p className="mb-6 text-sm text-slate-500">This detailed questionnaire helps us understand your teaching style and personality for better matching.</p>
-                {hasQuestionnaire ? (
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-                    <CheckCircle2 size={32} className="mx-auto mb-2 text-green-600" />
-                    <p className="font-semibold text-green-800">Questionnaire completed!</p>
-                    <Link to="/tutors/questionnaire" className="mt-3 inline-block text-sm text-blue-600 hover:underline">View or update answers</Link>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <p className="mb-4 text-slate-600">Takes about 5-8 minutes. Covers your teaching philosophy, personality traits, and preferences.</p>
-                    <Link to="/tutors/questionnaire" className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700">
-                      <ClipboardList size={18} />
-                      Start Questionnaire
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* AI INTERVIEW */}
+            {/* GETTING-TO-KNOW-YOU CHAT */}
             {activeSection === 'interview' && (
               <div>
-                <h2 className="mb-1 text-xl font-bold text-slate-900">AI Character Interview</h2>
-                <p className="mb-6 text-sm text-slate-500">Answer 4 short questions about your approach to teaching. This helps us evaluate fit beyond qualifications.</p>
+                <h2 className="mb-1 text-xl font-bold text-slate-900">Getting-to-Know-You Chat</h2>
+                <p className="mb-6 text-sm text-slate-500">A friendly 10-minute AI conversation covering your teaching style, personality, and approach — all in one go.</p>
                 {hasInterview ? (
                   <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
                     <CheckCircle2 size={32} className="mx-auto mb-2 text-green-600" />
-                    <p className="font-semibold text-green-800">Interview completed!</p>
-                    {profile?.ai_interview_score && (
-                      <p className="mt-1 text-sm text-slate-600">Score: {profile.ai_interview_score}/100</p>
-                    )}
-                    <Link to="/tutors/interview-results" className="mt-3 inline-block text-sm text-blue-600 hover:underline">View results</Link>
+                    <p className="font-semibold text-green-800">Chat completed!</p>
+                    <p className="mt-1 text-sm text-slate-600">Our team will review your responses and match you with ideal students.</p>
                   </div>
                 ) : (
-                  <div className="space-y-5">
-                    {AI_INTERVIEW_QUESTIONS.map((q) => (
-                      <div key={q.id}>
-                        <label className="mb-2 block text-sm font-semibold text-slate-700">{q.question}</label>
-                        <textarea
-                          rows={3}
-                          value={interviewAnswers[q.id] || ''}
-                          onChange={(e) => setInterviewAnswers({ ...interviewAnswers, [q.id]: e.target.value })}
-                          placeholder="Type your answer here..."
-                          className="w-full resize-none rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
-                        />
-                      </div>
-                    ))}
-                    <button onClick={handleInterviewSubmit} disabled={saving}
-                      className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50">
-                      {saving ? 'Submitting...' : 'Submit Interview'}
-                    </button>
-                    <p className="text-xs text-slate-500">
-                      For a more comprehensive AI interview experience, you can also <Link to="/tutors/ai-interview" className="text-blue-600 hover:underline">take the full AI interview</Link>.
-                    </p>
+                  <div className="text-center">
+                    <p className="mb-4 text-slate-600">You'll answer 10 quick questions — a mix of multiple choice, short answers, and personality ratings. The AI adapts to you, so just be yourself!</p>
+                    <Link to="/tutors/ai-interview" className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700">
+                      <Brain size={18} />
+                      Start Chat
+                    </Link>
                   </div>
                 )}
               </div>

@@ -44,13 +44,6 @@ export const TutorLogin: React.FC = () => {
       return;
     }
 
-    // Check for admin credentials
-    if (formData.email === 'admin' && formData.password === 'admin123') {
-      localStorage.setItem('adminSession', 'true');
-      navigate('/admin/matching');
-      return;
-    }
-
     setLoading(true);
 
     const result = await signIn(formData.email, formData.password);
@@ -97,7 +90,7 @@ export const TutorLogin: React.FC = () => {
                     id="tutor-login-email"
                     type="text"
                     name="email"
-                    placeholder="your.email@example.com or admin"
+                    placeholder="your.email@example.com"
                     value={formData.email}
                     onChange={handleChange}
                     aria-invalid={!!fieldErrors.email}

@@ -10,6 +10,8 @@ import {
   markTestComplete,
   saveDiagnosticResults,
 } from '../services/platformApi';
+import { scoreAllBids, MatchScore } from '../services/autoMatching';
+import { sendDiscordMessage } from '../services/discord';
 
 interface Request {
   id: string;
@@ -20,6 +22,8 @@ interface Request {
   diagnostic_test_booked: boolean;
   diagnostic_test_completed: boolean;
   diagnostic_test_date: string | null;
+  diagnostic_test_results?: string | null;
+  diagnostic_test_notes?: string | null;
   first_class_date?: string | null;
   first_class_location?: string | null;
   created_at: string;
@@ -42,6 +46,9 @@ interface Bid {
     experience_years: number;
     verification_status: string;
     questionnaire_answers: any;
+    ai_interview_score: number | null;
+    ai_interview_status: string | null;
+    ai_interview_assessment: string | null;
     certificates: Array<{
       id: string;
       file_url: string;
@@ -67,6 +74,8 @@ export const AdminMatching: React.FC = () => {
     show: boolean;
     requestId: string;
     tutorId: string;
+    tutorName?: string;
+    studentName?: string;
   } | null>(null);
   const [firstClassSchedule, setFirstClassSchedule] = useState({
     date: '',
@@ -80,6 +89,8 @@ export const AdminMatching: React.FC = () => {
   const [showAssistant, setShowAssistant] = useState(false);
   const [selectedTutorForAssistant, setSelectedTutorForAssistant] = useState<any>(null);
   const [selectedRequestForAssistant, setSelectedRequestForAssistant] = useState<any>(null);
+  const [matchScores, setMatchScores] = useState<{ [requestId: string]: MatchScore[] }>({});
+  const [scoringRequest, setScoringRequest] = useState<string | null>(null);
   const normalizeQuestionnaire = (value: any) => {
     if (!value) return null;
     if (typeof value === 'string') {
@@ -148,61 +159,75 @@ export const AdminMatching: React.FC = () => {
   };
 
   const handleApproveBid = async (requestId: string, tutorId: string) => {
-    // Set loading state for this specific bid immediately
     setApprovingBid(`${requestId}-${tutorId}`);
     setError(null);
 
-    // Perform the approval without blocking
-    requestAnimationFrame(async () => {
-      try {
-        // Step 1: Save diagnostic results if they exist
-        if (diagnosticResults.results || diagnosticResults.notes) {
-          const diagResult = await saveDiagnosticResults(
-            requestId,
-            diagnosticResults.results,
-            diagnosticResults.notes
-          );
-          
-          if (!diagResult.success) {
-            setError('Failed to save diagnostic results. ' + (diagResult.error || ''));
-            setApprovingBid(null);
-            return;
-          }
-        }
-
-        // Step 2: Approve the match
-        const result = await approveBid(requestId, tutorId, {
-          date: firstClassSchedule.date || undefined,
-          location: firstClassSchedule.location || undefined,
-          notes: firstClassSchedule.notes || undefined,
-        });
+    try {
+      // Step 1: Save diagnostic results if they exist
+      if (diagnosticResults.results || diagnosticResults.notes) {
+        const diagResult = await saveDiagnosticResults(
+          requestId,
+          diagnosticResults.results,
+          diagnosticResults.notes
+        );
         
-        if (result.success) {
-          setSuccessMessage('Match approved successfully!');
-          setTimeout(() => setSuccessMessage(null), 3000);
-          
-          // Reset forms
-          setFirstClassSchedule({ date: '', location: '', notes: '' });
-          setDiagnosticResults({ results: '', notes: '' });
-          
-          // Use startTransition for non-urgent state updates
-          startTransition(() => {
-            fetchRequests();
-          });
-        } else {
-          setError(result.error || 'Failed to approve bid');
+        if (!diagResult.success) {
+          setError('Failed to save diagnostic results. ' + (diagResult.error || ''));
+          setApprovingBid(null);
+          return;
         }
-      } catch (err) {
-        setError('An error occurred while approving the bid');
-      } finally {
-        setApprovingBid(null);
-        setConfirmModal(null);
       }
-    });
+
+      // Step 2: Approve the match
+      const result = await approveBid(requestId, tutorId, {
+        date: firstClassSchedule.date || undefined,
+        location: firstClassSchedule.location || undefined,
+        notes: firstClassSchedule.notes || undefined,
+      });
+      
+      if (result.success) {
+        // Send Discord notification
+        const matchedRequest = requests.find(r => r.id === requestId);
+        const tutorName = confirmModal?.tutorName || 'Unknown Tutor';
+        const studentName = matchedRequest?.student_name || confirmModal?.studentName || 'Unknown Student';
+        sendDiscordMessage({
+          embeds: [{
+            title: '✅ Match Approved!',
+            description: `A tutor has been matched with a student.`,
+            color: 0x10b981,
+            fields: [
+              { name: 'Tutor', value: tutorName, inline: true },
+              { name: 'Student', value: studentName, inline: true },
+              { name: 'Level', value: matchedRequest?.student_level || 'N/A', inline: true },
+              { name: 'Subjects', value: matchedRequest?.subjects?.join(', ') || 'N/A', inline: false },
+              ...(firstClassSchedule.date ? [{ name: 'First Class', value: `${firstClassSchedule.date} at ${firstClassSchedule.location || 'TBD'}`, inline: false }] : []),
+            ],
+            timestamp: new Date().toISOString(),
+          }],
+        });
+
+        setSuccessMessage('Match approved successfully!');
+        setTimeout(() => setSuccessMessage(null), 3000);
+        
+        setFirstClassSchedule({ date: '', location: '', notes: '' });
+        setDiagnosticResults({ results: '', notes: '' });
+        
+        startTransition(() => {
+          fetchRequests();
+        });
+      } else {
+        setError(result.error || 'Failed to approve bid');
+      }
+    } catch (err) {
+      setError('An error occurred while approving the bid');
+    } finally {
+      setApprovingBid(null);
+      setConfirmModal(null);
+    }
   };
 
-  const showConfirmApproval = (requestId: string, tutorId: string) => {
-    setConfirmModal({ show: true, requestId, tutorId });
+  const showConfirmApproval = (requestId: string, tutorId: string, tutorName?: string, studentName?: string) => {
+    setConfirmModal({ show: true, requestId, tutorId, tutorName, studentName });
   };
 
   const cancelApproval = () => {
@@ -243,6 +268,17 @@ export const AdminMatching: React.FC = () => {
   const openQuestionnaireModal = (answers: any) => {
     setSelectedQuestionnaire(answers);
     setShowQuestionnaireModal(true);
+  };
+
+  const handleAutoScore = async (requestId: string) => {
+    setScoringRequest(requestId);
+    const result = await scoreAllBids(requestId);
+    if (result.success && result.data) {
+      setMatchScores((prev) => ({ ...prev, [requestId]: result.data! }));
+    } else {
+      setError(result.error || 'Failed to compute match scores');
+    }
+    setScoringRequest(null);
   };
 
   if (loading) {
@@ -408,21 +444,74 @@ export const AdminMatching: React.FC = () => {
                       {expandedRequest === request.id ? 'Hide Bids' : 'View Bids'}
                     </Button>
                   )}
+                  {expandedRequest === request.id && bids[request.id]?.length > 0 && (
+                    <Button
+                      variant="outline"
+                      onClick={() => handleAutoScore(request.id)}
+                      disabled={scoringRequest === request.id}
+                      className="text-sm"
+                    >
+                      {scoringRequest === request.id ? 'Scoring...' : '🤖 Auto-Score Bids'}
+                    </Button>
+                  )}
                 </div>
 
                 {expandedRequest === request.id && request.diagnostic_test_booked && request.diagnostic_test_completed && (
                   <div className="mt-4 border-t pt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h4 className="font-semibold text-gray-900 mb-3">📋 Diagnostic Test Results</h4>
-                    <p className="text-sm text-gray-600 mb-3">Record the diagnostic test findings to help with matching</p>
+                    {request.diagnostic_test_results ? (
+                      <div className="mb-4 p-3 bg-white border border-blue-100 rounded-lg">
+                        <p className="text-sm font-semibold text-gray-700 mb-1">Saved Results:</p>
+                        <p className="text-sm text-gray-800 whitespace-pre-wrap">{request.diagnostic_test_results}</p>
+                        {request.diagnostic_test_notes && (
+                          <>
+                            <p className="text-sm font-semibold text-gray-700 mt-2 mb-1">Notes:</p>
+                            <p className="text-sm text-gray-800 whitespace-pre-wrap">{request.diagnostic_test_notes}</p>
+                          </>
+                        )}
+                      </div>
+                    ) : null}
+                    <p className="text-sm text-gray-600 mb-3">{request.diagnostic_test_results ? 'Update the diagnostic test findings:' : 'Record the diagnostic test findings to help with matching'}</p>
                     <div className="space-y-3">
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">Test Results Summary</label>
                         <textarea
+                          value={diagnosticResults.results}
+                          onChange={(e) => setDiagnosticResults(prev => ({ ...prev, results: e.target.value }))}
                           placeholder="e.g., Weak in algebra, strong in geometry. Gaps in fractions. Good problem-solving skills."
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                           rows={3}
                         />
                       </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Notes</label>
+                        <textarea
+                          value={diagnosticResults.notes}
+                          onChange={(e) => setDiagnosticResults(prev => ({ ...prev, notes: e.target.value }))}
+                          placeholder="Any additional observations or recommendations..."
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                          rows={2}
+                        />
+                      </div>
+                      <Button
+                        variant="primary"
+                        onClick={async () => {
+                          if (!diagnosticResults.results.trim()) return;
+                          const res = await saveDiagnosticResults(request.id, diagnosticResults.results, diagnosticResults.notes);
+                          if (res.success) {
+                            setDiagnosticResults({ results: '', notes: '' });
+                            setSuccessMessage('Diagnostic results saved successfully!');
+                            setTimeout(() => setSuccessMessage(null), 3000);
+                            fetchRequests();
+                          } else {
+                            setError('Failed to save diagnostic results: ' + (res.error || ''));
+                          }
+                        }}
+                        className="text-sm"
+                        disabled={!diagnosticResults.results.trim()}
+                      >
+                        Save Results
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -449,6 +538,23 @@ export const AdminMatching: React.FC = () => {
                                 <p className="text-sm text-slate-500">Tutor Name</p>
                                 <p className="font-semibold">{bid.tutor.full_name}</p>
                               </div>
+                              {matchScores[request.id] && (() => {
+                                const ms = matchScores[request.id].find((m) => m.tutorId === bid.tutor.id);
+                                if (!ms) return null;
+                                return (
+                                  <div>
+                                    <p className="text-sm text-slate-500">Match Score</p>
+                                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
+                                      ms.score >= 70 ? 'bg-green-100 text-green-800'
+                                      : ms.score >= 50 ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-red-100 text-red-800'
+                                    }`}>
+                                      {ms.score}/100
+                                    </span>
+                                    <p className="text-xs text-slate-500 mt-0.5">{ms.explanation}</p>
+                                  </div>
+                                );
+                              })()}
                               <div>
                                 <p className="text-sm text-slate-500">Qualification</p>
                                 <p className="font-semibold">{bid.tutor.qualification || 'N/A'}</p>
@@ -490,6 +596,46 @@ export const AdminMatching: React.FC = () => {
                               </p>
                             </div>
 
+                            {/* AI Interview Score + Fit (Admin-only) */}
+                            {bid.tutor.ai_interview_score != null && (
+                              <div className="mb-3 p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                                <div className="flex items-center gap-3 mb-2">
+                                  <span className="text-sm font-semibold text-indigo-900">AI Interview Score</span>
+                                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                                    bid.tutor.ai_interview_score >= 7 ? 'bg-green-100 text-green-800'
+                                    : bid.tutor.ai_interview_score >= 5 ? 'bg-yellow-100 text-yellow-800'
+                                    : 'bg-red-100 text-red-800'
+                                  }`}>
+                                    {bid.tutor.ai_interview_score}/10
+                                  </span>
+                                </div>
+                                {(() => {
+                                  const qa = normalizeQuestionnaire(bid.tutor.questionnaire_answers);
+                                  const fit = qa?.fitRecommendation;
+                                  const traits = qa?.personality?.topTraits;
+                                  return (
+                                    <>
+                                      {traits && traits.length > 0 && (
+                                        <p className="text-xs text-indigo-800 mb-1">
+                                          <strong>Top traits:</strong> {traits.map((t: string) => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')}
+                                        </p>
+                                      )}
+                                      {fit?.summary && (
+                                        <p className="text-xs text-indigo-800 mb-1">
+                                          <strong>Best fit:</strong> {fit.summary}
+                                        </p>
+                                      )}
+                                      {fit?.bestWith && fit.bestWith.length > 0 && (
+                                        <p className="text-xs text-indigo-800">
+                                          <strong>Ideal students:</strong> {fit.bestWith.join(', ')}
+                                        </p>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+                              </div>
+                            )}
+
                             <div className="flex gap-2 flex-wrap">
                               {questionnaire && (
                                 <Button
@@ -528,7 +674,7 @@ export const AdminMatching: React.FC = () => {
                               </Button>
                               <Button
                                 variant="primary"
-                                onClick={() => showConfirmApproval(request.id, bid.tutor.id)}
+                                onClick={() => showConfirmApproval(request.id, bid.tutor.id, bid.tutor.full_name, request.student_name)}
                                 disabled={approvingBid === `${request.id}-${bid.tutor.id}`}
                                 className="text-sm"
                               >
@@ -625,9 +771,15 @@ export const AdminMatching: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold text-gray-900 mb-3">Confirm Match Approval</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 mb-2">
               Are you sure you want to approve this tutor-parent match? This action will notify both parties.
             </p>
+            {(confirmModal.tutorName || confirmModal.studentName) && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+                {confirmModal.tutorName && <p><strong>Tutor:</strong> {confirmModal.tutorName}</p>}
+                {confirmModal.studentName && <p><strong>Student:</strong> {confirmModal.studentName}</p>}
+              </div>
+            )}
 
             <div className="border-t border-gray-200 pt-4 mb-6">
               <h4 className="text-md font-semibold text-gray-900 mb-3">📋 Diagnostic Test Results (Optional)</h4>
@@ -678,6 +830,7 @@ export const AdminMatching: React.FC = () => {
                     type="datetime-local"
                     value={firstClassSchedule.date}
                     onChange={(e) => setFirstClassSchedule({ ...firstClassSchedule, date: e.target.value })}
+                    min={new Date().toISOString().slice(0, 16)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>

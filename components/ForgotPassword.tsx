@@ -23,7 +23,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, userType
       return;
     }
 
-    if (!email.includes('@')) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setFieldError('Enter a valid email address.');
       return;
     }
@@ -46,7 +46,6 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, userType
       }
 
       setSuccess(true);
-      setEmail('');
     } catch (err: any) {
       console.error('Password reset error:', err);
       setError(err.message || 'Failed to send reset email. Please try again.');

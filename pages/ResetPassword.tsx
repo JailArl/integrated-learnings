@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Lock, Loader2 } from 'lucide-react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { Lock, Loader2, AlertTriangle } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import { Section } from '../components/Components';
 
@@ -37,7 +37,20 @@ export const ResetPassword: React.FC = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Timeout: if token verification takes too long, show an error
+    const timeout = setTimeout(() => {
+      setSessionReady((ready) => {
+        if (!ready) {
+          setError('Unable to verify your reset link. It may have expired or is invalid. Please request a new one.');
+        }
+        return ready;
+      });
+    }, 10000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,8 +120,31 @@ export const ResetPassword: React.FC = () => {
     );
   }
 
+  // Show error state with option to request a new link
+  if (!sessionReady && error) {
+    return (
+      <Section className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle className="text-red-600" size={24} />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 mb-2">Reset Link Invalid</h1>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <Link
+              to={userType === 'tutor' ? '/tutors/login' : '/parents/login'}
+              className="inline-block bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg font-semibold transition duration-200"
+            >
+              Back to Login
+            </Link>
+          </div>
+        </div>
+      </Section>
+    );
+  }
+
   // Show loading spinner while waiting for Supabase to process the recovery token
-  if (!sessionReady && !error) {
+  if (!sessionReady) {
     return (
       <Section className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-md mx-auto">

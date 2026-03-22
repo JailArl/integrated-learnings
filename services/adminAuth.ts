@@ -27,15 +27,14 @@ export const adminLogin = async (
   email: string,
   password: string
 ): Promise<AdminLoginResponse> => {
-  // Fallback hardcoded credentials for quick access
-  // TODO: Replace with proper database user after setup
-  const HARDCODED_ADMIN_EMAIL = 'manage.integrated.learnings@gmail.com';
-  const HARDCODED_ADMIN_PASSWORD = 'Jail_123@369';
+  // Admin credentials from environment variables (keep out of source code)
+  const envAdminEmail = (import.meta as any).env?.VITE_ADMIN_EMAIL;
+  const envAdminPassword = (import.meta as any).env?.VITE_ADMIN_PASSWORD;
 
-  if (email === HARDCODED_ADMIN_EMAIL && password === HARDCODED_ADMIN_PASSWORD) {
+  if (envAdminEmail && envAdminPassword && email === envAdminEmail && password === envAdminPassword) {
     const token = generateToken();
     localStorage.setItem('adminToken', token);
-    localStorage.setItem('adminId', 'hardcoded-admin');
+    localStorage.setItem('adminId', 'env-admin');
     return {
       success: true,
       token,
@@ -63,8 +62,9 @@ export const adminLogin = async (
       return { success: false, error: 'Admin account is disabled' };
     }
 
-    // In production, use bcrypt or similar to verify password
-    // For now, simple comparison (NOT SECURE - use bcrypt in production!)
+    // SECURITY: password_hash field should contain a bcrypt hash.
+    // Use a server-side Edge Function for proper bcrypt.compare() verification.
+    // This client-side comparison is a temporary measure — migrate to server-side auth.
     if (admin.password_hash !== password) {
       return { success: false, error: 'Invalid credentials' };
     }
@@ -106,33 +106,6 @@ export const adminLogin = async (
 };
 
 /**
- * Verify admin session token
- */
-export const verifyAdminToken = async (token: string): Promise<boolean> => {
-  if (!supabase) {
-    return false;
-  }
-
-  try {
-    const { data: session, error } = await supabase
-      .from('admin_sessions')
-      .select('id, expires_at')
-      .eq('token', token)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    if (error || !session) {
-      return false;
-    }
-
-    return true;
-  } catch (error: any) {
-    console.error('Token verification error:', error);
-    return false;
-  }
-};
-
-/**
  * Logout - invalidate session
  */
 export const adminLogout = async (token: string): Promise<boolean> => {
@@ -155,37 +128,5 @@ export const adminLogout = async (token: string): Promise<boolean> => {
   } catch (error: any) {
     console.error('Logout error:', error);
     return false;
-  }
-};
-
-/**
- * Get admin info from token
- */
-export const getAdminFromToken = async (token: string) => {
-  if (!supabase) {
-    return null;
-  }
-
-  try {
-    const { data: session, error } = await supabase
-      .from('admin_sessions')
-      .select(
-        `
-        admin_id,
-        admin_users(id, email, full_name)
-      `
-      )
-      .eq('token', token)
-      .gt('expires_at', new Date().toISOString())
-      .single();
-
-    if (error || !session) {
-      return null;
-    }
-
-    return session;
-  } catch (error: any) {
-    console.error('Get admin error:', error);
-    return null;
   }
 };

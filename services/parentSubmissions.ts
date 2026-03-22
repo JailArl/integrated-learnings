@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { notifyParentInquiry } from './discord';
 
 export interface ParentSubmissionData {
   parent_name: string;
@@ -46,65 +47,19 @@ export const submitParentInquiry = async (
       .single();
 
     if (error) throw error;
+
+    // Send Discord notification (non-blocking)
+    notifyParentInquiry({
+      parentName: data.parent_name,
+      email: data.email,
+      phone: data.contact_number,
+      studentLevel: data.student_level,
+      subjects: data.subjects,
+    });
+
     return { success: true, id: result.id };
   } catch (error: any) {
     console.error('Parent submission error:', error);
     return { success: false, error: error.message || 'Failed to submit inquiry' };
-  }
-};
-
-export const getParentSubmissions = async (filters?: {
-  status?: string;
-  student_level?: string;
-  subject?: string;
-}): Promise<{ success: boolean; data?: any[]; error?: string }> => {
-  if (!supabase) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
-  try {
-    let query = supabase
-      .from('parent_submissions')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (filters?.status && filters.status !== 'all') {
-      query = query.eq('status', filters.status);
-    }
-    if (filters?.student_level && filters.student_level !== 'all') {
-      query = query.eq('student_level', filters.student_level);
-    }
-    if (filters?.subject && filters.subject !== 'all') {
-      query = query.contains('subjects', [filters.subject]);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
-    return { success: true, data: data || [] };
-  } catch (error: any) {
-    console.error('Fetch parent submissions error:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-export const updateParentSubmissionStatus = async (
-  id: string,
-  status: string
-): Promise<{ success: boolean; error?: string }> => {
-  if (!supabase) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
-  try {
-    const { error } = await supabase
-      .from('parent_submissions')
-      .update({ status })
-      .eq('id', id);
-
-    if (error) throw error;
-    return { success: true };
-  } catch (error: any) {
-    console.error('Update submission status error:', error);
-    return { success: false, error: error.message };
   }
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Loader, CheckCircle, MessageCircle } from 'lucide-react';
-import { sendInterviewMessage, getInitialQuestion, submitInterviewAppeal } from '../services/aiInterview';
+import { sendInterviewMessage, getInitialQuestion } from '../services/aiInterview';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -21,16 +21,8 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
   const [error, setError] = useState('');
   const [interviewComplete, setInterviewComplete] = useState(false);
   const [scores, setScores] = useState<any>(null);
-  const [appealReason, setAppealReason] = useState('');
-  const [appealSubmitting, setAppealSubmitting] = useState(false);
-  const [appealSubmitted, setAppealSubmitted] = useState(false);
-  const [appealError, setAppealError] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const MAX_INPUT_CHARS = 400;
-  const maxRetakes = 2;
-  const canRetake = retakeCount < maxRetakes;
-  const lowScoreThreshold = 7;
-  const isLowScore = typeof scores?.overall === 'number' && scores.overall < lowScoreThreshold;
 
   // Initialize with first question
   useEffect(() => {
@@ -94,46 +86,6 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
     }
   };
 
-  const handleRetakeInterview = () => {
-    // Reset all state to restart interview
-    setInterviewComplete(false);
-    setScores(null);
-    setAppealReason('');
-    setAppealSubmitting(false);
-    setAppealSubmitted(false);
-    setAppealError('');
-    setMessages([{ role: 'assistant', content: getInitialQuestion() }]);
-    setUserInput('');
-    setError('');
-  };
-
-  const handleSubmitAppeal = async () => {
-    if (!appealReason.trim()) {
-      setAppealError('Please tell us why you want an appeal.');
-      return;
-    }
-
-    setAppealError('');
-    setAppealSubmitting(true);
-
-    const attemptNumber = retakeCount + 1;
-    const result = await submitInterviewAppeal({
-      tutorId,
-      reason: appealReason.trim(),
-      overallScore: scores?.overall ?? null,
-      interviewAttempt: attemptNumber,
-    });
-
-    setAppealSubmitting(false);
-
-    if (!result.success) {
-      setAppealError(result.error || 'Failed to submit appeal');
-      return;
-    }
-
-    setAppealSubmitted(true);
-  };
-
   if (interviewComplete) {
     return (
       <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-8 border border-green-200">
@@ -141,15 +93,15 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="text-green-600" size={32} />
           </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Questionnaire Submitted!</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Interview Complete!</h2>
           <p className="text-gray-600">
-            Thank you for completing the questionnaire. We'll use this to better understand your teaching style and match you with the right leads.
+            Thank you for chatting with us! We now have a great picture of your teaching style and personality.
           </p>
         </div>
 
         <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-900">
-            ✅ Our team will review your responses and use them to understand your teaching style better. This helps us match you with ideal student cases.
+            ✅ Our team will review your responses and match you with students who'll benefit most from your approach. You'll hear from us soon!
           </p>
         </div>
 
@@ -172,9 +124,9 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
         <div className="flex items-center gap-3">
           <MessageCircle className="text-blue-100" size={24} />
           <div>
-            <h2 className="text-2xl font-bold">Character Interview</h2>
+            <h2 className="text-2xl font-bold">Getting to Know You</h2>
             <p className="text-blue-100">
-              Let's have a conversation about your teaching style and character
+              A quick chat about your teaching style and personality — takes about 10 minutes
             </p>
           </div>
         </div>
@@ -253,29 +205,4 @@ export const AIInterview: React.FC<AIInterviewProps> = ({ tutorId, tutorProfile,
   );
 };
 
-// Score card component
-const ScoreCard: React.FC<{ label: string; score: number; highlight?: boolean }> = ({
-  label,
-  score,
-  highlight,
-}) => {
-  const percentage = (score / 10) * 100;
-  return (
-    <div className={`rounded-lg p-4 text-center ${highlight ? 'bg-blue-100 border-2 border-blue-400' : 'bg-gray-100'}`}>
-      <p className={`text-sm font-semibold ${highlight ? 'text-blue-900' : 'text-gray-700'}`}>
-        {label}
-      </p>
-      <div className="mt-2 w-full bg-gray-300 rounded-full h-2">
-        <div
-          className={`h-2 rounded-full transition-all ${
-            highlight ? 'bg-blue-600' : 'bg-green-500'
-          }`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <p className={`text-2xl font-bold mt-2 ${highlight ? 'text-blue-600' : 'text-gray-800'}`}>
-        {score}
-      </p>
-    </div>
-  );
-};
+

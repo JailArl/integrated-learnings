@@ -82,7 +82,7 @@ export const TutorInterviewResults: React.FC = () => {
         latestProfile?.ai_interview_attempts ?? (latestProfile?.ai_interview_status === 'completed' ? 1 : 0);
 
       if (latestAttempts >= MAX_TOTAL_ATTEMPTS) {
-        setError('You have reached the maximum of 2 questionnaire retakes. Please contact admin for assistance.');
+        setError('You have reached the maximum of 2 interview retakes. Please contact admin for assistance.');
         return;
       }
 
@@ -100,8 +100,8 @@ export const TutorInterviewResults: React.FC = () => {
 
       navigate('/tutors/ai-interview');
     } catch (err: any) {
-      console.error('Failed to start questionnaire retake:', err);
-      setError(err.message || 'Failed to start questionnaire retake');
+      console.error('Failed to start interview retake:', err);
+      setError(err.message || 'Failed to start interview retake');
     } finally {
       setRetakeLoading(false);
     }
@@ -138,9 +138,9 @@ export const TutorInterviewResults: React.FC = () => {
             <div className="flex items-start gap-3">
               <AlertCircle size={24} />
               <div>
-                <h2 className="text-lg font-bold mb-2">Questionnaire Not Yet Submitted</h2>
+                <h2 className="text-lg font-bold mb-2">Interview Not Yet Completed</h2>
                 <p className="text-sm">
-                  Complete your questionnaire to proceed. Your responses help us understand your teaching style better.
+                  Complete your getting-to-know-you chat to proceed. Your responses help us understand your teaching style and match you with ideal students.
                 </p>
                 <button
                   onClick={() => navigate('/tutors')}
@@ -165,9 +165,9 @@ export const TutorInterviewResults: React.FC = () => {
               <CheckCircle className="text-green-600" size={24} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-primary">Questionnaire Submitted</h1>
+              <h1 className="text-3xl font-bold text-primary">Interview Complete</h1>
               <p className="text-slate-600">
-                Thank you for completing the questionnaire. We've received your responses and will use them to match you with ideal student cases.
+                Thank you for completing the getting-to-know-you chat. We've received your responses and will use them to match you with ideal student cases.
               </p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                 <span className="bg-green-50 border border-green-200 text-green-700 px-3 py-1 rounded-full">
@@ -189,7 +189,7 @@ export const TutorInterviewResults: React.FC = () => {
           {/* Retakes Info Section */}
           <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
             <p className="text-sm font-semibold text-yellow-900 mb-2">
-              ✏️ Retake your questionnaire to improve your profile
+              ✏️ Retake the interview to improve your profile
             </p>
             <p className="text-sm text-yellow-800">
               Retakes remaining: <strong>{retakesRemaining} of {MAX_RETAKES}</strong>
@@ -204,7 +204,7 @@ export const TutorInterviewResults: React.FC = () => {
                   disabled={retakeLoading}
                   className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold transition"
                 >
-                  {retakeLoading ? 'Loading...' : '📝 Retake Questionnaire'}
+                  {retakeLoading ? 'Loading...' : '📝 Retake Interview'}
                 </button>
                 <button
                   onClick={() => navigate('/tutors')}
@@ -216,7 +216,7 @@ export const TutorInterviewResults: React.FC = () => {
             ) : (
               <>
                 <div className="flex-1 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 font-semibold">
-                  ❌ No retakes remaining. You've reached the maximum of 3 attempts.
+                  ❌ No retakes remaining. You've used all {MAX_RETAKES} retake opportunities.
                 </div>
                 <button
                   onClick={() => navigate('/tutors')}

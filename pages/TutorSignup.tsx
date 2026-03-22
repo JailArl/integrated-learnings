@@ -25,6 +25,7 @@ export const TutorSignup: React.FC = () => {
     gender?: string;
   }>({});
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -37,6 +38,7 @@ export const TutorSignup: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
 
     const nextErrors: typeof fieldErrors = {};
     if (!formData.fullName.trim()) {
@@ -107,8 +109,14 @@ export const TutorSignup: React.FC = () => {
       return;
     }
 
-    alert('Account created successfully! Please complete your profile.');
-    navigate('/tutors/onboarding');
+    if (result.needsEmailVerification) {
+      setSuccess('Account created. Please verify your email first, then log in to complete onboarding.');
+      setTimeout(() => navigate('/tutors/login'), 1200);
+      return;
+    }
+
+    setSuccess('Account created successfully. Redirecting you to onboarding...');
+    setTimeout(() => navigate('/tutors/onboarding'), 500);
   };
 
   return (
@@ -129,6 +137,12 @@ export const TutorSignup: React.FC = () => {
             {error && (
               <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-4 p-3 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm">
+                {success}
               </div>
             )}
 

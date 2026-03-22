@@ -269,30 +269,7 @@ export const PRICING_DATA: PricingTier[] = [
   },
 ];
 
-export const TUTOR_SCENARIO_QUESTIONS = [
-  {
-    id: 1,
-    question: "A Sec 2 student is consistently not handing in homework, claiming they 'forgot'. Their grades are slipping. What is your first course of action?",
-    options: [
-      "Strictly reprimand them and threaten to call their parents immediately.",
-      "Ignore the homework and focus only on the lesson time.",
-      "Investigate the root cause (difficulty vs laziness) and implement a small, manageable tracking system.",
-      "Give them double homework the next week as punishment."
-    ]
-  },
-  {
-    id: 2,
-    question: "You notice a P5 student becomes visibly anxious and shuts down when they make a mistake in Math. How do you handle this?",
-    options: [
-      "Tell them not to cry and that exams are harder than this.",
-      "Switch to an easier topic immediately to avoid the conflict.",
-      "Pause the lesson, normalize making mistakes as part of learning, and walk through the error without judgement.",
-      "Call the parent to ask if the child has emotional issues."
-    ]
-  }
-];
-
-export interface TutorTypeInsight {
+interface TutorTypeInsight {
   label: string;
   description: string;
 }
@@ -372,53 +349,6 @@ export const getTutorTypeLabel = (
       return null;
   }
 };
-
-export const TUTOR_CONTRACT_TEXT = `
-TUTOR REFERRAL AGREEMENT
-
-1. PARTNERSHIP MODEL
-You are joining Integrated Learnings as a Referral Partner tutor. This is a referral-based arrangement:
-- One-time Commission: 50% of the first month's tuition fees (covering the first 2 weeks of lessons).
-- Payment Flow: Parents pay the Agency for the first 2 weeks. From Week 3 onwards, you collect fees directly from the parent.
-- Independence: After the initial match, you manage your own schedule, rates, and client relationship.
-
-2. PROFESSIONAL CONDUCT
-As an educator with Integrated Learnings, you agree to:
-- Punctuality: Arrive on time for all scheduled lessons.
-- Preparation: Maintain well-prepared lesson plans and materials.
-- Professionalism: Conduct yourself with integrity and respect towards students and parents.
-- Communication: Maintain regular contact with parents regarding student progress.
-
-3. QUALIFICATION VERIFICATION
-You agree to provide genuine, verified credentials:
-- Upload your original educational certificates (Degree, Diploma, Teaching Certification, etc.).
-- Provide valid NRIC or identification for background verification.
-- Certifications must be from recognized institutions.
-- False credentials will result in immediate termination and legal action.
-
-4. DIRECT PAYMENT RESPONSIBILITY
-Once you collect payment directly from parents:
-- You are fully responsible for tax declarations and business records.
-- You must maintain professional communication and documentation.
-- Disputes must be resolved directly between you and the parent (Integrated Learnings is not liable).
-
-5. CANCELLATION & RELIABILITY
-- Maintain consistent lesson attendance. High cancellation rates may result in removal from our tutor pool.
-- Notify parents immediately if you cannot conduct a lesson.
-- For long-term absences, inform Integrated Learnings so we can support student transitions.
-
-6. CODE OF CONDUCT VIOLATIONS
-Violations include (but are not limited to):
-- Misconduct towards students or parents.
-- False certification claims.
-- Soliciting parents for "off-the-books" arrangements before the Agency fee period ends.
-- Sharing student/parent information without consent.
-- Breach of this agreement results in immediate removal from the platform.
-
-7. AGREEMENT TERMS
-By signing up, you accept these terms and agree to abide by this Referral Agreement and Integrated Learnings' Code of Conduct.
-`;
-
 
 export const PRIVACY_POLICY_TEXT = `
 1. COLLECTION OF DATA

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import MainLanding from './pages/MainLanding';
@@ -7,7 +7,6 @@ import TuitionHome from './pages/TuitionHome';
 import EnrichmentHome from './pages/EnrichmentHome';
 import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
-import { ParentDashboard, TutorDashboard } from './pages/Dashboards';
 import { AdminDashboard } from './pages/AdminDashboard'; 
 import { AdminMatching } from './pages/AdminMatching';
 import { AdminTutors } from './pages/AdminTutors';
@@ -17,18 +16,47 @@ import InternationalStudents from './pages/InternationalStudents';
 import PersonalityDecode from './pages/PersonalityDecode';
 import ServiceDetail from './pages/ServiceDetail';
 import { Calendar } from './pages/Calendar';
-import { ParentLogin } from './pages/ParentLogin';
-import { ParentSignup } from './pages/ParentSignup';
 import { TutorLogin } from './pages/TutorLogin';
 import { TutorSignup } from './pages/TutorSignup';
 import { ResetPassword } from './pages/ResetPassword';
-import NewParentDashboard from './pages/NewParentDashboard';
 import NewTutorDashboard from './pages/NewTutorDashboard';
 import CaseDetail from './pages/CaseDetail';
-import TutorQuestionnaire from './pages/TutorQuestionnaire';
 import TutorAIInterview from './pages/TutorAIInterview';
 import TutorInterviewResults from './pages/TutorInterviewResults';
 import TutorOnboarding from './pages/TutorOnboarding';
+
+// Global Error Boundary — prevents white-screen crashes
+class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('App error:', error, info.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center max-w-md p-8">
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Something went wrong</h1>
+            <p className="text-gray-600 mb-6">An unexpected error occurred. Please try refreshing the page.</p>
+            <button
+              onClick={() => { this.setState({ hasError: false }); window.location.href = '/'; }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+            >
+              Return to Home
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 // Protected Route for Coursework (Sec 4 only)
 const Sec4OnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -68,6 +96,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const App: React.FC = () => {
   return (
     // BrowserRouter for clean URLs on production with custom domain
+    <ErrorBoundary>
     <BrowserRouter>
       <Layout>
         <Routes>
@@ -89,8 +118,8 @@ const App: React.FC = () => {
           <Route path="/parents" element={<Navigate to="/tuition#parent-inquiry" replace />} />
           <Route path="/tutors" element={<NewTutorDashboard />} />
           <Route path="/tutors/case/:caseId" element={<CaseDetail />} />
-          <Route path="/tutors/questionnaire" element={<TutorQuestionnaire />} />
-          <Route path="/tutor/questionnaire" element={<TutorQuestionnaire />} />
+          <Route path="/tutors/questionnaire" element={<Navigate to="/tutors/ai-interview" replace />} />
+          <Route path="/tutor/questionnaire" element={<Navigate to="/tutors/ai-interview" replace />} />
           <Route path="/tutors/onboarding" element={<TutorOnboarding />} />
           <Route path="/tutors/ai-interview" element={<TutorAIInterview />} />
           <Route path="/tutors/interview-results" element={<TutorInterviewResults />} />
@@ -129,15 +158,7 @@ const App: React.FC = () => {
               <div className="text-center max-w-md">
                 <h1 className="text-3xl font-bold text-gray-900 mb-4">Student Login</h1>
                 <p className="text-gray-600 mb-6">Access the Financial Literacy Game Platform</p>
-                <a 
-                  href="YOUR_GAME_URL_HERE" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-block bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-full font-semibold transition shadow-lg"
-                >
-                  Launch Game Platform →
-                </a>
-                <p className="text-sm text-gray-500 mt-4">Opens in new tab</p>
+                <p className="text-sm text-gray-500 mt-4">Game platform coming soon!</p>
               </div>
             </div>
           } />
@@ -185,6 +206,7 @@ const App: React.FC = () => {
         </Routes>
       </Layout>
     </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 

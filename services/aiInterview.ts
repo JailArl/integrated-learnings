@@ -26,233 +26,207 @@ interface InterviewResponse {
   error?: string;
 }
 
-interface InterviewAppealInput {
-  tutorId: string;
-  reason: string;
-  overallScore?: number | null;
-  interviewAttempt?: number | null;
-}
-
-// Generate dynamic system prompt based on tutor profile
+// ---------------------------------------------------------------------------
+// UNIFIED SYSTEM PROMPT – combines personality questionnaire + teaching
+// character interview into one friendly conversation.
+// The AI (via Supabase Edge Function / OpenAI key) generates the questions
+// dynamically every session — no separate ChatGPT step is needed.
+// ---------------------------------------------------------------------------
 const generateSystemPrompt = (tutorProfile?: any): string => {
   const subjects = tutorProfile?.subjects?.join(', ') || 'various subjects';
   const experience = tutorProfile?.experience_years || 0;
   const qualification = tutorProfile?.qualification || 'teaching';
-  
-  return `You are an education specialist getting to know tutors who want to join Integrated Learnings. Your goal is to understand their teaching style and character through simple, friendly questions.
+
+  return `You are a warm, professional education specialist welcoming tutors to Integrated Learnings — a tutoring agency in Singapore. Your goal is to understand each tutor's personality, teaching style, and character through a relaxed, chat-style conversation so the agency can match them with the right students.
 
 TUTOR INFO:
 - Subjects: ${subjects}
 - Experience: ${experience} years
 - Qualification: ${qualification}
 
-YOUR JOB:
-1. Ask 8-10 simple questions (mostly multiple choice)
-2. Mix: 6-7 MCQ questions + 2-3 short-answer questions
-3. Use simple, clear English. No big words or complicated sentences.
-4. Keep questions SHORT (under 15 words)
-5. Ask one question at a time
-6. Number questions as Q1, Q2, Q3, etc.
-7. Be friendly and warm
-8. After each answer, say something nice (1 sentence) to encourage them
-9. RANDOMIZE: Ask different questions each time a tutor retakes this
-10. NEVER repeat a question in the same conversation
+═══════════════════════════════════════════
+HOW TO CONDUCT THE CONVERSATION
+═══════════════════════════════════════════
 
-QUESTION SOURCES (randomly pick from these):
+1. Ask exactly **10 questions**, numbered Q1 – Q10.
+2. Use this mix (pick RANDOMLY from the pools below):
+   • 5 MCQ questions (4 options each, labelled A-D)
+   • 3 short-answer questions (2-3 sentence answers)
+   • 2 personality-style agree/disagree statements (rate 1-5)
+3. Ask **one question at a time**. Wait for the tutor's response before moving on.
+4. After each answer, respond with a brief encouraging remark (1 sentence) before the next question.
+5. Use simple, friendly English — no jargon.
+6. RANDOMISE which questions you pick each session. Never repeat a question.
+7. Number every question clearly: **Q1**, **Q2**, … **Q10**.
 
-**MCQ QUESTIONS (Pick 6-7 of these randomly):**
+═══════════════════════════════════════════
+MCQ QUESTION POOL (pick 5 randomly)
+═══════════════════════════════════════════
 
-MCQ1: How do you help a student who is struggling with a subject?
-A) Explain it the same way but slower
-B) Try different ways until they understand
-C) Give them more homework to practice
-D) Tell them to study harder at home
+MCQ1: A student keeps getting the same type of question wrong. What would you do?
+A) Repeat the explanation the same way
+B) Try a different approach or use real-life examples
+C) Give them more practice questions on that topic
+D) Move on and come back to it later
 
-MCQ2: What is most important in teaching?
-A) Getting high test scores
-B) Helping the student understand deeply
-C) Finishing the curriculum on time
-D) Being strict with rules
+MCQ2: What matters most to you as a tutor?
+A) The student scores well in exams
+B) The student truly understands the subject
+C) Finishing the syllabus on time
+D) Maintaining clear rules and discipline
 
-MCQ3: A student makes a mistake. What do you do?
-A) Point it out and correct them
-B) Let them discover the mistake themselves
-C) Tell them they're wrong
-D) Move on to the next topic
+MCQ3: A student makes a careless mistake. How do you handle it?
+A) Point it out immediately and correct it
+B) Ask guiding questions so they spot the mistake themselves
+C) Ignore it and focus on the harder questions
+D) Write the correct answer for them
 
-MCQ4: How often should you give feedback to students?
-A) Once a month
-B) Only before exams
-C) After every lesson or whenever needed
-D) Never - let them learn alone
+MCQ4: A parent messages you asking about their child's progress. You:
+A) Say everything is going fine
+B) Give an honest, balanced update with suggestions
+C) Only share the problems
+D) Prefer not to communicate with parents
 
-MCQ5: What does a good tutor do differently from a teacher?
-A) More homework
-B) Works one-on-one and goes at their pace
-C) Uses more technology
-D) Focuses on discipline
+MCQ5: A student says "I hate this subject." You:
+A) Tell them they still need to study it
+B) Find out why and try to make it more relatable
+C) Suggest they drop the subject
+D) Ignore it and continue the lesson
 
-MCQ6: If a student's parent asks about progress, you:
-A) Tell them everything is fine
-B) Give honest feedback and suggest improvements
-C) Only tell them the bad things
-D) Don't communicate with parents
+MCQ6: How do you usually prepare for a lesson?
+A) Review what we did last time and plan the next topic
+B) Wing it based on the student's mood that day
+C) Follow a strict textbook chapter order
+D) Ask the student what they want to cover
 
-MCQ7: How do you stay patient with a struggling student?
-A) Remember they're trying their best
-B) Get frustrated and move on
-C) Push harder until they get it
-D) Suggest they need better tuition elsewhere
+MCQ7: What does "being patient" mean to you as a tutor?
+A) Repeating yourself many times without frustration
+B) Letting the student work at their own pace
+C) Being strict so they learn faster
+D) Giving them the answer when they're stuck
 
-MCQ8: What does good communication with a student mean?
-A) Talking more
-B) Listening, explaining clearly, and checking they understand
-C) Being strict about rules
-D) Avoiding difficult questions
+MCQ8: A student seems upset or distracted during a lesson. You:
+A) Focus on academics — personal matters aren't your job
+B) Gently check in and adjust the lesson if needed
+C) End the lesson early
+D) Inform the parent straight away
 
-MCQ9: A student says they don't understand anything. You:
-A) Simplify and break it into smaller steps
-B) Repeat the same explanation louder
-C) Tell them to read the textbook
-D) Move to a different topic
+MCQ9: How do you check if a student truly understands?
+A) Ask them to explain it back in their own words
+B) Give a test
+C) If they nod, they probably understand
+D) Move on to the next chapter — they'll ask if confused
 
-MCQ10: How do you handle a student who is not doing homework?
-A) Punish them
-B) Understand why and work out a solution together
-C) Stop teaching them
-D) Tell their parents immediately
+MCQ10: You disagree with a parent's request for your teaching approach. You:
+A) Follow the parent's wishes without question
+B) Have an open conversation and explain your reasoning
+C) Ignore their request
+D) Suggest they find another tutor
 
-MCQ11: What makes you excited about teaching?
-A) Salary and benefits
-B) Seeing students grow and understand
-C) Having authority over students
-D) Easy job with minimal effort
+MCQ11: What makes your lessons different from school classes?
+A) I give more homework
+B) I personalise the pace and focus on their weak areas
+C) I use more technology
+D) I'm stricter than school teachers
 
-MCQ12: How do you explain a difficult concept?
-A) Use complex terminology to sound smart
-B) Break it down, use examples, and check understanding
-C) Give them a textbook reference
-D) Skip difficult topics
+MCQ12: A student turns in homework that's clearly copied. You:
+A) Confront them directly
+B) Discuss the material casually to see what they actually know
+C) Ignore it
+D) Report to the parent immediately
 
-MCQ13: A student has a different learning style than most. You:
-A) Force them to learn like everyone else
-B) Adapt your teaching to suit their style
-C) Say they're not suitable for tuition
-D) Give them extra assignments
+═══════════════════════════════════════════
+SHORT-ANSWER QUESTION POOL (pick 3 randomly)
+═══════════════════════════════════════════
 
-MCQ14: How important is building trust with a student?
-A) Not important, just teach the content
-B) Very important - it helps them learn better
-C) Only important with high-performing students
-D) Waste of time
+SA1: Tell us about a time you helped a student make a real breakthrough. What happened?
+SA2: In 2-3 sentences, describe your teaching style.
+SA3: What does a great tutor-student relationship look like to you?
+SA4: How would you re-engage a student who has completely given up on a subject?
+SA5: What age group or level do you enjoy teaching most, and why?
+SA6: Describe a tough moment you've had as a tutor and how you handled it.
+SA7: How do you balance being friendly with maintaining boundaries?
+SA8: What would your past students say about you?
 
-MCQ15: You notice a student is struggling emotionally. You:
-A) Ignore it and focus on academics
-B) Show care, listen, and encourage them
-C) Refer them away
-D) Tell them to talk to a counselor
+═══════════════════════════════════════════
+PERSONALITY AGREE/DISAGREE POOL (pick 2 randomly)
+Rate each on a 1-5 scale (1 = Strongly Disagree, 5 = Strongly Agree)
+═══════════════════════════════════════════
 
-MCQ16: How do you stay updated in your subject area?
-A) Use old textbooks only
-B) Read, take courses, and keep learning
-C) Students should just memorize
-D) Experience is enough
+P1: "I prefer having a clear lesson structure and routine."
+P2: "I adapt my approach depending on how the student is feeling that day."
+P3: "I enjoy breaking down complex problems into logical steps."
+P4: "I bring high energy and enthusiasm into every session."
+P5: "I focus more on building a student's confidence than drilling content."
+P6: "I like to challenge students to push beyond their comfort zone."
+P7: "I frequently check for understanding and adjust my pacing."
+P8: "I prefer coaching students to discover answers on their own."
 
-MCQ17: A student asks why a topic is important. You:
-A) Because it's in the exam
-B) Connect it to real life and show relevance
-C) Just because
-D) Don't answer such questions
+═══════════════════════════════════════════
+AFTER ALL 10 QUESTIONS — ASSESSMENT (HIDDEN FROM TUTOR)
+═══════════════════════════════════════════
 
-MCQ18: How do you handle a parent who disagrees with your methods?
-A) Argue and defend
-B) Listen, explain, and work together
-C) Ignore their opinions
-D) Ask them to find another tutor
+After the tutor answers Q10, respond with a short, encouraging closing message like:
+"Thank you so much for sharing — we really enjoyed getting to know you! Our team will review your responses and be in touch soon."
 
-MCQ19: What's your approach to making a lesson interesting?
-A) Just read from textbook
-B) Use examples, stories, and activities
-C) Lectures only
-D) Whatever is fastest
+Then, on a NEW LINE, output a JSON block (the tutor won't see this — it's parsed by our system). Label it exactly:
 
-MCQ20: How many hours per week are you realistically available?
-A) Less than 2 hours
-B) 5-10 hours
-C) 10-20 hours
-D) 20+ hours
-
-**SHORT-ANSWER QUESTIONS (Pick 2-3 of these randomly):**
-
-SA1: Tell us about a time when you helped a student make real progress. What did you do?
-
-SA2: What is your teaching style? How do you explain difficult topics?
-
-SA3: What do you think makes a great tutor-student relationship?
-
-SA4: Describe how you would help a student who is losing confidence in their studies.
-
-SA5: What subjects are you most comfortable teaching and why?
-
-SA6: How do you know if a student has truly understood a topic?
-
-SA7: Tell us about your experience with different age groups. Which do you prefer?
-
-SA8: What's the most challenging situation you've faced as a tutor? How did you handle it?
-
-SA9: How do you prepare lessons? Walk us through your process.
-
-SA10: What would your previous students say about you as a tutor?
-
-SA11: How do you balance being friendly with maintaining boundaries as a tutor?
-
-SA12: Describe a time when a student disagreed with you. How did you respond?
-
-SA13: What's your biggest strength as an educator and why?
-
-SA14: If a student has given up on a subject, how would you re-engage them?
-
-SA15: Tell us about your qualifications and how they help you teach better?
-
-AFTER ALL QUESTIONS:
-Provide these scores (1-10 each):
-- **Patience** (willingness to explain multiple times)
-- **Empathy** (care for student wellbeing)
-- **Communication** (clarity and listening)
-- **Professionalism** (reliability, ethics)
-- **Subject Mastery** (knowledge of ${subjects})
-- **Teaching Ability** (explains simply, adapts to students)
-- **Overall** (would be good for Integrated Learnings)
-
-For each score, write 1-2 sentences explaining why.
-
-Then include a JSON block labeled INTERVIEW_BREAKDOWN_JSON:
+INTERVIEW_ASSESSMENT_JSON
+\`\`\`json
 {
-  "overallScore": <1-10>,
   "categoryScores": {
     "patience": <1-10>,
     "empathy": <1-10>,
     "communication": <1-10>,
     "professionalism": <1-10>,
     "subjectMastery": <1-10>,
-    "teachingAbility": <1-10>,
-    "overall": <1-10>
+    "teachingAbility": <1-10>
   },
+  "overall": <1-10>,
+  "personalityTraits": {
+    "structured": <0-100>,
+    "supportive": <0-100>,
+    "analytical": <0-100>,
+    "energetic": <0-100>,
+    "adaptive": <0-100>
+  },
+  "topTraits": ["<top trait>", "<second trait>"],
   "fitRecommendation": {
-    "summary": "<who would this tutor work best with>",
+    "summary": "<1-2 sentence description of ideal student match>",
     "bestWith": ["<student type 1>", "<student type 2>"],
     "avoid": ["<student type to avoid>"],
-    "notes": "<any important notes>"
+    "notes": "<any important observations>"
   },
   "questionBreakdown": [
-    {"questionNumber": "Q1", "question": "<exact question>", "answerSummary": "<short answer>", "category": "Patience|Empathy|Communication|Professionalism|Subject Mastery|Teaching Ability", "score": <1-10>, "rationale": "<why>"}
+    {
+      "questionNumber": "Q1",
+      "question": "<exact question asked>",
+      "answerSummary": "<short summary>",
+      "category": "Patience|Empathy|Communication|Professionalism|Subject Mastery|Teaching Ability",
+      "score": <1-10>,
+      "rationale": "<brief why>"
+    }
   ]
 }
+\`\`\`
 
-Keep JSON valid (no trailing commas).`;
+SCORING GUIDELINES:
+- **Patience** — willingness to explain multiple times, calm demeanour
+- **Empathy** — care for student wellbeing, reads emotions
+- **Communication** — clarity, active listening, checking understanding
+- **Professionalism** — reliability, ethics, parent communication
+- **Subject Mastery** — depth of knowledge in ${subjects}
+- **Teaching Ability** — simplifies concepts, adapts to learners
+
+PERSONALITY TRAIT SCORING (0-100 scale):
+- **Structured** — prefers clear plans, measurable goals
+- **Supportive** — nurturing, builds confidence
+- **Analytical** — logical breakdown, gap diagnosis
+- **Energetic** — enthusiastic, interactive style
+- **Adaptive** — flexible, adjusts on the fly
+
+Be fair. Reserve 8+ for genuinely strong answers. Keep JSON valid.`;
 };
-
-const SYSTEM_PROMPT = generateSystemPrompt();
 
 export const sendInterviewMessage = async (
   tutorId: string,
@@ -261,16 +235,14 @@ export const sendInterviewMessage = async (
   tutorProfile?: any
 ): Promise<InterviewResponse> => {
   try {
-    // Build conversation messages
     const messages: Message[] = [
       ...conversationHistory,
       { role: 'user', content: userMessage },
     ];
 
-    // Generate dynamic system prompt based on tutor profile
     const systemPrompt = generateSystemPrompt(tutorProfile);
 
-    // Call Supabase Edge Function
+    // Call Supabase Edge Function (which in turn calls OpenAI via your API key)
     const response = await supabase.functions.invoke('interview-message', {
       body: { systemPrompt, messages },
     });
@@ -280,32 +252,31 @@ export const sendInterviewMessage = async (
     }
 
     const data = response.data;
-
     if (!data.success) {
       throw new Error(data.error || 'Failed to process interview response');
     }
 
-    const assistantMessage = data.message;
+    const assistantMessage: string = data.message;
 
-    // Check if interview is complete (look for final assessment)
-    const conversationOver =
-      assistantMessage.includes('Overall score') ||
-      assistantMessage.includes('Final assessment') ||
-      assistantMessage.includes('assessment complete') ||
-      messages.length > 14; // ~7 questions + responses
+    // Detect completion: look for the structured JSON block
+    const hasJsonBlock = assistantMessage.includes('INTERVIEW_ASSESSMENT_JSON');
+    const conversationOver = hasJsonBlock || messages.length >= 20;
 
-    // Extract scores if interview is over
     let scores: InterviewScore | undefined;
     if (conversationOver) {
-      scores = extractScoresFromResponse(assistantMessage);
-      // Save interview to database
+      scores = extractScores(assistantMessage);
       await saveInterviewToDatabase(tutorId, messages, assistantMessage, scores);
     }
+
+    // Strip the hidden JSON block from what the tutor sees
+    const visibleMessage = assistantMessage
+      .replace(/INTERVIEW_ASSESSMENT_JSON[\s\S]*$/, '')
+      .trim();
 
     return {
       success: true,
       data: {
-        message: assistantMessage,
+        message: visibleMessage,
         conversationOver,
         scores,
       },
@@ -319,26 +290,89 @@ export const sendInterviewMessage = async (
   }
 };
 
-const extractScoresFromResponse = (response: string): InterviewScore => {
-  // Parse scores from the AI response
-  const scores: InterviewScore = {
-    patience: parseScore(response, 'Patience'),
-    empathy: parseScore(response, 'Empathy'),
-    communication: parseScore(response, 'Communication'),
-    professionalism: parseScore(response, 'Professionalism'),
-    subjectMastery: parseScore(response, 'Subject Mastery'),
-    teachingAbility: parseScore(response, 'Teaching Ability'),
-    overall: parseScore(response, 'Overall'),
+// ---------- Score extraction ----------
+
+const extractScores = (response: string): InterviewScore => {
+  // Primary: parse the structured JSON block
+  const jsonScores = extractScoresFromJson(response);
+  if (jsonScores) return jsonScores;
+
+  // Fallback: regex extraction
+  return {
+    patience: parseScoreRegex(response, 'Patience'),
+    empathy: parseScoreRegex(response, 'Empathy'),
+    communication: parseScoreRegex(response, 'Communication'),
+    professionalism: parseScoreRegex(response, 'Professionalism'),
+    subjectMastery: parseScoreRegex(response, 'Subject Mastery'),
+    teachingAbility: parseScoreRegex(response, 'Teaching Ability'),
+    overall: parseScoreRegex(response, 'Overall'),
   };
-
-  return scores;
 };
 
-const parseScore = (text: string, category: string): number => {
-  const regex = new RegExp(`${category}[:\\s]+(\\d+)`, 'i');
-  const match = text.match(regex);
-  return match ? parseInt(match[1]) : 5; // Default to 5 if not found
+const extractScoresFromJson = (text: string): InterviewScore | null => {
+  try {
+    // Match JSON block after INTERVIEW_ASSESSMENT_JSON label
+    const jsonMatch = text.match(/INTERVIEW_ASSESSMENT_JSON[\s\S]*?```json\s*([\s\S]*?)```/);
+    if (!jsonMatch) {
+      // Try without code fences
+      const altMatch = text.match(/INTERVIEW_ASSESSMENT_JSON\s*(\{[\s\S]*\})/);
+      if (!altMatch) return null;
+      const parsed = JSON.parse(altMatch[1]);
+      return mapParsedScores(parsed);
+    }
+    const parsed = JSON.parse(jsonMatch[1]);
+    return mapParsedScores(parsed);
+  } catch {
+    console.warn('Failed to parse INTERVIEW_ASSESSMENT_JSON, falling back to regex');
+    return null;
+  }
 };
+
+const mapParsedScores = (parsed: any): InterviewScore => {
+  const cat = parsed.categoryScores || {};
+  return {
+    patience: clampScore(cat.patience),
+    empathy: clampScore(cat.empathy),
+    communication: clampScore(cat.communication),
+    professionalism: clampScore(cat.professionalism),
+    subjectMastery: clampScore(cat.subjectMastery),
+    teachingAbility: clampScore(cat.teachingAbility),
+    overall: clampScore(parsed.overall),
+  };
+};
+
+const clampScore = (val: any): number => {
+  const n = Number(val);
+  if (Number.isNaN(n)) return 5;
+  return Math.max(1, Math.min(10, Math.round(n)));
+};
+
+const parseScoreRegex = (text: string, category: string): number => {
+  // Handle "Category: 8/10", "Category: **8**/10", "Category: 8"
+  const patterns = [
+    new RegExp(`${category}[:\\s]+\\**(\\d+)\\**(?:/10)?`, 'i'),
+    new RegExp(`${category}[:\\s]+(\\d+)`, 'i'),
+  ];
+  for (const regex of patterns) {
+    const match = text.match(regex);
+    if (match) return clampScore(parseInt(match[1]));
+  }
+  return 5;
+};
+
+// ---------- Extract full assessment JSON for DB storage ----------
+
+const extractFullAssessment = (text: string): any | null => {
+  try {
+    const jsonMatch = text.match(/INTERVIEW_ASSESSMENT_JSON[\s\S]*?```json\s*([\s\S]*?)```/);
+    if (jsonMatch) return JSON.parse(jsonMatch[1]);
+    const altMatch = text.match(/INTERVIEW_ASSESSMENT_JSON\s*(\{[\s\S]*\})/);
+    if (altMatch) return JSON.parse(altMatch[1]);
+  } catch { /* ignore */ }
+  return null;
+};
+
+// ---------- Save to database ----------
 
 const saveInterviewToDatabase = async (
   tutorId: string,
@@ -350,16 +384,15 @@ const saveInterviewToDatabase = async (
 
   try {
     const transcript = messages.map((m) => `${m.role}: ${m.content}`).join('\n\n');
-    const overallScore = Math.round(
-      scores.patience * 0.125 + 
-      scores.empathy * 0.125 + 
-      scores.communication * 0.125 + 
-      scores.professionalism * 0.125 + 
-      scores.subjectMastery * 0.25 + 
+    const weightedScore = Math.round(
+      scores.patience * 0.125 +
+      scores.empathy * 0.125 +
+      scores.communication * 0.125 +
+      scores.professionalism * 0.125 +
+      scores.subjectMastery * 0.25 +
       scores.teachingAbility * 0.25
     );
 
-    // Get current attempt count
     const { data: tutorData } = await supabase
       .from('tutor_profiles')
       .select('ai_interview_attempts')
@@ -368,64 +401,55 @@ const saveInterviewToDatabase = async (
 
     const currentAttempts = tutorData?.ai_interview_attempts || 0;
 
-    await supabase.from('tutor_profiles').update({
+    // Extract the structured JSON to persist personality + fit data
+    const assessmentJson = extractFullAssessment(finalAssessment);
+
+    const updatePayload: Record<string, any> = {
       ai_interview_status: 'completed',
       ai_interview_transcript: transcript,
-      ai_interview_score: overallScore,
+      ai_interview_score: weightedScore,
       ai_interview_assessment: finalAssessment,
       ai_interview_attempts: currentAttempts + 1,
-    }).eq('id', tutorId);
+      // Also mark the combined questionnaire as completed
+      questionnaire_completed: true,
+    };
 
-    console.log('✅ Interview saved to database');
+    // Persist personality traits + fit recommendation inside questionnaire_answers
+    if (assessmentJson) {
+      updatePayload.questionnaire_answers = {
+        version: 'unified_v2',
+        personality: {
+          traitScores: assessmentJson.personalityTraits || {},
+          topTraits: assessmentJson.topTraits || [],
+        },
+        fitRecommendation: assessmentJson.fitRecommendation || null,
+        categoryScores: assessmentJson.categoryScores || {},
+        questionBreakdown: assessmentJson.questionBreakdown || [],
+        completedAt: new Date().toISOString(),
+      };
+    }
+
+    await supabase
+      .from('tutor_profiles')
+      .update(updatePayload)
+      .eq('id', tutorId);
+
+    console.log('✅ Unified interview + personality saved to database');
   } catch (error: any) {
     console.error('Error saving interview:', error);
   }
 };
 
+// ---------- Public helpers ----------
+
 export const getInitialQuestion = (): string => {
-  return "Welcome to your Integrated Learnings character interview! This is a conversation where we'll explore your teaching approach and personal qualities as an educator.\n\nLet's start with our first question:\n\n**In 2-4 sentences, how do you support a student who is struggling with a topic?**";
-};
+  return `Hi there! Welcome to the Integrated Learnings getting-to-know-you chat. 🎓
 
-export const submitInterviewAppeal = async (
-  input: InterviewAppealInput
-): Promise<{ success: boolean; error?: string }> => {
-  if (!supabase) {
-    return { success: false, error: 'Supabase not configured' };
-  }
+This is a casual conversation — not an exam! We'd love to learn more about you as a person and as an educator so we can match you with students who'll really benefit from your style.
 
-  try {
-    const { error } = await supabase.from('ai_interview_appeals').insert([
-      {
-        tutor_id: input.tutorId,
-        reason: input.reason,
-        overall_score: input.overallScore ?? null,
-        interview_attempt: input.interviewAttempt ?? null,
-        status: 'pending',
-      },
-    ]);
+There are 10 short questions — a mix of multiple choice, short answers, and quick agree/disagree ratings. It usually takes about 10-12 minutes.
 
-    if (error) throw error;
+Ready? Let's go!
 
-    await sendDiscordMessage({
-      embeds: [
-        {
-          title: 'Appeal Requested: AI Interview',
-          description: 'A tutor has requested a score appeal.',
-          color: 0xf59e0b,
-          fields: [
-            { name: 'Tutor ID', value: input.tutorId, inline: false },
-            { name: 'Overall Score', value: String(input.overallScore ?? 'N/A'), inline: true },
-            { name: 'Attempt', value: String(input.interviewAttempt ?? 'N/A'), inline: true },
-            { name: 'Reason', value: input.reason || 'Not provided', inline: false },
-          ],
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    });
-
-    return { success: true };
-  } catch (error: any) {
-    console.error('Interview appeal error:', error);
-    return { success: false, error: error.message || 'Failed to submit appeal' };
-  }
+**Q1: In 2-3 sentences, tell us — what drew you to teaching or tutoring in the first place?**`;
 };
