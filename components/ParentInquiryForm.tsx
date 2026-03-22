@@ -153,12 +153,17 @@ interface SubjectEntry {
 // COMPONENT
 // ═══════════════════════════════════════════
 
+const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes between submissions
+const MIN_FILL_TIME_MS = 3000; // Reject if filled in under 3 seconds
+
 const ParentInquiryForm: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [addressLoading, setAddressLoading] = useState(false);
   const submittingRef = useRef(false);
+  const formLoadTime = useRef(Date.now());
+  const [honeypot, setHoneypot] = useState('');
 
   // Form fields
   const [parentName, setParentName] = useState('');
@@ -262,6 +267,22 @@ const ParentInquiryForm: React.FC = () => {
     if (submittingRef.current) return;
     setError('');
 
+    // Anti-spam: honeypot
+    if (honeypot) return;
+
+    // Anti-spam: too fast (bot filled form instantly)
+    if (Date.now() - formLoadTime.current < MIN_FILL_TIME_MS) {
+      setError('Please take a moment to fill out the form properly.');
+      return;
+    }
+
+    // Anti-spam: cooldown (10 min between submissions)
+    const lastSubmit = localStorage.getItem('il_last_inquiry');
+    if (lastSubmit && Date.now() - Number(lastSubmit) < COOLDOWN_MS) {
+      setError('You have already submitted an inquiry recently. Please wait before submitting again.');
+      return;
+    }
+
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -297,6 +318,7 @@ const ParentInquiryForm: React.FC = () => {
     }
 
     setSubmitted(true);
+    localStorage.setItem('il_last_inquiry', String(Date.now()));
   };
 
   // ═══ SUBMITTED STATE ═══
@@ -336,6 +358,20 @@ const ParentInquiryForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Honeypot — hidden from humans, bots auto-fill it */}
+      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+        <label htmlFor="website_url">Leave this empty</label>
+        <input
+          type="text"
+          id="website_url"
+          name="website_url"
+          tabIndex={-1}
+          autoComplete="off"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+        />
+      </div>
+
       <p className="text-sm leading-relaxed text-slate-600">
         Tell us about your child&rsquo;s learning needs &mdash; our advisor will match them with the most suitable tutor within 2&ndash;3 business days.
       </p>
