@@ -3,6 +3,7 @@ import { notifyParentInquiry } from './discord';
 
 export interface ParentSubmissionData {
   parent_name: string;
+  student_name: string;
   contact_number: string;
   email: string;
   student_level: string;
@@ -29,6 +30,7 @@ export const submitParentInquiry = async (
       .insert([
         {
           parent_name: data.parent_name,
+          student_name: data.student_name,
           contact_number: data.contact_number,
           email: data.email,
           student_level: data.student_level,

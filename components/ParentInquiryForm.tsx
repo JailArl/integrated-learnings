@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { CheckCircle2, Send, MessageCircle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { CheckCircle2, Send, MessageCircle, ArrowLeft } from 'lucide-react';
 import { submitParentInquiry, ParentSubmissionData } from '../services/parentSubmissions';
 
 const STUDENT_LEVELS = [
@@ -8,12 +8,38 @@ const STUDENT_LEVELS = [
   'JC 1', 'JC 2', 'Poly', 'ITE',
 ];
 
-const SUBJECTS = [
+const PRIMARY_SUBJECTS = [
+  'English', 'Mathematics', 'Science', 'Chinese', 'Malay', 'Tamil',
+];
+
+const SECONDARY_SUBJECTS = [
+  'English', 'Mathematics', 'Additional Mathematics', 'Elementary Mathematics',
+  'Science', 'Physics', 'Chemistry', 'Biology',
+  'Chinese', 'Malay', 'Tamil',
+  'History', 'Geography', 'Literature', 'Social Studies',
+];
+
+const JC_SUBJECTS = [
+  'General Paper', 'Mathematics', 'Economics',
+  'Physics', 'Chemistry', 'Biology',
+  'History', 'Geography', 'Literature',
+  'Chinese', 'Accounting',
+];
+
+const ALL_SUBJECTS = [
   'English', 'Mathematics', 'Science', 'Chinese', 'Malay', 'Tamil',
   'Additional Mathematics', 'Elementary Mathematics', 'Physics', 'Chemistry', 'Biology',
   'History', 'Geography', 'Literature', 'Social Studies',
   'General Paper', 'Economics', 'Accounting',
 ];
+
+const getSubjectsForLevel = (level: string): string[] => {
+  if (!level) return ALL_SUBJECTS;
+  if (level.startsWith('Primary')) return PRIMARY_SUBJECTS;
+  if (level.startsWith('Secondary')) return SECONDARY_SUBJECTS;
+  if (level.startsWith('JC')) return JC_SUBJECTS;
+  return ALL_SUBJECTS; // Poly, ITE
+};
 
 const BUDGET_RANGES = [
   '$30 - $45/hr', '$45 - $60/hr', '$60 - $80/hr', '$80 - $100/hr', '$100+/hr', 'Discuss with advisor',
@@ -39,8 +65,10 @@ const ParentInquiryForm: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const submittingRef = useRef(false);
   const [formData, setFormData] = useState<ParentSubmissionData>({
     parent_name: '',
+    student_name: '',
     contact_number: '',
     email: '',
     student_level: '',
@@ -57,7 +85,17 @@ const ParentInquiryForm: React.FC = () => {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'student_level') {
+      const available = getSubjectsForLevel(value);
+      setFormData((prev) => ({
+        ...prev,
+        student_level: value,
+        subjects: prev.subjects.filter((s) => available.includes(s)),
+      }));
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const toggleSubject = (subject: string) => {
@@ -71,8 +109,10 @@ const ParentInquiryForm: React.FC = () => {
 
   const validate = (): string | null => {
     if (!formData.parent_name.trim()) return 'Parent name is required.';
-    if (!formData.contact_number.trim()) return 'Contact number is required.';
-    if (!formData.email.trim() || !formData.email.includes('@')) return 'Valid email is required.';
+    if (!formData.student_name.trim()) return 'Student name is required.';
+    const phone = formData.contact_number.replace(/\s/g, '');
+    if (!phone || !/^[89]\d{7}$/.test(phone)) return 'Please enter a valid Singapore phone number (8 digits starting with 8 or 9).';
+    if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) return 'Please enter a valid email address.';
     if (!formData.student_level) return 'Student level is required.';
     if (formData.subjects.length === 0) return 'Select at least one subject.';
     return null;
@@ -80,6 +120,7 @@ const ParentInquiryForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     setError('');
 
     const validationError = validate();
@@ -88,11 +129,13 @@ const ParentInquiryForm: React.FC = () => {
       return;
     }
 
+    submittingRef.current = true;
     setLoading(true);
     const result = await submitParentInquiry(formData);
     setLoading(false);
 
     if (!result.success) {
+      submittingRef.current = false;
       setError(result.error || 'Something went wrong. Please try again.');
       return;
     }
@@ -109,13 +152,20 @@ const ParentInquiryForm: React.FC = () => {
           We've received your request and will be in touch within 1-2 business days to discuss your child's learning needs.
         </p>
         <a
-          href="https://wa.me/98882675"
+          href="https://wa.me/6598882675"
           target="_blank"
           rel="noreferrer"
           className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
         >
           <MessageCircle size={20} />
           Chat on WhatsApp for faster response
+        </a>
+        <a
+          href="/tuition"
+          className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-700"
+        >
+          <ArrowLeft size={16} />
+          Return to Home
         </a>
       </div>
     );
@@ -158,6 +208,19 @@ const ParentInquiryForm: React.FC = () => {
             required
           />
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-sm font-semibold text-slate-700">Student's Name *</label>
+        <input
+          type="text"
+          name="student_name"
+          value={formData.student_name}
+          onChange={handleChange}
+          placeholder="e.g. Ryan Tan"
+          className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
+          required
+        />
       </div>
 
       <div>
@@ -206,8 +269,11 @@ const ParentInquiryForm: React.FC = () => {
 
       <div>
         <label className="mb-2 block text-sm font-semibold text-slate-700">Subjects Needed *</label>
+        {!formData.student_level && (
+          <p className="mb-2 text-xs text-amber-600">Select a student level first to see relevant subjects.</p>
+        )}
         <div className="flex flex-wrap gap-2">
-          {SUBJECTS.map((subject) => (
+          {getSubjectsForLevel(formData.student_level).map((subject) => (
             <button
               type="button"
               key={subject}

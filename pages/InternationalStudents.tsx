@@ -271,7 +271,7 @@ const InternationalStudents: React.FC = () => {
                   ))}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">200+ 家庭信赖</p>
+                  <p className="text-sm font-bold text-slate-800">250+ 家庭信赖</p>
                   <p className="text-xs text-slate-400">在新加坡的中国家庭选择了我们</p>
                 </div>
               </div>
