@@ -50,7 +50,7 @@ export const PageHeader: React.FC<{ title: string; subtitle?: string }> = ({ tit
 );
 
 export const RoadmapCard: React.FC<{ id: string; title: string }> = ({ id, title }) => (
-  <Link to={`/roadmap/${id}`} className="group block bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md hover:border-secondary transition text-center h-full flex items-center justify-center flex-col">
+  <Link to={`/tuition/roadmap/${id}`} className="group block bg-white border border-slate-200 rounded-lg p-6 hover:shadow-md hover:border-secondary transition text-center h-full flex items-center justify-center flex-col">
     <span className="font-semibold text-lg text-slate-800 group-hover:text-secondary transition">{title}</span>
     <span className="mt-2 text-sm text-slate-400 opacity-0 group-hover:opacity-100 transition flex items-center">
       Learn More <ChevronRight size={14} className="ml-1" />

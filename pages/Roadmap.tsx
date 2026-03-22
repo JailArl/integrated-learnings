@@ -55,7 +55,7 @@ const MapNode: React.FC<{
   node: any; 
 }> = ({ node }) => (
   <Link 
-    to={`/roadmap/${node.id}`}
+    to={`/tuition/roadmap/${node.id}`}
     className={`absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center transition hover:scale-110 z-20 group`}
     style={{ left: node.x, top: node.y }}
   >
@@ -133,7 +133,7 @@ const EducationMRTMap: React.FC = () => {
                 <p className="text-xs font-bold text-emerald-700">Foundation</p>
               </div>
             </div>
-            <Link to="/roadmap/primary" className="text-xs text-blue-600 font-semibold mt-2 block hover:underline">Learn more →</Link>
+            <Link to="/tuition/roadmap/primary" className="text-xs text-blue-600 font-semibold mt-2 block hover:underline">Learn more →</Link>
           </div>
 
           <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-blue-300 to-slate-700"></div></div>
@@ -152,7 +152,7 @@ const EducationMRTMap: React.FC = () => {
             <div className="bg-amber-50 border-l-2 border-amber-400 pl-2 py-1 text-xs text-amber-800 mt-2">
               <strong>Critical:</strong> June hols = intensive revision month
             </div>
-            <Link to="/roadmap/psle" className="text-xs text-secondary font-semibold mt-2 block hover:underline">View strategies →</Link>
+            <Link to="/tuition/roadmap/psle" className="text-xs text-secondary font-semibold mt-2 block hover:underline">View strategies →</Link>
           </div>
 
           <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-slate-700 to-blue-700"></div></div>
@@ -178,7 +178,7 @@ const EducationMRTMap: React.FC = () => {
                 <p className="text-[10px] text-emerald-600 text-center mt-1">→ N-Levels first</p>
               </div>
             </div>
-            <Link to="/roadmap/secondary" className="text-xs text-secondary font-semibold mt-2 block hover:underline">Understand FSBB →</Link>
+            <Link to="/tuition/roadmap/secondary" className="text-xs text-secondary font-semibold mt-2 block hover:underline">Understand FSBB →</Link>
           </div>
 
           <div className="flex justify-center items-center gap-1">
@@ -206,7 +206,7 @@ const EducationMRTMap: React.FC = () => {
                 </div>
               </div>
             </div>
-            <Link to="/roadmap/olevel" className="text-xs text-secondary font-semibold mt-2 block hover:underline">L1R5 strategies →</Link>
+            <Link to="/tuition/roadmap/olevel" className="text-xs text-secondary font-semibold mt-2 block hover:underline">L1R5 strategies →</Link>
           </div>
 
           <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-blue-800 to-indigo-600"></div></div>
@@ -236,7 +236,7 @@ const EducationMRTMap: React.FC = () => {
                 <p className="text-[10px] text-emerald-600">Nitec → Higher Nitec → Poly</p>
               </div>
             </div>
-            <Link to="/roadmap/postsec" className="text-xs text-indigo-600 font-semibold mt-2 block hover:underline">Compare routes →</Link>
+            <Link to="/tuition/roadmap/postsec" className="text-xs text-indigo-600 font-semibold mt-2 block hover:underline">Compare routes →</Link>
           </div>
 
           <div className="flex justify-center"><div className="w-0.5 h-8 bg-gradient-to-b from-indigo-600 to-slate-900"></div></div>
@@ -408,7 +408,7 @@ const RoadmapLanding: React.FC = () => {
                 <div>
                    <h4 className="font-bold text-amber-900">Sec 2 Streaming Warning</h4>
                    <p className="text-amber-800 text-sm mt-1">
-                      Your child's Sec 2 results determine their Sec 3 subjects (e.g., Pure Science, A-Math). 
+                      Under <strong>FSBB (Full Subject-Based Banding)</strong>, your child's Sec 2 results determine their Sec 3 subject combination (e.g., Pure Sciences, A-Math, combined humanities). 
                       Closing doors here (by failing to qualify) limits University Engineering and Medicine options later.
                    </p>
                 </div>
@@ -421,7 +421,7 @@ const RoadmapLanding: React.FC = () => {
           
            {/* CTA for Sec 2 - Redirect to Parents */}
           <div className="mt-8 text-center">
-             <Button to="/tuition#parent-inquiry">Book Subject Combination Consultation</Button>
+             <a href="/tuition#parent-inquiry" className="inline-flex items-center justify-center px-6 py-3 rounded-lg font-semibold transition duration-200 text-base shadow-sm bg-secondary text-white hover:bg-blue-800 shadow-blue-900/20">Book Subject Combination Consultation</a>
           </div>
         </div>
 
@@ -456,7 +456,7 @@ const RoadmapDetail: React.FC = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center flex-col">
         <h2 className="text-2xl font-bold mb-4">Topic not found</h2>
-        <Button to="/roadmap">Back to Roadmap</Button>
+        <Button to="/tuition/roadmap">Back to Roadmap</Button>
       </div>
     );
   }
@@ -465,7 +465,7 @@ const RoadmapDetail: React.FC = () => {
     <>
       <PageHeader title={topic.title} subtitle={topic.description} />
       <Section className="max-w-4xl">
-        <Link to="/roadmap" className="text-secondary font-medium hover:underline mb-8 block">&larr; Back to Roadmap overview</Link>
+        <Link to="/tuition/roadmap" className="text-secondary font-medium hover:underline mb-8 block">&larr; Back to Roadmap overview</Link>
         
         <div className="space-y-12 mb-12">
           {topic.sections.map((section, idx) => (
@@ -496,7 +496,7 @@ const RoadmapDetail: React.FC = () => {
             <p className="text-slate-300 mb-8 text-lg">
               Don't wait until the grades drop. Our specialist tutors are ready to help with this specific stage.
             </p>
-            <Button to="/tuition#parent-inquiry" variant="white" className="px-8 py-4 text-lg font-bold">Get Assessment for {topic.title}</Button>
+            <a href="/tuition#parent-inquiry" className="inline-flex items-center justify-center px-8 py-4 text-lg font-bold rounded-lg transition duration-200 shadow-sm bg-white text-primary hover:bg-slate-100">Get Assessment for {topic.title}</a>
           </div>
         </div>
       </Section>
