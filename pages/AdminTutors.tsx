@@ -449,25 +449,23 @@ export const AdminTutors: React.FC = () => {
 
   return (
     <Section>
-      <div className="mb-6 flex items-center justify-between border-b border-gray-200 pb-4">
-        <div className="flex items-center space-x-4">
+      <div className="mb-6 flex items-center border-b border-gray-200 pb-4">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => navigate('/admin')}
+            className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+          >
+            Dashboard
+          </button>
           <button
             onClick={() => navigate('/admin/matching')}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              location.pathname === '/admin/matching'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/matching' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
           >
             Matching
           </button>
           <button
             onClick={() => navigate('/admin/tutors')}
-            className={`px-4 py-2 rounded-lg font-semibold ${
-              location.pathname === '/admin/tutors'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/tutors' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
           >
             Tutor Review
           </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AlertCircle, Clock, Eye, EyeOff, LogOut, RefreshCw, Download, Search, Filter } from 'lucide-react';
 import { adminLogout } from '../services/adminAuth';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
@@ -23,6 +24,8 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -293,6 +296,30 @@ export default function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Admin Page Navigation */}
+        <div className="mb-6 flex items-center border-b border-gray-200 pb-4">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => navigate('/admin')}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Dashboard
+            </button>
+            <button
+              onClick={() => navigate('/admin/matching')}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/matching' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Matching
+            </button>
+            <button
+              onClick={() => navigate('/admin/tutors')}
+              className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/tutors' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+            >
+              Tutor Review
+            </button>
+          </div>
+        </div>
+
         <div className="mb-6 bg-white border border-gray-200 rounded-lg p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500">Welcome back</p>
