@@ -43,6 +43,10 @@ interface RequestData {
 export const scoreAllBids = async (
   requestId: string
 ): Promise<{ success: boolean; data?: MatchScore[]; error?: string }> => {
+  if (!supabase) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+
   try {
     // Fetch the request
     const { data: request, error: reqErr } = await supabase

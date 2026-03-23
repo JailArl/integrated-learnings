@@ -96,8 +96,10 @@ export const getMyBids = async (
     return { success: false, error: 'Supabase not configured' };
   }
 
+  const db = supabase;
+
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('tutor_bids')
       .select(
         `
@@ -113,7 +115,7 @@ export const getMyBids = async (
     // For each bid, fetch the corresponding match if the request is matched
     const bidsWithMatches = await Promise.all((data || []).map(async (bid) => {
       if (bid.request?.status === 'matched' || bid.request?.status === 'invoiced') {
-        const { data: matchData } = await supabase
+        const { data: matchData } = await db
           .from('matches')
           .select('*')
           .eq('request_id', bid.request.id)

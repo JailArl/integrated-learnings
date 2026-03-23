@@ -65,7 +65,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </div>
               </Link>
               
-              <nav className="hidden md:flex items-center space-x-6">
+              <nav aria-label="Enrichment navigation" className="hidden md:flex items-center space-x-6">
                 <Link to="/enrichment" className={`${isActive('/enrichment') ? 'text-green-700 font-semibold' : 'text-slate-600'} hover:text-green-700 transition text-sm`}>Program</Link>
                 <Link to="/enrichment/login" className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-full text-sm font-medium transition shadow-lg">
                   Student Login
@@ -85,7 +85,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
           
           {isMenuOpen && (
-            <div id={mobileMenuId} className="md:hidden bg-white border-b border-slate-200 shadow-lg">
+            <div id={mobileMenuId} role="navigation" aria-label="Mobile enrichment menu" className="md:hidden bg-white border-b border-slate-200 shadow-lg">
               <div className="px-4 py-6 space-y-4">
                 <button onClick={() => handleNav('/enrichment')} className="block w-full text-left py-2 font-medium text-slate-700">Program Overview</button>
                 <button onClick={() => handleNav('/enrichment/login')} className="block w-full text-center bg-green-600 text-white py-3 rounded-lg font-medium mt-4">Student Login</button>
@@ -94,11 +94,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           )}
         </header>
         
-        <main className="flex-grow pt-20">
+        <main id="main-content" className="flex-grow pt-20" role="main">
           {children}
         </main>
         
-        <footer className="bg-gray-800 text-slate-300 py-8 border-t border-slate-700">
+        <footer className="bg-gray-800 text-slate-300 py-8 border-t border-slate-700" role="contentinfo">
           <div className="max-w-7xl mx-auto px-4 text-center text-xs text-slate-400">
             © {new Date().getFullYear()} Integrated Learnings Singapore. All rights reserved.
             <div className="mt-2">
@@ -131,7 +131,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* Desktop Nav - Main Landing */}
             {isMainLanding && (
-              <nav className="hidden md:flex items-center space-x-6 h-full">
+              <nav aria-label="Main navigation" className="hidden md:flex items-center space-x-6 h-full">
                 <Link to="/tuition" className="text-slate-600 hover:text-secondary transition text-sm">For Families</Link>
                 <Link to="/enrichment" className="text-slate-600 hover:text-green-700 transition text-sm">School Programs</Link>
                 <a href="mailto:info@integratedlearnings.com.sg" className="bg-secondary hover:bg-blue-800 text-white px-5 py-2 rounded-full text-sm font-medium transition shadow-lg shadow-blue-900/20">
@@ -142,7 +142,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* Desktop Nav - Tuition Section */}
             {isTuitionSection && (
-              <nav className="hidden md:flex items-center space-x-6 h-full">
+              <nav aria-label="Tuition navigation" className="hidden md:flex items-center space-x-6 h-full">
                 <Link to="/tuition" className={`${isActive('/tuition') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Home</Link>
                 <Link to="/tuition/pricing" className={`${isActive('/tuition/pricing') ? 'text-secondary font-semibold' : 'text-slate-600'} hover:text-secondary transition text-sm`}>Pricing</Link>
 
@@ -169,7 +169,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Mobile Menu - Main Landing */}
         {isMenuOpen && isMainLanding && (
-          <div id={mobileMenuId} className="md:hidden bg-white border-b border-slate-200 shadow-lg">
+          <div id={mobileMenuId} role="navigation" aria-label="Mobile main menu" className="md:hidden bg-white border-b border-slate-200 shadow-lg">
             <div className="px-4 py-6 space-y-4">
               <button onClick={() => handleNav('/tuition')} className="block w-full text-left py-2 font-medium text-slate-700">For Families</button>
               <button onClick={() => handleNav('/enrichment')} className="block w-full text-left py-2 font-medium text-slate-700">School Programs</button>
@@ -180,7 +180,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Mobile Menu - Tuition Section */}
         {isMenuOpen && isTuitionSection && (
-          <div id={mobileMenuId} className="md:hidden bg-white border-b border-slate-200 shadow-lg">
+          <div id={mobileMenuId} role="navigation" aria-label="Mobile tuition menu" className="md:hidden bg-white border-b border-slate-200 shadow-lg">
             <div className="px-4 py-6 space-y-4">
               <button onClick={() => handleNav('/tuition')} className="block w-full text-left py-2 font-medium text-slate-700">Home</button>
               <hr className="border-slate-100" />
@@ -192,12 +192,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow pt-20">
+      <main id="main-content" className="flex-grow pt-20" role="main">
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="bg-primary text-slate-300 py-12 border-t border-slate-800">
+      <footer className="bg-primary text-slate-300 py-12 border-t border-slate-800" role="contentinfo">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <h3 className="text-white font-bold text-lg mb-4">Integrated Learnings</h3>
@@ -248,10 +248,11 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <a 
           href="https://wa.me/98882675" 
           target="_blank" 
-          rel="noreferrer"
+          rel="noopener noreferrer"
+          aria-label="Contact us on WhatsApp (opens in a new tab)"
           className="fixed bottom-6 right-6 bg-[#25D366] text-white px-5 py-3 rounded-full shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 z-40 flex items-center font-bold"
         >
-          <Phone size={20} className="mr-2 fill-current" />
+          <Phone size={20} className="mr-2 fill-current" aria-hidden="true" />
           WhatsApp
         </a>
       )}

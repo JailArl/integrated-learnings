@@ -3,24 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Integrated Learnings</title>
+    <title>Integrated Learnings — Professional Learning Advisory &amp; Enrichment | Singapore</title>
     <meta
       name="description"
-      content="Integrated Learnings Singapore — a professional learning advisory and school enrichment provider that helps students thrive academically and personally."
+      content="Integrated Learnings Singapore — a professional learning advisory and school enrichment provider that helps students thrive academically and personally. Diagnostic-driven tutor matching for Primary, Secondary, and JC students."
     />
     <meta name="theme-color" content="#0f172a" />
-    <meta property="og:title" content="Integrated Learnings" />
+    <link rel="canonical" href="https://www.integratedlearnings.com.sg/" />
+    <meta property="og:title" content="Integrated Learnings — Professional Learning Advisory | Singapore" />
     <meta
       property="og:description"
-      content="Professional learning advisory and enrichment programs for Singapore families and schools."
+      content="Professional learning advisory and enrichment programs for Singapore families and schools. Diagnostic-driven tutor matching."
     />
     <meta property="og:image" content="/og-image.svg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="en_SG" />
+    <meta property="og:url" content="https://www.integratedlearnings.com.sg/" />
+    <meta property="og:site_name" content="Integrated Learnings" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Integrated Learnings" />
+    <meta name="twitter:title" content="Integrated Learnings — Professional Learning Advisory | Singapore" />
     <meta
       name="twitter:description"
       content="Professional learning advisory and enrichment programs for Singapore families and schools."
@@ -39,46 +42,36 @@
       gtag('js', new Date());
       gtag('config', 'G-FC23BDRCJX');
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: '#0f172a', // Slate 900 - Deep Blue/Black
-              secondary: '#1e40af', // Blue 800
-              accent: '#3b82f6', // Blue 500
-              surface: '#f8fafc', // Slate 50
-            },
-            fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
-            }
-          }
-        }
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "Integrated Learnings",
+      "url": "https://www.integratedlearnings.com.sg",
+      "logo": "https://www.integratedlearnings.com.sg/images/logo.png",
+      "description": "Professional learning advisory and school enrichment provider in Singapore. Diagnostic-driven tutor matching for Primary, Secondary, and JC students.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "SG"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+65-9888-2675",
+        "contactType": "customer service",
+        "availableLanguage": ["English", "Chinese"]
+      },
+      "sameAs": [],
+      "areaServed": {
+        "@type": "Country",
+        "name": "Singapore"
       }
+    }
     </script>
-    <style>
-      /* Custom scrollbar for cleaner look */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #f1f5f9;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
-      body {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-    </style>
 </head>
   <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-white focus:px-4 focus:py-2 focus:text-blue-700 focus:font-semibold focus:rounded focus:shadow-lg">
+      Skip to main content
+    </a>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /admin/*
+Disallow: /tutors/
+Disallow: /tutors/*
+Disallow: /tutor-login
+Disallow: /tutor-signup
+Disallow: /reset-password
+
+Sitemap: https://www.integratedlearnings.com.sg/sitemap.xml

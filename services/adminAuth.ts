@@ -21,7 +21,12 @@ interface AdminSession {
 
 /**
  * Admin Login - Returns JWT-like token stored in database
- * In production, consider using Supabase JWT or a proper backend service
+ * 
+ * Admin accounts are managed directly in Supabase (admin_users table).
+ * The env-based fallback is for initial setup only.
+ * For production, all admin accounts should be created and managed in
+ * the Supabase admin_users table with proper password hashing via 
+ * Supabase Edge Functions or server-side logic.
  */
 export const adminLogin = async (
   email: string,

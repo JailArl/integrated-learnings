@@ -234,6 +234,13 @@ export const sendInterviewMessage = async (
   conversationHistory: Message[],
   tutorProfile?: any
 ): Promise<InterviewResponse> => {
+  if (!supabase) {
+    return {
+      success: false,
+      error: 'Supabase not configured',
+    };
+  }
+
   try {
     const messages: Message[] = [
       ...conversationHistory,
