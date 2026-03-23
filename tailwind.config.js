@@ -2,9 +2,10 @@
 export default {
   content: [
     './index.html',
-    './**/*.{js,ts,jsx,tsx}',
-    '!./node_modules/**',
-    '!./supabase/**',
+    './pages/**/*.{js,ts,jsx,tsx}',
+    './components/**/*.{js,ts,jsx,tsx}',
+    './App.tsx',
+    './index.tsx',
   ],
   theme: {
     extend: {

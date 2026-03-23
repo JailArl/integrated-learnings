@@ -234,6 +234,13 @@ export const sendInterviewMessage = async (
   conversationHistory: Message[],
   tutorProfile?: any
 ): Promise<InterviewResponse> => {
+  if (!supabase) {
+    return {
+      success: false,
+      error: 'Supabase not configured',
+    };
+  }
+
   try {
     const messages: Message[] = [
       ...conversationHistory,
@@ -243,7 +250,7 @@ export const sendInterviewMessage = async (
     const systemPrompt = generateSystemPrompt(tutorProfile);
 
     // Call Supabase Edge Function (which in turn calls OpenAI via your API key)
-    const response = await supabase!.functions.invoke('interview-message', {
+    const response = await supabase.functions.invoke('interview-message', {
       body: { systemPrompt, messages },
     });
 

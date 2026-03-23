@@ -124,8 +124,10 @@ export const AdminTutorRanking: React.FC = () => {
       return;
     }
 
+    const db = supabase;
+
     try {
-      const { data: tutors, error: fetchError } = await supabase
+      const { data: tutors, error: fetchError } = await db
         .from('tutor_profiles')
         .select(`
           id,
@@ -149,7 +151,7 @@ export const AdminTutorRanking: React.FC = () => {
       // Get certificate counts for each tutor
       const tutorsWithCerts = await Promise.all(
         (tutors || []).map(async (tutor) => {
-          const { data: certs } = await supabase!
+          const { data: certs } = await db
             .from('tutor_certificates')
             .select('id')
             .eq('tutor_id', tutor.id)
