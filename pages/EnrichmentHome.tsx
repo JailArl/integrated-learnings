@@ -10,7 +10,7 @@ const EnrichmentHome: React.FC = () => {
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full mb-6">
-              <School className="w-5 h-5" />
+              <School className="w-5 h-5" aria-hidden="true" />
               <span className="font-semibold">For Schools & Educational Institutions</span>
             </div>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
@@ -53,7 +53,7 @@ const EnrichmentHome: React.FC = () => {
               
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="bg-green-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                  <DollarSign className="w-7 h-7 text-green-600" />
+                  <DollarSign className="w-7 h-7 text-green-600" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Stocks & Shares</h3>
                 <p className="text-gray-600">
@@ -63,7 +63,7 @@ const EnrichmentHome: React.FC = () => {
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="bg-blue-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                  <Briefcase className="w-7 h-7 text-blue-600" />
+                  <Briefcase className="w-7 h-7 text-blue-600" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Bonds & Fixed Income</h3>
                 <p className="text-gray-600">
@@ -73,7 +73,7 @@ const EnrichmentHome: React.FC = () => {
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="bg-purple-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                  <PieChart className="w-7 h-7 text-purple-600" />
+                  <PieChart className="w-7 h-7 text-purple-600" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">REITs & Property</h3>
                 <p className="text-gray-600">
@@ -83,7 +83,7 @@ const EnrichmentHome: React.FC = () => {
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="bg-orange-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                  <Target className="w-7 h-7 text-orange-600" />
+                  <Target className="w-7 h-7 text-orange-600" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Decision Making</h3>
                 <p className="text-gray-600">
@@ -93,7 +93,7 @@ const EnrichmentHome: React.FC = () => {
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="bg-pink-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                  <Brain className="w-7 h-7 text-pink-600" />
+                  <Brain className="w-7 h-7 text-pink-600" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Critical Thinking</h3>
                 <p className="text-gray-600">
@@ -103,7 +103,7 @@ const EnrichmentHome: React.FC = () => {
 
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="bg-yellow-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                  <TrendingUp className="w-7 h-7 text-yellow-600" />
+                  <TrendingUp className="w-7 h-7 text-yellow-600" aria-hidden="true" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Long-term Planning</h3>
                 <p className="text-gray-600">
@@ -155,7 +155,7 @@ const EnrichmentHome: React.FC = () => {
 
           {/* Student Login Section */}
           <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl shadow-xl p-8 md:p-12 text-white text-center">
-            <Users className="w-16 h-16 mx-auto mb-4" />
+            <Users className="w-16 h-16 mx-auto mb-4" aria-hidden="true" />
             <h3 className="text-2xl font-bold mb-4">Students: Ready to Play?</h3>
             <p className="text-green-100 mb-6 text-lg">
               Enter your school-issued access code to begin your financial literacy journey
@@ -178,7 +178,7 @@ const EnrichmentHome: React.FC = () => {
             
             <div className="grid md:grid-cols-2 gap-8">
               <div className="bg-white rounded-xl p-8 shadow-lg">
-                <Award className="w-12 h-12 text-green-600 mb-4" />
+                <Award className="w-12 h-12 text-green-600 mb-4" aria-hidden="true" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Engaging & Interactive</h3>
                 <p className="text-gray-600">
                   Game-based learning keeps students motivated and engaged while teaching critical life skills.
@@ -186,7 +186,7 @@ const EnrichmentHome: React.FC = () => {
               </div>
 
               <div className="bg-white rounded-xl p-8 shadow-lg">
-                <BookOpen className="w-12 h-12 text-green-600 mb-4" />
+                <BookOpen className="w-12 h-12 text-green-600 mb-4" aria-hidden="true" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Curriculum-Aligned</h3>
                 <p className="text-gray-600">
                   Supports MOE's Character and Citizenship Education (CCE) and 21st Century Competencies.
@@ -194,7 +194,7 @@ const EnrichmentHome: React.FC = () => {
               </div>
 
               <div className="bg-white rounded-xl p-8 shadow-lg">
-                <TrendingUp className="w-12 h-12 text-green-600 mb-4" />
+                <TrendingUp className="w-12 h-12 text-green-600 mb-4" aria-hidden="true" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Real-World Skills</h3>
                 <p className="text-gray-600">
                   Students learn practical financial concepts they'll use throughout their lives.
@@ -202,7 +202,7 @@ const EnrichmentHome: React.FC = () => {
               </div>
 
               <div className="bg-white rounded-xl p-8 shadow-lg">
-                <Users className="w-12 h-12 text-green-600 mb-4" />
+                <Users className="w-12 h-12 text-green-600 mb-4" aria-hidden="true" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Easy Implementation</h3>
                 <p className="text-gray-600">
                   Simple setup, teacher dashboards, and full support from our team.

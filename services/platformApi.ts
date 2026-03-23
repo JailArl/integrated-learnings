@@ -113,7 +113,7 @@ export const getMyBids = async (
     // For each bid, fetch the corresponding match if the request is matched
     const bidsWithMatches = await Promise.all((data || []).map(async (bid) => {
       if (bid.request?.status === 'matched' || bid.request?.status === 'invoiced') {
-        const { data: matchData } = await supabase
+        const { data: matchData } = await supabase!
           .from('matches')
           .select('*')
           .eq('request_id', bid.request.id)

@@ -149,7 +149,7 @@ export const AdminTutorRanking: React.FC = () => {
       // Get certificate counts for each tutor
       const tutorsWithCerts = await Promise.all(
         (tutors || []).map(async (tutor) => {
-          const { data: certs } = await supabase
+          const { data: certs } = await supabase!
             .from('tutor_certificates')
             .select('id')
             .eq('tutor_id', tutor.id)
