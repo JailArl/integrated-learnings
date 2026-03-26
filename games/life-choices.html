@@ -355,8 +355,8 @@ const FIELDS=[
      {level:2,name:'Senior Technician',sal:28000,req:'Higher NITEC',cpf:true,type:'FT',yrsExp:0},
      {level:3,name:'Engineering Associate',sal:32000,req:'Diploma',cpf:true,type:'FT',yrsExp:0},
      {level:4,name:'Engineer',sal:52000,req:'Degree',cpf:true,type:'FT',yrsExp:0},
-     {level:5,name:'Senior Engineer',sal:72000,req:'Degree',cpf:true,type:'FT',yrsExp:8},
-     {level:6,name:'Engineering Manager',sal:95000,req:'Degree',cpf:true,type:'FT',yrsExp:15},
+     {level:5,name:'Senior Engineer',sal:72000,req:'Degree',cpf:true,type:'FT',yrsExp:5},
+     {level:6,name:'Engineering Manager',sal:95000,req:'Degree',cpf:true,type:'FT',yrsExp:10},
    ]},
   {id:'biz',name:'Business & Finance',icon:'💼',color:'#2563eb',
    hiPerYear:5,hiNote:'High pay but corporate stress — you work for money not passion',invBonus:0.10,
@@ -369,7 +369,7 @@ const FIELDS=[
      {level:3,name:'Bank Officer',sal:30000,req:'Diploma',cpf:true,type:'FT',yrsExp:0},
      {level:4,name:'Accountant',sal:50000,req:'Degree',cpf:true,type:'FT',yrsExp:0},
      {level:5,name:'Finance Manager',sal:75000,req:'Degree',cpf:true,type:'FT',yrsExp:8},
-     {level:6,name:'CFO / Director',sal:120000,req:'Degree',cpf:true,type:'FT',yrsExp:18},
+     {level:6,name:'CFO / Director',sal:120000,req:'Degree',cpf:true,type:'FT',yrsExp:14},
    ]},
   {id:'it',name:'IT & Computing',icon:'💻',color:'#7c3aed',
    hiPerYear:20,hiNote:'Solve problems, build products, great work culture',itBonus:true,
@@ -394,7 +394,7 @@ const FIELDS=[
      {level:1,name:'F&B Supervisor',sal:22000,req:'NITEC',cpf:true,type:'FT',yrsExp:0},
      {level:2,name:'Restaurant Manager',sal:28000,req:'Higher NITEC',cpf:true,type:'FT',yrsExp:0},
      {level:3,name:'Hotel Operations Mgr',sal:38000,req:'Diploma',cpf:true,type:'FT',yrsExp:0},
-     {level:4,name:'Hotel General Manager',sal:55000,req:'Diploma',cpf:true,type:'FT',yrsExp:10},
+     {level:4,name:'Hotel General Manager',sal:55000,req:'Diploma',cpf:true,type:'FT',yrsExp:15},
    ]},
   {id:'creative',name:'Creative & Design',icon:'🎨',color:'#0891b2',
    hiPerYear:30,hiNote:'Most satisfying — express yourself, create beauty every day',
@@ -406,7 +406,7 @@ const FIELDS=[
      {level:2,name:'Junior Designer',sal:25000,req:'Higher NITEC',cpf:true,type:'FT',yrsExp:0},
      {level:3,name:'UX / Graphic Designer',sal:34000,req:'Diploma',cpf:true,type:'FT',yrsExp:0},
      {level:4,name:'Senior Designer',sal:52000,req:'Degree',cpf:true,type:'FT',yrsExp:0},
-     {level:5,name:'Creative Director',sal:80000,req:'Degree',cpf:true,type:'FT',yrsExp:10},
+     {level:5,name:'Creative Director',sal:80000,req:'Degree',cpf:true,type:'FT',yrsExp:8},
    ]},
   {id:'med',name:'Medicine',icon:'🩺',color:'#16a34a',
    hiPerYear:20,hiNote:'Save lives — deep purpose, cannot be retrenched',noRetrenched:true,
@@ -426,23 +426,23 @@ const FIELDS=[
    available:['jc'],
    ladder:[
      {level:0,name:'Associate Lawyer',sal:70000,req:'Law Degree',cpf:true,type:'FT',yrsExp:0},
-     {level:1,name:'Senior Associate',sal:90000,req:'Law Degree',cpf:true,type:'FT',yrsExp:3},
+     {level:1,name:'Senior Associate',sal:90000,req:'Law Degree',cpf:true,type:'FT',yrsExp:5},
      {level:2,name:'Junior Partner',sal:130000,req:'Law Degree',cpf:true,type:'FT',yrsExp:8},
-     {level:3,name:'Senior Partner',sal:200000,req:'Law Degree',cpf:true,type:'FT',yrsExp:15},
+     {level:3,name:'Senior Partner',sal:200000,req:'Law Degree',cpf:true,type:'FT',yrsExp:20},
    ]},
 ];
 
 // UNIVERSAL JOBS — available to all fields, all levels (FT career choices)
 const UNIVERSAL=[
-  {id:'hawker',name:'Hawker Stall Owner',icon:'🍜',sal:36000,type:'FT',cpf:false,selfEmployed:true,grows:0.02,tip:'Beloved SG career! Self-employed = NO employer CPF contribution. Must self-fund retirement. Slower growth but rewarding.'},
+  {id:'hawker',name:'Hawker Stall Owner',icon:'🍜',sal:42000,type:'FT',cpf:false,selfEmployed:true,grows:0.03,tip:'Beloved SG career! Top hawkers earn $5K-$8K/month. Self-employed = NO employer CPF contribution. Must self-fund retirement via cash savings & investments. Hard work but deeply rewarding — you are your own boss!'},
 ];
 
 // SIDE GIGS — optional extra income alongside a FT job, but cost HI
 const SIDE_GIGS=[
-  {id:'grab',name:'Grab Delivery',icon:'🛵',extraSal:6000,hiCost:-15,cpf:false,
-   tip:'$500/month extra BUT exhausting after a full day at work. No CPF. No career growth.'},
-  {id:'content',name:'Content Creator',icon:'📱',extraSal:3000,hiCost:-10,cpf:false,
-   tip:'$250/month IF you get traction. High failure rate. No CPF. Weekends sacrificed.'},
+  {id:'grab',name:'Grab Delivery',icon:'🛵',extraSal:9600,hiCost:-20,cpf:false,
+   tip:'$800/month extra BUT physically draining after a full day at work. No CPF. No career growth. Wear & tear on your body.'},
+  {id:'content',name:'Content Creator',icon:'📱',extraSal:6000,hiCost:-15,cpf:false,
+   tip:'$500/month IF you build an audience. Takes 6-12 months to gain traction. No CPF. Evenings & weekends sacrificed.'},
 ];
 
 // EDUCATION PATHS
@@ -1974,7 +1974,7 @@ function renderAngbao(){
   const lj=!isUniv?getLadder()[G.jobLevel]:null;
   const job=lj||uj;
   // Mid-career PT study: salary at 85%
-  const isMidPT=G.studying&&G.studying.ptMode&&G.jobLevel>=-1;
+  const isMidPT=G.studying&&G.studying.ptMode&&G.jobLevel!==(-1);  // works for field jobs AND universal/hawker
   const rawSal=G.jobSal||0;
   const sal=isMidPT?Math.round(rawSal*0.85):rawSal;
   const cpfE=job?.cpf?cpfEmployee(sal):0;
@@ -2117,7 +2117,7 @@ function renderAngbao(){
   el('bca')?.addEventListener('click',()=>{
     // Apply income — 85% salary if mid-career PT study active
     const rawS=G.jobSal||0;
-    const isMidPT2=G.studying&&G.studying.ptMode&&G.jobLevel>=-1;
+    const isMidPT2=G.studying&&G.studying.ptMode&&G.jobLevel!==(-1);  // works for field jobs AND universal/hawker
     const s=isMidPT2?Math.round(rawS*0.85):rawS;
     const isUniv2=G.jobLevel<0;
     const uIdx2=isUniv2?(-G.jobLevel-2):0;
@@ -3312,10 +3312,10 @@ function confirmAlloc(){
   UI.lc=null;UI.ie={};UI.is={};
 
   // ── MID-CAREER PT STUDY TICK ──
-  // If studying PT while working (jobLevel is valid), tick down and trigger grad
+  // If studying PT while working (any job including hawker/universal), tick down and trigger grad
   // Note: G.age was already incremented by bny → we just tick studying.left
   var midCareerGrad=false;
-  if(G.studying&&G.studying.ptMode&&G.jobLevel>=-1){
+  if(G.studying&&G.studying.ptMode&&G.jobLevel!==(-1)){  // any job (field or universal/hawker), but not unset (-1)
     G.studying.left--;
     G.yearsTotal++;
     if(G.age>=21)G.pocketMoney=false;
@@ -4086,6 +4086,7 @@ function renderSummary(){
     G=newG();
     G.resetCount=rc;
     UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    saveG();
     toast('Game reset! Try a different path this time 🔄','ty');
     render();
   });
@@ -4487,6 +4488,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     var rc=(G.resetCount||0)+1;
     G=newG();G.resetCount=rc;
     UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    saveG();
     toast('Reset! Resets used: '+rc,'ty');
     render();
   });
