@@ -280,6 +280,7 @@ td{padding:8px 5px;border-bottom:1px solid #f3f4f6}
       <div class="ns"><span class="nsl">Net Worth</span><span class="nsv b" id="nn">$500</span></div>
       <div class="ns"><span class="nsl">CPF</span><span class="nsv v" id="ncp">$0</span></div>
       <div class="ns"><span class="nsl">Loans owed</span><span class="nsv" id="nl">$0</span></div>
+      <div class="ns" id="npi-wrap" style="display:none"><span class="nsl">📈 Passive</span><span class="nsv" id="npi" style="color:#16a34a">$0/yr</span></div>
       <div class="hipill"><span style="font-size:9px;font-weight:700;color:#9ca3af">😊 <span id="nh">50</span></span><div class="hibar"><div class="hifill" id="hf" style="width:50%"></div></div></div>
     </div>
     <div class="nr">
@@ -433,7 +434,7 @@ const FIELDS=[
 
 // UNIVERSAL JOBS — available to all fields, all levels (FT career choices)
 const UNIVERSAL=[
-  {id:'hawker',name:'Hawker Stall Owner',icon:'🍜',sal:36000,type:'FT',cpf:true,selfEmployed:true,grows:0.04,tip:'Beloved SG career! Hard work with real growth. No qual needed. NOT just a side gig.'},
+  {id:'hawker',name:'Hawker Stall Owner',icon:'🍜',sal:36000,type:'FT',cpf:false,selfEmployed:true,grows:0.02,tip:'Beloved SG career! Self-employed = NO employer CPF contribution. Must self-fund retirement. Slower growth but rewarding.'},
 ];
 
 // SIDE GIGS — optional extra income alongside a FT job, but cost HI
@@ -487,7 +488,7 @@ const EDUPATHS=[
 // CERTS (available age 18+ during study and work)
 const CERTS=[
   {id:'drv',name:'Driving Licence',icon:'🚗',cost:3500,effect:'Driving Licence',age:18,desc:'Required to buy a car.'},
-  {id:'swim',name:'Swimming Coach Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,desc:'Side income: +$5K/yr as part-time coach.'},
+  {id:'swim',name:'Swimming Coach Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,maxAge:40,desc:'Side income: +$5K/yr as part-time coach. Available until age 40.'},
   {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,jobRequired:true,salBoost:2000,desc:'Govt subsidised. After attending, your salary increases by $2,000/yr and you are protected from scams!'},
   {id:'ins',name:'Insurance Licence',icon:'🛡️',cost:1500,effect:'Insurance Lic',age:21,desc:'Side income: +$4K/yr. Also gives 50% off insurance premiums.'},
 ];
@@ -941,7 +942,7 @@ function newG(){return {
 };}
 
 let G=null;
-let UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptJobChoice:null,luxPick:[],ptEnrolPick:null};
+let UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptJobChoice:null,luxPick:[],ptEnrolPick:null};
 
 function invTot(inv){return Object.values(inv||{}).reduce((a,b)=>a+b,0);}
 function loans(){
@@ -949,9 +950,30 @@ function loans(){
   return(G.studyLoan||0)+allPropLoans+(G.carLoan||0)+(G.emergencyDebt||0);
 }
 function emergencyBorrow(amt,reason){
-  // General cash shortfall goes to emergency debt (26% interest — bad debt!)
-  G.emergencyDebt=(G.emergencyDebt||0)+amt;G.cash=0;
-  addLog('🚨 Emergency debt +'+fmt(amt)+' @ 26%! ('+reason+') Pay this off fast!');
+  var remaining=amt;
+  // 1. Use emergency fund first
+  if(G.emergencyFund>0&&remaining>0){
+    var efUse=Math.min(G.emergencyFund,remaining);
+    G.emergencyFund-=efUse;remaining-=efUse;
+    addLog('🛟 Emergency fund used: -'+fmt(efUse)+' for '+reason+' (EF remaining: '+fmt(G.emergencyFund)+')');
+  }
+  // 2. Liquidate investments (bank savings first, then liquid assets)
+  var sellOrder=['bank','etf','reit','bank_stock','stock'];
+  sellOrder.forEach(function(key){
+    if(remaining<=0)return;
+    var avail=G.inv[key]||0;
+    if(avail>0){
+      var use=Math.min(avail,remaining);
+      G.inv[key]-=use;remaining-=use;
+      addLog('📉 Emergency liquidation: sold '+fmt(use)+' of '+key+' to cover '+reason);
+    }
+  });
+  // 3. Only take emergency debt for the remainder
+  if(remaining>0){
+    G.emergencyDebt=(G.emergencyDebt||0)+remaining;
+    addLog('🚨 Emergency debt +'+fmt(remaining)+' @ 26%! ('+reason+') Pay this off fast!');
+  }
+  G.cash=0;
   G.hi-=40;
 }
 function nw(){
@@ -1017,6 +1039,19 @@ function updateNav(){
   el('nh').textContent=G.hi;
   el('nh').style.color=G.hi<0?'#dc2626':G.hi<20?'#d97706':'';
   el('hf').style.width=Math.min(100,Math.max(0,G.hi/10))+'%';
+  // Passive income display
+  var passiveInc=Math.round(INV.reduce(function(a,i){return a+(G.inv[i.key]||0)*dynamicReturn(i.key,G.currentNews);},0));
+  // Add rental income from investment properties
+  if(G.properties&&G.properties.length>1){
+    G.properties.slice(1).forEach(function(pp){if(pp.rentEnabled&&pp.propData?.rent)passiveInc+=pp.propData.rent*12;});
+  }
+  // Add dividend income
+  passiveInc+=Math.round(INV.reduce(function(a,i){return a+getDividend(i.key,G.inv[i.key]||0,G.currentNews);},0));
+  var npiWrap=el('npi-wrap');var npiEl=el('npi');
+  if(npiWrap&&npiEl){
+    if(passiveInc>0){npiWrap.style.display='';npiEl.textContent=fmt(passiveInc)+'/yr';npiEl.style.color=G.ffAge?'#7c3aed':'#16a34a';}
+    else{npiWrap.style.display='none';}
+  }
 }
 
 function updateSB(){
@@ -1032,7 +1067,10 @@ function updateSB(){
   if(G.studyLoan>0)h+=sr('Study Loan ✅','<span class="tag tgn">'+fmt(G.studyLoan)+'</span>');
   // mortgage displayed with property above
   if(G.carLoan>0)h+=sr('Car Loan','<span class="tag trd">'+fmt(G.carLoan)+'</span>');
-  if(G.car)h+=sr('Car',G.car);
+  if(G.car){
+    h+=sr('🚗 Car','<span class="tag tbl" style="font-size:9px">'+G.car+'</span>');
+    h+=sr('└ Value',fmt(carVal(G.carData,G.carAge))+' (Age: '+G.carAge+'yr'+(G.carAge>=8?' ⚠️ Old!':'')+')');
+  }
   // Display all owned properties
   if(G.properties&&G.properties.length>0){
     G.properties.forEach((pp,idx)=>{
@@ -2162,7 +2200,14 @@ function renderAlloc(){
   h+='<div style="display:flex;align-items:center;gap:8px">';
   h+='<input type="number" min="0" step="500" id="ef-inp" value="" placeholder="Top up amount (any amount!)" class="inp" style="flex:1;padding:7px 10px;font-size:12px">';
   h+='<span style="font-size:10px;color:#9ca3af">Protects you from retrenchment/emergencies!</span>';
-  h+='</div></div>';
+  h+='</div>';
+  if(G.emergencyFund>0){
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-top:6px">';
+    h+='<input type="number" min="0" max="'+G.emergencyFund+'" step="500" id="ef-withdraw" value="" placeholder="Withdraw from EF (max '+fmt(G.emergencyFund)+')" class="inp" style="flex:1;padding:7px 10px;font-size:12px;border-color:#fca5a5">';
+    h+='<span style="font-size:10px;color:#dc2626">⚠️ Withdrawing reduces your safety net!</span>';
+    h+='</div>';
+  }
+  h+='</div>';
 
   // Loans — with year-end projection
   if(tl>0){
@@ -2365,9 +2410,15 @@ function renderAlloc(){
       h+='<div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:6px;padding:5px 8px;font-size:9px;color:#991b1b;font-weight:700">🔒 Unavailable: '+blockReason+'</div>';
     }else{
       h+='<div style="position:relative">';
-      h+='<input class="inp" type="number" min="'+(i.minInvest||0)+'" step="500" id="inv-'+i.key+'" value="" placeholder="Add (min '+fmt(i.minInvest||0)+')" style="padding:7px 10px;font-size:12px">';
+      h+='<input class="inp" type="number" min="'+(i.minInvest||0)+'" step="500" id="inv-'+i.key+'" value="'+(UI.ie[i.key]?UI.ie[i.key]:'')+'" placeholder="Add (min '+fmt(i.minInvest||0)+')" style="padding:7px 10px;font-size:12px">';
       h+='<span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:8px;color:#6b7280;background:#f8fafc;padding:1px 4px;border-radius:3px">+ADD</span>';
       h+='</div>';
+      if(cur>0&&i.key!=='fd'&&i.key!=='cpfsa'){
+        h+='<div style="position:relative;margin-top:4px">';
+        h+='<input class="inp" type="number" min="0" max="'+cur+'" step="500" id="sell-'+i.key+'" value="'+(UI.is[i.key]?UI.is[i.key]:'')+'" placeholder="Sell (max '+fmt(cur)+')" style="padding:7px 10px;font-size:12px;border-color:#fca5a5">';
+        h+='<span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:8px;color:#dc2626;background:#fff5f5;padding:1px 4px;border-radius:3px">−SELL</span>';
+        h+='</div>';
+      }
       h+='<p style="font-size:9px;color:#6b7280;margin-top:3px">Min: <strong>'+fmt(i.minInvest||0)+'</strong>'+(i.maxPerYear?' · Max/yr: '+fmt(i.maxPerYear):'')+(i.brokFee?' · Brkge: $'+i.brokFee:'')+' · Current: '+fmt(cur)+'</p>';
     }
     h+='</div>';
@@ -2414,16 +2465,36 @@ function renderAlloc(){
   const canSell=!!G.car;
   const canBuyIns=!G.insurance&&G.age>=21;
   const hasCCDebt=(G.ccDebt||0)>0;
-  if(canCar||canHDB||canCondo||canSell||canBuyIns||hasCCDebt){
+  // Always show big purchases section with locked items
+  {
     h+='<div style="border:1px dashed #e5e7eb;border-radius:10px;padding:12px;margin-top:4px">';
-    h+='<p style="font-size:12px;font-weight:700;margin-bottom:8px">🔧 Big Purchases</p>';
+    h+='<p style="font-size:12px;font-weight:700;margin-bottom:8px">🔧 Big Purchases & Milestones</p>';
+    // Car
     if(canCar)h+='<button class="btn bs bsm" id="bbcar" style="margin-right:6px;margin-bottom:6px">🚗 Buy a Car</button>';
+    else if(!G.car){
+      var carNeeds=[];
+      if(!G.certs.includes('Driving Licence'))carNeeds.push('Driving Licence');
+      if(G.cash<=65000)carNeeds.push(fmt(65000-G.cash)+' more cash');
+      h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🚗 Car — Need: '+carNeeds.join(' + ')+'</div>';
+    }
     if(canSell)h+='<button class="btn bs bsm" id="bscar" style="margin-right:6px;margin-bottom:6px">💰 Sell Car ('+fmt(carVal(G.carData,G.carAge))+')</button>';
     var isLowCOE=G.coeLevel<0.85;
     if(canSell&&G.certs.includes('Driving Licence'))h+='<button class="btn bg bsm" id="bswapcar" style="margin-right:6px;margin-bottom:6px">'+(isLowCOE?'🟢 COE Low — ':'')+'🚗 Sell & Buy New Car'+(isLowCOE?' (Good time!)':'')+'</button>';
+    // HDB
     if(canHDB)h+='<button class="btn bg bsm" id="bbhdb" style="margin-right:6px;margin-bottom:6px">🏗️ '+(G.hdbBallotWon?'✅ BTO Ballot Won — Buy Now!':'HDB BTO — Ballot ('+((G.hdbBallotCount||0))+'/2 used)')+'</button>';
+    else if(ownCount===0&&!hasPrivate){
+      var hdbNeeds=[];
+      if(!G.married)hdbNeeds.push('Get married first');
+      else if((G.hdbBallotCount||0)>=2&&!G.hdbBallotWon)hdbNeeds.push('Used all 2 ballot attempts');
+      h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏗️ HDB BTO — Need: '+(hdbNeeds.length?hdbNeeds.join(' + '):'Ballot!')+'</div>';
+    }
+    // Condo
     if(ownCount===0&&!G.married&&canCondo)h+='<button class="btn bs bsm" id="bbcondo" style="margin-right:6px;margin-bottom:6px">🏢 Buy Condo (1st home, single)</button>';
-    if(ownCount===0&&G.married&&!G.hdbBallotWon&&canCondo)h+='<button class="btn bs bsm" id="bbcondo" style="margin-right:6px;margin-bottom:6px">🏢 Buy Condo (instead of HDB)</button>';
+    else if(ownCount===0&&G.married&&!G.hdbBallotWon&&canCondo)h+='<button class="btn bs bsm" id="bbcondo" style="margin-right:6px;margin-bottom:6px">🏢 Buy Condo (instead of HDB)</button>';
+    else if(ownCount===0&&G.age>=21&&!canCondo){
+      var condoDown=Math.round(900000*0.25*(1+absdNext));
+      h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏢 Condo — Need: '+fmt(condoDown-G.cash)+' more cash (25% down of $900K)</div>';
+    }
     if(ownCount===0&&canLuxCondo)h+='<button class="btn bs bsm" id="bbluxcondo" style="margin-right:6px;margin-bottom:6px">🌇 Buy Luxury Condo ($1.8M)</button>';
     if(canInvestProp)h+='<button class="btn bs bsm" id="bbinvprop" style="margin-right:6px;margin-bottom:6px;border-color:#f59e0b">🏢 Buy Investment Property #'+(ownCount+1)+absdLabel+'</button>';
     if(!G.prop&&!G.married&&G.age>=21)h+='<div style="font-size:10px;color:#dc2626;margin-top:4px">⚠️ Singles can only buy Condo or Landed. HDB requires marriage. <span style=\"color:#16a34a\">Get married to unlock HDB BTO!</span></div>';
@@ -2503,10 +2574,20 @@ function renderAlloc(){
   function updateAllocLiveCash(){
     // Sum all investment inputs + EF input to show live remaining cash
     var committed=0;
-    INV.forEach(i=>{committed+=(UI.ie[i.key]||0)+(i.brokFee&&(UI.ie[i.key]||0)>0?i.brokFee:0);});
+    var sellBack=0;
+    INV.forEach(i=>{
+      committed+=(UI.ie[i.key]||0)+(i.brokFee&&(UI.ie[i.key]||0)>0?i.brokFee:0);
+      var sellAmt=UI.is[i.key]||0;
+      if(sellAmt>0){
+        sellBack+=sellAmt;
+        if(i.brokFee)sellBack-=i.brokFee; // brokerage on sell too
+      }
+    });
     var efAdd=parseInt(el('ef-inp')?.value)||0;
+    var efWithdraw=parseInt(el('ef-withdraw')?.value)||0;
     committed+=efAdd;
-    var remaining=G.cash-committed;
+    committed-=efWithdraw;
+    var remaining=G.cash-committed+sellBack;
     var liveEl=el('alloc-cash-live');
     if(liveEl){
       liveEl.textContent=fmt(remaining);
@@ -2524,6 +2605,7 @@ function renderAlloc(){
     }
   }
   el('ef-inp')?.addEventListener('input',updateAllocLiveCash);
+  el('ef-withdraw')?.addEventListener('input',updateAllocLiveCash);
   INV.forEach(i=>{
     const inp=el('inv-'+i.key);
     if(inp){
@@ -2533,13 +2615,22 @@ function renderAlloc(){
         // Live-update the estimated gain chip for this investment only
         const cur=G.inv[i.key]||0;
         const add=UI.ie[i.key]||0;
-        const totalForCalc=cur+add;
+        const sell=UI.is[i.key]||0;
+        const totalForCalc=cur+add-sell;
         const news5=NEWS.find(n=>n.id===G.currentNews)||NEWS[1];
         const estGain=Math.round(totalForCalc*(news5.ret[i.key]||INV.find(x=>x.key===i.key)?.yield||0));
         const estChip=document.querySelector('[data-estgain="'+i.key+'"]');
         if(estChip&&i.key!=='fd'){
-          estChip.innerHTML='Est: <strong style="color:'+(estGain>=0?'#16a34a':'#dc2626')+'">'+(estGain>=0?'+':'')+fmt(estGain)+'</strong>'+(add>0?' <span style="color:#7c3aed;font-size:8px">(+'+fmt(add)+')</span>':'');
+          estChip.innerHTML='Est: <strong style="color:'+(estGain>=0?'#16a34a':'#dc2626')+'">'+(estGain>=0?'+':'')+fmt(estGain)+'</strong>'+(add>0?' <span style="color:#7c3aed;font-size:8px">(+'+fmt(add)+')</span>':'')+(sell>0?' <span style="color:#dc2626;font-size:8px">(-'+fmt(sell)+')</span>':'');
         }
+      });
+    }
+    // Sell listener
+    var sellInp=el('sell-'+i.key);
+    if(sellInp){
+      sellInp.addEventListener('input',()=>{
+        UI.is[i.key]=Math.min(parseInt(sellInp.value)||0,G.inv[i.key]||0);
+        updateAllocLiveCash();
       });
     }
   });
@@ -2784,6 +2875,9 @@ function confirmAlloc(){
   // Emergency fund top-up
   var efInp=el('ef-inp');var efAdd=parseInt(efInp?.value)||0;
   if(efAdd>0&&G.cash>=efAdd){G.cash-=efAdd;G.emergencyFund=(G.emergencyFund||0)+efAdd;addLog('🛟 Emergency fund +'+fmt(efAdd)+' = '+fmt(G.emergencyFund)+' total');}
+  // Emergency fund withdrawal
+  var efWithdrawInp=el('ef-withdraw');var efWithdraw=Math.min(parseInt(efWithdrawInp?.value)||0,G.emergencyFund||0);
+  if(efWithdraw>0){G.emergencyFund=Math.max(0,(G.emergencyFund||0)-efWithdraw);G.cash+=efWithdraw;addLog('🛟 Emergency fund withdrawn -'+fmt(efWithdraw)+' → EF: '+fmt(G.emergencyFund)+' | Use wisely!');}
   // Loan repayment
   const lsl=el('lsl');
   if(lsl){
@@ -2802,6 +2896,18 @@ function confirmAlloc(){
     var carPay=Math.min(parseInt(carlsl.value)||0,G.carLoan,G.cash);
     if(carPay>0){G.cash-=carPay;G.carLoan-=carPay;addLog('🚗 Car loan extra repay -'+fmt(carPay)+' | Remaining: '+fmt(G.carLoan));}
   }
+  // Investments — SELL first (liquidate holdings)
+  INV.forEach(i=>{
+    var sellAmt=UI.is?Math.min(UI.is[i.key]||0,G.inv[i.key]||0):0;
+    if(sellAmt<=0)return;
+    if(i.key==='fd'||i.key==='cpfsa')return; // cannot sell locked investments
+    var fee=i.brokFee||0;
+    G.inv[i.key]=Math.max(0,(G.inv[i.key]||0)-sellAmt);
+    G.cash+=sellAmt-fee;
+    if(fee>0)addLog('💸 Brokerage fee -$'+fee+' for selling '+i.name);
+    addLog('📉 Sold '+i.name+': -'+fmt(sellAmt)+' → remaining '+fmt(G.inv[i.key])+' | +'+fmt(sellAmt-fee)+' cash');
+  });
+  UI.is={};
   // Investments — with real-world constraint enforcement
   G.cpfsaThisYear=0; // reset each year — $8K cap is annual
   var skippedInv=[]; // track what couldn't be processed
@@ -3096,7 +3202,7 @@ function confirmAlloc(){
   }
   // FF check — realistic SG living costs minimum $24K/yr (food+transport+housing+basic needs)
   // Must be at least age 35 to avoid TOTO windfall exploit
-  const invYld=Math.round(INV.reduce((a,i)=>a+G.inv[i.key]*i.yield,0));
+  const invYld=Math.round(INV.reduce((a,i)=>a+(G.inv[i.key]||0)*dynamicReturn(i.key,G.currentNews),0));
   var baseLiving=1800+1440; // food + transport always required
   var housingCost=G.prop?0:7200; // rental if no property
   var realLivCost=Math.max(lc2+baseLiving+housingCost+(G.childCost||0),24000); // include child costs
@@ -3145,7 +3251,7 @@ function confirmAlloc(){
   }
   // Age 55 CPF milestone
   if(G.age===55&&!G.cpf55shown){G.cpf55shown=true;addLog('🏛️ CPF age 55 reached! Check your CPF withdrawal options in summary.');}
-  UI.lc=null;UI.ie={};
+  UI.lc=null;UI.ie={};UI.is={};
 
   // ── MID-CAREER PT STUDY TICK ──
   // If studying PT while working (jobLevel is valid), tick down and trigger grad
@@ -3170,7 +3276,7 @@ function confirmAlloc(){
       saveG();UI.phase='grad';render();return;
     }
     const yw2=G.yearsWorked;
-    const ev2=yw2%3===0,qz2=yw2%7===2,cert2=yw2%4===1&&G.age>=21;
+    const ev2=yw2%3===0,qz2=yw2%7===2,cert2=yw2%3===1&&G.age>=18;
     if(cert2&&CERTS.some(c=>!G.certs.includes(c.effect)&&G.cash>c.cost)){UI.phase='cert';}
     else if(ev2){UI.evShown=false;UI.evPick=null;UI.phase='event';}
     else if(qz2){UI.phase='quiz';}
@@ -3180,7 +3286,7 @@ function confirmAlloc(){
 
   // Next phase
   const yw=G.yearsWorked;
-  const ev=yw%3===0,qz=yw%7===2,cert=yw%4===1&&G.age>=21;
+  const ev=yw%3===0,qz=yw%7===2,cert=yw%3===1&&G.age>=18;
   if(cert&&CERTS.some(c=>!G.certs.includes(c.effect)&&G.cash>c.cost)){UI.phase='cert';}
   else if(ev){UI.evShown=false;UI.evPick=null;UI.phase='event';}
   else if(qz){UI.phase='quiz';}
@@ -3287,6 +3393,12 @@ function doUpgradeProp(){
   // "Upgrade" = sell current home, buy a better one (owner-occupied, no ABSD)
   if(!G.prop||!G.propData||(G.properties||[]).length===0)return;
   var ownedProp=G.properties[0]; // first property = main home
+  // MOP check: HDB must be held for 5 years before selling/upgrading
+  if(ownedProp.propData?.isHDB&&(ownedProp.mopYearsDone||0)<5){
+    var mopLeft=5-(ownedProp.mopYearsDone||0);
+    toast('Cannot upgrade yet! HDB MOP: '+mopLeft+' year(s) remaining. Must hold for 5 years before selling.','tr');
+    return;
+  }
   var nextProp=PROPERTIES.find(p=>p.price>ownedProp.propData.price);
   if(!nextProp){toast('Already at top property tier!','ty');return;}
   // Sell old
@@ -3405,6 +3517,7 @@ function renderCert(){
     if(G.certs.includes(c.effect))return false;
     if(G.cash<c.cost)return false;
     if(G.age<c.age)return false;
+    if(c.maxAge&&G.age>c.maxAge)return false;
     if(c.jobRequired&&G.jobLevel===-1)return false; // SF only useful with a job
     return true;
   });
@@ -3722,7 +3835,6 @@ function renderSummary(){
     h+='<p style="font-size:12px;color:#15803d;line-height:1.7;margin-bottom:12px">Baby is coming! Hospital, confinement lady, baby items — first year costs ~$20,000.<br>Monthly expenses will increase by $800–1,200 permanently. But the joy is priceless! 😊</p>';
     h+='<div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">';
     h+='<button class="btn bg" id="bwelcome-baby">👶 Welcome Baby! (-$25,000, +200 HI)</button>';
-    h+='<button class="btn bs bsm" id="bno-baby" style="margin-left:8px">Not ready yet</button>';
     h+='</div></div>';
   }
 
@@ -3860,7 +3972,7 @@ function renderSummary(){
     SID=SID; // keep same session slot
     G=newG();
     G.resetCount=rc;
-    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
     toast('Game reset! Try a different path this time 🔄','ty');
     render();
   });
@@ -3879,8 +3991,8 @@ function renderSummary(){
     G.cash+=scrapVal;G.carLoan=0;
     addLog('🚗 Sold old car for scrap: +'+fmt(scrapVal));
     G.car=null;G.carData=null;G.carVal2=0;G.carAge=0;G.coePending=false;
-    toast('Old car scrapped. Proceed to buy a new car!','tg');
-    render(); // car will appear in alloc screen next year
+    toast('Old car scrapped. Choose your new car!','tg');
+    showCarModal(); // open car selection immediately
   });
   el('bgo-mrt')?.addEventListener('click',()=>{
     var scrapVal=Math.min((G.carData?.arf||34000)*0.5,60000);
@@ -3900,13 +4012,6 @@ function renderSummary(){
     render();
   });
   el('bstay-single')?.addEventListener('click',()=>{render();});
-  el('bno-baby')?.addEventListener('click',()=>{
-    // Reset trigger so it can appear again next year
-    G.babyTriggerShown=false;
-    G.hi-=20; // partner disappointed but not disaster
-    addLog('👶 Decided not to have baby this year. -20 HI. Prompt returns next year.');
-    render();
-  });
   el('bwelcome-baby')?.addEventListener('click',()=>{
     G.cash-=25000;G.hasChildren=true;G.babyAge=G.age;
     G.hi+=400; // baby +200 HI
@@ -4080,7 +4185,7 @@ async function endGame(){
     SID=null; // force new session for replay
     G=newG();
     G.resetCount=0;
-    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
     setScreen('game');render();
   });
   el('blbe')?.addEventListener('click',loadLb);
@@ -4234,7 +4339,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!confirm('Reset and start over? Progress lost.'))return;
     var rc=(G.resetCount||0)+1;
     G=newG();G.resetCount=rc;
-    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
     toast('Reset! Resets used: '+rc,'ty');
     render();
   });
@@ -4243,7 +4348,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   el('bex')?.addEventListener('click',()=>{
     // Clear all game state so next player starts fresh
     G=null;P=null;SID=null;RD=null;
-    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
     // Clear login form fields
     var ic=el('ic');if(ic)ic.value='';
     var ii=el('ii');if(ii)ii.value='';
