@@ -907,7 +907,7 @@ function newG(){return {
   cpfsaThisYear:0,
   propLoanYearsPaid:0,
   properties:[],   // array of owned properties {id,name,icon,propVal,propLoan,propLoanYearsPaid,propData,mopYearsDone,rentEnabled}
-  hdbBallotWon:false,hdbBallotCount:0, // BTO ballot tracking
+  hdbBallotWon:false,hdbBallotCount:0,hdbBallotLastAge:0, // BTO ballot tracking
   studyLoanTenure:20,studyLoanYearsPaid:0,
   carOriginalLoan:0,carAnnualPayment:0,carTenure:7,carLoanYearsPaid:0,
   prop:null,propVal:0, // LEGACY: kept for compat, use properties[] for multi
@@ -2458,7 +2458,7 @@ function renderAlloc(){
   var hdb4p=PROPERTIES.find(x=>x.id==='hdb4'),hdb5p=PROPERTIES.find(x=>x.id==='hdb5');
   var absdNext=ABSD_SC[Math.min(ownCount,2)];
   var absdLabel=ownCount>0?' (+'+Math.round(absdNext*100)+'% ABSD cash!)':'';
-  var canHDB=(ownCount===0&&!hasPrivate&&G.married&&(G.hdbBallotWon||(G.hdbBallotCount||0)<2)); // first property, married, no private owned
+  var canHDB=(ownCount===0&&!hasPrivate&&G.married&&(G.hdbBallotWon||G.hdbBallotLastAge!==G.age)); // first property, married, can ballot once/yr
   var canCondo=G.cash>Math.round(900000*0.25*(1+absdNext))&&G.age>=21; // can always buy private if rich enough
   var canLuxCondo=G.cash>Math.round(1800000*0.25*(1+absdNext))&&G.age>=21;
   // Investment property: own 2+ properties (must have at least 1)
@@ -2482,12 +2482,12 @@ function renderAlloc(){
     var isLowCOE=G.coeLevel<0.85;
     if(canSell&&G.certs.includes('Driving Licence'))h+='<button class="btn bg bsm" id="bswapcar" style="margin-right:6px;margin-bottom:6px">'+(isLowCOE?'🟢 COE Low — ':'')+'🚗 Sell & Buy New Car'+(isLowCOE?' (Good time!)':'')+'</button>';
     // HDB
-    if(canHDB)h+='<button class="btn bg bsm" id="bbhdb" style="margin-right:6px;margin-bottom:6px">🏗️ '+(G.hdbBallotWon?'✅ BTO Ballot Won — Buy Now!':'HDB BTO — Ballot ('+((G.hdbBallotCount||0))+'/2 used)')+'</button>';
+    if(canHDB)h+='<button class="btn bg bsm" id="bbhdb" style="margin-right:6px;margin-bottom:6px">🏗️ '+(G.hdbBallotWon?'✅ BTO Ballot Won — Buy Now!':'HDB BTO — Ballot 🎲 ('+((G.hdbBallotCount||0))+' attempts)')+'</button>';
     else if(ownCount===0&&!hasPrivate){
       var hdbNeeds=[];
       if(!G.married)hdbNeeds.push('Get married first');
-      else if((G.hdbBallotCount||0)>=2&&!G.hdbBallotWon)hdbNeeds.push('Used all 2 ballot attempts');
-      h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏗️ HDB BTO — Need: '+(hdbNeeds.length?hdbNeeds.join(' + '):'Ballot!')+'</div>';
+      else if(G.hdbBallotLastAge===G.age&&!G.hdbBallotWon)hdbNeeds.push('Already balloted this year — try next year');
+      h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏗️ HDB BTO — '+(hdbNeeds.length?'Need: '+hdbNeeds.join(' + '):'Ballot!')+'</div>';
     }
     // Condo
     if(ownCount===0&&!G.married&&canCondo)h+='<button class="btn bs bsm" id="bbcondo" style="margin-right:6px;margin-bottom:6px">🏢 Buy Condo (1st home, single)</button>';
@@ -2682,34 +2682,58 @@ function renderAlloc(){
   });
   el('bbhdb')?.addEventListener('click',()=>{
     if(G.hdbBallotWon){doBuyHDB();return;} // won ballot previously — buy directly
+    // Check if already balloted this year
+    if(G.hdbBallotLastAge===G.age){toast('You already balloted this year! Try again next year.','ty');return;}
     // BTO Ballot modal
     var m=document.createElement('div');m.className='ov';m.id='btomod';
+    var attempts=G.hdbBallotCount||0;
+    var successChance=Math.min(0.70,0.25+attempts*0.05); // starts 25%, +5% each attempt (first-timer priority), caps 70%
     m.innerHTML='<div class="mo"><h3>🏗️ HDB BTO Ballot</h3>'+
       '<p style="font-size:12px;color:#6b7280;margin-bottom:14px;line-height:1.7">'+
       'BTO (Build-To-Order) flats are heavily subsidised by the government. You need to <strong>ballot</strong> for one — success is not guaranteed! '+
-      'Many SG couples ballot 2–5 times before getting a flat.</p>'+
+      'Many SG couples ballot multiple times before getting a flat. You can ballot <strong>once per year</strong> (each launch).</p>'+
       '<div style="background:#f0fdf4;border-radius:10px;padding:12px;margin-bottom:12px;font-size:11px;line-height:1.8">'+
-      '<strong>HDB BTO (4/5-Room)</strong><br>4-Room Standard: ~$450,000 | 5-Room Standard: ~$520,000<br>Down payment: 25% (can use CPF OA, Oct 2024 rule)<br>Loan: HDB concessionary 2.6%/yr, 25yr<br>BTO ballots used: '+(G.hdbBallotCount||0)+'/2</div>'+
+      '<strong>HDB BTO (4/5-Room)</strong><br>4-Room Standard: ~$450,000 | 5-Room Standard: ~$520,000<br>Down payment: 25% (can use CPF OA, Oct 2024 rule)<br>Loan: HDB concessionary 2.6%/yr, 25yr<br>'+
+      '🎲 Previous attempts: <strong>'+(attempts)+'</strong> · Est. success chance: <strong>~'+Math.round(successChance*100)+'%</strong>'+(attempts>=2?' (priority boost!)':'')+'</div>'+
       '<div style="display:flex;gap:8px"><button class="btn bp" id="bdo-ballot">🎲 Submit Ballot Application</button>'+
       '<button class="btn bs bsm" id="bbto-cancel">Cancel</button></div></div>';
     document.body.appendChild(m);
     document.getElementById('bbto-cancel').onclick=()=>{document.getElementById('btomod').remove();};
     document.getElementById('bdo-ballot').onclick=()=>{
       G.hdbBallotCount=(G.hdbBallotCount||0)+1;
-      if(G.hdbBallotCount>2){toast('You have used all 2 BTO ballot chances!','tr');return;}
-      var successChance=G.hdbBallotCount<=1?0.30:0.50; // 2nd ballot: better odds // better odds each try
+      G.hdbBallotLastAge=G.age; // Lock out further ballots this year
       document.getElementById('btomod').remove();
+      // Show result as popup
+      var rm=document.createElement('div');rm.className='ov';rm.id='bto-result';
+      var rh='';
       if(Math.random()<successChance){
         G.hdbBallotWon=true;
         G.hi+=200;
         addLog('🎊 HDB BTO Ballot SUCCESS (attempt '+G.hdbBallotCount+')! Buy in Allocate screen. +80 HI');
-        toast('🎊 BTO Ballot WON! Go buy your flat now!','tg');
+        rh='<div class="mo" style="text-align:center"><div style="font-size:60px;margin-bottom:12px">🎊</div>';
+        rh+='<h3 style="color:#16a34a;font-size:22px;margin-bottom:8px">BTO Ballot SUCCESS!</h3>';
+        rh+='<p style="font-size:14px;color:#166534;margin-bottom:12px">After <strong>'+G.hdbBallotCount+' attempt(s)</strong>, you secured a BTO flat!</p>';
+        rh+='<div style="background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8">';
+        rh+='🏠 You can now <strong>buy your HDB flat</strong> in the Big Purchases section<br>';
+        rh+='😊 +200 Happiness<br>';
+        rh+='💡 BTO flats are subsidised — one of the best ways to build wealth in SG!</div>';
+        rh+='<button class="btn bg" id="bbto-rok">Buy My Flat! 🏠</button></div>';
       }else{
         G.hi-=100;
         addLog('😔 BTO Ballot failed (attempt '+G.hdbBallotCount+'). Try again next year. -20 HI');
-        toast('😔 Ballot unsuccessful. Better luck next year!','tr');
+        rh='<div class="mo" style="text-align:center"><div style="font-size:60px;margin-bottom:12px">😔</div>';
+        rh+='<h3 style="color:#dc2626;font-size:22px;margin-bottom:8px">Ballot Unsuccessful</h3>';
+        rh+='<p style="font-size:14px;color:#991b1b;margin-bottom:12px">Your ballot number was too high this time.</p>';
+        rh+='<div style="background:#fff7ed;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8">';
+        rh+='📊 Total attempts so far: <strong>'+G.hdbBallotCount+'</strong><br>';
+        rh+='😔 -100 Happiness (the disappointment...)<br>';
+        rh+='⏰ You can ballot again <strong>next year</strong><br>';
+        rh+='💡 Each failed attempt slightly improves your priority for future ballots!</div>';
+        rh+='<button class="btn bs" id="bbto-rok">Try Again Next Year</button></div>';
       }
-      render();
+      rm.innerHTML=rh;
+      document.body.appendChild(rm);
+      document.getElementById('bbto-rok').onclick=()=>{document.getElementById('bto-result').remove();render();};
     };
   });
   el('bbluxcondo')?.addEventListener('click',()=>{
@@ -3996,26 +4020,55 @@ function renderSummary(){
   el('bneg')?.addEventListener('click',()=>{
     G.negotiationYear=G.yearsWorked;
     var r=Math.random();
+    var m=document.createElement('div');m.className='ov';m.id='negmod';
+    var mh='';
     if(r<0.50){
       var raise=Math.round(G.jobSal*0.08);
       G.jobSal+=raise;G.hi+=120;
-      toast('🎉 Negotiation SUCCESS! +'+fmt(raise)+'/yr salary!','tg');
       addLog('💬 Negotiated +'+fmt(raise)+' raise! New salary: '+fmt(G.jobSal));
+      mh='<div class="mo" style="text-align:center"><div style="font-size:60px;margin-bottom:12px">🎉</div>';
+      mh+='<h3 style="color:#16a34a;font-size:20px;margin-bottom:8px">Negotiation SUCCESS!</h3>';
+      mh+='<p style="font-size:14px;color:#166534;margin-bottom:12px">Your boss agreed — you got a <strong>+'+fmt(raise)+'/yr</strong> raise!</p>';
+      mh+='<div style="background:#f0fdf4;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8">';
+      mh+='💰 New salary: <strong style="color:#16a34a">'+fmt(G.jobSal)+'/yr</strong><br>';
+      mh+='😊 +120 Happiness<br>';
+      mh+='📈 That raise = <strong>'+fmt(Math.round(raise*Math.pow(1.07,65-G.age)))+'</strong> invested by age 65!</div>';
+      mh+='<button class="btn bg" id="bneg-ok">Awesome! ✅</button></div>';
     }else if(r<0.90){
       G.hi-=30;
-      toast('😬 No raise given, but kept job. Try again in 3 years.','ty');
       addLog('💬 Negotiation failed — no raise. A bit awkward.');
+      mh='<div class="mo" style="text-align:center"><div style="font-size:60px;margin-bottom:12px">😬</div>';
+      mh+='<h3 style="color:#d97706;font-size:20px;margin-bottom:8px">No Raise Given</h3>';
+      mh+='<p style="font-size:14px;color:#92400e;margin-bottom:12px">Your boss listened but said <em>"not this time"</em>. A bit awkward...</p>';
+      mh+='<div style="background:#fff7ed;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8">';
+      mh+='💼 Salary unchanged: <strong>'+fmt(G.jobSal)+'/yr</strong><br>';
+      mh+='😔 -30 Happiness (the awkwardness...)<br>';
+      mh+='⏰ Can try again in <strong>3 years</strong></div>';
+      mh+='<button class="btn bs" id="bneg-ok">Okay, move on</button></div>';
     }else{
-      // Backfire — lose job
       var oldSal=G.jobSal;
-      G.yearsAtLevel=0; // lose seniority
-      G.jobSal=getLadder()[G.jobLevel]?.sal||G.jobSal; // reset to base
+      G.yearsAtLevel=0;
+      G.jobSal=getLadder()[G.jobLevel]?.sal||G.jobSal;
       G.hi-=150;
-      toast('😱 Negotiation BACKFIRED — lost job! Find new one.','tr');
       addLog('💬 Negotiation backfired! Lost job. Salary reset from '+fmt(oldSal)+' to base '+fmt(G.jobSal));
-      UI.phase='job';UI.jl=null;render();return;
+      mh='<div class="mo" style="text-align:center"><div style="font-size:60px;margin-bottom:12px">😱</div>';
+      mh+='<h3 style="color:#dc2626;font-size:20px;margin-bottom:8px">Negotiation BACKFIRED!</h3>';
+      mh+='<p style="font-size:14px;color:#991b1b;margin-bottom:12px">Your boss took it badly — you <strong>lost your job!</strong></p>';
+      mh+='<div style="background:#fff5f5;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8">';
+      mh+='💔 Salary reset: '+fmt(oldSal)+' → <strong style="color:#dc2626">'+fmt(G.jobSal)+'/yr</strong><br>';
+      mh+='😰 -150 Happiness<br>';
+      mh+='🔄 You will need to find a new job<br>';
+      mh+='⚠️ Lesson: Negotiation has real risks! Always have a backup plan.</div>';
+      mh+='<button class="btn br" id="bneg-ok" data-lost="1">Find New Job →</button></div>';
     }
-    render();
+    m.innerHTML=mh;
+    document.body.appendChild(m);
+    document.getElementById('bneg-ok').onclick=function(){
+      var lost=this.dataset.lost;
+      document.getElementById('negmod').remove();
+      if(lost){UI.phase='job';UI.jl=null;}
+      render();
+    };
   });
   el('bnoneg')?.addEventListener('click',()=>render());
 
