@@ -925,6 +925,7 @@ function newG(){return {
   insurancePremium:0, // annual premium
   creditCard:false,   // has credit card debt
   ccDebt:0,           // credit card debt amount
+  weddingLoan:0,      // wedding loan (8%/yr personal loan)
   negotiationYear:0,  // last year salary was negotiated
   hdbBallots:0,       // number of times balloted
   log:[],eventsUsed:[],quizIdx:0,resetCount:0,
@@ -947,7 +948,7 @@ let UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},l
 function invTot(inv){return Object.values(inv||{}).reduce((a,b)=>a+b,0);}
 function loans(){
   var allPropLoans=G.properties&&G.properties.length>0?G.properties.reduce((s,p)=>s+(p.propLoan||0),0):(G.propLoan||0);
-  return(G.studyLoan||0)+allPropLoans+(G.carLoan||0)+(G.emergencyDebt||0);
+  return(G.studyLoan||0)+allPropLoans+(G.carLoan||0)+(G.emergencyDebt||0)+(G.weddingLoan||0);
 }
 function emergencyBorrow(amt,reason){
   var remaining=amt;
@@ -2494,20 +2495,37 @@ function renderAlloc(){
     else if(ownCount===0&&G.age>=21&&!canCondo){
       var condoDown=Math.round(900000*0.25*(1+absdNext));
       h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏢 Condo — Need: '+fmt(condoDown-G.cash)+' more cash (25% down of $900K)</div>';
+    }else if(ownCount===0&&G.age<21){
+      h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏢 Condo — Need: Age 21+</div>';
     }
     if(ownCount===0&&canLuxCondo)h+='<button class="btn bs bsm" id="bbluxcondo" style="margin-right:6px;margin-bottom:6px">🌇 Buy Luxury Condo ($1.8M)</button>';
+    else if(ownCount===0&&!canLuxCondo&&G.age>=21){
+      var luxCondoDown=Math.round(1800000*0.25*(1+absdNext));
+      h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🌇 Luxury Condo — Need: '+fmt(luxCondoDown-G.cash)+' more cash</div>';
+    }
     if(canInvestProp)h+='<button class="btn bs bsm" id="bbinvprop" style="margin-right:6px;margin-bottom:6px;border-color:#f59e0b">🏢 Buy Investment Property #'+(ownCount+1)+absdLabel+'</button>';
+    else if(ownCount>=1&&ownCount<3){
+      var invPropDown=Math.round(900000*0.25*(1+absdNext));
+      h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏢 Investment Property — Need: '+fmt(invPropDown-G.cash)+' more cash'+absdLabel+'</div>';
+    }
     if(!G.prop&&!G.married&&G.age>=21)h+='<div style="font-size:10px;color:#dc2626;margin-top:4px">⚠️ Singles can only buy Condo or Landed. HDB requires marriage. <span style=\"color:#16a34a\">Get married to unlock HDB BTO!</span></div>';
-    // Property upgrade
-    if(G.prop&&G.propData&&G.cash>100000){
+    // Property upgrade — always visible when owning property
+    if(G.prop&&G.propData){
       const nextProp=PROPERTIES.find(p=>p.price>G.propData.price);
-      if(nextProp)h+='<button class="btn bs bsm" id="bupgprop" style="margin-right:6px;margin-bottom:6px">⬆️ Upgrade to '+nextProp.name+' ('+fmt(nextProp.price)+')</button>';
+      if(nextProp){
+        if(G.cash>100000)h+='<button class="btn bs bsm" id="bupgprop" style="margin-right:6px;margin-bottom:6px">⬆️ Upgrade to '+nextProp.name+' ('+fmt(nextProp.price)+')</button>';
+        else h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 ⬆️ Upgrade to '+nextProp.name+' — Need: '+fmt(100000-G.cash)+' more cash</div>';
+      }
     }
     // Show asset summary badge
     if(!G.prop)h+='<div style="font-size:10px;color:#dc2626;margin-top:6px">🏚️ Renting: -$7,200/yr goes to landlord! Property ownership builds YOUR wealth instead.</div>';
+    // Insurance — always visible
     if(canBuyIns)h+='<button class="btn bg bsm" id="bbins" style="margin-right:6px;margin-bottom:6px">🛡️ Buy Insurance ($2,400/yr)</button>';
+    else if(!G.insurance&&G.age<21)h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🛡️ Insurance — Need: Age 21+</div>';
+    else if(G.insurance)h+='<div style="display:inline-block;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;font-size:11px;color:#16a34a">✅ 🛡️ Insured ($'+G.insurancePremium+'/yr)</div>';
     if(hasCCDebt)h+='<button class="btn br bsm" id="bpaycc" style="margin-right:6px;margin-bottom:6px">💳 Pay CC Debt ('+fmt(G.ccDebt)+' @ 26%!)</button>';
     if((G.emergencyDebt||0)>0)h+='<button class="btn br bsm" id="bpayemd" style="margin-right:6px;margin-bottom:6px">🚨 Pay Emergency Debt ('+fmt(G.emergencyDebt)+' @ 26%!)</button>';
+    if((G.weddingLoan||0)>0)h+='<button class="btn br bsm" id="bpaywl" style="margin-right:6px;margin-bottom:6px">💍 Pay Wedding Loan ('+fmt(G.weddingLoan)+' @ 8%!)</button>';
     h+='</div>';
   }
 
@@ -2765,6 +2783,13 @@ function renderAlloc(){
     G.cash-=pay;G.emergencyDebt-=pay;
     if((G.emergencyDebt||0)<=0){G.emergencyDebt=0;G.hi+=150;addLog('🎉 Emergency debt cleared! +60 HI');}
     else addLog('🚨 Paid '+fmt(pay)+' emergency debt. Remaining: '+fmt(G.emergencyDebt));
+    render();
+  });
+  el('bpaywl')?.addEventListener('click',()=>{
+    var pay=Math.min(G.weddingLoan||0,G.cash);
+    G.cash-=pay;G.weddingLoan-=pay;
+    if((G.weddingLoan||0)<=0){G.weddingLoan=0;G.hi+=100;addLog('🎉 Wedding loan cleared! +100 HI');}
+    else addLog('💍 Paid '+fmt(pay)+' wedding loan. Remaining: '+fmt(G.weddingLoan));
     render();
   });
   el('bpaycc')?.addEventListener('click',()=>{
@@ -3110,6 +3135,15 @@ function confirmAlloc(){
     G.emergencyDebt+=emInt;G.hi-=40;
     addLog('🚨 Emergency debt interest +'+fmt(emInt)+' (26%!) Total: '+fmt(G.emergencyDebt)+' — pay this off FIRST!');
   }
+  // Wedding loan interest (8%/yr — personal loan rate)
+  if(G.weddingLoan>0){
+    var wlInt=Math.round(G.weddingLoan*0.08);
+    var wlPay=Math.max(2400,Math.min(G.weddingLoan+wlInt,Math.round((G.weddingLoan+wlInt)/5)));
+    G.weddingLoan+=wlInt;
+    if(G.cash>=wlPay){G.cash-=wlPay;G.weddingLoan=Math.max(0,G.weddingLoan-wlPay);addLog('💍 Wedding loan: int +'+fmt(wlInt)+' paid -'+fmt(wlPay)+' | Remaining: '+fmt(G.weddingLoan));}
+    else{addLog('💍 Wedding loan interest +'+fmt(wlInt)+' — cannot afford repayment! Total: '+fmt(G.weddingLoan));}
+    if(G.weddingLoan<=0){G.weddingLoan=0;G.hi+=100;addLog('🎉 Wedding loan fully paid off! +100 HI');}
+  }
   // Child costs (if has children)
   if(G.hasChildren&&(G.childCost||0)>0){
     G.cash-=G.childCost;
@@ -3277,7 +3311,7 @@ function confirmAlloc(){
     }
     const yw2=G.yearsWorked;
     const ev2=yw2%3===0,qz2=yw2%7===2,cert2=yw2%3===1&&G.age>=18;
-    if(cert2&&CERTS.some(c=>!G.certs.includes(c.effect)&&G.cash>c.cost)){UI.phase='cert';}
+    if(cert2&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)){UI.phase='cert';}
     else if(ev2){UI.evShown=false;UI.evPick=null;UI.phase='event';}
     else if(qz2){UI.phase='quiz';}
     else UI.phase='summary';
@@ -3287,7 +3321,7 @@ function confirmAlloc(){
   // Next phase
   const yw=G.yearsWorked;
   const ev=yw%3===0,qz=yw%7===2,cert=yw%3===1&&G.age>=18;
-  if(cert&&CERTS.some(c=>!G.certs.includes(c.effect)&&G.cash>c.cost)){UI.phase='cert';}
+  if(cert&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)){UI.phase='cert';}
   else if(ev){UI.evShown=false;UI.evPick=null;UI.phase='event';}
   else if(qz){UI.phase='quiz';}
   else UI.phase='summary';
@@ -3513,22 +3547,26 @@ function doBuyHDB(flatId){
 // CERT PROMPT
 // ══════════════════════════════════════
 function renderCert(){
-  const av=CERTS.filter(c=>{
+  const allCerts=CERTS.filter(c=>{
     if(G.certs.includes(c.effect))return false;
-    if(G.cash<c.cost)return false;
     if(G.age<c.age)return false;
     if(c.maxAge&&G.age>c.maxAge)return false;
     if(c.jobRequired&&G.jobLevel===-1)return false; // SF only useful with a job
     return true;
   });
-  if(!av.length){UI.phase='event';UI.evShown=false;UI.evPick=null;render();return;}
+  if(!allCerts.length){UI.phase='event';UI.evShown=false;UI.evPick=null;render();return;}
   let h='<div class="card"><div class="ct">🎯 Upskill — Age '+G.age+'</div>';
   h+='<h2 style="font-size:18px;font-weight:800;margin-bottom:6px">Get new cert(s)?</h2>';
   h+='<p style="font-size:12px;color:#6b7280;margin-bottom:4px;line-height:1.7">You can take <strong>multiple certs</strong> this year! Each has immediate benefits. Available cash: <strong>'+fmt(G.cash)+'</strong></p>';
   h+='<div class="cg cg2">';
-  av.forEach(c=>{
+  allCerts.forEach(c=>{
+    var canAfford=G.cash>=c.cost;
     const sel=(UI.certPicks||[]).includes(c.id);
-    h+='<div class="ch'+(sel?' sel':'')+'" data-c2="'+c.id+'"><div class="chk">✓</div><div class="ci">'+c.icon+'</div><h4>'+c.name+'</h4><p class="me">'+c.desc+'</p><span class="pr prn">'+fmt(-c.cost)+'</span></div>';
+    if(canAfford){
+      h+='<div class="ch'+(sel?' sel':'')+'" data-c2="'+c.id+'"><div class="chk">✓</div><div class="ci">'+c.icon+'</div><h4>'+c.name+'</h4><p class="me">'+c.desc+'</p><span class="pr prn">'+fmt(-c.cost)+'</span></div>';
+    }else{
+      h+='<div class="ch" style="opacity:0.5;cursor:not-allowed;border-color:#e5e7eb"><div class="ci">'+c.icon+'</div><h4 style="color:#9ca3af">'+c.name+'</h4><p class="me">'+c.desc+'</p><span class="pr prn">'+fmt(-c.cost)+'</span><div style="font-size:10px;color:#dc2626;font-weight:700;margin-top:4px">🔒 Need '+fmt(c.cost-G.cash)+' more cash</div></div>';
+    }
   });
   h+='<div class="ch'+(!(UI.certPicks&&UI.certPicks.length)?' sel':'')+'" data-c2="skip"><div class="chk">✓</div><div class="ci">⏭️</div><h4>Skip this year</h4></div>';
   h+='</div></div>';
@@ -3539,6 +3577,9 @@ function renderCert(){
   el('main').querySelectorAll('[data-c2]').forEach(c=>{c.addEventListener('click',()=>{
     var cid=c.dataset.c2;
     if(cid==='skip'){UI.certPicks=[];render();return;}
+    // Don't allow selecting unaffordable certs
+    var certObj=CERTS.find(x=>x.id===cid);
+    if(certObj&&G.cash<certObj.cost){toast('Need '+fmt(certObj.cost)+' cash for '+certObj.name+' — you have '+fmt(G.cash),'tr');return;}
     if(!UI.certPicks)UI.certPicks=[];
     if(UI.certPicks.includes(cid))UI.certPicks=UI.certPicks.filter(x=>x!==cid);
     else UI.certPicks.push(cid);
@@ -3737,6 +3778,7 @@ function renderSummary(){
   if(G.insurance)h+='<div class="rrow neg"><span>🛡️ Insurance premium</span><strong>-'+fmt(G.insurancePremium)+'</strong></div>';
   if(G.studyLoan>0&&rSal>0)h+='<div class="rrow neg"><span>📋 Study loan repayment (5%)</span><strong>-'+fmt(Math.max(1200,Math.round(rSal*0.05)))+'</strong></div>';
   if((G.ccDebt||0)>0)h+='<div class="rrow neg"><span>💳 Credit card interest (26%!)</span><strong style="color:#dc2626">-'+fmt(Math.round(G.ccDebt*0.26))+'</strong></div>';
+  if((G.weddingLoan||0)>0)h+='<div class="rrow neg"><span>💍 Wedding loan repayment (8%)</span><strong style="color:#dc2626">-'+fmt(Math.max(2400,Math.round(G.weddingLoan/5)))+'</strong></div>';
   h+='</div>';
   h+='<div class="receipt-sec"><div class="receipt-sec-title">📈 ASSETS CHANGE</div>';
   if(ti>0)h+='<div class="rrow pos"><span>📈 Investment portfolio value</span><strong>'+fmt(ti)+'</strong></div>';
@@ -3802,19 +3844,32 @@ function renderSummary(){
   // ── MARRIAGE TRIGGER: shows age 28–42, every year until married ──
   // No permanent one-shot flag — player can afford it later and still get the prompt
   var canAffordWedding=G.cash>=50000;
+  var weddingCost=50000;
+  var weddingShortfall=Math.max(0,weddingCost-G.cash);
+  var weddingTotalInv=invTot(G.inv);
+  var weddingEF=G.emergencyFund||0;
+  var weddingCanFundFromAssets=(G.cash+weddingTotalInv+weddingEF)>=weddingCost;
   if(!G.married&&G.age>=28&&G.age<=42){
     h+='<div style="background:linear-gradient(135deg,#fdf2f8,#fce7f3);border:2px solid #f9a8d4;border-radius:14px;padding:18px;margin-bottom:14px;text-align:center">';
     h+='<div style="font-size:40px;margin-bottom:8px">💍</div>';
     h+='<p style="font-size:15px;font-weight:800;color:#9d174d;margin-bottom:6px">Life Stage: Get Married? (Age '+G.age+')</p>';
     h+='<p style="font-size:12px;color:#be185d;line-height:1.7;margin-bottom:6px">Many Singaporeans marry in their late 20s to early 30s. Wedding costs $30,000–$80,000.<br>Marriage unlocks <strong>HDB BTO</strong> — the biggest wealth-building tool for young Singaporeans!</p>';
     if(!canAffordWedding){
-      h+='<div style="background:#fff5f5;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;color:#dc2626">💸 Need at least $50,000 cash for wedding. You have '+fmt(G.cash)+'. Keep saving — this prompt reappears each year!</div>';
+      h+='<div style="background:#fff7ed;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#92400e;text-align:left;line-height:1.8">';
+      h+='💸 Wedding costs <strong>$50,000</strong>. You have <strong>'+fmt(G.cash)+'</strong> cash.';
+      if(weddingShortfall>0)h+=' Short by <strong style="color:#dc2626">'+fmt(weddingShortfall)+'</strong>.';
+      h+='<br>💰 Investments: <strong>'+fmt(weddingTotalInv)+'</strong> · 🛟 Emergency Fund: <strong>'+fmt(weddingEF)+'</strong>';
+      if(weddingCanFundFromAssets)h+='<br><span style="color:#16a34a">✅ You can fund the wedding by liquidating assets!</span>';
+      else h+='<br><span style="color:#dc2626">⚠️ Not enough total assets. You can take a wedding loan to cover the gap!</span>';
+      h+='</div>';
     }
     h+='<div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">';
-    if(canAffordWedding)h+='<button class="btn" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;box-shadow:0 4px 12px rgba(236,72,153,.3)" id="bget-married">💍 Get Married! (-$50,000, +200 HI)</button>';
+    if(canAffordWedding)h+='<button class="btn" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;box-shadow:0 4px 12px rgba(236,72,153,.3)" id="bget-married">💍 Get Married! (-$50,000 cash, +200 HI)</button>';
+    if(!canAffordWedding&&(weddingTotalInv>0||weddingEF>0))h+='<button class="btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff" id="bget-married-assets">💍 Marry — Use Investments/EF to cover gap</button>';
+    if(!canAffordWedding)h+='<button class="btn" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff" id="bget-married-loan">💍 Marry — Take Wedding Loan for shortfall</button>';
     h+='<button class="btn bs bsm" id="bstay-single">Not this year</button>';
     h+='</div>';
-    if(!canAffordWedding)h+='<p style="font-size:10px;color:#be185d;margin-top:6px;text-align:center">Need <strong>'+fmt(50000-G.cash)+' more</strong> cash. This prompt returns every year until age 42!</p>';
+    if(!canAffordWedding)h+='<p style="font-size:10px;color:#be185d;margin-top:6px;text-align:center">This prompt returns every year until age 42. Save up or use the options above!</p>';
     else h+='<p style="font-size:10px;color:#9ca3af;margin-top:6px;text-align:center">This prompt returns every year until age 42. Take your time!</p>';
     h+='</div>';
   }
@@ -3824,6 +3879,11 @@ function renderSummary(){
     h+='💍 Late marriage is still possible in SG (age 43+). However the HDB BTO window is narrower. Focus on building wealth and consider a resale HDB instead.';
     var lateCost=50000;
     if(G.cash>=lateCost)h+='<br><button class="btn bsm" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;margin-top:8px" id="bget-married">💍 Get Married Now! (-$50,000)</button>';
+    else{
+      var lateInv=invTot(G.inv),lateEF=G.emergencyFund||0;
+      if(lateInv>0||lateEF>0)h+='<br><button class="btn bsm" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;margin-top:8px" id="bget-married-assets">💍 Marry — Liquidate assets</button>';
+      h+='<br><button class="btn bsm" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;margin-top:4px" id="bget-married-loan">💍 Marry — Wedding loan</button>';
+    }
     h+='</div>';
   }
   // ── BABY TRIGGER (1-3 years after marriage) ──
@@ -4006,9 +4066,43 @@ function renderSummary(){
     if(G.cash<50000){toast('Need at least $50,000 for wedding costs!','tr');return;}
     G.cash-=50000;G.married=true;G.marriageAge=G.age;G.hi+=200;
     G.hi+=300; // marriage +150 HI
-    // Shared costs after marriage — halve rent and car loan repayment
-    if(G.propLoan>0){G.propLoan=Math.round(G.propLoan*0.9);} // spouse contributes
+    if(G.propLoan>0){G.propLoan=Math.round(G.propLoan*0.9);}
     addLog('💍 MARRIED at age '+G.age+'! -$50,000 +150 HI 🎊 HDB BTO now unlocked!');
+    render();
+  });
+  el('bget-married-assets')?.addEventListener('click',()=>{
+    // Liquidate investments + EF to fund wedding shortfall
+    var need=50000;
+    var fromCash=Math.min(G.cash,need);need-=fromCash;
+    var fromEF=Math.min(G.emergencyFund||0,need);need-=fromEF;
+    // Liquidate investments (sell in order: bank, etf, reit, bank_stock, stock)
+    var sellOrder=['bank','etf','reit','bank_stock','stock','fd'];
+    var fromInv=0;
+    sellOrder.forEach(function(k){if(need>0&&G.inv[k]>0){var take=Math.min(G.inv[k],need);G.inv[k]-=take;need-=take;fromInv+=take;}});
+    if(need>0){toast('Not enough assets! Still short '+fmt(need),'tr');return;}
+    G.cash-=fromCash;
+    G.emergencyFund=Math.max(0,(G.emergencyFund||0)-fromEF);
+    G.married=true;G.marriageAge=G.age;G.hi+=200;G.hi+=300;
+    if(G.propLoan>0){G.propLoan=Math.round(G.propLoan*0.9);}
+    var logParts=['💍 MARRIED at age '+G.age+'! +150 HI 🎊'];
+    if(fromCash>0)logParts.push('Cash: -'+fmt(fromCash));
+    if(fromEF>0)logParts.push('EF liquidated: -'+fmt(fromEF));
+    if(fromInv>0)logParts.push('Investments sold: -'+fmt(fromInv));
+    addLog(logParts.join(' | '));
+    toast('Married! Used savings + investments to fund wedding 💍','tg');
+    render();
+  });
+  el('bget-married-loan')?.addEventListener('click',()=>{
+    // Take wedding loan for the shortfall (treated as emergency debt at a lower 8% wedding loan rate)
+    var fromCash=Math.min(G.cash,50000);
+    var loanAmt=50000-fromCash;
+    G.cash-=fromCash;
+    G.weddingLoan=(G.weddingLoan||0)+loanAmt;
+    G.married=true;G.marriageAge=G.age;G.hi+=200;G.hi+=300;
+    G.hi-=50; // stress of debt
+    if(G.propLoan>0){G.propLoan=Math.round(G.propLoan*0.9);}
+    addLog('💍 MARRIED at age '+G.age+'! Cash: -'+fmt(fromCash)+' | Wedding loan: '+fmt(loanAmt)+' @8%/yr | -50 HI (debt stress)');
+    toast('Married with a '+fmt(loanAmt)+' wedding loan! Pay it off quickly 💍','ty');
     render();
   });
   el('bstay-single')?.addEventListener('click',()=>{render();});
