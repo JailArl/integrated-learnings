@@ -490,17 +490,17 @@ const EDUPATHS=[
    hasPT:true,req:'A-Levels',upgrade:true,availForFields:['eng','biz','it','creative','govt'],
    desc:'4yr FT or 6yr PT. NUS/NTU/SMU. Highest salary ceiling.',
    tip:'PT Uni: 2 extra years but earn while studying!'},
-  {id:'uni_adv',name:'University (Adv. from Poly)',icon:'🏛️',grants:'Degree',dur:3,durPT:4,cost:15000,costPT:13000,
+  {id:'uni_adv',name:'University (Adv. from Poly)',icon:'🏛️',grants:'Degree',dur:3,durPT:4,cost:25000,costPT:22000,
    hasPT:true,req:'Diploma',upgrade:true,availForFields:['eng','biz','it','creative','govt'],
    desc:'3yr FT or 4yr PT with Poly diploma. Saves 1 year vs JC→Uni (4yr)!',
-   tip:'Poly→Uni = 3yr (1yr exemption at NTU/NUS). SAME degree, $17K cheaper than JC→Uni!'},
+   tip:'Poly→Uni = 3yr (1yr exemption at NTU/NUS). SAME degree + a Diploma backup! Similar total cost but more practical experience.'},
   {id:'medschool',name:'Medical School',icon:'🩺',grants:'Medical Degree',dur:5,durPT:null,cost:150000,costPT:null,
    hasPT:false,req:'A-Levels',upgrade:true,availForFields:['med'],
    desc:'5yr at NUS/NTU. Very expensive ($150K!) but highest earning potential.',
    tip:'Doctor starts earning at 24+. Poly grad starts at 20. 4 years of investing gap!'},
-  {id:'lawschool',name:'Law School',icon:'⚖️',grants:'Law Degree',dur:4,durPT:null,cost:100000,costPT:null,
+  {id:'lawschool',name:'Law School',icon:'⚖️',grants:'Law Degree',dur:4,durPT:null,cost:60000,costPT:null,
    hasPT:false,req:'A-Levels',upgrade:true,availForFields:['law'],
-   desc:'4yr at NUS/SMU. $100K total fees. Competitive entry.',
+   desc:'4yr at NUS/SMU. ~$60K total fees (SC subsidised). Competitive entry.',
    tip:'Lawyer starts earning at 23. High pay but very long path to partner.'},
 ];
 
@@ -803,9 +803,9 @@ const PROPERTIES=[
 ];
 
 // ── INCOME TAX (SG simplified) — with spouse & child relief ──
-// CPF ordinary wage ceiling (from Jan 2023): $6,800/month = $81,600/yr
+// CPF ordinary wage ceiling (from Jan 2025): $7,400/month = $88,800/yr
 // Above this, no CPF on regular monthly salary (employee AND employer both capped)
-const CPF_OW_CEILING=81600;
+const CPF_OW_CEILING=88800;
 
 // CPF calculation with ordinary wage ceiling
 function cpfEmployee(sal){return Math.round(Math.min(sal,CPF_OW_CEILING)*0.20);}
@@ -3080,7 +3080,7 @@ function forecast(){
   var cpfAt65=Math.round(G.cpf*Math.pow(1.025,yl));
   var propAt65=G.prop&&G.propVal>0?Math.round(G.propVal*Math.pow(1.03,yl)):0;
   var salaryTotal=Math.round(G.jobSal*yl*0.8); // rough lifetime salary left
-  var cpfLifePayout=Math.round(Math.min(cpfAt65,205800)/240); // /month
+  var cpfLifePayout=Math.round(Math.min(cpfAt65,213000)/240); // /month
   return '<div class="fc"><h4>🔮 Age 65 Forecast</h4><div class="fcg"><div class="fi"><label>Portfolio at 65</label><div class="fv '+pc+'">$'+proj.toLocaleString()+'</div></div><div class="fi"><label>Savings Rate</label><div class="fv '+sc+'">'+sav+'%</div></div><div class="fi"><label>Inv. Yield/yr</label><div class="fv '+(yld>0?'gd':'bd')+'">'+fmt(yld)+'</div></div><div class="fi"><label>Years Left</label><div class="fv gd">'+yl+'</div></div></div><div class="fct">'+tip+'</div>'
     +'<details style="margin-top:8px"><summary style="cursor:pointer;font-size:9px;color:#9ca3af;font-weight:600">📊 How is this built? (click for breakdown)</summary>'
     +'<div style="margin-top:8px;font-size:10px;color:#d1d5db;line-height:2;background:rgba(255,255,255,.05);border-radius:6px;padding:8px 10px">'
@@ -4007,7 +4007,7 @@ const RETIRE_LIFESTYLES=[
 function renderRetirePlan(){
   const n=nw();
   const invYld=Math.round(INV.reduce((a,i)=>a+(G.inv[i.key]||0)*dynamicReturn(i.key,G.currentNews),0));
-  const cpfLife=Math.round(Math.min(G.cpf,205800)/240);
+  const cpfLife=Math.round(Math.min(G.cpf,213000)/240);
   const f=getField();
 
   let h='';
@@ -4325,7 +4325,7 @@ function renderSummary(){
   }
 
   if(G.cpf55shown&&G.age===55){
-    const FRS=205800; // Full Retirement Sum 2024
+    const FRS=213000; // Full Retirement Sum 2025
     const canWithdraw=Math.max(0,G.cpf-FRS);
     const cpfForLife=Math.min(G.cpf,FRS);
     const monthlyLifeEst=Math.round(cpfForLife/240);
@@ -4334,7 +4334,7 @@ function renderSummary(){
     h+='<p style="font-size:15px;font-weight:800;color:#6d28d9;margin-bottom:8px">CPF Age 55 Milestone!</p>';
     h+='<div style="background:#fff;border-radius:8px;padding:10px 12px;font-size:11px;line-height:2;margin-bottom:10px">';
     h+='<div style="display:flex;justify-content:space-between"><span>Your total CPF balance</span><strong style="color:#7c3aed">'+fmt(G.cpf)+'</strong></div>';
-    h+='<div style="display:flex;justify-content:space-between"><span>Full Retirement Sum (FRS)</span><strong>$205,800</strong></div>';
+    h+='<div style="display:flex;justify-content:space-between"><span>Full Retirement Sum (FRS)</span><strong>$213,000</strong></div>';
     h+='<div style="display:flex;justify-content:space-between"><span style="color:#16a34a;font-weight:700">✅ Can withdraw now</span><strong style="color:#16a34a">'+fmt(canWithdraw)+'</strong></div>';
     h+='<div style="display:flex;justify-content:space-between"><span>Stays for CPF LIFE (at 65)</span><strong style="color:#2563eb">'+fmt(cpfForLife)+'</strong></div>';
     h+='<div style="display:flex;justify-content:space-between"><span>Est. CPF LIFE payout from 65</span><strong style="color:#7c3aed">~'+fmt(monthlyLifeEst)+'/month for life!</strong></div>';
@@ -4342,7 +4342,7 @@ function renderSummary(){
     if(canWithdraw>0){
       h+='<button class="btn bg bsm" id="bwithdraw55" style="margin-right:8px">💵 Withdraw '+fmt(canWithdraw)+' to Cash</button>';
     }else{
-      h+='<div style="font-size:11px;color:#6d28d9;background:rgba(124,58,237,.1);border-radius:6px;padding:6px 10px">Your CPF is below FRS ($205,800). Nothing to withdraw yet — keep building! At 65, CPF LIFE pays '+fmt(monthlyLifeEst)+'/month for life.</div>';
+      h+='<div style="font-size:11px;color:#6d28d9;background:rgba(124,58,237,.1);border-radius:6px;padding:6px 10px">Your CPF is below FRS ($213,000). Nothing to withdraw yet — keep building! At 65, CPF LIFE pays '+fmt(monthlyLifeEst)+'/month for life.</div>';
     }
     h+='</div>';
   }
@@ -4571,7 +4571,7 @@ function renderSummary(){
     render();
   });
   el('bwithdraw55')?.addEventListener('click',()=>{
-    const FRS=205800;
+    const FRS=213000;
     const canW=Math.max(0,G.cpf-FRS);
     if(canW>0){
       G.cash+=canW;G.cpf-=canW;G.hi+=80;
@@ -4693,7 +4693,7 @@ async function endGame(){
   h+='</div>';
   h+='<div style="background:#f5f3ff;border-radius:12px;padding:14px;max-width:420px;width:100%;margin:0 auto 16px;text-align:left">';
   h+='<p style="font-size:12px;font-weight:800;color:#6d28d9;margin-bottom:6px">🏛️ CPF LIFE Payout from Age 65:</p>';
-  var cpfForLife65=Math.min(G.cpf,205800);
+  var cpfForLife65=Math.min(G.cpf,213000);
   var monthlyLife65=Math.round(cpfForLife65/240);
   h+='<p style="font-size:12px;color:#5b21b6;line-height:1.7">CPF balance <strong>'+fmt(G.cpf)+'</strong> locked for CPF LIFE.<br>At 65: ~<strong>'+fmt(monthlyLife65)+'/month</strong> government-guaranteed for life! Plus any voluntary CPF-SA top-ups.</p>';
   h+='</div>';
@@ -4722,7 +4722,7 @@ async function endGame(){
   // ── RETIREMENT PLAN VERDICT ──
   if(G.retirePlan){
     var rp=G.retirePlan;
-    var cpfForLife=Math.min(G.cpf,205800);
+    var cpfForLife=Math.min(G.cpf,213000);
     var cpfMo=Math.round(cpfForLife/240);
     var yrsInRet=90-rp.age;
     var totalNeeded=rp.yearlyNeed*yrsInRet;
