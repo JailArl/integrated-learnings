@@ -24,6 +24,8 @@ import CaseDetail from './pages/CaseDetail';
 import TutorAIInterview from './pages/TutorAIInterview';
 import TutorInterviewResults from './pages/TutorInterviewResults';
 import TutorOnboarding from './pages/TutorOnboarding';
+import EnrichmentLogin from './pages/EnrichmentLogin';
+import EnrichmentGame from './pages/EnrichmentGame';
 
 // Global Error Boundary — prevents white-screen crashes
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -153,15 +155,8 @@ const App: React.FC = () => {
           
           {/* School Enrichment Routes */}
           <Route path="/enrichment" element={<EnrichmentHome />} />
-          <Route path="/enrichment/login" element={
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-              <div className="text-center max-w-md">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">Student Login</h1>
-                <p className="text-gray-600 mb-6">Access the Financial Literacy Game Platform</p>
-                <p className="text-sm text-gray-500 mt-4">Game platform coming soon!</p>
-              </div>
-            </div>
-          } />
+          <Route path="/enrichment/login" element={<EnrichmentLogin />} />
+          <Route path="/enrichment/game" element={<EnrichmentGame />} />
           
           {/* Legacy routes - redirect to tuition for backward compatibility */}
           <Route path="/roadmap" element={<Navigate to="/tuition/roadmap" replace />} />

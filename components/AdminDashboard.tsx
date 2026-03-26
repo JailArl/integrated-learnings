@@ -432,6 +432,12 @@ export default function AdminDashboard() {
             >
               Tutor Review
             </button>
+            <button
+              onClick={() => navigate('/enrichment/game')}
+              className="px-4 py-2 rounded-lg font-semibold transition bg-green-100 text-green-700 hover:bg-green-200"
+            >
+              🎮 Preview Game
+            </button>
           </div>
         </div>
 
