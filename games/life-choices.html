@@ -466,20 +466,20 @@ const SIDE_GIGS=[
 
 // EDUCATION PATHS
 const EDUPATHS=[
-  {id:'ite',name:'ITE (NITEC)',icon:'🛠️',grants:'NITEC',dur:2,durPT:null,cost:1000,costPT:null,
-   hasPT:false,availForFields:['eng','biz','it','hosp','creative'],
-   desc:'2yr technical cert. Start earning at 19. Govt heavily subsidised!',
-   tip:'ITE is NOT the end! NITEC → Higher NITEC → Poly → Uni is a real path. Full-time commitment required.'},
-  {id:'hnitec',name:'Higher NITEC',icon:'⬆️',grants:'Higher NITEC',dur:2,durPT:null,cost:1500,costPT:null,
-   hasPT:false,req:'NITEC',upgrade:true,availForFields:['eng','biz','it','hosp','creative'],
-   desc:'Upgrade from NITEC. Unlocks better jobs and Poly advanced entry.',
-   tip:'Higher NITEC grads can enter Poly in 2yr instead of 3yr! Commit fully for 2 years.'},
+  {id:'ite',name:'ITE (NITEC)',icon:'🛠️',grants:'NITEC',dur:2,durPT:3,cost:1000,costPT:800,
+   hasPT:true,availForFields:['eng','biz','it','hosp','creative','govt'],
+   desc:'2yr (FT) or 3yr (PT). Govt heavily subsidised CET pathway!',
+   tip:'ITE is NOT the end! NITEC → Higher NITEC → Poly → Uni is a real path. PT available for working adults!'},
+  {id:'hnitec',name:'Higher NITEC',icon:'⬆️',grants:'Higher NITEC',dur:2,durPT:3,cost:1500,costPT:1200,
+   hasPT:true,req:'NITEC',upgrade:true,availForFields:['eng','biz','it','hosp','creative','govt'],
+   desc:'2yr (FT) or 3yr (PT). Upgrade from NITEC. Unlocks Poly advanced entry.',
+   tip:'Higher NITEC grads can enter Poly in 2yr instead of 3yr! PT available for working adults!'},
   {id:'poly',name:'Poly Diploma',icon:'📚',grants:'Diploma',dur:3,durPT:4,cost:9000,costPT:7000,
-   hasPT:true,availForFields:['eng','biz','it','hosp','creative'],
+   hasPT:true,availForFields:['eng','biz','it','hosp','creative','govt'],
    desc:'3yr (FT) or 4yr (PT) diploma. Practical, industry-ready.',
    tip:'PT Diploma: 1 extra year but you can work FT and earn while studying!'},
   {id:'poly_adv',name:'Poly (Adv. Entry from Higher NITEC)',icon:'📚',grants:'Diploma',dur:2,durPT:3,cost:6000,costPT:5000,
-   hasPT:true,req:'Higher NITEC',upgrade:true,availForFields:['eng','biz','it','hosp','creative'],
+   hasPT:true,req:'Higher NITEC',upgrade:true,availForFields:['eng','biz','it','hosp','creative','govt'],
    desc:'2yr (FT) or 3yr (PT) with Higher NITEC. Advanced standing saves time!',
    tip:'Advanced entry — you already have the foundation!'},
   {id:'jc',name:'JC (A-Levels)',icon:'🎓',grants:'A-Levels',dur:2,durPT:null,cost:500,costPT:null,
@@ -3915,10 +3915,10 @@ function renderEvent(){
 // MILESTONE BONUS (5yr/10yr/15yr/20yr)
 // ══════════════════════════════════════
 const MILESTONES=[
-  {years:5,  months:1,  hi:80,  icon:'⭐',   title:'5-Year Milestone!',        color:'#d97706',bg:'#fffbeb',border:'#fde68a',note:'Half a decade of dedication! Your employer rewards your loyalty.'},
-  {years:10, months:2,  hi:150, icon:'🌟',   title:'10-Year Milestone!',       color:'#2563eb',bg:'#eff6ff',border:'#93c5fd',note:'A decade of service! You are now a senior pillar of the organisation.'},
-  {years:15, months:3,  hi:250, icon:'🏆',   title:'15-Year Milestone!',       color:'#7c3aed',bg:'#f5f3ff',border:'#c4b5fd',note:'Incredible commitment! Few stay this long. Your experience is invaluable.'},
-  {years:20, months:6,  hi:400, icon:'👑',   title:'20-Year Milestone!',       color:'#dc2626',bg:'#fef2f2',border:'#fecaca',note:'Two decades! You are a legend. This kind of loyalty is rare and deeply respected.'},
+  {years:5,  months:2,  hi:100, icon:'⭐',   title:'5-Year Milestone!',        color:'#d97706',bg:'#fffbeb',border:'#fde68a',note:'Half a decade of dedication! Your employer rewards your loyalty with a 2-month bonus (~17% of annual pay).'},
+  {years:10, months:3,  hi:180, icon:'🌟',   title:'10-Year Milestone!',       color:'#2563eb',bg:'#eff6ff',border:'#93c5fd',note:'A decade of service! You are now a senior pillar. 3-month bonus (~25% of annual pay).'},
+  {years:15, months:4,  hi:280, icon:'🏆',   title:'15-Year Milestone!',       color:'#7c3aed',bg:'#f5f3ff',border:'#c4b5fd',note:'Incredible commitment! Few stay this long. 4-month bonus (~33% of annual pay).'},
+  {years:20, months:6,  hi:400, icon:'👑',   title:'20-Year Milestone!',       color:'#dc2626',bg:'#fef2f2',border:'#fecaca',note:'Two decades! You are a legend. 6-month bonus (50% of annual pay!) — loyalty like this is rare.'},
 ];
 
 function renderMilestone(){
