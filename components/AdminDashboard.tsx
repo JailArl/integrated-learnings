@@ -204,7 +204,7 @@ export default function AdminDashboard() {
           submittedAt: t.created_at || new Date().toISOString(),
           status: t.status || t.verification_status || 'pending_review',
         }));
-        const verifiedCount = (tutorsRes.data || []).filter((t: any) => t.verification_status === 'verified').length;
+        const verifiedCount = (tutorsRes.data || []).filter((t: any) => t.verification_status === 'verified' || t.verification_status === 'approved').length;
         const combined = [...parents, ...tutors];
         setSubmissions(combined);
         setStats({

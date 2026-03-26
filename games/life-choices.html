@@ -430,6 +430,23 @@ const FIELDS=[
      {level:2,name:'Junior Partner',sal:170000,req:'Law Degree',cpf:true,type:'FT',yrsExp:8},
      {level:3,name:'Senior Partner',sal:350000,req:'Law Degree',cpf:true,type:'FT',yrsExp:20},
    ]},
+  {id:'govt',name:'Government & Public Service',icon:'🏛️',color:'#1e3a5f',
+   hiPerYear:18,hiNote:'Serve the nation, iron rice bowl — stable, respected, meaningful',
+   noRetrenched:true,
+   noFieldSwitch:true,  // cannot switch to another field mid-career
+   noMoonlight:true,    // cannot do side gigs
+   nsOnly:true,  // only available to NS completees
+   desc:'Civil Service, SAF Regular, SPF, SCDF. Stable "iron rice bowl" with strong CPF. NS required.',
+   available:['ite','poly','jc'],
+   ladder:[
+     {level:0,name:'Operations Support',sal:22000,req:null,cpf:true,type:'FT',yrsExp:0},
+     {level:1,name:'Public Service Officer',sal:26000,req:'NITEC',cpf:true,type:'FT',yrsExp:0},
+     {level:2,name:'Senior Service Officer',sal:32000,req:'Higher NITEC',cpf:true,type:'FT',yrsExp:0},
+     {level:3,name:'Executive (Govt)',sal:42000,req:'Diploma',cpf:true,type:'FT',yrsExp:0},
+     {level:4,name:'Senior Executive (Govt)',sal:62000,req:'Degree',cpf:true,type:'FT',yrsExp:0},
+     {level:5,name:'Assistant Director',sal:95000,req:'Degree',cpf:true,type:'FT',yrsExp:8},
+     {level:6,name:'Director (Public Service)',sal:155000,req:'Degree',cpf:true,type:'FT',yrsExp:15},
+   ]},
 ];
 
 // UNIVERSAL JOBS — available to all fields, all levels (FT career choices)
@@ -470,11 +487,11 @@ const EDUPATHS=[
    desc:'2yr A-Levels. Nearly free ($500 total!). Required for Medicine/Law.',
    tip:'JC is very cheap but Uni after costs $28–150K. Factor in 6+ years before earning!'},
   {id:'uni',name:'University (from JC)',icon:'🏛️',grants:'Degree',dur:4,durPT:6,cost:32000,costPT:28000,
-   hasPT:true,req:'A-Levels',upgrade:true,availForFields:['eng','biz','it','creative'],
+   hasPT:true,req:'A-Levels',upgrade:true,availForFields:['eng','biz','it','creative','govt'],
    desc:'4yr FT or 6yr PT. NUS/NTU/SMU. Highest salary ceiling.',
    tip:'PT Uni: 2 extra years but earn while studying!'},
   {id:'uni_adv',name:'University (Adv. from Poly)',icon:'🏛️',grants:'Degree',dur:3,durPT:4,cost:15000,costPT:13000,
-   hasPT:true,req:'Diploma',upgrade:true,availForFields:['eng','biz','it','creative'],
+   hasPT:true,req:'Diploma',upgrade:true,availForFields:['eng','biz','it','creative','govt'],
    desc:'3yr FT or 4yr PT with Poly diploma. Saves 1 year vs JC→Uni (4yr)!',
    tip:'Poly→Uni = 3yr (1yr exemption at NTU/NUS). SAME degree, $17K cheaper than JC→Uni!'},
   {id:'medschool',name:'Medical School',icon:'🩺',grants:'Medical Degree',dur:5,durPT:null,cost:150000,costPT:null,
@@ -930,6 +947,10 @@ function newG(){return {
   weddingLoan:0,      // wedding loan (8%/yr personal loan)
   negotiationYear:0,  // last year salary was negotiated
   hdbBallots:0,       // number of times balloted
+  nsCompleted:false,  // National Service completed (males only)
+  nsYear:0,           // current NS year (1 or 2)
+  milestonePending:null,  // milestone year pending (5/10/15/20)
+  milestoneClaimed:[],    // milestone years already claimed
   log:[],eventsUsed:[],quizIdx:0,resetCount:0,
   yearsTotal:0,
   cpf55shown:false,babyTriggerShown:false,
@@ -1016,6 +1037,7 @@ function render(){
   updateNav();updateSB();
   const p=UI.phase;
   if(p==='start')renderStart();
+  else if(p==='ns')renderNS();
   else if(p==='field')renderField();
   else if(p==='work_entry')renderWorkEntry();
   else if(p==='path')renderPath();
@@ -1027,6 +1049,7 @@ function render(){
   else if(p==='alloc')renderAlloc();
   else if(p==='cert')renderCert();
   else if(p==='event')renderEvent();
+  else if(p==='milestone')renderMilestone();
   else if(p==='quiz')renderQuiz();
   else if(p==='summary')renderSummary();
 }
@@ -1062,6 +1085,8 @@ function updateSB(){
   const f=getField(),j=curJob();
   let h='';
   h+='<div class="sbh">👤 Status</div>';
+  if(G.gender==='M'&&!G.nsCompleted&&G.nsYear>0)h+=sr('NS','<span class="tag tam">🪖 Serving (Year '+G.nsYear+'/2)</span>');
+  if(G.gender==='M'&&G.nsCompleted)h+=sr('NS','<span class="tag tgn">🎖️ ORD</span>');
   if(f)h+=sr('Field','<span style="color:'+f.color+';font-weight:700">'+f.icon+' '+f.name+'</span>');
   if(G.quals.length)h+=sr('Qualification',G.quals[G.quals.length-1]);
   if(j)h+=sr('Job','<span class="tag tbl" style="font-size:9px">'+j.name+'</span>');
@@ -1183,6 +1208,8 @@ function renderStart(){
   h+='<div class="ch sel" data-gender="M" style="padding:12px 24px;min-width:110px;text-align:center"><div class="chk">✓</div><div style="font-size:24px">👨</div><h4 style="font-size:12px;margin-top:4px">Male</h4></div>';
   h+='<div class="ch" data-gender="F" style="padding:12px 24px;min-width:110px;text-align:center"><div class="chk">✓</div><div style="font-size:24px">👩</div><h4 style="font-size:12px;margin-top:4px">Female</h4></div>';
   h+='</div></div>';
+  h+='<div id="nsNote" style="background:#ecfdf5;border:1px solid #86efac;border-radius:8px;padding:10px 12px;font-size:11px;color:#166534;line-height:1.6;margin-bottom:8px">';
+  h+='🪖 <strong>Males:</strong> 2 years of National Service — after ITE/Poly/Uni (Study First) or before work (Work First). Just like real SG!</div>';
   h+='<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11px;color:#78350f;line-height:1.6">';
   h+='💡 <strong>SG Reality:</strong> Both paths are valid! Many Singaporeans work first, then upskill mid-career via SkillsFuture and part-time courses. The choice is yours!';
   h+='</div>';
@@ -1190,7 +1217,135 @@ function renderStart(){
   mp(h);
   el('main').querySelectorAll('[data-gender]').forEach(el2=>{el2.addEventListener('click',()=>{el('main').querySelectorAll('[data-gender]').forEach(x=>x.classList.remove('sel'));el2.classList.add('sel');});});
   el('bStudyFirst')?.addEventListener('click',()=>{G.workFirst=false;var g=document.querySelector('[data-gender].sel')?.dataset.gender||'M';G.gender=g;UI.phase='field';render();});
-  el('bWorkFirst')?.addEventListener('click',()=>{G.workFirst=true;var g=document.querySelector('[data-gender].sel')?.dataset.gender||'M';G.gender=g;UI.phase='field';render();});
+  el('bWorkFirst')?.addEventListener('click',()=>{G.workFirst=true;var g=document.querySelector('[data-gender].sel')?.dataset.gender||'M';G.gender=g;UI.phase=g==='M'?'ns':'field';render();});
+}
+
+// ══════════════════════════════════════
+// PHASE: NATIONAL SERVICE (Males only)
+// ══════════════════════════════════════
+function renderNS(){
+  const yr=G.nsYear+1; // 1 or 2
+  // NS allowance: median including SGT/officer/combat pay
+  // Year 1: ~$900/mo avg = $10,800/yr; Year 2: ~$1,200/mo avg = $14,400/yr
+  const nsAllowance=yr===1?10800:14400;
+  const foodProvided=3600; // value of meals provided by SAF
+  const lodgingProvided=6000; // value of bunk/utilities
+  const personalExpenses=2400; // phone, toiletries, weekend food
+
+  let h='';
+  if(yr===1){
+    // Year 1 intro
+    h+='<div style="text-align:center;padding:16px 0 12px">';
+    h+='<div style="font-size:60px;margin-bottom:10px">🪖</div>';
+    h+='<h2 style="font-size:22px;font-weight:800;margin-bottom:4px">National Service!</h2>';
+    h+='<p style="font-size:14px;font-weight:700;color:#166534;margin-bottom:4px">It\'s your time to serve the nation</p>';
+    h+='<p style="font-size:12px;color:#6b7280">Every Singaporean male must complete 2 years of NS before studying or working.</p>';
+    h+='</div>';
+  }
+
+  h+='<div class="card">';
+  h+='<div class="ct">🪖 NS Year '+yr+' of 2 — Age '+G.age+'</div>';
+
+  h+='<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px;margin-bottom:14px">';
+  h+='<p style="font-size:13px;font-weight:700;color:#166534;margin-bottom:6px">'+(yr===1?'🎖️ Basic Military Training (BMT) → Unit Posting':'🎖️ Operationally Ready — Year 2')+'</p>';
+  h+='<p style="font-size:11px;color:#15803d;line-height:1.6">'+(yr===1?'Welcome to Tekong! 9 weeks BMT, then posted to your unit. You receive a monthly NS allowance and meals/lodging are provided.':'You\'re now experienced. Higher rank = slightly higher allowance. Last year before ORD!')+'</p>';
+  h+='</div>';
+
+  h+='<table class="it">';
+  h+='<tr><td colspan="2" style="padding-top:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af">INCOME</td></tr>';
+  h+='<tr><td>🪖 NS Allowance ('+(yr===1?'Recruit → Private':'Lance Cpl → Corporal')+')</td><td class="p">'+fmt(nsAllowance)+'</td></tr>';
+  h+='<tr><td>🍜 Meals provided by SAF</td><td class="p" style="color:#16a34a">FREE (worth '+fmt(foodProvided)+')</td></tr>';
+  h+='<tr><td>🏠 Lodging provided</td><td class="p" style="color:#16a34a">FREE (worth '+fmt(lodgingProvided)+')</td></tr>';
+  h+='<tr class="sub"><td>Total allowance</td><td class="p">'+fmt(nsAllowance)+'</td></tr>';
+
+  h+='<tr><td colspan="2" style="padding-top:12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af">EXPENSES</td></tr>';
+  h+='<tr><td>📱 Personal (phone, toiletries, weekend)</td><td class="n">-'+fmt(personalExpenses)+'</td></tr>';
+  h+='<tr class="sub"><td>Total expenses</td><td class="n">-'+fmt(personalExpenses)+'</td></tr>';
+
+  const netNS=nsAllowance-personalExpenses;
+  h+='<tr class="tot"><td>Net savings this year</td><td class="p">+'+fmt(netNS)+'</td></tr>';
+  h+='</table>';
+
+  // Financial choice: what to do with NS savings
+  h+='<div style="border:2px solid #86efac;border-radius:12px;padding:14px;margin-bottom:12px;margin-top:12px">';
+  h+='<p style="font-size:13px;font-weight:700;margin-bottom:10px">💰 What will you do with your NS savings? (~'+fmt(netNS)+')</p>';
+  const nsOpts=[
+    {id:'spend',icon:'🎮',l:'Spend it all!',d:'Games, outings, treats',hi:'+50 HI',color:'#16a34a',warn:'Money gone but great memories with section mates!'},
+    {id:'save',icon:'🏦',l:'Save in bank',d:'Build emergency fund',hi:'+20 HI',color:'#d97706',warn:'Smart! You\'ll start adult life with a safety net.'},
+    {id:'invest',icon:'📈',l:'Invest it',d:'Start early, grow wealth',hi:'-10 HI',color:'#dc2626',warn:'$'+fmt(netNS)+' invested at 7% → $'+fmt(Math.round(netNS*Math.pow(1.07,65-G.age)))+' by age 65!'},
+  ];
+  h+='<div class="cg cg3">';
+  nsOpts.forEach(o=>{
+    const sel=UI.ac===o.id;
+    h+='<div class="ch'+(sel?' sel':'')+'" data-ac="'+o.id+'" style="padding:10px">';
+    h+='<div class="chk">✓</div><div style="font-size:18px">'+o.icon+'</div>';
+    h+='<h4 style="font-size:11px;margin-top:4px">'+o.l+'</h4>';
+    h+='<p class="me" style="font-size:10px">'+o.d+'</p>';
+    h+='<p style="font-size:10px;font-weight:700;color:'+o.color+'">'+o.hi+'</p>';
+    h+='<p style="font-size:9px;color:#6b7280;margin-top:2px">'+o.warn+'</p>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  // Financial lesson box
+  h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:12px;margin-bottom:0">';
+  h+='<p style="font-size:12px;font-weight:700;color:#1d4ed8;margin-bottom:4px">💡 NS Financial Lesson</p>';
+  if(yr===1){
+    h+='<p style="font-size:11px;color:#1e40af;line-height:1.6">NS is your <strong>first taste of earning money</strong>. With meals and lodging provided, your expenses are very low. This is a rare chance to save! Many NSFs waste this — don\'t be one of them.</p>';
+  }else{
+    h+='<p style="font-size:11px;color:#1e40af;line-height:1.6"><strong>Compound interest starts NOW.</strong> Someone who invests $5K during NS and earns 7%/yr will have $'+fmt(Math.round(5000*Math.pow(1.07,46)))+' by age 65. That\'s the power of starting early — even with a small amount!</p>';
+  }
+  h+='</div>';
+
+  h+='</div>';
+  h+=abar([{t:yr===2?'ORD LOH! 🎉 →':'Continue Year →',id:'bns',dis:!UI.ac}]);
+  mp(h);
+
+  el('main').querySelectorAll('[data-ac]').forEach(c=>c.addEventListener('click',()=>{UI.ac=c.dataset.ac;render();}));
+  el('bns')?.addEventListener('click',confirmNSYear);
+}
+
+function confirmNSYear(){
+  const yr=G.nsYear+1;
+  const nsAllowance=yr===1?10800:14400;
+  const personalExpenses=2400;
+  const netNS=nsAllowance-personalExpenses;
+
+  // HI: +100 first year only (brotherhood, BMT memories!)
+  if(yr===1) G.hi+=100;
+
+  // Apply savings choice
+  if(UI.ac==='spend'){
+    G.hi+=50;
+    addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+ ' | Spent savings on fun +50 HI');
+  }else if(UI.ac==='save'){
+    G.cash+=netNS;
+    G.hi+=20;
+    addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+' | Saved '+fmt(netNS)+' in bank +20 HI');
+  }else if(UI.ac==='invest'){
+    var aPool=['bank','etf','reit','bank_stock'];
+    var aPick=aPool[Math.floor(Math.random()*aPool.length)];
+    G.inv[aPick]=(G.inv[aPick]||0)+netNS;
+    G.hi-=10;
+    addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+' | Invested '+fmt(netNS)+' in '+aPick+' -10 HI 📈');
+  }
+
+  G.nsYear++;
+  G.age++;
+  G.yearsTotal++;
+  UI.ac=null;
+
+  if(G.nsYear>=2){
+    // NS complete — ORD LOH!
+    G.nsCompleted=true;
+    G.hi+=200;
+    addLog('🎖️ ORD LOH! 🇸🇬 National Service completed at age '+G.age+' +200 HI 🎉 | 🏛️ Government career UNLOCKED!');
+    // Study First: already have quals → go to grad screen; Work First: go to field selection
+    UI.phase=G.quals.length>0?'grad':'field';
+  }
+  // else stay in NS phase for year 2
+
+  saveG();render();
 }
 
 // ══════════════════════════════════════
@@ -1203,6 +1358,8 @@ function renderField(){
   h+='<p style="font-size:13px;color:#6b7280;margin-bottom:18px;line-height:1.7">Your field determines your career ladder for life. '+(G.workFirst?'You will start at entry-level — studying PT later unlocks higher rungs!':'Choose based on your interests — not just salary! All fields can reach Financial Freedom.')+'</p>';
   h+='<div class="cg cg2">';
   FIELDS.forEach(f=>{
+    // NS-only field: hide for females / non-NS males
+    if(f.nsOnly&&!G.nsCompleted)return;
     // Work-first: lock jcOnly fields (Med/Law need JC — not available work-first)
     const isLockedWorkFirst=G.workFirst&&f.jcOnly;
     const sel=UI.fc===f.id&&!isLockedWorkFirst;
@@ -1210,6 +1367,7 @@ function renderField(){
     h+='<div class="chk">✓</div><div class="ci">'+f.icon+'</div>';
     h+='<h4 style="color:'+(sel?f.color:'#1a1d2e')+'">'+f.name+'</h4>';
     h+='<p class="me">'+f.desc+'</p>';
+    if(f.nsOnly)h+='<span class="tag tpu" style="font-size:9px">🎖️ NS Benefit — Exclusive!</span>';
     if(f.jcOnly&&G.workFirst)h+='<span class="tag trd" style="font-size:9px">🔒 JC required — Study First only</span>';
     else if(f.jcOnly)h+='<span class="tag tpu" style="font-size:9px">JC path only</span>';
     if(f.noUni)h+='<span class="tag trd" style="font-size:9px">No Uni path</span>';
@@ -1666,7 +1824,8 @@ function confirmStudyYear(){
     G.studyLoanYearsPaid=0; // reset repayment counter
     addLog('🎓 Graduated! Earned: '+slGrant+' +30 HI 🎉 | Study loan tenure: '+G.studyLoanTenure+'yr');
     G.studying=null;
-    UI.phase='grad';
+    // Males who haven't done NS go to National Service after graduation
+    UI.phase=(G.gender==='M'&&!G.nsCompleted)?'ns':'grad';
   }
 
   saveG();render();
@@ -1696,6 +1855,7 @@ function renderGrad(){
   h+='<h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Congratulations!</h2>';
   h+='<p style="font-size:14px;font-weight:700;color:#2563eb;margin-bottom:4px">You earned: '+lastQual+'</p>';
   h+='<p style="font-size:12px;color:#6b7280">Age '+G.age+' · Study loan: <span class="'+(G.studyLoan>0?'nsv a':'nsv p')+'">'+fmt(G.studyLoan)+'</span></p>';
+  if(G.nsCompleted)h+='<p style="font-size:11px;color:#166534;margin-top:4px">🎖️ NS completed — ready to start your career!</p>';
   h+='</div>';
 
   if(G.studyLoan>0){
@@ -2530,7 +2690,14 @@ function renderAlloc(){
   // ── SIDE GIGS (optional, costs HI) ──
   // Only show if player has a FT job (jobLevel >= 0 or a universal FT job)
   var hasFTJob=G.jobLevel>=0||(G.jobLevel<=-2&&UNIVERSAL[(-G.jobLevel-2)]?.type==='FT');
-  if(hasFTJob&&!G.studying){
+  if(hasFTJob&&!G.studying&&getField()?.noMoonlight){
+    // Government servants cannot moonlight
+    h+='<div class="card" style="border-color:#fca5a5;background:#fef2f2">';
+    h+='<div class="ct" style="color:#dc2626">🏛️ No Side Gigs Allowed</div>';
+    h+='<p style="font-size:11px;color:#991b1b;line-height:1.6">As a <strong>government servant</strong>, you are bound by the Public Service Division code of conduct. Moonlighting and outside employment are <strong>strictly prohibited</strong> to prevent conflicts of interest.</p>';
+    h+='<p style="font-size:10px;color:#6b7280;margin-top:4px">💡 Trade-off: Job security + iron rice bowl, but no side hustle income.</p>';
+    h+='</div>';
+  }else if(hasFTJob&&!G.studying){
     h+='<div class="card"><div class="ct" style="color:#d97706">⚡ Side Gig? (Optional — costs happiness!)</div>';
     h+='<p style="font-size:11px;color:#6b7280;margin-bottom:10px">Earn extra on top of your FT job — but your body pays the price. Is the extra cash worth it?</p>';
     h+='<div class="cg cg3">';
@@ -3309,6 +3476,9 @@ function confirmAlloc(){
   // Exp growth
   G.yearsWorked++;G.yearsAtLevel++;
   G.ftYearsWorked=(G.ftYearsWorked||0)+1; // FT-only experience counter
+  // Check milestone bonus (5/10/15/20 years)
+  var msCheck=MILESTONES.find(m=>m.years===G.yearsWorked&&!(G.milestoneClaimed||[]).includes(m.years));
+  if(msCheck){G.milestonePending=msCheck.years;}
   // Natural salary growth
   if(G.jobLevel>=0){
     const lj=getLadder()[G.jobLevel];
@@ -3345,6 +3515,8 @@ function confirmAlloc(){
       saveG();UI.phase='grad';render();return;
     }
     const yw2=G.yearsWorked;
+    // Milestone bonus takes priority
+    if(G.milestonePending){UI.phase='milestone';saveG();render();return;}
     const ev2=yw2%3===0,qz2=yw2%7===2,cert2=yw2%3===1&&G.age>=18;
     if(cert2&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)){UI.phase='cert';}
     else if(ev2){UI.evShown=false;UI.evPick=null;UI.phase='event';}
@@ -3355,6 +3527,8 @@ function confirmAlloc(){
 
   // Next phase
   const yw=G.yearsWorked;
+  // Milestone bonus takes priority
+  if(G.milestonePending){UI.phase='milestone';saveG();render();return;}
   const ev=yw%3===0,qz=yw%7===2,cert=yw%3===1&&G.age>=18;
   if(cert&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)){UI.phase='cert';}
   else if(ev){UI.evShown=false;UI.evPick=null;UI.phase='event';}
@@ -3733,6 +3907,65 @@ function renderEvent(){
     // If retrenched, go back to job selection
     if(ev.retrenched){UI.phase='job';UI.jl=null;}
     else UI.phase=yw%7===2?'quiz':'summary';
+    saveG();render();
+  });
+}
+
+// ══════════════════════════════════════
+// MILESTONE BONUS (5yr/10yr/15yr/20yr)
+// ══════════════════════════════════════
+const MILESTONES=[
+  {years:5,  months:1,  hi:80,  icon:'⭐',   title:'5-Year Milestone!',        color:'#d97706',bg:'#fffbeb',border:'#fde68a',note:'Half a decade of dedication! Your employer rewards your loyalty.'},
+  {years:10, months:2,  hi:150, icon:'🌟',   title:'10-Year Milestone!',       color:'#2563eb',bg:'#eff6ff',border:'#93c5fd',note:'A decade of service! You are now a senior pillar of the organisation.'},
+  {years:15, months:3,  hi:250, icon:'🏆',   title:'15-Year Milestone!',       color:'#7c3aed',bg:'#f5f3ff',border:'#c4b5fd',note:'Incredible commitment! Few stay this long. Your experience is invaluable.'},
+  {years:20, months:6,  hi:400, icon:'👑',   title:'20-Year Milestone!',       color:'#dc2626',bg:'#fef2f2',border:'#fecaca',note:'Two decades! You are a legend. This kind of loyalty is rare and deeply respected.'},
+];
+
+function renderMilestone(){
+  const ms=MILESTONES.find(m=>m.years===G.milestonePending);
+  if(!ms){UI.phase='summary';render();return;}
+  const bonus=Math.round((G.jobSal||0)*(ms.months/12));
+  const fld=getField();
+  const jobName=G.jobLevel>=0&&fld?fld.ladder[G.jobLevel]?.name:(G.jobLevel<=-2?UNIVERSAL[(-G.jobLevel-2)]?.name:'your job');
+
+  let h='<div style="text-align:center;padding:20px 0 16px">';
+  h+='<div style="font-size:64px;margin-bottom:8px">'+ms.icon+'</div>';
+  h+='<h2 style="font-size:24px;font-weight:800;color:'+ms.color+';margin-bottom:6px">'+ms.title+'</h2>';
+  h+='<p style="font-size:14px;color:#6b7280;margin-bottom:4px">'+ms.years+' years at work — Age '+G.age+'</p>';
+  if(fld)h+='<p style="font-size:12px;color:'+fld.color+';font-weight:600">'+fld.icon+' '+fld.name+' · '+jobName+'</p>';
+  h+='</div>';
+
+  h+='<div class="card" style="background:'+ms.bg+';border-color:'+ms.border+'">';
+  h+='<p style="font-size:13px;color:'+ms.color+';font-weight:700;margin-bottom:10px">'+ms.note+'</p>';
+
+  h+='<table class="it">';
+  h+='<tr><td colspan="2" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;padding-bottom:6px">MILESTONE REWARDS</td></tr>';
+  h+='<tr><td>🎁 Loyalty Bonus ('+ms.months+' month'+(ms.months>1?'s':'')+' salary)</td><td class="p" style="font-weight:800">+'+fmt(bonus)+'</td></tr>';
+  h+='<tr><td>😊 Happiness Boost (career satisfaction)</td><td class="p" style="font-weight:800;color:'+ms.color+'">+'+ms.hi+' HI</td></tr>';
+  h+='</table>';
+
+  h+='<div style="background:rgba(255,255,255,.7);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;color:#374151;line-height:1.7">';
+  h+='💡 <strong>SG Reality:</strong> Many companies give long-service awards and loyalty bonuses. In the civil service, the Annual Variable Component (AVC) and National Bonus reward long-serving officers. Staying committed compounds your career growth!';
+  h+='</div>';
+  h+='</div>';
+
+  h+=abar([{t:'Collect Bonus! →',id:'bms'}]);
+  mp(h);
+
+  el('bms')?.addEventListener('click',()=>{
+    G.cash+=bonus;
+    G.hi+=ms.hi;
+    G.milestoneClaimed=(G.milestoneClaimed||[]);
+    G.milestoneClaimed.push(ms.years);
+    addLog(ms.icon+' '+ms.years+'-Year Milestone! Bonus: +'+fmt(bonus)+' ('+ms.months+'mo salary) | +'+ms.hi+' HI 🎉');
+    G.milestonePending=null;
+    // Continue to next phase (event/quiz/summary)
+    const yw=G.yearsWorked;
+    const ev=yw%3===0,qz=yw%7===2,cert=yw%3===1&&G.age>=18;
+    if(cert&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)){UI.phase='cert';}
+    else if(ev){UI.evShown=false;UI.evPick=null;UI.phase='event';}
+    else if(qz){UI.phase='quiz';}
+    else UI.phase='summary';
     saveG();render();
   });
 }
