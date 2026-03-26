@@ -435,6 +435,8 @@ const FIELDS=[
 // UNIVERSAL JOBS — available to all fields, all levels (FT career choices)
 const UNIVERSAL=[
   {id:'hawker',name:'Hawker Stall Owner',icon:'🍜',sal:42000,type:'FT',cpf:false,selfEmployed:true,grows:0.03,tip:'Beloved SG career! Top hawkers earn $5K-$8K/month. Self-employed = NO employer CPF contribution. Must self-fund retirement via cash savings & investments. Hard work but deeply rewarding — you are your own boss!'},
+  {id:'grab_ft',name:'Full-Time Grab Driver',icon:'🚗',sal:30000,type:'FT',cpf:false,selfEmployed:true,grows:0.01,tip:'$2,500/mth driving full-time. Flexible hours but long days. No CPF — self-employed. Car wear & tear not included. Great for gap years or between jobs!'},
+  {id:'content_ft',name:'Full-Time Content Creator',icon:'🎥',sal:24000,type:'FT',cpf:false,selfEmployed:true,grows:0.05,tip:'$2,000/mth starting — can grow fast if you go viral! No CPF. High variance — some earn $0, top creators earn $10K+/mth. 5% growth/yr if audience builds.'},
 ];
 
 // SIDE GIGS — optional extra income alongside a FT job, but cost HI
@@ -1787,12 +1789,8 @@ function renderGrad(){
     const dur=UI.ptMode?up.durPT:up.dur;
     const cost=UI.ptMode?up.costPT:up.cost;
     G.studying={id:up.id,name:up.name,grants:up.grants,left:dur,total:dur,cost,ptMode:UI.ptMode};
-    if(!UI.ptMode){
-      // FT: charge full fees now (leave job)
-      if(G.cash>=cost){G.cash-=cost;}else{G.studyLoan+=cost-G.cash;G.cash=0;}
-    }
-    // PT: fees charged yearly in angbao handler — no upfront charge
-    addLog('📚 Enrolled: '+up.name+(UI.ptMode?' (PT — fees yearly)':' (FT — paid upfront)'));
+    // Fees are charged yearly during study phase (per year = cost/dur) — no upfront charge
+    addLog('📚 Enrolled: '+up.name+(UI.ptMode?' (PT — fees yearly)':' (FT — fees yearly)')+' · '+fmt(cost)+' total ('+fmt(Math.round(cost/dur))+'/yr)');
     UI.jc=null;
     // FT: go to study phase; PT mid-career: go back to working cycle
     if(UI.ptMode&&G.yearsWorked>0){
@@ -2334,10 +2332,10 @@ function renderAlloc(){
     }
   }
   // If already studying PT mid-career, show status banner
-  if(G.studying&&G.jobLevel>=0){
+  if(G.studying&&G.jobLevel!==(-1)){
     h+='<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:12px">';
-    h+='<p style="font-size:12px;font-weight:700;color:#92400e">📚 PT Study in Progress: '+G.studying.name+'</p>';
-    h+='<p style="font-size:10px;color:#78350f;margin-top:2px">'+G.studying.left+' year(s) remaining. Salary at 85% until graduation. Fees: '+fmt(Math.round(G.studying.cost/G.studying.total))+'/yr</p>';
+    h+='<p style="font-size:12px;font-weight:700;color:#92400e">📚 '+(G.studying.ptMode?'PT':'FT')+' Study in Progress: '+G.studying.name+'</p>';
+    h+='<p style="font-size:10px;color:#78350f;margin-top:2px">'+G.studying.left+' year(s) remaining.'+(G.studying.ptMode?' Salary at 85% until graduation. Fees: '+fmt(Math.round(G.studying.cost/G.studying.total))+'/yr':' No salary — studying full-time.')+'</p>';
     h+='</div>';
   }
 
@@ -2664,14 +2662,27 @@ function renderAlloc(){
   el('bpt-enrol-cancel')?.addEventListener('click',()=>{UI.ptEnrolPick=null;render();});
   el('bpt-enrol-confirm')?.addEventListener('click',()=>{
     if(!UI.ptEnrolPick)return;
-    const p=EDUPATHS.find(x=>x.id===UI.ptEnrolPick);
+    var isFT=UI.ptEnrolPick.startsWith('ft_');
+    var pId=isFT?UI.ptEnrolPick.slice(3):UI.ptEnrolPick;
+    const p=EDUPATHS.find(x=>x.id===pId);
     if(!p)return;
-    const dur=p.durPT;const cost=p.costPT;
-    G.studying={id:p.id,name:p.name,grants:p.grants,left:dur,total:dur,cost,ptMode:true};
-    addLog('📚 Enrolled in PT: '+p.name+' · '+fmt(Math.round(cost/dur))+'/yr fees · Salary now 85%');
-    UI.ptEnrolPick=null;
-    toast('📚 Enrolled in '+p.name+' (PT)! Your salary is now 85% while studying.','tg');
-    render();
+    if(isFT){
+      // FT study: quit job, go to study phase — fees charged yearly (same as initial study)
+      const dur=p.dur;const cost=p.cost;
+      G.studying={id:p.id,name:p.name,grants:p.grants,left:dur,total:dur,cost,ptMode:false};
+      addLog('📚 Quit job to study FT: '+p.name+' · '+fmt(cost)+' total ('+fmt(Math.round(cost/dur))+'/yr fees)');
+      UI.ptEnrolPick=null;
+      toast('📚 Enrolled in '+p.name+' (FT)! You left your job to study.','ty');
+      UI.phase='study';render();
+    }else{
+      // PT study: keep working
+      const dur=p.durPT;const cost=p.costPT;
+      G.studying={id:p.id,name:p.name,grants:p.grants,left:dur,total:dur,cost,ptMode:true};
+      addLog('📚 Enrolled in PT: '+p.name+' · '+fmt(Math.round(cost/dur))+'/yr fees · Salary now 85%');
+      UI.ptEnrolPick=null;
+      toast('📚 Enrolled in '+p.name+' (PT)! Your salary is now 85% while studying.','tg');
+      render();
+    }
   });
   el('bbcar')?.addEventListener('click',showCarModal);
   el('bscar')?.addEventListener('click',doSellCar);
