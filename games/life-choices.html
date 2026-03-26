@@ -951,6 +951,7 @@ function newG(){return {
   nsYear:0,           // current NS year (1 or 2)
   milestonePending:null,  // milestone year pending (5/10/15/20)
   milestoneClaimed:[],    // milestone years already claimed
+  retirePlan:null,        // {age, lifestyle, monthlyNeed} — set at age 40
   log:[],eventsUsed:[],quizIdx:0,resetCount:0,
   yearsTotal:0,
   cpf55shown:false,babyTriggerShown:false,
@@ -966,7 +967,7 @@ function newG(){return {
 };}
 
 let G=null;
-let UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptJobChoice:null,luxPick:[],ptEnrolPick:null};
+let UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptJobChoice:null,luxPick:[],ptEnrolPick:null,retireAge:null,retireLife:null};
 
 function invTot(inv){return Object.values(inv||{}).reduce((a,b)=>a+b,0);}
 function loans(){
@@ -1019,6 +1020,28 @@ function calcScore(){
   if(goal==='highest_nw')return Math.max(0,n);
   if(goal==='highest_hi')return Math.max(0,G.hi*100);
   if(goal==='highest_cpf')return Math.max(0,G.cpf);
+  if(goal==='balanced_life'){
+    // Rewards: wealth, happiness, life experiences, & personal growth — all balanced
+    var bWealth=Math.min(4000,Math.round(n/500));  // up to 4000 pts for $2M NW
+    var bHI=Math.min(3000,Math.max(0,G.hi*3));     // up to 3000 pts for 1000 HI
+    var bCPF=Math.min(1000,Math.round(G.cpf/200)); // up to 1000 pts for $200K CPF
+    var bFF=G.ffAge?Math.round((65-G.ffAge)*80):0; // up to 2000 pts for FF at 40
+    // Life experiences — things money can't measure
+    var bLife=0;
+    if(G.married)bLife+=400;       // found love
+    if(G.hasChildren)bLife+=400;   // raised a family
+    if(G.prop)bLife+=300;          // owns a home
+    bLife+=Math.min(400,(G.certs||[]).length*100); // skills & certs
+    bLife+=Math.min(300,Math.round((G.luxurySpent||0)/200)); // enjoyed life (travel/luxury)
+    if((G.milestoneClaimed||[]).length>=2)bLife+=200; // career loyalty
+    if(G.nsCompleted)bLife+=100;   // served the nation
+    // Penalty for extreme imbalance
+    var bPenalty=0;
+    if(G.hi<0)bPenalty+=500;      // burnout
+    if(n<0)bPenalty+=500;          // negative NW
+    if(!G.married&&!G.hasChildren&&(G.luxurySpent||0)<5000)bPenalty+=300; // never lived
+    return Math.max(0,bWealth+bHI+bCPF+bFF+bLife-bPenalty);
+  }
   return Math.max(0,Math.round(n/200+G.hi*5+G.cpf/500+(G.ffAge?(65-G.ffAge)*200:0)));
 }
 
@@ -1050,6 +1073,7 @@ function render(){
   else if(p==='cert')renderCert();
   else if(p==='event')renderEvent();
   else if(p==='milestone')renderMilestone();
+  else if(p==='retire_plan')renderRetirePlan();
   else if(p==='quiz')renderQuiz();
   else if(p==='summary')renderSummary();
 }
@@ -3971,6 +3995,137 @@ function renderMilestone(){
 }
 
 // ══════════════════════════════════════
+// RETIREMENT PLANNER (Age 40 trigger)
+// ══════════════════════════════════════
+const RETIRE_LIFESTYLES=[
+  {id:'basic',    name:'Basic',        icon:'🏠', monthly:2000, yearly:24000,  desc:'HDB paid off, cook at home, MRT, occasional hawker. Simple but stress-free.', color:'#16a34a'},
+  {id:'comfort',  name:'Comfortable',  icon:'🍽️', monthly:3500, yearly:42000,  desc:'Eat out 2-3x/week, annual local holiday, light shopping, hobbies.', color:'#2563eb'},
+  {id:'premium',  name:'Premium',      icon:'✈️', monthly:5500, yearly:66000,  desc:'Annual overseas trip, drive a car, dine out often, gym membership.', color:'#7c3aed'},
+  {id:'luxury',   name:'Luxury',       icon:'🌟', monthly:8000, yearly:96000,  desc:'First class travel, fine dining, country club, help the kids with property.', color:'#dc2626'},
+];
+
+function renderRetirePlan(){
+  const n=nw();
+  const invYld=Math.round(INV.reduce((a,i)=>a+(G.inv[i.key]||0)*dynamicReturn(i.key,G.currentNews),0));
+  const cpfLife=Math.round(Math.min(G.cpf,205800)/240);
+  const f=getField();
+
+  let h='';
+  h+='<div style="text-align:center;padding:20px 0 14px">';
+  h+='<div style="font-size:56px;margin-bottom:8px">🧓</div>';
+  h+='<h2 style="font-size:22px;font-weight:800;margin-bottom:4px">Retirement Planning</h2>';
+  h+='<p style="font-size:14px;color:#6b7280;margin-bottom:4px">You are 40 years old — it\'s time to think about the future</p>';
+  h+='<p style="font-size:12px;color:#9ca3af">Every Singaporean should plan for retirement. The choices you make NOW determine your life after work.</p>';
+  h+='</div>';
+
+  // Current financial snapshot
+  h+='<div class="card" style="border-color:#93c5fd;background:#eff6ff">';
+  h+='<div class="ct" style="color:#2563eb">📊 Your Financial Snapshot at Age 40</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">';
+  h+='<div style="background:#fff;border-radius:8px;padding:10px;text-align:center"><p style="font-size:9px;color:#6b7280;text-transform:uppercase">Net Worth</p><p style="font-size:16px;font-weight:800;color:'+(n>=0?'#2563eb':'#dc2626')+'">'+fmt(n)+'</p></div>';
+  h+='<div style="background:#fff;border-radius:8px;padding:10px;text-align:center"><p style="font-size:9px;color:#6b7280;text-transform:uppercase">Investment Yield</p><p style="font-size:16px;font-weight:800;color:#16a34a">'+fmt(invYld)+'/yr</p></div>';
+  h+='<div style="background:#fff;border-radius:8px;padding:10px;text-align:center"><p style="font-size:9px;color:#6b7280;text-transform:uppercase">CPF Balance</p><p style="font-size:16px;font-weight:800;color:#7c3aed">'+fmt(G.cpf)+'</p></div>';
+  h+='</div>';
+  h+='<p style="font-size:10px;color:#6b7280;line-height:1.6">💡 CPF LIFE will pay ~<strong>'+fmt(cpfLife)+'/month</strong> from age 65, guaranteed for life. Your investments generate <strong>'+fmt(invYld)+'/yr</strong> in passive income right now.</p>';
+  h+='</div>';
+
+  // Step 1: Choose target retirement age
+  h+='<div class="card">';
+  h+='<div class="ct">🎯 Step 1: When Do You Want to Retire?</div>';
+  h+='<p style="font-size:11px;color:#6b7280;margin-bottom:10px">The earlier you retire, the more savings you need. SG\'s official retirement age is 63, re-employment until 68.</p>';
+  h+='<div class="cg cg2" id="retire-age-opts">';
+  var retAgeOpts=[
+    {age:50, label:'Early (50)',  icon:'🏖️', note:'15 more years of savings needed — need very large nest egg!', color:'#dc2626'},
+    {age:55, label:'Mid (55)',    icon:'⛵', note:'10 more years — doable with strong investments.', color:'#d97706'},
+    {age:60, label:'Normal (60)', icon:'🎣', note:'5 years early — a realistic stretch goal.', color:'#2563eb'},
+    {age:65, label:'CPF Age (65)',icon:'🏛️', note:'SG norm. CPF LIFE kicks in. Most comfortable.', color:'#16a34a'},
+  ];
+  retAgeOpts.forEach(o=>{
+    var sel=UI.retireAge===o.age;
+    h+='<div class="ch'+(sel?' sel':'')+'" data-retage="'+o.age+'" style="padding:10px;border-color:'+(sel?o.color:'')+'">';
+    h+='<div class="chk">✓</div><div style="font-size:20px">'+o.icon+'</div>';
+    h+='<h4 style="font-size:12px;margin-top:4px">'+o.label+'</h4>';
+    h+='<p style="font-size:10px;color:#6b7280;margin-top:2px">'+o.note+'</p>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  // Step 2: Choose retirement lifestyle
+  h+='<div class="card">';
+  h+='<div class="ct">🏡 Step 2: What Retirement Lifestyle Do You Want?</div>';
+  h+='<p style="font-size:11px;color:#6b7280;margin-bottom:10px">This determines how much monthly income you need in retirement. SG costs are high — plan realistically!</p>';
+  h+='<div class="cg cg2" id="retire-life-opts">';
+  RETIRE_LIFESTYLES.forEach(ls=>{
+    var sel=UI.retireLife===ls.id;
+    h+='<div class="ch'+(sel?' sel':'')+'" data-retlife="'+ls.id+'" style="padding:10px;border-color:'+(sel?ls.color:'')+'">';
+    h+='<div class="chk">✓</div><div style="font-size:20px">'+ls.icon+'</div>';
+    h+='<h4 style="font-size:12px;margin-top:4px">'+ls.name+'</h4>';
+    h+='<p style="font-size:10px;color:#6b7280;margin-top:2px">'+ls.desc+'</p>';
+    h+='<p style="font-size:11px;font-weight:800;color:'+ls.color+';margin-top:4px">'+fmt(ls.monthly)+'/mth · '+fmt(ls.yearly)+'/yr</p>';
+    h+='</div>';
+  });
+  h+='</div></div>';
+
+  // Calculation preview (shows if both selected)
+  if(UI.retireAge&&UI.retireLife){
+    var ls=RETIRE_LIFESTYLES.find(x=>x.id===UI.retireLife);
+    var retAge=UI.retireAge;
+    var yrsToRetire=retAge-40;
+    var yrsInRetirement=90-retAge; // plan to 90 (SG life expectancy ~84, buffer)
+    var totalNeeded=ls.yearly*yrsInRetirement;
+    var cpfLifeTotal=cpfLife*12*Math.max(0,90-65); // CPF LIFE from 65-90
+    var gapTotal=Math.max(0,totalNeeded-cpfLifeTotal);
+    var projInv=Math.round(invTot(G.inv)*Math.pow(1.06,yrsToRetire)); // 6% growth
+    var projCash=G.cash; // simplification
+    var projWealth=projInv+projCash;
+    var onTrack=projWealth>=gapTotal;
+
+    h+='<div class="card" style="border-color:'+(onTrack?'#86efac':'#fca5a5')+';background:'+(onTrack?'#f0fdf4':'#fef2f2')+'">';
+    h+='<div class="ct" style="color:'+(onTrack?'#166534':'#991b1b')+'">🧮 Your Retirement Math</div>';
+    h+='<table class="it">';
+    h+='<tr><td>🎯 Retire at age</td><td class="p" style="font-weight:800">'+retAge+'</td></tr>';
+    h+='<tr><td>'+ls.icon+' Lifestyle: '+ls.name+'</td><td style="font-weight:700">'+fmt(ls.yearly)+'/yr</td></tr>';
+    h+='<tr><td>📅 Years in retirement (to age 90)</td><td>'+yrsInRetirement+' years</td></tr>';
+    h+='<tr><td>💰 Total needed ('+yrsInRetirement+'yr × '+fmt(ls.yearly)+')</td><td style="font-weight:800;color:#dc2626">'+fmt(totalNeeded)+'</td></tr>';
+    h+='<tr><td>🏛️ CPF LIFE covers (age 65-90, ~'+fmt(cpfLife)+'/mth)</td><td style="color:#16a34a;font-weight:700">-'+fmt(cpfLifeTotal)+'</td></tr>';
+    h+='<tr class="tot"><td>🎯 Gap YOU must fund from investments</td><td style="font-weight:800;color:'+(gapTotal>0?'#dc2626':'#16a34a')+'">'+fmt(gapTotal)+'</td></tr>';
+    h+='</table>';
+
+    h+='<div style="background:rgba(255,255,255,.7);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;line-height:1.7">';
+    h+='<p style="font-weight:700;margin-bottom:4px">📈 Projected investments at '+retAge+' (@ 6%/yr growth):</p>';
+    h+='<p>Current investments: <strong>'+fmt(invTot(G.inv))+'</strong> → Projected: <strong style="color:#2563eb">'+fmt(projInv)+'</strong></p>';
+    if(onTrack){
+      h+='<p style="color:#166534;font-weight:700;margin-top:6px">✅ ON TRACK! Your projected wealth ('+fmt(projWealth)+') exceeds the gap ('+fmt(gapTotal)+'). Keep investing!</p>';
+    }else{
+      var shortfall=gapTotal-projWealth;
+      var extraPerYear=Math.round(shortfall/Math.max(1,yrsToRetire));
+      h+='<p style="color:#991b1b;font-weight:700;margin-top:6px">⚠️ SHORTFALL of '+fmt(shortfall)+'. You need to invest an additional ~'+fmt(extraPerYear)+'/yr for the next '+yrsToRetire+' years to close the gap.</p>';
+    }
+    h+='</div>';
+
+    h+='<div style="background:#eff6ff;border-radius:8px;padding:10px 12px;margin-top:8px;font-size:10px;color:#1d4ed8;line-height:1.7">';
+    h+='💡 <strong>SG Reality:</strong> CPF LIFE provides a basic floor (~$800-$2,000/mth depending on balance). For a comfortable retirement, most Singaporeans need <strong>$500K-$1M+ in additional savings/investments</strong> beyond CPF. Start early — compound interest is your best friend!';
+    h+='</div>';
+    h+='</div>';
+  }
+
+  h+=abar([{t:'Set Retirement Plan →',id:'bretplan',dis:!UI.retireAge||!UI.retireLife}]);
+  mp(h);
+
+  el('main').querySelectorAll('[data-retage]').forEach(c=>c.addEventListener('click',()=>{UI.retireAge=parseInt(c.dataset.retage);render();}));
+  el('main').querySelectorAll('[data-retlife]').forEach(c=>c.addEventListener('click',()=>{UI.retireLife=c.dataset.retlife;render();}));
+  el('bretplan')?.addEventListener('click',()=>{
+    if(!UI.retireAge||!UI.retireLife)return;
+    var ls=RETIRE_LIFESTYLES.find(x=>x.id===UI.retireLife);
+    G.retirePlan={age:UI.retireAge,lifestyle:UI.retireLife,monthlyNeed:ls.monthly,yearlyNeed:ls.yearly,lifestyleName:ls.name,lifestyleIcon:ls.icon};
+    G.hi+=30;
+    addLog('🧓 Retirement Plan set! Target: retire at '+UI.retireAge+' with '+ls.name+' lifestyle ('+fmt(ls.monthly)+'/mth) +30 HI');
+    UI.phase='summary';
+    saveG();render();
+  });
+}
+
+// ══════════════════════════════════════
 // QUIZ
 // ══════════════════════════════════════
 function renderQuiz(){
@@ -4013,6 +4168,9 @@ function renderQuiz(){
 // SUMMARY
 // ══════════════════════════════════════
 function renderSummary(){
+  // Retirement planner trigger — once at age 40
+  if(G.age===40&&!G.retirePlan){UI.phase='retire_plan';render();return;}
+
   const n=nw(),sc=calcScore();
   const f=getField();
 
@@ -4496,7 +4654,7 @@ async function endGame(){
   await saveG(true);
   const n=nw(),sc=calcScore(),f=getField();
   const goal=RD?.goal||'combined';
-  const gls={ff_earliest:'First to FF',highest_nw:'Net Worth',highest_hi:'Happiness',highest_cpf:'CPF',combined:'Overall'};
+  const gls={ff_earliest:'First to FF',highest_nw:'Net Worth',highest_hi:'Happiness',highest_cpf:'CPF',balanced_life:'Balanced Life',combined:'Overall'};
   const won=G.ffAge||(n>500000);
   const monthly=Math.round(G.cpf/240);
 
@@ -4560,6 +4718,49 @@ async function endGame(){
   h+='<p style="font-size:12px;font-weight:800;margin-bottom:10px">🎓 Lessons for Real Life</p>';
   lessons.slice(0,5).forEach(l=>h+='<div style="display:flex;gap:8px;font-size:11px;padding:7px 0;border-bottom:1px solid #f3f4f6;line-height:1.6"><span>'+l.i+'</span><span>'+l.t+'</span></div>');
   h+='</div>';
+
+  // ── RETIREMENT PLAN VERDICT ──
+  if(G.retirePlan){
+    var rp=G.retirePlan;
+    var cpfForLife=Math.min(G.cpf,205800);
+    var cpfMo=Math.round(cpfForLife/240);
+    var yrsInRet=90-rp.age;
+    var totalNeeded=rp.yearlyNeed*yrsInRet;
+    var cpfCovers=cpfMo*12*Math.max(0,90-65);
+    var gap=Math.max(0,totalNeeded-cpfCovers);
+    var wealth=n+G.cpf; // total resources
+    var invWealth=invTot(G.inv)+G.cash; // liquid+investable
+    var achieved=invWealth>=gap;
+    var pct=gap>0?Math.min(Math.round(invWealth/gap*100),999):100;
+    var barW=Math.min(pct,100);
+
+    h+='<div style="background:'+(achieved?'#f0fdf4':'#fff7ed')+';border:1.5px solid '+(achieved?'#86efac':'#fdba74')+';border-radius:12px;padding:16px;max-width:480px;width:100%;margin:0 auto 16px;text-align:left">';
+    h+='<p style="font-size:14px;font-weight:800;margin-bottom:10px;color:'+(achieved?'#166534':'#9a3412')+'">🧓 Retirement Plan Verdict</p>';
+    h+='<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px">';
+    h+='<span style="font-size:28px">'+(achieved?'✅':'⚠️')+'</span>';
+    h+='<div><p style="font-size:13px;font-weight:700;color:'+(achieved?'#166534':'#9a3412')+'">'+(achieved?'You CAN retire at '+rp.age+' with a '+rp.lifestyleName+' lifestyle!':'You CANNOT yet afford to retire at '+rp.age+' with '+rp.lifestyleName+' lifestyle')+'</p>';
+    h+='<p style="font-size:10px;color:#6b7280">Plan: Retire at '+rp.age+' · '+rp.lifestyleIcon+' '+rp.lifestyleName+' ('+fmt(rp.monthlyNeed)+'/mth)</p></div></div>';
+
+    // Progress bar
+    h+='<div style="background:#e5e7eb;border-radius:99px;height:14px;overflow:hidden;margin-bottom:6px">';
+    h+='<div style="background:'+(achieved?'#22c55e':'#f97316')+';height:100%;width:'+barW+'%;border-radius:99px;transition:width .5s"></div></div>';
+    h+='<p style="font-size:10px;color:#6b7280;text-align:right;margin-bottom:10px">'+pct+'% funded</p>';
+
+    h+='<table class="it" style="font-size:11px">';
+    h+='<tr><td>'+rp.lifestyleIcon+' Lifestyle cost ('+yrsInRet+'yr to age 90)</td><td style="font-weight:800;color:#dc2626">'+fmt(totalNeeded)+'</td></tr>';
+    h+='<tr><td>🏛️ CPF LIFE covers (65-90)</td><td style="color:#16a34a;font-weight:700">-'+fmt(cpfCovers)+'</td></tr>';
+    h+='<tr><td>🎯 Gap to fund yourself</td><td style="font-weight:800">'+fmt(gap)+'</td></tr>';
+    h+='<tr class="tot"><td>💰 Your investments + cash</td><td style="font-weight:800;color:'+(achieved?'#16a34a':'#dc2626')+'">'+fmt(invWealth)+'</td></tr>';
+    h+='</table>';
+
+    if(achieved){
+      h+='<p style="font-size:11px;color:#166534;margin-top:10px;line-height:1.7">🎉 <strong>Congratulations!</strong> Your disciplined saving and investing paid off. You have enough to cover your retirement — with '+fmt(invWealth-gap)+' to spare!</p>';
+    }else{
+      h+='<p style="font-size:11px;color:#9a3412;margin-top:10px;line-height:1.7">💡 <strong>Shortfall: '+fmt(gap-invWealth)+'</strong>. In real life, this means working longer, cutting expenses, or accepting a simpler retirement. This is why starting to invest early matters so much!</p>';
+    }
+    h+='</div>';
+  }
+
   var resets=G.resetCount||0;
   if(resets>0){
     h+='<div style="background:#fffbeb;border-radius:12px;padding:12px 16px;max-width:420px;width:100%;margin:0 auto 16px;font-size:12px;color:#92400e;line-height:1.7">';
@@ -4577,7 +4778,7 @@ async function endGame(){
     SID=null; // force new session for replay
     G=newG();
     G.resetCount=0;
-    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[],retireAge:null,retireLife:null};
     setScreen('game');render();
   });
   el('blbe')?.addEventListener('click',loadLb);
@@ -4611,7 +4812,7 @@ async function loadAdmin(){
   const active=Array.isArray(rounds)?rounds.find(r=>r.is_active):null;
   let sessions=[];
   if(active)sessions=await dbJ('game_sessions','*,players(class_id,index_number)',{round_id:active.id},'final_score.desc');
-  const gls={ff_earliest:'🏁 First to FF',highest_nw:'💰 Net Worth',highest_hi:'😊 Happiness',highest_cpf:'🏛️ CPF',combined:'🥇 Combined'};
+  const gls={ff_earliest:'🏁 First to FF',highest_nw:'💰 Net Worth',highest_hi:'😊 Happiness',highest_cpf:'🏛️ CPF',balanced_life:'⚖️ Balanced Life',combined:'🥇 Combined'};
 
   let h='<div class="ac"><div class="ct">Game Rounds</div>';
   (Array.isArray(rounds)?rounds:[]).forEach(r=>{
@@ -4731,7 +4932,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!confirm('Reset and start over? Progress lost.'))return;
     var rc=(G.resetCount||0)+1;
     G=newG();G.resetCount=rc;
-    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[],retireAge:null,retireLife:null};
     saveG();
     toast('Reset! Resets used: '+rc,'ty');
     render();
@@ -4745,7 +4946,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
     // Clear all game state so next player starts fresh
     G=null;P=null;SID=null;RD=null;
-    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
+    UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[],retireAge:null,retireLife:null};
     // Clear login form fields
     var ic=el('ic');if(ic)ic.value='';
     var ii=el('ii');if(ii)ii.value='';
