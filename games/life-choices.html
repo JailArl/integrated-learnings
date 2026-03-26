@@ -506,11 +506,11 @@ const EDUPATHS=[
 
 // CERTS (available age 18+ during study and work)
 const CERTS=[
-  {id:'drv',name:'Driving Licence',icon:'🚗',cost:3500,effect:'Driving Licence',age:18,desc:'Required to buy a car. SG driving test: theory + practical. Most people learn at 18!'},
-  {id:'swim',name:'Swimming / Lifesaving Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,maxAge:40,desc:'Side income: +$5K/yr as part-time coach. Essential life skill! Available until age 40.'},
-  {id:'ins',name:'Insurance Licence',icon:'🛡️',cost:1500,effect:'Insurance Lic',age:21,desc:'Side income: +$4K/yr. Also gives 50% off insurance premiums.'},
-  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,jobRequired:true,salBoost:2000,desc:'Govt subsidised. After attending, your salary increases by $2,000/yr and you are protected from scams!'},
-  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,jobRequired:true,salBoost:1000,desc:'Workforce Skills Qualification. Recognised by employers, +$1,000/yr salary boost.'},
+  {id:'drv',name:'Driving Licence',icon:'🚗',cost:3500,effect:'Driving Licence',age:18,desc:'Required to buy a car or be a Grab driver. SG driving test: theory + practical. Most people learn at 18!'},
+  {id:'swim',name:'Swimming / Lifesaving Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,maxAge:40,sideIncome:5000,desc:'Side income: +$5,000/yr as part-time swimming coach. Essential life skill! Available until age 40.'},
+  {id:'ins',name:'Insurance Licence',icon:'🛡️',cost:1500,effect:'Insurance Lic',age:21,sideIncome:4000,insDiscount:true,desc:'Side income: +$4,000/yr as insurance agent. 50% off your own insurance premiums. Acts as free insurance if you don\'t buy a plan!'},
+  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,jobRequired:true,salBoost:2000,desc:'Govt subsidised. Permanent +$2,000/yr salary boost and scam protection!'},
+  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,jobRequired:true,salBoost:1000,desc:'Workforce Skills Qualification. Permanent +$1,000/yr salary boost. Recognised by employers!'},
 ];
 
 // CARS — SG 2024/2025 OTR prices. Total = basePrice + COE + ARF + taxes.
@@ -925,6 +925,7 @@ function newG(){return {
   salaryEnvyShown:false,
   fdDeposits:[],
   cpfsaThisYear:0,
+  certSalBoost:0,    // permanent salary boost from SF/WSQ certs
   propLoanYearsPaid:0,
   properties:[],   // array of owned properties {id,name,icon,propVal,propLoan,propLoanYearsPaid,propData,mopYearsDone,rentEnabled}
   hdbBallotWon:false,hdbBallotCount:0,hdbBallotLastAge:0, // BTO ballot tracking
@@ -2104,12 +2105,14 @@ function renderJob(){
   h+='<div class="ct" style="margin-top:12px">Universal Jobs (any field)</div>';
   h+='<div class="cg">';
   unis.forEach((j,i)=>{
+    var needsLicence=j.id==='grab_ft'&&!G.certs.includes('Driving Licence');
     const isSel=UI.jl==='u'+i;
-    h+='<div class="ch'+(isSel?' sel':'')+'" data-jl="u'+i+'">';
+    h+='<div class="ch'+(isSel?' sel':'')+(needsLicence?' lk':'')+'" '+(needsLicence?'':'data-jl="u'+i+'"')+'>';
     h+='<div class="chk">✓</div><div class="ci">'+j.icon+'</div>';
     h+='<h4>'+j.name+'</h4>';
     h+='<p class="me">'+j.type+' · CPF: '+(j.cpf?'✅':'❌')+'</p>';
-    h+='<p class="me" style="color:#dc2626;font-size:10px">'+j.tip+'</p>';
+    if(needsLicence)h+='<p style="font-size:10px;color:#dc2626;font-weight:700;margin-top:4px">🔒 Needs: Driving Licence</p>';
+    else h+='<p class="me" style="color:#dc2626;font-size:10px">'+j.tip+'</p>';
     h+='<span class="pr prp">'+fmt(j.sal)+'/yr</span>';
     h+='</div>';
   });
@@ -2736,10 +2739,12 @@ function renderAlloc(){
     h+='</div>';
     SIDE_GIGS.forEach(sg=>{
       var isSel=UI.sideGig===sg.id;
-      h+='<div class="ch'+(isSel?' sel':'')+'" data-sg="'+sg.id+'" style="padding:10px">';
+      var needsLicence=sg.id==='grab'&&!G.certs.includes('Driving Licence');
+      h+='<div class="ch'+(isSel?' sel':'')+(needsLicence?' lk':'')+'" '+(needsLicence?'':'data-sg="'+sg.id+'"')+' style="padding:10px">';
       h+='<div class="chk">✓</div><div style="font-size:20px">'+sg.icon+'</div>';
       h+='<h4 style="font-size:11px;margin-top:4px">'+sg.name+'</h4>';
-      h+='<p class="me" style="font-size:10px">'+sg.tip+'</p>';
+      if(needsLicence)h+='<p style="font-size:10px;color:#dc2626;font-weight:700">🔒 Needs: Driving Licence</p>';
+      else h+='<p class="me" style="font-size:10px">'+sg.tip+'</p>';
       h+='<span class="pr prp">+'+fmt(sg.extraSal)+'/yr</span>';
       h+='<p style="font-size:10px;color:#dc2626;font-weight:600">'+sg.hiCost+' HI/yr</p>';
       h+='<p style="font-size:9px;color:#9ca3af;margin-top:2px">Could be '+fmt(Math.round(sg.extraSal*Math.pow(1.07,65-G.age)))+' at 65 if invested</p>';
@@ -3000,9 +3005,10 @@ function renderAlloc(){
     m.querySelector('#binvpropcancel')?.addEventListener('click',()=>m.remove());
   });
   el('bbins')?.addEventListener('click',()=>{
-    if(G.cash<2400){toast('Need $2,400/yr for insurance premium!','tr');return;}
-    G.insurance=true;G.insurancePremium=2400;G.cash-=2400;G.hi+=40;
-    addLog('🛡️ Personal insurance purchased! $2,400/yr premium. Now protected against illness/accidents.');
+    var insPremium=G.certs.includes('Insurance Lic')?1200:2400; // 50% discount with Insurance Licence
+    if(G.cash<insPremium){toast('Need '+fmt(insPremium)+'/yr for insurance premium!','tr');return;}
+    G.insurance=true;G.insurancePremium=insPremium;G.cash-=insPremium;G.hi+=40;
+    addLog('🛡️ Personal insurance purchased! '+fmt(insPremium)+'/yr premium'+(insPremium<2400?' (50% off with Insurance Lic!)':'')+'. Now protected against illness/accidents.');
     render();
   });
   el('bpayemd')?.addEventListener('click',()=>{
@@ -3504,14 +3510,25 @@ function confirmAlloc(){
   // Check milestone bonus (5/10/15/20 years)
   var msCheck=MILESTONES.find(m=>m.years===G.yearsWorked&&!(G.milestoneClaimed||[]).includes(m.years));
   if(msCheck){G.milestonePending=msCheck.years;}
-  // Natural salary growth
+  // Natural salary growth + persistent cert salary boost
   if(G.jobLevel>=0){
     const lj=getLadder()[G.jobLevel];
-    if(lj)G.jobSal=salWithGrowth(lj,G.yearsAtLevel);
+    if(lj)G.jobSal=salWithGrowth(lj,G.yearsAtLevel)+(G.certSalBoost||0);
   }else if(G.jobLevel<=-2){
     const uIdx=(-G.jobLevel-2);
     const uj=UNIVERSAL[uIdx];
-    if(uj)G.jobSal=Math.round(uj.sal*Math.pow(1+(uj.grows||0.02),G.yearsAtLevel));
+    if(uj)G.jobSal=Math.round(uj.sal*Math.pow(1+(uj.grows||0.02),G.yearsAtLevel))+(G.certSalBoost||0);
+  }
+  // Cert-based side income (swimming coach, insurance agent)
+  var certSideIncome=0;
+  CERTS.forEach(c=>{
+    if(c.sideIncome&&G.certs.includes(c.effect)){
+      if(!c.maxAge||G.age<=c.maxAge)certSideIncome+=c.sideIncome;
+    }
+  });
+  if(certSideIncome>0){
+    G.cash+=certSideIncome;
+    addLog('🎯 Cert side income: +'+fmt(certSideIncome)+'/yr'+(G.certs.includes('Swimming Coach')?' (🏊 coaching)':'')+(G.certs.includes('Insurance Lic')?' (🛡️ insurance sales)':''));
   }
   // Age 55 CPF milestone
   if(G.age===55&&!G.cpf55shown){G.cpf55shown=true;addLog('🏛️ CPF age 55 reached! Check your CPF withdrawal options in summary.');}
@@ -3828,8 +3845,9 @@ function renderCert(){
       const cert=CERTS.find(c=>c.id===cid);
       if(cert&&G.cash>=cert.cost){
         G.cash-=cert.cost;G.certs.push(cert.effect);G.hi+=30;
-        if(cert.salBoost&&G.jobSal>0){G.jobSal+=cert.salBoost;addLog('🎯 Got '+cert.name+'! +10 HI +'+fmt(cert.salBoost)+'/yr salary');}
-        else addLog('🎯 Got '+cert.name+'! +10 HI');
+        if(cert.salBoost&&G.jobSal>0){G.certSalBoost=(G.certSalBoost||0)+cert.salBoost;G.jobSal+=cert.salBoost;addLog('🎯 Got '+cert.name+'! +30 HI, permanent +'+fmt(cert.salBoost)+'/yr salary boost');}
+        else if(cert.sideIncome)addLog('🎯 Got '+cert.name+'! +30 HI, +'+fmt(cert.sideIncome)+'/yr side income');
+        else addLog('🎯 Got '+cert.name+'! +30 HI');
       }
     });
     UI.certPicks=[];UI.certPick=null;UI.phase='event';UI.evShown=false;UI.evPick=null;render();
