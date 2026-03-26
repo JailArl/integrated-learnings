@@ -31,7 +31,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .w100{width:100%}
 .errmsg{background:#fff0f0;border:1px solid #fecaca;color:#dc2626;font-size:12px;padding:9px 12px;border-radius:8px;margin-top:10px;display:none}
 /* NAV */
-.nav{background:#fff;border-bottom:1px solid #e5e7eb;position:sticky;top:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.nav{background:#fff;border-bottom:1px solid #e5e7eb;position:fixed;top:0;left:0;right:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.06)}
 .ni{max-width:1100px;margin:0 auto;padding:0 16px;height:54px;display:flex;align-items:center;gap:6px}
 .nbrand{font-size:14px;font-weight:800;margin-right:10px;white-space:nowrap}
 .nstats{display:flex;flex:1;overflow-x:auto;scrollbar-width:none}
@@ -45,7 +45,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .hifill{height:100%;background:linear-gradient(90deg,#7c3aed,#2563eb);border-radius:3px;transition:width .4s}
 .nr{margin-left:auto;display:flex;gap:5px;flex-shrink:0}
 /* LAYOUT */
-.gwrap{max-width:1100px;margin:0 auto;display:flex;min-height:calc(100vh - 54px)}
+.gwrap{max-width:1100px;margin:0 auto;display:flex;min-height:calc(100vh - 54px);padding-top:54px}
 /* SIDEBAR */
 .sb{width:210px;flex-shrink:0;background:#fff;border-right:1px solid #e5e7eb;padding:14px;overflow-y:auto;position:sticky;top:54px;height:calc(100vh - 54px)}
 .sbh{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#9ca3af;margin:12px 0 6px}
@@ -160,7 +160,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* END */
 .ew{text-align:center;padding:32px 20px;max-width:520px;width:100%}
 /* ADMIN */
-.ab2{max-width:1000px;margin:0 auto;padding:24px 18px}
+.ab2{max-width:1000px;margin:0 auto;padding:78px 18px 24px}
 .ac{background:#fff;border-radius:14px;border:1px solid #e5e7eb;padding:18px;margin-bottom:14px}
 .ag{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
 table{width:100%;border-collapse:collapse;font-size:11px}
@@ -4345,7 +4345,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
   el('bclb')?.addEventListener('click',()=>el('lbmod').classList.add('hidden'));
   el('lbmod')?.addEventListener('click',e=>{if(e.target===el('lbmod'))el('lbmod').classList.add('hidden');});
-  el('bex')?.addEventListener('click',()=>{
+  el('bex')?.addEventListener('click',async()=>{
+    // Reset the database session so next login starts fresh
+    if(SID){
+      try{await dbU('game_sessions',{game_state:null,is_complete:true,age:17,cash:500,cpf:0,happiness:50,net_worth:500,final_score:0},SID);}catch(e){}
+    }
     // Clear all game state so next player starts fresh
     G=null;P=null;SID=null;RD=null;
     UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[]};
