@@ -189,7 +189,7 @@ export default function AdminDashboard() {
     try {
       if (isSupabaseConfigured && supabase) {
         const parentsRes = await supabase.from('parent_submissions').select('*');
-        const tutorsRes = await supabase.from('tutor_profiles').select('id, verification_status');
+        const tutorsRes = await supabase.from('tutor_profiles').select('*');
         const parents = (parentsRes.data || []).map((p: any) => ({
           id: p.id,
           type: 'parent' as const,
@@ -197,14 +197,20 @@ export default function AdminDashboard() {
           submittedAt: p.created_at || new Date().toISOString(),
           status: p.status || 'pending',
         }));
-        const tutorCount = tutorsRes.data?.length || 0;
-        const verifiedCount = tutorsRes.data?.filter((t: any) => t.verification_status === 'verified').length || 0;
-        const combined = [...parents];
+        const tutors = (tutorsRes.data || []).map((t: any) => ({
+          id: t.id,
+          type: 'tutor' as const,
+          data: t,
+          submittedAt: t.created_at || new Date().toISOString(),
+          status: t.status || t.verification_status || 'pending_review',
+        }));
+        const verifiedCount = (tutorsRes.data || []).filter((t: any) => t.verification_status === 'verified').length;
+        const combined = [...parents, ...tutors];
         setSubmissions(combined);
         setStats({
-          totalSubmissions: combined.length + tutorCount,
+          totalSubmissions: combined.length,
           parentRequests: parents.length,
-          tutorApplications: tutorCount,
+          tutorApplications: tutors.length,
           pendingApprovals: combined.filter(s => s.status === 'new' || s.status === 'pending' || s.status === 'pending_review').length,
           activeMatches: combined.filter(s => s.status === 'matching' || s.status === 'matched' || s.status === 'converted').length,
           verifiedTutors: verifiedCount,
@@ -322,6 +328,38 @@ export default function AdminDashboard() {
     setSearchTerm('');
     setFilterStatus('all');
     setFilterType('all');
+  };
+
+  const handleStatClick = (statType: string) => {
+    setSearchTerm('');
+    setFilterArea('all');
+    switch (statType) {
+      case 'total':
+        setActiveTab('submissions');
+        setFilterStatus('all');
+        setFilterType('all');
+        break;
+      case 'parents':
+        setActiveTab('parents');
+        setFilterStatus('all');
+        break;
+      case 'tutors':
+        setActiveTab('tutors');
+        setFilterStatus('all');
+        break;
+      case 'pending':
+        setActiveTab('parents');
+        setFilterStatus('new');
+        break;
+      case 'matches':
+        setActiveTab('parents');
+        setFilterStatus('matching');
+        break;
+      case 'verified':
+        setActiveTab('tutors');
+        setFilterStatus('approved');
+        break;
+    }
   };
 
   const parentSubmissions = submissions.filter(s => s.type === 'parent');
@@ -464,27 +502,27 @@ export default function AdminDashboard() {
         {/* Stats Grid */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
-            <div className="bg-white rounded-lg shadow p-4">
+            <div onClick={() => handleStatClick('total')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-gray-300 transition">
               <p className="text-gray-600 text-sm">Total Submissions</p>
               <p className="text-3xl font-bold text-gray-900">{stats.totalSubmissions}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div onClick={() => handleStatClick('parents')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-300 transition">
               <p className="text-gray-600 text-sm">Parent Requests</p>
               <p className="text-3xl font-bold text-blue-600">{stats.parentRequests}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div onClick={() => handleStatClick('tutors')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-green-300 transition">
               <p className="text-gray-600 text-sm">Tutor Applications</p>
               <p className="text-3xl font-bold text-green-600">{stats.tutorApplications}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div onClick={() => handleStatClick('pending')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-yellow-300 transition">
               <p className="text-gray-600 text-sm">Pending</p>
               <p className="text-3xl font-bold text-yellow-600">{stats.pendingApprovals}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div onClick={() => handleStatClick('matches')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-purple-300 transition">
               <p className="text-gray-600 text-sm">Active Matches</p>
               <p className="text-3xl font-bold text-purple-600">{stats.activeMatches}</p>
             </div>
-            <div className="bg-white rounded-lg shadow p-4">
+            <div onClick={() => handleStatClick('verified')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-red-300 transition">
               <p className="text-gray-600 text-sm">Verified Tutors</p>
               <p className="text-3xl font-bold text-red-600">{stats.verifiedTutors}</p>
             </div>
