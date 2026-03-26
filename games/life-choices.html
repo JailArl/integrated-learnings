@@ -506,10 +506,11 @@ const EDUPATHS=[
 
 // CERTS (available age 18+ during study and work)
 const CERTS=[
-  {id:'drv',name:'Driving Licence',icon:'🚗',cost:3500,effect:'Driving Licence',age:18,desc:'Required to buy a car.'},
-  {id:'swim',name:'Swimming Coach Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,maxAge:40,desc:'Side income: +$5K/yr as part-time coach. Available until age 40.'},
-  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,jobRequired:true,salBoost:2000,desc:'Govt subsidised. After attending, your salary increases by $2,000/yr and you are protected from scams!'},
+  {id:'drv',name:'Driving Licence',icon:'🚗',cost:3500,effect:'Driving Licence',age:18,desc:'Required to buy a car. SG driving test: theory + practical. Most people learn at 18!'},
+  {id:'swim',name:'Swimming / Lifesaving Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,maxAge:40,desc:'Side income: +$5K/yr as part-time coach. Essential life skill! Available until age 40.'},
   {id:'ins',name:'Insurance Licence',icon:'🛡️',cost:1500,effect:'Insurance Lic',age:21,desc:'Side income: +$4K/yr. Also gives 50% off insurance premiums.'},
+  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,jobRequired:true,salBoost:2000,desc:'Govt subsidised. After attending, your salary increases by $2,000/yr and you are protected from scams!'},
+  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,jobRequired:true,salBoost:1000,desc:'Workforce Skills Qualification. Recognised by employers, +$1,000/yr salary boost.'},
 ];
 
 // CARS — SG 2024/2025 OTR prices. Total = basePrice + COE + ARF + taxes.
@@ -1624,7 +1625,7 @@ function startStudy(){
 function renderStudy(){
   const yr=G.studying?(G.studying.total-G.studying.left+1):1;
   const isPT=G.studying?.ptMode;
-  const pocketMoney=G.pocketMoney?2400:0;
+  const pocketMoney=(G.pocketMoney&&!isPT)?2400:0; // stops when employed (PT means working)
   const angbao=300;
   const foodCost=1800,transCost=1440;
   const income=pocketMoney+angbao;
@@ -1727,8 +1728,8 @@ function renderStudy(){
   });
   h+='</div></div>';
 
-  // Optional cert (age 18+)
-  const avCerts=CERTS.filter(c=>!G.certs.includes(c.effect)&&G.age>=c.age&&G.cash>=c.cost&&!c.jobRequired);
+  // Optional cert (age 18+, jobRequired only if PT/employed)
+  const avCerts=CERTS.filter(c=>!G.certs.includes(c.effect)&&G.age>=c.age&&G.cash>=c.cost&&(!c.jobRequired||isPT));
   if(avCerts.length){
     h+='<div style="border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:0">';
     h+='<p style="font-size:12px;font-weight:700;margin-bottom:8px">🎯 Optional cert this year? (age '+G.age+')</p>';
@@ -1767,7 +1768,7 @@ function getAvailableJob(){
 
 function confirmStudyYear(){
   const isPT=G.studying?.ptMode;
-  const pocketMoney=G.pocketMoney?2400:0;
+  const pocketMoney=(G.pocketMoney&&!isPT)?2400:0; // stops when employed (PT means working)
   const foodCost=1800,transCost=1440;
 
   G.cash+=pocketMoney;
@@ -1836,7 +1837,7 @@ function confirmStudyYear(){
   G.age++;G.yearsTotal++;
   UI.ac=null;UI.certPick=null;
 
-  if(G.age>=21)G.pocketMoney=false;
+  if(isPT)G.pocketMoney=false; // employed = no more pocket money
 
   if(G.studying.left<=0){
     // Graduated!
@@ -3499,7 +3500,7 @@ function confirmAlloc(){
   }
   // Exp growth
   G.yearsWorked++;G.yearsAtLevel++;
-  G.ftYearsWorked=(G.ftYearsWorked||0)+1; // FT-only experience counter
+  if(!(G.studying&&G.studying.ptMode))G.ftYearsWorked=(G.ftYearsWorked||0)+1; // FT-only experience counter — skip during mid-career PT study
   // Check milestone bonus (5/10/15/20 years)
   var msCheck=MILESTONES.find(m=>m.years===G.yearsWorked&&!(G.milestoneClaimed||[]).includes(m.years));
   if(msCheck){G.milestonePending=msCheck.years;}
@@ -3523,7 +3524,7 @@ function confirmAlloc(){
   if(G.studying&&G.studying.ptMode&&G.jobLevel!==(-1)){  // any job (field or universal/hawker), but not unset (-1)
     G.studying.left--;
     G.yearsTotal++;
-    if(G.age>=21)G.pocketMoney=false;
+    G.pocketMoney=false; // employed mid-career = no pocket money
     if(G.studying.left<=0){
       G.quals.push(G.studying.grants);
       G.hi+=200;
@@ -3541,8 +3542,10 @@ function confirmAlloc(){
     const yw2=G.yearsWorked;
     // Milestone bonus takes priority
     if(G.milestonePending){UI.phase='milestone';saveG();render();return;}
-    const ev2=yw2%3===0,qz2=yw2%7===2,cert2=yw2%3===1&&G.age>=18;
-    if(cert2&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)){UI.phase='cert';}
+    const ev2=yw2%3===0,qz2=yw2%7===2;
+    // Cert popup: always check if any age-appropriate cert is available (age 18+)
+    const cert2Avail=G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age&&(!c.jobRequired||G.jobLevel>=0));
+    if(cert2Avail){UI.phase='cert';}
     else if(ev2){UI.evShown=false;UI.evPick=null;UI.phase='event';}
     else if(qz2){UI.phase='quiz';}
     else UI.phase='summary';
@@ -3553,8 +3556,10 @@ function confirmAlloc(){
   const yw=G.yearsWorked;
   // Milestone bonus takes priority
   if(G.milestonePending){UI.phase='milestone';saveG();render();return;}
-  const ev=yw%3===0,qz=yw%7===2,cert=yw%3===1&&G.age>=18;
-  if(cert&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)){UI.phase='cert';}
+  const ev=yw%3===0,qz=yw%7===2;
+  // Cert popup: always check if any age-appropriate cert is available (age 18+)
+  const certAvail=G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age&&(!c.jobRequired||G.jobLevel>=0));
+  if(certAvail){UI.phase='cert';}
   else if(ev){UI.evShown=false;UI.evPick=null;UI.phase='event';}
   else if(qz){UI.phase='quiz';}
   else UI.phase='summary';
@@ -3839,6 +3844,7 @@ function renderEvent(){
     const pool=EVENTS.filter(e=>{
       if(e.trigger==='marry')return false; // marriage handled as life stage, not random event
       if(e.needsMarried&&!G.married)return false; // baby etc only if married
+      if(e.needsMarried&&G.hasChildren)return false; // prevent double baby
       if(e.dividend&&invTot(G.inv)===0)return false;
       if(e.propBonus&&!G.prop)return false;
       if(e.carOnly&&!G.car)return false; // car accident only if you own a car
