@@ -4,6 +4,7 @@ import { AlertCircle, Clock, Eye, EyeOff, LogOut, RefreshCw, Download, Search, F
 import { adminLogout } from '../services/adminAuth';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 import AdminTutorRanking from './AdminTutorRanking';
+import EnrichmentAdminPanel from './EnrichmentAdminPanel';
 
 // ─── Singapore Postal District → Area Mapping ───
 const SG_AREA_MAP: Record<string, string> = {
@@ -143,7 +144,14 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors' | 'rankings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors' | 'rankings' | 'enrichment'>('overview');
+  const [enrichmentEvents, setEnrichmentEvents] = useState<any[]>([]);
+  const [enrichmentDetail, setEnrichmentDetail] = useState<any>(null);
+  const [enrichmentRounds, setEnrichmentRounds] = useState<any[]>([]);
+  const [enrichmentSessions, setEnrichmentSessions] = useState<any[]>([]);
+  const [enrichmentPlayers, setEnrichmentPlayers] = useState<any[]>([]);
+  const [newSchool, setNewSchool] = useState('');
+  const [newHours, setNewHours] = useState(48);
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -531,7 +539,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <div className="flex gap-0 mb-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {(['overview', 'submissions', 'parents', 'tutors', 'rankings'] as const).map(tab => (
+          {(['overview', 'submissions', 'parents', 'tutors', 'rankings', 'enrichment'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1050,6 +1058,25 @@ export default function AdminDashboard() {
 
         {activeTab === 'rankings' && (
           <AdminTutorRanking />
+        )}
+
+        {activeTab === 'enrichment' && (
+          <EnrichmentAdminPanel
+            events={enrichmentEvents}
+            setEvents={setEnrichmentEvents}
+            detail={enrichmentDetail}
+            setDetail={setEnrichmentDetail}
+            rounds={enrichmentRounds}
+            setRounds={setEnrichmentRounds}
+            sessions={enrichmentSessions}
+            setSessions={setEnrichmentSessions}
+            players={enrichmentPlayers}
+            setPlayers={setEnrichmentPlayers}
+            newSchool={newSchool}
+            setNewSchool={setNewSchool}
+            newHours={newHours}
+            setNewHours={setNewHours}
+          />
         )}
       </div>
 
