@@ -282,7 +282,7 @@ td{padding:8px 5px;border-bottom:1px solid #f3f4f6}
     </div>
     <div id="af" class="hidden" style="margin-top:14px;border-top:1px solid #e5e7eb;padding-top:14px">
       <p style="font-size:14px;font-weight:700;margin-bottom:10px">Teacher Login</p>
-      <input class="inp" id="au" placeholder="Username" style="margin-bottom:8px">
+      <input class="inp" id="au" placeholder="Email" style="margin-bottom:8px">
       <input class="inp" id="ap" type="password" placeholder="Password" style="margin-bottom:10px">
       <div id="ale" class="errmsg"></div>
       <button class="btn bs w100" id="bal">🔐 Sign In</button>
@@ -5181,9 +5181,9 @@ async function doLogin(){
 async function doAdminLogin(){
   var u=el('au')?.value?.trim(),p=el('ap')?.value?.trim();
   var errEl=el('ale');
-  if(!u||!p){if(errEl){errEl.style.display='block';errEl.textContent='Enter username and password.';}return;}
+  if(!u||!p){if(errEl){errEl.style.display='block';errEl.textContent='Enter email and password.';}return;}
   try{
-    var admin=await dbQ('admins',{username:u,password_hash:p},true);
+    var admin=await dbQ('admin_users',{email:u,password_hash:p},true);
     if(admin){if(errEl)errEl.style.display='none';setScreen('admin');loadAdmin();}
     else{if(errEl){errEl.style.display='block';errEl.textContent='Invalid credentials.';}}
   }catch(e){if(errEl){errEl.style.display='block';errEl.textContent='Connection error. Try again.';}}
