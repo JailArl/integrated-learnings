@@ -144,7 +144,8 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors' | 'rankings' | 'enrichment'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors' | 'rankings'>('overview');
+  const [activeSection, setActiveSection] = useState<'tuition' | 'enrichment'>('tuition');
   const [enrichmentEvents, setEnrichmentEvents] = useState<any[]>([]);
   const [enrichmentDetail, setEnrichmentDetail] = useState<any>(null);
   const [enrichmentRounds, setEnrichmentRounds] = useState<any[]>([]);
@@ -487,6 +488,50 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Section Toggle: Tuition vs Enrichment */}
+        <div className="mb-6 flex bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+          <button
+            onClick={() => setActiveSection('tuition')}
+            className={`flex-1 py-4 font-bold text-base transition flex items-center justify-center gap-2 ${
+              activeSection === 'tuition'
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            📚 Tuition
+          </button>
+          <button
+            onClick={() => setActiveSection('enrichment')}
+            className={`flex-1 py-4 font-bold text-base transition flex items-center justify-center gap-2 ${
+              activeSection === 'enrichment'
+                ? 'bg-green-600 text-white'
+                : 'bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            🎮 Enrichment
+          </button>
+        </div>
+
+        {activeSection === 'enrichment' && (
+          <EnrichmentAdminPanel
+            events={enrichmentEvents}
+            setEvents={setEnrichmentEvents}
+            detail={enrichmentDetail}
+            setDetail={setEnrichmentDetail}
+            rounds={enrichmentRounds}
+            setRounds={setEnrichmentRounds}
+            sessions={enrichmentSessions}
+            setSessions={setEnrichmentSessions}
+            players={enrichmentPlayers}
+            setPlayers={setEnrichmentPlayers}
+            newSchool={newSchool}
+            setNewSchool={setNewSchool}
+            newHours={newHours}
+            setNewHours={setNewHours}
+          />
+        )}
+
+        {activeSection === 'tuition' && (<>
         <div className="mb-6 bg-white border border-gray-200 rounded-lg p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <p className="text-sm text-gray-500">Welcome back</p>
@@ -539,7 +584,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <div className="flex gap-0 mb-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {(['overview', 'submissions', 'parents', 'tutors', 'rankings', 'enrichment'] as const).map(tab => (
+          {(['overview', 'submissions', 'parents', 'tutors', 'rankings'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -1059,25 +1104,7 @@ export default function AdminDashboard() {
         {activeTab === 'rankings' && (
           <AdminTutorRanking />
         )}
-
-        {activeTab === 'enrichment' && (
-          <EnrichmentAdminPanel
-            events={enrichmentEvents}
-            setEvents={setEnrichmentEvents}
-            detail={enrichmentDetail}
-            setDetail={setEnrichmentDetail}
-            rounds={enrichmentRounds}
-            setRounds={setEnrichmentRounds}
-            sessions={enrichmentSessions}
-            setSessions={setEnrichmentSessions}
-            players={enrichmentPlayers}
-            setPlayers={setEnrichmentPlayers}
-            newSchool={newSchool}
-            setNewSchool={setNewSchool}
-            newHours={newHours}
-            setNewHours={setNewHours}
-          />
-        )}
+        </>)}
       </div>
 
       {/* Details Modal */}
