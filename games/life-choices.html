@@ -251,12 +251,31 @@ td{padding:8px 5px;border-bottom:1px solid #f3f4f6}
       🎓 You just finished your Secondary Education. You have <strong>$500</strong>. Every decision you make today shapes your life at 65. Can you achieve <strong>Financial Freedom</strong>?
     </div>
     <div id="sf">
-      <div class="g2" style="margin-bottom:10px">
-        <div><span class="lbl">Class</span><input class="inp" id="ic" placeholder="e.g. 3A" maxlength="10"></div>
-        <div><span class="lbl">Index No.</span><input class="inp" id="ii" placeholder="e.g. 12" maxlength="6"></div>
+      <!-- Step 1: Access Code -->
+      <div id="login-step1">
+        <span class="lbl">🔑 Event Access Code</span>
+        <p style="font-size:11px;color:#6b7280;margin-bottom:6px">Enter the code given by your teacher</p>
+        <input class="inp" id="iac" placeholder="e.g. ABC123" maxlength="8" style="text-transform:uppercase;font-size:18px;text-align:center;font-weight:800;letter-spacing:4px;margin-bottom:8px">
+        <div id="code-status" style="display:none;border-radius:8px;padding:8px 12px;font-size:11px;margin-bottom:8px"></div>
+        <button class="btn bp w100" id="bvc">🔓 Verify Code</button>
       </div>
-      <div id="le" class="errmsg"></div>
-      <button class="btn bp w100" style="margin-top:10px" id="bl">🚀 Start Playing</button>
+      <!-- Step 2: Class + Index (shown after valid code) -->
+      <div id="login-step2" class="hidden">
+        <div id="event-banner" style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:#1d4ed8">
+          <span id="event-school" style="font-weight:800"></span>
+          <span id="event-timer" style="float:right;font-family:monospace;font-size:11px"></span>
+        </div>
+        <div id="round-banner" style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12px;display:none">
+          <span id="round-info" style="font-weight:700;color:#92400e"></span>
+        </div>
+        <div class="g2" style="margin-bottom:10px">
+          <div><span class="lbl">Class</span><input class="inp" id="ic" placeholder="e.g. 3A" maxlength="10"></div>
+          <div><span class="lbl">Index No.</span><input class="inp" id="ii" placeholder="e.g. 12" maxlength="6"></div>
+        </div>
+        <div id="le" class="errmsg"></div>
+        <button class="btn bp w100" style="margin-top:10px" id="bl">🚀 Start Playing</button>
+        <button class="btn bs w100" style="margin-top:6px;font-size:11px" id="bcc">← Change Code</button>
+      </div>
       <div style="text-align:center;margin-top:12px;font-size:12px;color:#9ca3af">
         Teacher? <button id="bsa" style="background:none;border:none;color:#2563eb;font-weight:700;cursor:pointer;font-family:inherit;font-size:12px">Admin →</button>
       </div>
@@ -609,6 +628,16 @@ const INV=[
    conditionShort:'Age 18+, CDP account. Min ~$1,000. ~4% annual dividend.',
    purpose:'💰 Dividend + Growth',purposeColor:'#1d4ed8',
    tip:'~6.5%/yr + ~4% reliable dividend. Real gain: +3.5%. SG banks are resilient but can drop -20% in recessions. Dividend income is very reliable even when share price dips.'},
+  {key:'ssb',name:'Singapore Savings Bonds',icon:'🇸🇬',yield:0.032,risk:'Safe',col:'#e11d48',canNeg:false,
+   realReturn:0.002,
+   minInvest:500,
+   maxPerYear:200000,
+   needsCDP:false,minAge:18,
+   redeemAnytime:true,
+   condition:'Apply via DBS/OCBC/UOB ATM or internet banking. Min $500, max $200K. Fully redeemable any month with no penalty!',
+   conditionShort:'Age 18+. Min $500. Redeem anytime, no penalty!',
+   purpose:'🛟 Safe Savings (better than bank!)',purposeColor:'#e11d48',
+   tip:'Government-backed, 0% risk, ~3.2%/yr average over 10 years. Better than bank savings! You can cash out ANY month with NO penalty — perfect first investment for students. Earns more the longer you hold (step-up interest).'},
   {key:'stock',name:'Individual Stocks',icon:'💹',yield:0.09,risk:'High',col:'#dc2626',canNeg:true,
    realReturn:0.06,
    minInvest:500,
@@ -735,43 +764,43 @@ const QUIZZES=[
 const NEWS=[
   {id:'bull',name:'Bull Market! 🚀',headline:'Global markets surge — STI hits record highs!',
    mood:'bull',salMod:1.05,costMod:1.02,cashBonus:0,propBonus:0,
-   ret:{bank:0.035,cpfsa:0.04,fd:0.040,etf:0.18,reit:0.12,bank_stock:0.14,stock:0.25},
+   ret:{bank:0.035,cpfsa:0.04,fd:0.040,ssb:0.035,etf:0.18,reit:0.12,bank_stock:0.14,stock:0.25},
    tip:'Bull markets lift all boats. Those who stayed invested through crashes are rewarded now!'},
   {id:'stable',name:'Steady Year 📊',headline:'Singapore economy grows steadily at 3.2%.',
    mood:'stable',salMod:1.03,costMod:1.03,cashBonus:0,propBonus:0,
-   ret:{bank:0.035,cpfsa:0.04,fd:0.038,etf:0.07,reit:0.065,bank_stock:0.065,stock:0.07},
+   ret:{bank:0.035,cpfsa:0.04,fd:0.038,ssb:0.032,etf:0.07,reit:0.065,bank_stock:0.065,stock:0.07},
    tip:'Normal years are the foundation of wealth. Keep investing consistently every year!'},
   {id:'rates_up',name:'Interest Rates Rise 📈',headline:'US Fed hikes rates — fixed deposits now very attractive!',
    mood:'rates',salMod:1.02,costMod:1.04,cashBonus:0,propBonus:0,
-   ret:{bank:0.055,cpfsa:0.04,fd:0.060,etf:0.02,reit:-0.05,bank_stock:-0.03,stock:-0.08},
+   ret:{bank:0.055,cpfsa:0.04,fd:0.060,ssb:0.042,etf:0.02,reit:-0.05,bank_stock:-0.03,stock:-0.08},
    tip:'High rates are a saver\'s best friend! FD hits 6%! But stocks and REITs suffer — higher borrowing costs hurt them. This is why diversification matters!'},
   {id:'tech_boom',name:'AI / Tech Boom! 🤖',headline:'AI revolution — tech salaries surge, jobs disrupted!',
    mood:'tech',salMod:1.08,costMod:1.03,cashBonus:0,propBonus:0,itBonus:true,
-   ret:{bank:0.035,cpfsa:0.04,fd:0.038,etf:0.15,reit:0.05,bank_stock:0.08,stock:0.35},
+   ret:{bank:0.035,cpfsa:0.04,fd:0.038,ssb:0.032,etf:0.15,reit:0.05,bank_stock:0.08,stock:0.35},
    tip:'AI is reshaping every industry. Upskilling in tech = massive career advantage!'},
   {id:'property_boom',name:'Property Boom! 🏠',headline:'Singapore property prices surge — HDB resale hits new highs!',
    mood:'property',salMod:1.03,costMod:1.05,cashBonus:0,propBonus:0.10,
-   ret:{bank:0.035,cpfsa:0.04,fd:0.038,etf:0.08,reit:0.15,bank_stock:0.09,stock:0.08},
+   ret:{bank:0.035,cpfsa:0.04,fd:0.038,ssb:0.032,etf:0.08,reit:0.15,bank_stock:0.09,stock:0.08},
    tip:'Property owners gain wealth passively. Another reason to own your home early!'},
   {id:'recession',name:'Recession 📉',headline:'Global recession — Singapore contracts, job losses rise.',
    mood:'recession',salMod:0.95,costMod:1.02,cashBonus:0,propBonus:0,
-   ret:{bank:0.030,cpfsa:0.04,fd:0.035,etf:-0.12,reit:-0.08,bank_stock:-0.10,stock:-0.22},
+   ret:{bank:0.030,cpfsa:0.04,fd:0.035,ssb:0.028,etf:-0.12,reit:-0.08,bank_stock:-0.10,stock:-0.22},
    tip:'Recessions test resilience. Your bank savings and FD stay safe while stocks crash. Emergency fund = difference between okay and crisis!'},
   {id:'crash',name:'Market Crash! 💥',headline:'Financial crisis — global markets crash 30%+!',
    mood:'crash',salMod:0.90,costMod:1.01,cashBonus:0,propBonus:0,
-   ret:{bank:0.030,cpfsa:0.04,fd:0.035,etf:-0.28,reit:-0.18,bank_stock:-0.20,stock:-0.40},
+   ret:{bank:0.030,cpfsa:0.04,fd:0.035,ssb:0.028,etf:-0.28,reit:-0.18,bank_stock:-0.20,stock:-0.40},
    tip:'Crashes are terrifying — but your bank and FD never go negative! Those in ETF who HELD ON always recovered. Panic selling locks in your losses forever.'},
   {id:'budget_year',name:'SG Budget Bonuses! 🏛️',headline:'National Day Rally — CDC vouchers and GST rebates for all!',
    mood:'good',salMod:1.02,costMod:1.02,cashBonus:1500,propBonus:0,
-   ret:{bank:0.035,cpfsa:0.04,fd:0.038,etf:0.07,reit:0.065,bank_stock:0.065,stock:0.07},
+   ret:{bank:0.035,cpfsa:0.04,fd:0.038,ssb:0.032,etf:0.07,reit:0.065,bank_stock:0.065,stock:0.07},
    tip:'SG government gives back through CDC vouchers and GST Vouchers. Use them wisely!'},
   {id:'inflation',name:'Inflation Spike! 🔥',headline:'War-driven inflation hits 7% — everything costs more!',
    mood:'inflation',salMod:1.01,costMod:1.07,cashBonus:0,propBonus:0.04,
-   ret:{bank:0.035,cpfsa:0.04,fd:0.048,etf:0.04,reit:0.05,bank_stock:0.03,stock:-0.05},
+   ret:{bank:0.035,cpfsa:0.04,fd:0.048,ssb:0.035,etf:0.04,reit:0.05,bank_stock:0.03,stock:-0.05},
    tip:'Even your bank at 3.5% LOSES real value when inflation hits 7%! Only FD (4.8%), property and real assets protect you from inflation.'},
   {id:'pandemic',name:'Pandemic! 🦠',headline:'COVID-style outbreak — Circuit Breaker. Economy frozen.',
    mood:'pandemic',salMod:0.60,costMod:1.01,cashBonus:0,propBonus:0,once:true,
-   ret:{bank:0.030,cpfsa:0.04,fd:0.030,etf:-0.18,reit:-0.12,bank_stock:-0.15,stock:-0.25},
+   ret:{bank:0.030,cpfsa:0.04,fd:0.030,ssb:0.025,etf:-0.18,reit:-0.12,bank_stock:-0.15,stock:-0.25},
    tip:'Pandemics prove emergency funds are not optional. Your bank savings stayed safe while stocks crashed 25%! 6 months expenses in bank = survival.'},
 ];
 
@@ -867,7 +896,7 @@ function dynamicReturn(key,newsId){
   // Business field: +10% to all investment returns (financial literacy pays off)
   var bizBonus=(G&&G.field?FIELDS.find(f=>f.id===G.field)?.invBonus||0:0);
   // Floors: capital-protected instruments cannot lose principal
-  const floors={bank:0.010,cpfsa:0.04,fd:0.025,reit:-0.18,bank_stock:-0.20,etf:-0.28,stock:-0.40};
+  const floors={bank:0.010,cpfsa:0.04,fd:0.025,ssb:0.015,reit:-0.18,bank_stock:-0.20,etf:-0.28,stock:-0.40};
   return Math.max(floors[key]!==undefined?floors[key]:0,raw*(1+bizBonus));
 }
 function getDividend(key,amount,newsId){
@@ -910,7 +939,7 @@ function carVal(c,ageYrs){
 // ══════════════════════════════════════
 // STATE
 // ══════════════════════════════════════
-let P=null,RD=null,SID=null;
+let P=null,RD=null,SID=null,EVT=null;
 
 function newG(){return {
   age:17,cash:500,hi:60,cpf:0,
@@ -933,7 +962,7 @@ function newG(){return {
   carOriginalLoan:0,carAnnualPayment:0,carTenure:7,carLoanYearsPaid:0,
   prop:null,propVal:0, // LEGACY: kept for compat, use properties[] for multi
   car:null,carData:null,carVal2:0,carAge:0,
-  inv:{bank:0,cpfsa:0,fd:0,etf:0,reit:0,bank_stock:0,stock:0},
+  inv:{bank:0,cpfsa:0,fd:0,ssb:0,etf:0,reit:0,bank_stock:0,stock:0},
   married:false,ffAge:null,marriageAge:null,babyAge:null,hasChildren:false,spouseIncome:0,
   lifestyle:'basic',
   pocketMoney:true,
@@ -1405,6 +1434,11 @@ function renderField(){
     h+='<p style="font-size:9px;color:#9ca3af;font-style:italic;line-height:1.4">'+(f.hiNote||'')+'</p>';
     if(f.noRetrenched)h+='<span class="tag tgn" style="font-size:9px;margin-top:3px;display:inline-block">🛡️ Job security</span> ';
     if(f.invBonus)h+='<span class="tag tbl" style="font-size:9px;margin-top:3px;display:inline-block">📈 +10% invest returns</span>';
+    // Lifetime earnings estimate
+    var ltYrs=65-17;
+    var avgSal=Math.round(f.ladder.reduce(function(s,r){return s+r.sal;},0)/f.ladder.length);
+    var ltEarn=fmt(Math.round(avgSal*ltYrs/1000)*1000);
+    h+='<div style="margin-top:4px;background:#f8fafc;border-radius:6px;padding:4px 8px;font-size:9px;color:#6b7280">💰 Est. lifetime earnings: <strong style="color:#1a1d2e">~'+ltEarn+'</strong> over '+ltYrs+' yrs</div>';
     h+='</div>';
     h+='</div>';
   });
@@ -2530,14 +2564,30 @@ function renderAlloc(){
   // ── INVESTMENT PANEL (improved) ──
   const news4Inv=NEWS.find(n=>n.id===G.currentNews)||NEWS[1];
   h+='<div class="ct" style="margin-top:4px">📈 Investments <span style="font-size:9px;color:#9ca3af;font-weight:400;text-transform:none">— how much EXTRA cash to add this year?</span></div>';
+  h+='<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 14px;margin-bottom:10px">';
+  h+='<p style="font-size:12px;font-weight:800;color:#92400e;margin-bottom:4px">💡 Rule of 72 — The Most Powerful Mental Math Trick!</p>';
+  h+='<p style="font-size:11px;color:#78350f;line-height:1.7">Divide <strong>72</strong> by your interest rate to find how many years your money takes to <strong>double</strong>.</p>';
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px">';
+  [{r:3.5,n:'Bank',e:'🏦'},{r:4,n:'CPF-SA',e:'🏛️'},{r:7,n:'ETF',e:'📈'},{r:9,n:'Stocks',e:'💹'}].forEach(function(x){
+    var dbl=Math.round(72/x.r);
+    h+='<div style="background:#fff;border-radius:6px;padding:6px;text-align:center;border:1px solid #e5e7eb">';
+    h+='<div style="font-size:14px">'+x.e+'</div>';
+    h+='<div style="font-size:9px;color:#6b7280">'+x.n+' ('+x.r+'%)</div>';
+    h+='<div style="font-size:13px;font-weight:800;color:#92400e">~'+dbl+' yrs</div>';
+    h+='<div style="font-size:8px;color:#9ca3af">to double</div></div>';
+  });
+  h+='</div>';
+  h+='<p style="font-size:9px;color:#78350f;margin-top:6px">Example: $1,000 in ETF (7%) → $2,000 in ~10 yrs → $4,000 in ~20 yrs → $8,000 in ~30 yrs! 🚀</p>';
+  h+='</div>';
   h+='<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:10px;color:#5b21b6">🏛️ <strong>CPF-SA:</strong> Voluntary CASH top-up (not salary CPF). Grows at 4%/yr, locked till 55. Max $8K/yr for tax relief!</div>';
   // Strategy guide
   h+='<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:10px">';
   h+='<p style="font-weight:800;color:#1a1d2e;margin-bottom:5px">🧠 The SG Investment Ladder — Use All Tiers!</p>';
-  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
+  h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
   h+='<div style="background:#eff6ff;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#1d4ed8;margin-bottom:2px">Step 1 — Safety</p><p style="color:#6b7280;line-height:1.5">Bank (3.5%) + CPF-SA (4%) for Emergency Fund and retirement</p></div>';
-  h+='<div style="background:#f0fdf4;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#166534;margin-bottom:2px">Step 2 — Goals</p><p style="color:#6b7280;line-height:1.5">FD (3.8%) for BTO down payment, car, holiday — locked 2yrs, capital safe</p></div>';
-  h+='<div style="background:#fffbeb;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#92400e;margin-bottom:2px">Step 3 — Growth</p><p style="color:#6b7280;line-height:1.5">ETF/REIT/Stocks for long-term wealth you WON\'T need for 10+ years</p></div>';
+  h+='<div style="background:#fff0f6;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#e11d48;margin-bottom:2px">Step 2 — SSB</p><p style="color:#6b7280;line-height:1.5">SG Savings Bonds (3.2%) — govt-backed, redeem anytime, beats bank!</p></div>';
+  h+='<div style="background:#f0fdf4;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#166534;margin-bottom:2px">Step 3 — Goals</p><p style="color:#6b7280;line-height:1.5">FD (3.8%) for BTO/car — locked 2yrs, capital safe</p></div>';
+  h+='<div style="background:#fffbeb;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#92400e;margin-bottom:2px">Step 4 — Growth</p><p style="color:#6b7280;line-height:1.5">ETF/REIT/Stocks for long-term wealth you WON\'T need for 10+ years</p></div>';
   h+='</div>';
   h+='<p style="color:#dc2626;font-size:9px;margin-top:6px;font-weight:600">⚠️ Never put your emergency fund in ETF/Stocks — a crash forces you to sell at -30%!</p>';
   h+='</div>';
@@ -2773,7 +2823,9 @@ function renderAlloc(){
     h+='<div class="lux-name">'+lx.name+famLbl+'</div>';
     h+='<div class="lux-cost">-'+fmt(adjCost)+'</div>';
     h+='<div class="lux-hi" style="color:'+(adjHi>lx.hi?'#ec4899':'#16a34a')+'">+'+adjHi+' HI'+(famMult>1?' 🔥':'')+'</div>';
-    h+='<div class="lux-regret">Could be $'+regretVal.toLocaleString()+' at 65</div>';
+    var yrsToDouble=Math.round(72/7);
+    h+='<div class="lux-regret" style="color:#dc2626;font-weight:600">⏳ If invested: '+fmt(regretVal)+' at 65</div>';
+    h+='<div style="font-size:8px;color:#9ca3af;margin-top:1px">💡 Rule of 72: at 7%, money doubles every ~'+yrsToDouble+' yrs</div>';
     h+='</div>';
   });
   h+='</div></div>';
@@ -3918,8 +3970,8 @@ function renderEvent(){
   if(ev.ccTrap){G.ccDebt=(G.ccDebt||0)+5000;G.creditCard=true;money=-500;note='💳 $5,000 credit card debt added at 26%/yr interest. Pay it off FIRST before any other spending!';}
   if(ev.pandemic){money=Math.round(-G.jobSal*0.5);note=G.emergencyFund>0?'✅ Emergency fund helped you survive the pandemic!':'⚠️ No emergency fund — you had to take emergency loans!';}
   if(ev.war){
-    var warLoss=Math.round(invTot(G.inv)*0.20);
-    INV.forEach(i=>{G.inv[i.key]=Math.round(G.inv[i.key]*0.80);});
+    var warLoss=Math.round(INV.filter(i=>i.canNeg).reduce((s,i)=>s+(G.inv[i.key]||0),0)*0.20);
+    INV.forEach(i=>{if(i.canNeg)G.inv[i.key]=Math.round(G.inv[i.key]*0.80);});
     money=-warLoss;note='⚔️ Inflation spiked 7%. Stocks dropped 20%. Property and ETFs are best hedges against war inflation!';
   }
   if(ev.coeSpike){G.coeLevel=Math.min(1.5,(G.coeLevel||1)*1.3);money=0;note='Car prices just got 30% more expensive! Current COE multiplier: '+Math.round(G.coeLevel*100)+'%';}
@@ -3944,7 +3996,7 @@ function renderEvent(){
     G.cash+=money;G.hi+=hiChange;
     if(ev.trigger==='marry')G.married=true;
     if(ev.propBonus&&G.prop)G.propVal=Math.round(G.propVal*(1+ev.propBonus));
-    if(ev.crash&&!ev.war)INV.forEach(i=>{G.inv[i.key]=Math.round(G.inv[i.key]*(1-ev.crash));});
+    if(ev.crash&&!ev.war)INV.forEach(i=>{if(i.canNeg)G.inv[i.key]=Math.round(G.inv[i.key]*(1-ev.crash));});
     if(ev.retrenched){G.jobLevel=-1;G.jobSal=0;addLog('😰 Lost job — must find new job next year!');}
     if(ev.ccTrap){G.ccDebt=(G.ccDebt||0)+5000;G.creditCard=true;}
     if(G.cash<0){emergencyBorrow(Math.abs(G.cash),'emergency');addLog('⚠️ Emergency loan taken!');}
@@ -4236,6 +4288,27 @@ function renderSummary(){
   if(G.carVal2>0)h+='<div class="rrow neu"><span>🚗 Car value (depreciating)</span><strong>'+fmt(G.carVal2)+'</strong></div>';
   h+='</div>';
   h+='<div class="rtot"><span>Net Worth</span><span style="color:'+(n>=0?'#16a34a':'#dc2626')+'">'+fmt(n)+'</span></div>';
+  // ── SAVINGS RATE INDICATOR (50/30/20 Rule) ──
+  var yrIncome=G.jobSal||0;
+  if(yrIncome>0){
+    var yrExpenses=(3240+(G.lifestyle==="comfort"?3000:0)+(G.car&&G.carData?carRunCost(G.carData,G.carAge):0)+(!G.prop?7200:0)+(G.insurance?G.insurancePremium:0)+(G.hasChildren&&G.childCost?G.childCost:0))*G.inflationMult;
+    var yrSaved=Math.max(0,yrIncome-cpfEmployee(yrIncome)-calcTax(yrIncome,G.married,G.hasChildren,1,G.cpfsaThisYear||0,G.age)-yrExpenses);
+    var savingsRate=Math.round(yrSaved/yrIncome*100);
+    var srColor=savingsRate>=20?'#16a34a':savingsRate>=10?'#d97706':'#dc2626';
+    var srEmoji=savingsRate>=20?'🟢':savingsRate>=10?'🟡':'🔴';
+    h+='<div style="background:'+(savingsRate>=20?'#f0fdf4':savingsRate>=10?'#fffbeb':'#fff5f5')+';border:1.5px solid '+(savingsRate>=20?'#86efac':savingsRate>=10?'#fde68a':'#fca5a5')+';border-radius:10px;padding:10px 14px;margin-top:8px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+    h+='<span style="font-size:11px;font-weight:700;color:#1a1d2e">'+srEmoji+' Savings Rate</span>';
+    h+='<span style="font-size:16px;font-weight:800;font-family:monospace;color:'+srColor+'">'+savingsRate+'%</span>';
+    h+='</div>';
+    h+='<div style="height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:'+Math.min(100,savingsRate*2.5)+'%;background:'+srColor+';border-radius:3px"></div></div>';
+    h+='<div style="font-size:9px;color:#6b7280;line-height:1.6">';
+    h+='<strong>50/30/20 Rule:</strong> Needs (50%) · Wants (30%) · <strong>Save & Invest (20%+)</strong>';
+    if(savingsRate<10)h+='<br><span style="color:#dc2626;font-weight:700">⚠️ Danger zone! You\'re saving almost nothing. Cut spending or earn more!</span>';
+    else if(savingsRate<20)h+='<br><span style="color:#d97706;font-weight:600">Getting there — aim for 20%+ to build real wealth!</span>';
+    else h+='<br><span style="color:#16a34a;font-weight:600">Great job! You\'re on track for Financial Freedom! 🎯</span>';
+    h+='</div></div>';
+  }
   h+='</div></div></div>';
 
   // ── ASSET PANEL ──
@@ -4832,32 +4905,110 @@ async function loadLb(){
 async function loadAdmin(){
   const body=el('admbody');
   body.innerHTML='<div style="text-align:center;padding:30px;color:#9ca3af">⏳ Loading...</div>';
-  const rounds=await dbQ('game_rounds',{});
-  const active=Array.isArray(rounds)?rounds.find(r=>r.is_active):null;
-  let sessions=[];
-  if(active)sessions=await dbJ('game_sessions','*,players(class_id,index_number)',{round_id:active.id},'final_score.desc');
+  // Load events
+  var events=[];
+  try{events=await dbJ('game_events','*',{},'created_at.desc');}catch(e){}
+  if(!Array.isArray(events))events=[];
   const gls={ff_earliest:'🏁 First to FF',highest_nw:'💰 Net Worth',highest_hi:'😊 Happiness',highest_cpf:'🏛️ CPF',balanced_life:'⚖️ Balanced Life',combined:'🥇 Combined'};
 
-  let h='<div class="ac"><div class="ct">Game Rounds</div>';
-  (Array.isArray(rounds)?rounds:[]).forEach(r=>{
+  let h='<div class="ac" style="border-left:4px solid #2563eb"><div class="ct">📋 Events Dashboard</div>';
+  // Create event form
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:end">';
+  h+='<div style="flex:1;min-width:180px"><label style="font-size:10px;color:#9ca3af;display:block;margin-bottom:2px">School Name</label><input class="inp" id="ne-school" placeholder="e.g. Raffles Institution"></div>';
+  h+='<div style="min-width:100px"><label style="font-size:10px;color:#9ca3af;display:block;margin-bottom:2px">Duration (hrs)</label><input class="inp" id="ne-hours" type="number" value="48" min="1" max="168"></div>';
+  h+='<button onclick="createEvent()" class="btn bp bsm" style="height:36px">🎟️ Create Event</button></div></div>';
+
+  // List events
+  if(events.length){
+    events.forEach(ev=>{
+      var expired=new Date(ev.expires_at)<new Date();
+      var active=ev.is_active&&!expired;
+      h+='<div class="ac" style="border-left:4px solid '+(active?'#22c55e':expired?'#dc2626':'#d1d5db')+'">';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+      h+='<div><div style="font-weight:700;font-size:14px">🏫 '+ev.school_name+'</div>';
+      h+='<div style="font-size:11px;color:#6b7280">Created: '+new Date(ev.created_at).toLocaleString()+'</div></div>';
+      h+='<div style="text-align:right">';
+      h+='<div style="font-size:28px;font-weight:800;letter-spacing:5px;font-family:monospace;color:'+(active?'#2563eb':'#9ca3af')+'">'+ev.access_code+'</div>';
+      h+='<span class="tag '+(active?'tgn':expired?'tpe':'tpu')+'">'+(active?'● ACTIVE':expired?'✖ EXPIRED':'○ INACTIVE')+'</span>';
+      h+='</div></div>';
+      // Expiry info
+      if(!expired){
+        var diff=new Date(ev.expires_at)-new Date();
+        var hrs=Math.floor(diff/3600000),mins=Math.floor((diff%3600000)/60000);
+        h+='<div style="font-size:11px;color:'+(hrs<2?'#dc2626':hrs<6?'#d97706':'#16a34a')+'">⏱️ '+hrs+'h '+mins+'m remaining</div>';
+      }
+      // Action buttons
+      h+='<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">';
+      h+='<button onclick="loadEventDetail(\''+ev.id+'\')" class="btn bp bsm">📊 Dashboard</button>';
+      if(active)h+='<button onclick="deactEvent(\''+ev.id+'\')" class="btn bsm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5">🛑 Deactivate</button>';
+      if(!active&&!expired)h+='<button onclick="actEvent(\''+ev.id+'\')" class="btn bsm" style="background:#f0fdf4;color:#16a34a;border:1px solid #86efac">▶ Activate</button>';
+      h+='<button onclick="exportEvt(\''+ev.id+'\')" class="btn bsm" style="background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd">📥 Export</button>';
+      h+='<button onclick="if(confirm(\'Delete event and ALL data?\'))cleanEvt(\''+ev.id+'\')" class="btn bsm" style="background:#fef2f2;color:#dc2626;border:1px solid #fca5a5">🗑️ Delete</button>';
+      h+='</div></div>';
+    });
+  }else{
+    h+='<div class="ac" style="text-align:center;padding:28px;color:#9ca3af"><p style="font-size:28px;margin-bottom:6px">🎟️</p><p style="font-weight:600">No events yet</p><p style="font-size:11px;margin-top:4px">Create an event above to get an access code for students.</p></div>';
+  }
+  body.innerHTML=h;
+}
+
+// Event detail dashboard (rounds + leaderboard for one event)
+window.loadEventDetail=async function(evtId){
+  const body=el('admbody');
+  body.innerHTML='<div style="text-align:center;padding:30px;color:#9ca3af">⏳ Loading event...</div>';
+  const gls={ff_earliest:'🏁 First to FF',highest_nw:'💰 Net Worth',highest_hi:'😊 Happiness',highest_cpf:'🏛️ CPF',balanced_life:'⚖️ Balanced Life',combined:'🥇 Combined'};
+  var rounds=await dbJ('game_rounds','*',{event_id:evtId},'round_number.asc');
+  if(!Array.isArray(rounds))rounds=[];
+  var activeRd=rounds.find(r=>r.is_active);
+  var players=await dbJ('players','*',{event_id:evtId});
+  if(!Array.isArray(players))players=[];
+
+  let h='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><button onclick="loadAdmin()" class="btn bsm" style="background:#f3f4f6;color:#374151;border:1px solid #e5e7eb">← Back</button><span style="font-weight:700;font-size:14px">Event Detail</span></div>';
+
+  // Rounds section
+  h+='<div class="ac"><div class="ct">🔄 Rounds</div>';
+  rounds.forEach(r=>{
     h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f3f4f6">';
     h+='<span class="tag '+(r.is_active?'tgn':'tpu')+'">'+(r.is_active?'● LIVE':'○')+'</span>';
-    h+='<span style="flex:1;font-weight:600;font-size:12px">'+r.round_name+'</span>';
+    h+='<span style="flex:1;font-weight:600;font-size:12px">Round '+r.round_number+': '+r.round_name+'</span>';
     h+='<span style="font-size:11px;color:#9ca3af">'+gls[r.goal]+'</span>';
-    if(!r.is_active)h+='<button onclick="actRound(\''+r.id+'\')" class="btn bp bsm">Activate</button>';
+    if(!r.is_active)h+='<button onclick="actRound(\''+r.id+'\',\''+evtId+'\')" class="btn bp bsm">▶ Activate</button>';
     h+='</div>';
   });
+  // Create round form
   h+='<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">';
-  h+='<input class="inp" id="nrn" placeholder="Round name" style="flex:1;min-width:160px">';
+  h+='<input class="inp" id="nrn" placeholder="Round name" style="flex:1;min-width:140px">';
   h+='<select class="inp" id="nrg" style="width:auto">';
   Object.entries(gls).forEach(([k,v])=>h+='<option value="'+k+'">'+v+'</option>');
-  h+='</select><button onclick="createRound()" class="btn bp bsm">+ Create</button></div></div>';
+  h+='</select><button onclick="createRound(\''+evtId+'\')" class="btn bp bsm">+ Round</button></div></div>';
 
-  h+='<div class="ag"><div class="ac"><div class="ct">Players</div><div style="font-size:36px;font-weight:800">'+sessions.length+'</div></div>';
-  h+='<div class="ac"><div class="ct">Completed</div><div style="font-size:36px;font-weight:800">'+sessions.filter(s=>s.is_complete).length+'</div></div></div>';
+  // Stats
+  var sessions=[];
+  if(activeRd)sessions=await dbJ('game_sessions','*,players(class_id,index_number)',{round_id:activeRd.id},'final_score.desc');
+  if(!Array.isArray(sessions))sessions=[];
 
+  h+='<div class="ag"><div class="ac"><div class="ct">👥 Players</div><div style="font-size:36px;font-weight:800">'+players.length+'</div></div>';
+  h+='<div class="ac"><div class="ct">🎮 Sessions</div><div style="font-size:36px;font-weight:800">'+sessions.length+'</div></div>';
+  h+='<div class="ac"><div class="ct">✅ Completed</div><div style="font-size:36px;font-weight:800">'+sessions.filter(s=>s.is_complete).length+'</div></div></div>';
+
+  // Leaderboard
   if(sessions.length){
-    h+='<div class="ac"><div class="ct">🏆 Leaderboard</div>';
+    h+='<div class="ac"><div class="ct">🏆 Leaderboard — '+(activeRd?'Round '+activeRd.round_number+': '+activeRd.round_name:'')+'</div>';
+    // Player highlights
+    var done=sessions.filter(s=>s.is_complete&&s.game_state);
+    if(done.length>=3){
+      h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">';
+      // Conservative: highest bank+fd+ssb ratio
+      var cons=done.map(s=>{var gs=s.game_state,tot=Math.max(1,(gs.inv?.bank||0)+(gs.inv?.fd||0)+(gs.inv?.ssb||0)+(gs.inv?.etf||0)+(gs.inv?.stock||0));return{s,ratio:((gs.inv?.bank||0)+(gs.inv?.fd||0)+(gs.inv?.ssb||0))/tot};}).sort((a,b)=>b.ratio-a.ratio)[0];
+      if(cons)h+='<span class="tag tpu" style="font-size:10px">🛡️ Most Conservative: '+cons.s.players?.class_id+'-'+cons.s.players?.index_number+'</span>';
+      // Risk-taker: highest stock ratio
+      var risky=done.map(s=>{var gs=s.game_state,tot=Math.max(1,(gs.inv?.bank||0)+(gs.inv?.fd||0)+(gs.inv?.ssb||0)+(gs.inv?.etf||0)+(gs.inv?.stock||0));return{s,ratio:(gs.inv?.stock||0)/tot};}).sort((a,b)=>b.ratio-a.ratio)[0];
+      if(risky)h+='<span class="tag tpe" style="font-size:10px">🎲 Biggest Risk-Taker: '+risky.s.players?.class_id+'-'+risky.s.players?.index_number+'</span>';
+      // Happiest
+      var happy=done.sort((a,b)=>(b.game_state?.hi||0)-(a.game_state?.hi||0))[0];
+      if(happy)h+='<span class="tag tgn" style="font-size:10px">😊 Happiest: '+happy.s?.players?.class_id+'-'+happy.s?.players?.index_number+'</span>';
+      h+='</div>';
+    }
     sessions.filter(s=>s.final_score>0).slice(0,10).forEach((s,i)=>{
       h+='<div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f9fafb;border-radius:8px;margin-bottom:4px">';
       h+='<span style="font-size:13px;width:22px;text-align:center">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</span>';
@@ -4867,14 +5018,14 @@ async function loadAdmin(){
       h+='</div>';
     });
     h+='</div>';
-    h+='<div class="ac"><div class="ct">All Sessions</div><table><thead><tr><th>Student</th><th>Age</th><th>Field</th><th>Qual</th><th>Cash</th><th>NW</th><th>CPF</th><th>HI</th><th>Score</th><th>Status</th></tr></thead><tbody>';
+    // Session table
+    h+='<div class="ac"><div class="ct">📊 All Sessions</div><table><thead><tr><th>Student</th><th>Age</th><th>Field</th><th>Cash</th><th>NW</th><th>CPF</th><th>HI</th><th>Score</th><th>Status</th></tr></thead><tbody>';
     sessions.forEach(s=>{
-      const gs=s.game_state;
-      const f2=FIELDS.find(x=>x.id===gs?.field);
+      var gs=s.game_state||{};
+      var f2=FIELDS.find(x=>x.id===gs.field);
       h+='<tr><td><strong>'+s.players?.class_id+'-'+s.players?.index_number+'</strong></td>';
       h+='<td>'+s.age+'</td>';
       h+='<td>'+(f2?f2.icon+' '+f2.name.split(' ')[0]:'—')+'</td>';
-      h+='<td>'+(gs?.quals?.[gs.quals.length-1]||'—')+'</td>';
       h+='<td style="font-family:monospace;color:'+(s.cash>=0?'#16a34a':'#dc2626')+'">'+fmt(s.cash)+'</td>';
       h+='<td style="font-family:monospace;color:#2563eb">'+fmt(s.net_worth||0)+'</td>';
       h+='<td style="font-family:monospace;color:#7c3aed">'+fmt(s.cpf)+'</td>';
@@ -4884,56 +5035,150 @@ async function loadAdmin(){
     });
     h+='</tbody></table></div>';
   }else{
-    h+='<div class="ac" style="text-align:center;padding:28px;color:#9ca3af"><p style="font-size:28px;margin-bottom:6px">🎮</p><p style="font-weight:600">No players yet</p><p style="font-size:11px;margin-top:4px">Share: <code style="background:#f3f4f6;padding:3px 7px;border-radius:5px">'+window.location.href+'</code></p></div>';
+    h+='<div class="ac" style="text-align:center;padding:28px;color:#9ca3af"><p style="font-size:28px;margin-bottom:6px">🎮</p><p style="font-weight:600">'+(activeRd?'No sessions yet — Students playing this round will appear here.':'No active round. Activate a round above to start.')+'</p></div>';
   }
   body.innerHTML=h;
-}
-window.actRound=async function(id){
-  const all=await dbQ('game_rounds',{});
-  for(const r of(Array.isArray(all)?all:[]))await dbU('game_rounds',{is_active:r.id===id},r.id);
-  loadAdmin();
 };
-window.createRound=async function(){
-  const name=el('nrn')?.value?.trim(),goal=el('nrg')?.value||'combined';
-  if(!name)return;
-  const all=await dbQ('game_rounds',{});
-  const next=((Array.isArray(all)?all:[]).reduce((m,r)=>Math.max(m,r.round_number||0),0))+1;
-  await dbI('game_rounds',{round_name:name,round_number:next,is_active:false,goal});
-  el('nrn').value='';loadAdmin();
+
+// Create event via Supabase RPC
+window.createEvent=async function(){
+  var school=(el('ne-school')?.value||'').trim();
+  var hours=parseInt(el('ne-hours')?.value)||48;
+  if(!school){toast('Enter a school name','te');return;}
+  try{
+    var res=await fetch(SB+'/rest/v1/rpc/create_game_event',{method:'POST',headers:H,body:JSON.stringify({p_school_name:school,p_duration_hours:hours})});
+    var data=res.ok?await res.json():null;
+    if(data){toast('✅ Event created! Code: '+(data.access_code||''),'tg');el('ne-school').value='';loadAdmin();}
+    else{toast('⚠️ Error creating event','te');}
+  }catch(e){toast('⚠️ Connection error','te');}
+};
+window.actEvent=async function(id){
+  await dbU('game_events',{is_active:true},id);loadAdmin();
+};
+window.deactEvent=async function(id){
+  await dbU('game_events',{is_active:false},id);loadAdmin();
+};
+window.exportEvt=async function(id){
+  try{
+    var res=await fetch(SB+'/rest/v1/rpc/export_event_report',{method:'POST',headers:H,body:JSON.stringify({p_event_id:id})});
+    var data=res.ok?await res.json():null;
+    if(!data){toast('No data to export','te');return;}
+    // Download as JSON
+    var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');a.href=url;a.download='event-report-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    toast('📥 Report downloaded','tg');
+  }catch(e){toast('⚠️ Export error','te');}
+};
+window.cleanEvt=async function(id){
+  try{
+    await fetch(SB+'/rest/v1/rpc/cleanup_event',{method:'POST',headers:H,body:JSON.stringify({p_event_id:id})});
+    toast('🗑️ Event deleted','tg');loadAdmin();
+  }catch(e){toast('⚠️ Error','te');}
+};
+window.actRound=async function(id,evtId){
+  var all=await dbQ('game_rounds',{event_id:evtId});
+  for(var r of(Array.isArray(all)?all:[]))await dbU('game_rounds',{is_active:r.id===id},r.id);
+  loadEventDetail(evtId);
+};
+window.createRound=async function(evtId){
+  var name=el('nrn')?.value?.trim(),goal=el('nrg')?.value||'combined';
+  if(!name){toast('Enter a round name','te');return;}
+  var all=await dbQ('game_rounds',{event_id:evtId});
+  var next=((Array.isArray(all)?all:[]).reduce((m,r)=>Math.max(m,r.round_number||0),0))+1;
+  await dbI('game_rounds',{event_id:evtId,round_name:name,round_number:next,is_active:false,goal});
+  el('nrn').value='';loadEventDetail(evtId);
 };
 
 // ══════════════════════════════════════
-// AUTH
+// AUTH — ACCESS CODE + LOGIN
 // ══════════════════════════════════════
-async function doLogin(){
-  const cls=(el('ic')?.value||'').trim().toUpperCase();
-  const idx=(el('ii')?.value||'').trim();
-  const err=el('le');
-  if(!cls||!idx){err.style.display='block';err.textContent='Enter your class and index number.';return;}
-  err.style.display='none';
-  const btn=el('bl');btn.textContent='⏳...';btn.disabled=true;
+// Validate access code against DB
+async function verifyCode(){
+  var codeInp=el('iac');
+  var code=(codeInp?.value||'').trim().toUpperCase();
+  var statusEl=el('code-status');
+  if(!code||code.length<4){statusEl.style.display='block';statusEl.style.background='#fff5f5';statusEl.style.borderColor='#fca5a5';statusEl.style.color='#dc2626';statusEl.textContent='⚠️ Please enter your access code.';return;}
+  el('bvc').textContent='⏳ Verifying...';el('bvc').disabled=true;
   try{
-    let player=await dbQ('players',{class_id:cls,index_number:idx},true);
-    if(!player){player=await dbI('players',{class_id:cls,index_number:idx});if(!player)player=await dbQ('players',{class_id:cls,index_number:idx},true);}
+    // Call Supabase RPC to validate
+    var res=await fetch(SB+'/rest/v1/rpc/validate_access_code',{method:'POST',headers:H,body:JSON.stringify({p_code:code})});
+    var data=res.ok?await res.json():[];
+    var row=Array.isArray(data)?data[0]:data;
+    if(!row||!row.is_valid){
+      statusEl.style.display='block';statusEl.style.background='#fff5f5';statusEl.style.color='#dc2626';
+      statusEl.textContent=row?'⏰ This code has expired. Ask your teacher for a new one.':'❌ Invalid code. Check with your teacher.';
+      el('bvc').textContent='🔓 Verify Code';el('bvc').disabled=false;return;
+    }
+    // Valid! Store event info and show step 2
+    EVT={id:row.event_id,school:row.school_name,expires:new Date(row.expires_at),code:code};
+    el('event-school').textContent='🏫 '+row.school_name;
+    updateEventTimer();
+    // Load rounds for this event
+    var rounds=await dbJ('game_rounds','*',{event_id:EVT.id},'round_number.asc');
+    var activeRd=Array.isArray(rounds)?rounds.find(r=>r.is_active):null;
+    if(activeRd){
+      RD=activeRd;
+      el('round-banner').style.display='block';
+      var gls={ff_earliest:'🏁 Race to Financial Freedom',highest_nw:'💰 Highest Net Worth',highest_hi:'😊 Happiest Life',highest_cpf:'🏛️ Best Retirement Fund',balanced_life:'⚖️ Most Balanced Life',combined:'🥇 Combined Score'};
+      el('round-info').textContent='Round '+activeRd.round_number+': '+(gls[activeRd.goal]||activeRd.round_name);
+    }
+    el('login-step1').classList.add('hidden');
+    el('login-step2').classList.remove('hidden');
+    statusEl.style.display='none';
+  }catch(e){
+    statusEl.style.display='block';statusEl.style.background='#fff5f5';statusEl.style.color='#dc2626';
+    statusEl.textContent='⚠️ Connection error. Please try again.';
+  }
+  el('bvc').textContent='🔓 Verify Code';el('bvc').disabled=false;
+}
+
+function updateEventTimer(){
+  if(!EVT||!EVT.expires)return;
+  var now=new Date(),diff=EVT.expires-now;
+  if(diff<=0){el('event-timer').textContent='⏰ EXPIRED';el('event-timer').style.color='#dc2626';return;}
+  var hrs=Math.floor(diff/3600000),mins=Math.floor((diff%3600000)/60000);
+  el('event-timer').textContent='⏱️ '+hrs+'h '+mins+'m left';
+  el('event-timer').style.color=hrs<2?'#dc2626':hrs<6?'#d97706':'#1d4ed8';
+}
+
+async function doLogin(){
+  var cls=(el('ic')?.value||'').trim().toUpperCase();
+  var idx=(el('ii')?.value||'').trim();
+  var err=el('le');
+  if(!cls||!idx){err.style.display='block';err.textContent='Enter your class and index number.';return;}
+  if(!EVT||!EVT.id){err.style.display='block';err.textContent='No valid event. Go back and enter your access code.';return;}
+  // Check expiry
+  if(EVT.expires && new Date()>EVT.expires){err.style.display='block';err.textContent='⏰ Event has expired.';return;}
+  err.style.display='none';
+  var btn=el('bl');btn.textContent='⏳...';btn.disabled=true;
+  try{
+    // Find or create player for this event
+    var player=await dbQ('players',{event_id:EVT.id,class_id:cls,index_number:idx},true);
+    if(!player){player=await dbI('players',{event_id:EVT.id,class_id:cls,index_number:idx});if(!player)player=await dbQ('players',{event_id:EVT.id,class_id:cls,index_number:idx},true);}
     if(!player)throw new Error('player');
     P=player;
-    const rounds=await dbQ('game_rounds',{is_active:true},false);
-    RD=Array.isArray(rounds)?rounds[0]||null:null;
+    // Get active round
+    if(!RD){
+      var rounds=await dbQ('game_rounds',{event_id:EVT.id,is_active:true},false);
+      RD=Array.isArray(rounds)?rounds[0]||null:null;
+    }
     G=newG();SID=null;
     if(RD&&player.id){
-      const sess=await dbQ('game_sessions',{player_id:player.id,round_id:RD.id},false);
-      const s=Array.isArray(sess)?sess[0]:null;
+      var sess=await dbQ('game_sessions',{player_id:player.id,round_id:RD.id},false);
+      var s=Array.isArray(sess)?sess[0]:null;
       if(s&&!s.is_complete&&s.game_state){G=s.game_state;SID=s.id;setScreen('game');render();toast('Welcome back '+cls+'-'+idx+'! Resuming 👋','tg');return;}
       else if(s){SID=s.id;await dbU('game_sessions',{age:17,cash:500,cpf:0,happiness:50,net_worth:500,final_score:0,is_complete:false,game_state:G},s.id);}
-      else{const ns=await dbI('game_sessions',{player_id:player.id,round_id:RD.id,age:17,cash:500,cpf:0,happiness:50,net_worth:500,final_score:0,is_complete:false,game_state:G});if(ns)SID=ns.id;}
+      else{var ns=await dbI('game_sessions',{player_id:player.id,round_id:RD.id,event_id:EVT.id,age:17,cash:500,cpf:0,happiness:50,net_worth:500,final_score:0,is_complete:false,game_state:G});if(ns)SID=ns.id;}
     }
-    setScreen('game');render();toast('Lets go '+cls+'-'+idx+'! 🚀','tg');
+    setScreen('game');render();toast('Let\'s go '+cls+'-'+idx+'! 🚀','tg');
   }catch(e){G=newG();P={id:null,class_id:cls,index_number:idx};setScreen('game');render();toast('Playing offline 🎮','');}
   btn.textContent='🚀 Start Playing';btn.disabled=false;
 }
 async function doAdminLogin(){
-  const u=el('au')?.value?.trim(),p=el('ap')?.value?.trim();
-  const admin=await dbQ('admins',{username:u,password_hash:p},true);
+  var u=el('au')?.value?.trim(),p=el('ap')?.value?.trim();
+  var admin=await dbQ('admins',{username:u,password_hash:p},true);
   if(admin){setScreen('admin');loadAdmin();}
   else{el('le').style.display='block';el('le').textContent='Invalid credentials.';}
 }
@@ -4946,12 +5191,19 @@ let _tt;
 function toast(msg,type){const t=el('toast');t.textContent=msg;t.className='toast show '+(type||'');clearTimeout(_tt);_tt=setTimeout(()=>t.className='toast',3500);}
 
 document.addEventListener('DOMContentLoaded',()=>{
+  // Access code flow
+  el('bvc')?.addEventListener('click',verifyCode);
+  el('iac')?.addEventListener('keydown',e=>{if(e.key==='Enter')verifyCode();});
+  el('bcc')?.addEventListener('click',()=>{el('login-step1').classList.remove('hidden');el('login-step2').classList.add('hidden');EVT=null;RD=null;el('iac').value='';el('code-status').style.display='none';});
+  // Student login
   el('bl')?.addEventListener('click',doLogin);
   el('bal')?.addEventListener('click',doAdminLogin);
   el('bsa')?.addEventListener('click',()=>el('af').classList.toggle('hidden'));
   ['ic','ii'].forEach(id=>el(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
   ['au','ap'].forEach(id=>el(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doAdminLogin();}));
   el('blb')?.addEventListener('click',loadLb);
+  // Update event timer every minute
+  setInterval(updateEventTimer,60000);
   el('bnav-rst')?.addEventListener('click',()=>{
     if(!confirm('Reset and start over? Progress lost.'))return;
     var rc=(G.resetCount||0)+1;
@@ -4969,21 +5221,29 @@ document.addEventListener('DOMContentLoaded',()=>{
       try{await dbU('game_sessions',{game_state:null,is_complete:true,age:17,cash:500,cpf:0,happiness:50,net_worth:500,final_score:0},SID);}catch(e){}
     }
     // Clear all game state so next player starts fresh
-    G=null;P=null;SID=null;RD=null;
+    G=null;P=null;SID=null;RD=null;EVT=null;
     UI={phase:'start',fc:null,pc:null,ptMode:false,jc:null,ac:null,ie:{},is:{},lc:null,evPick:null,evShown:false,certPick:null,carPick:null,ptEnrolPick:null,ptJobChoice:null,sideGig:null,luxPick:[],retireAge:null,retireLife:null};
     // Clear login form fields
     var ic=el('ic');if(ic)ic.value='';
     var ii=el('ii');if(ii)ii.value='';
+    var iac=el('iac');if(iac)iac.value='';
     var le=el('le');if(le){le.style.display='none';le.textContent='';}
+    el('code-status')&&(el('code-status').style.display='none');
+    // Reset to step 1
+    el('login-step1')?.classList.remove('hidden');
+    el('login-step2')?.classList.add('hidden');
     // Hide admin form if open
     var af=el('af');if(af)af.classList.add('hidden');
     setScreen('login');
   });
   el('bar')?.addEventListener('click',loadAdmin);
   el('bao')?.addEventListener('click',()=>{
-    G=null;P=null;SID=null;RD=null;
+    G=null;P=null;SID=null;RD=null;EVT=null;
     var ic=el('ic');if(ic)ic.value='';
     var ii=el('ii');if(ii)ii.value='';
+    var iac=el('iac');if(iac)iac.value='';
+    el('login-step1')?.classList.remove('hidden');
+    el('login-step2')?.classList.add('hidden');
     setScreen('login');
   });
 });
