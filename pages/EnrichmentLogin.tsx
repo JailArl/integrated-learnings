@@ -1,30 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { signIn, getCurrentUser, signUpStudent } from '../services/auth';
-import { School, GamepadIcon, ArrowLeft } from 'lucide-react';
+import React, { useEffect } from 'react';
 
 const EnrichmentLogin: React.FC = () => {
-  const navigate = useNavigate();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [schoolCode, setSchoolCode] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-
-  // If already logged in as student, redirect to game
+  // The game now handles its own access-code auth, so redirect directly
   useEffect(() => {
-    const check = async () => {
-      const { user, role } = await getCurrentUser();
-      if (user && role === 'student') {
-        navigate('/enrichment/game', { replace: true });
-      }
-      setCheckingAuth(false);
-    };
-    check();
-  }, [navigate]);
+    window.location.href = '/games/life-choices.html';
+  }, []);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mx-auto" />
+        <p className="mt-4 text-gray-600">Redirecting to game...</p>
+      </div>
+    </div>
+  );
+};
+
+export default EnrichmentLogin;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
