@@ -1412,7 +1412,7 @@ function confirmNSYear(){
     UI.phase=G.quals.length>0?'grad':'field';
   } else {
     // After NS year 1 (age 18): offer certs like driving licence, swimming
-    var nsCertAvail=G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
+    var nsCertAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
     if(nsCertAvail){UI.certReturnPhase='ns';UI.phase='cert';}
     // else stay in NS phase for year 2
   }
@@ -1912,7 +1912,7 @@ function confirmStudyYear(){
   }
 
   // Cert check: age 18+ gets cert popup regardless of study/work status
-  var studyCertAvail=G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
+  var studyCertAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
   if(studyCertAvail){
     // If graduating, cert comes first then routes to grad/ns
     UI.certReturnPhase=UI.phase||'study';
@@ -3665,7 +3665,7 @@ function confirmAlloc(){
     if(G.milestonePending){UI.phase='milestone';saveG();render();return;}
     const ev2=yw2%3===0,qz2=yw2%7===2;
     // Cert popup: always check if any age-appropriate cert is available (age 18+)
-    const cert2Avail=G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
+    const cert2Avail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
     if(cert2Avail){UI.certReturnPhase='event';UI.phase='cert';}
     else if(ev2){UI.evShown=false;UI.evPick=null;UI.phase='event';}
     else if(qz2){UI.phase='quiz';}
@@ -3682,7 +3682,7 @@ function confirmAlloc(){
   if(G.milestonePending){UI.phase='milestone';saveG();render();return;}
   const ev=yw%3===0,qz=yw%7===2;
   // Cert popup: always check if any age-appropriate cert is available (age 18+)
-  const certAvail=G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
+  const certAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
   if(certAvail){UI.certReturnPhase='event';UI.phase='cert';}
   else if(ev){UI.evShown=false;UI.evPick=null;UI.phase='event';}
   else if(qz){UI.phase='quiz';}
