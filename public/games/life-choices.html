@@ -507,8 +507,8 @@ const CERTS=[
   {id:'drv',name:'Driving Licence',icon:'🚗',cost:3500,effect:'Driving Licence',age:18,desc:'Required to buy a car or be a Grab driver. SG driving test: theory + practical. Most people learn at 18!'},
   {id:'swim',name:'Swimming / Lifesaving Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,maxAge:40,sideIncome:5000,desc:'Side income: +$5,000/yr as part-time swimming coach. Essential life skill! Available until age 40.'},
   {id:'ins',name:'Insurance Licence',icon:'🛡️',cost:1500,effect:'Insurance Lic',age:21,sideIncome:4000,insDiscount:true,desc:'Side income: +$4,000/yr as insurance agent. 50% off your own insurance premiums. Acts as free insurance if you don\'t buy a plan!'},
-  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,salBoost:2000,desc:'Govt subsidised. Permanent +$2,000/yr salary boost once employed. Scam protection!'},
-  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,salBoost:1000,desc:'Workforce Skills Qualification. Permanent +$1,000/yr salary boost once employed. Recognised by employers!'},
+  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,salBoost:2000,needsJob:true,desc:'Govt subsidised. Permanent +$2,000/yr salary boost once employed. Scam protection!'},
+  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,salBoost:1000,needsJob:true,desc:'Workforce Skills Qualification. Permanent +$1,000/yr salary boost once employed. Recognised by employers!'},
 ];
 
 // CARS — SG 2024/2025 OTR prices. Total = basePrice + COE + ARF + taxes.
@@ -634,14 +634,8 @@ const EVENTS=[
   {id:1,t:'good',name:'Year-End Bonus!',icon:'🎉',money:'bonus',hi:250,
    desc:'Your performance review was excellent — bonus awarded!',
    lesson:'Always invest windfalls. A $10K bonus invested at 7% for 20 years = $38,700. Never lifestyle-inflate!'},
-  {id:2,t:'good',name:'Salary Negotiation Win! 💼',icon:'💼',money:0,hi:150,salNegWin:true,
-   desc:'You asked for a raise and they said yes — great outcome!',
-   lesson:'Salary negotiation is a skill. On average, those who negotiate earn $1M more over a lifetime!'},
-  {id:3,t:'good',name:'New Baby! 👶',icon:'👶',money:-30000,hi:200,needsMarried:true,
-   desc:'Baby expenses: hospital, confinement, childcare deposits.',
-   lesson:'Raising a child in SG costs $300K+. Government gives Baby Bonus — but plan finances first!'},
-  {id:4,t:'good',name:'Promoted! 🏅',icon:'🏅',money:15000,hi:300,promo:true,
-   desc:'Your hard work and upskilling paid off — promotion received!',
+  {id:4,t:'good',name:'Promoted! 🏅',icon:'🏅',money:15000,hi:300,
+   desc:'Your hard work and upskilling paid off — promotion and one-time bonus!',
    lesson:'Promotions compound like investments. A 10% raise at 25 vs 35 = $150K+ difference by 65!'},
   {id:5,t:'good',name:'Won TOTO! 🎰',icon:'🎰',money:80000,hi:200,
    desc:'Lucky jackpot — $80,000 prize!',
@@ -649,15 +643,6 @@ const EVENTS=[
   {id:6,t:'good',name:'CDC Vouchers / Govt Grant! 🏛️',icon:'🏛️',money:1500,hi:100,
    desc:'National Day Rally — govt gives CDC vouchers and GST rebates.',
    lesson:'The SG government gives back through CDCVouchers, GST Vouchers, and Workfare. Use them wisely!'},
-  {id:7,t:'good',name:'Investment Dividend! 💰',icon:'💰',money:0,hi:100,dividend:true,
-   desc:'Your portfolio paid out quarterly dividends!',
-   lesson:'Passive income is the goal. Dividends keep coming whether you work or not — this is financial freedom building!'},
-  {id:8,t:'good',name:'Property Appreciation! 🏠',icon:'🏠',money:0,hi:150,propBonus:0.12,
-   desc:'SG property prices rose — your home is worth more!',
-   lesson:'SG property has appreciated ~3-4%/yr historically. Owning your home is a long-term wealth builder.'},
-  {id:9,t:'good',name:'HDB BTO Ballot — You Won! 🎊',icon:'🎊',money:0,hi:200,hdbWon:true,
-   desc:'You successfully balloted for an HDB BTO flat!',
-   lesson:'HDB BTO flats are subsidised heavily by govt. Getting a ballot early means lower prices and longer to grow in value!'},
 
   // === BAD EVENTS ===
   {id:10,t:'bad',name:'Retrenched 😰',icon:'😰',money:0,hi:-500,retrenched:true,
@@ -675,9 +660,7 @@ const EVENTS=[
   {id:14,t:'bad',name:'Market Crash! 📉',icon:'📉',money:0,hi:-150,crash:0.30,
    desc:'Global recession — all equity portfolios dropped 30%.',
    lesson:'Crashes are NORMAL and temporary. Those who stayed invested recovered and profited. Panic selling = locking in losses!'},
-  {id:15,t:'bad',name:'HDB BTO Ballot — Failed 😔',icon:'😔',money:0,hi:-100,hdbFail:true,
-   desc:'You did not get a ballot for HDB BTO this round. Try again next time.',
-   lesson:'Many SG couples ballot multiple times. Plan your finances for 2-3 years of waiting — and save that down payment!'},
+
   {id:16,t:'bad',name:'Dengue! 🦟',icon:'🦟',money:-3000,hi:-100,insurable:true,
    desc:'Hospitalised for dengue fever — a very SG experience.',
    lesson:'MediShield Life covers inpatient dengue treatment. This is why MediShave matters — review your coverage annually!'},
@@ -706,9 +689,6 @@ const EVENTS=[
   {id:23,t:'bad',name:'Global War / Geopolitical Crisis 💥',icon:'⚔️',money:0,hi:-180,war:true,
    desc:'Russia-Ukraine style conflict — inflation spikes, supply chains broken, markets drop 20%.',
    lesson:'Inflation erodes savings. During Ukraine war, SG inflation hit 7%. Owning assets (property, stocks) protects you!'},
-  {id:24,t:'bad',name:'COE Price Surge! 🚗📈',icon:'📈',money:0,hi:-80,coeSpike:true,
-   desc:'LTA reduces COE quota — prices spike 30% overnight.',
-   lesson:'COE prices are unpredictable and can change dramatically. Cars in SG are a luxury, not a necessity.'},
   {id:25,t:'neutral',name:'SkillsFuture Credit Top-Up 🎓',icon:'🎓',money:500,hi:80,
    desc:'Govt topped up your SkillsFuture credit — use it to upskill!',
    lesson:'SG gives every citizen $500 SkillsFuture credits. Use them for courses that increase your earning power!'},
@@ -888,7 +868,7 @@ function dynamicReturnStable(key,newsId){
   return Math.max(floors[key]!==undefined?floors[key]:0,base*(1+bizBonus));
 }
 function getDividend(key,amount,newsId){
-  const divYields={reit:0.05,stock:0.04,etf:0.015};
+  const divYields={reit:0.05,stock:0.04,etf:0.015,bank_stock:0.04};
   const dy=divYields[key]||0;
   if(!dy||!amount)return 0;
   const news=NEWS.find(n=>n.id===newsId)||NEWS[1];
@@ -1126,10 +1106,15 @@ function updateNav(){
   }
   // Add dividend income
   passiveInc+=Math.round(INV.reduce(function(a,i){return a+getDividend(i.key,G.inv[i.key]||0,G.currentNews);},0));
+  // Add cert side income (swimming coach, insurance agent)
+  if(typeof CERTS!=='undefined')CERTS.forEach(function(c){
+    if(c.sideIncome&&G.certs.includes(c.effect)){if(!c.maxAge||G.age<=c.maxAge)passiveInc+=c.sideIncome;}
+  });
   var npiWrap=el('npi-wrap');var npiEl=el('npi');
   if(npiWrap&&npiEl){
-    if(passiveInc>0){npiWrap.style.display='';npiEl.textContent=fmt(passiveInc)+'/yr';npiEl.style.color=G.ffAge?'#7c3aed':'#16a34a';}
-    else{npiWrap.style.display='none';}
+    npiWrap.style.display=''; // always show passive income for progress monitoring
+    npiEl.textContent=fmt(passiveInc)+'/yr';
+    npiEl.style.color=passiveInc>0?(G.ffAge?'#7c3aed':'#16a34a'):'#9ca3af';
   }
 }
 
@@ -1398,7 +1383,7 @@ function confirmNSYear(){
       if(G.cash>=pay){G.cash-=pay;cl.balance-=pay;cl.yearsLeft--;addLog('📋 Cert loan ('+cl.name+'): paid '+fmt(pay)+' from NS savings | Remaining: '+fmt(cl.balance));}
       else if(G.cash>0){var partial=G.cash;G.cash=0;cl.balance-=partial;addLog('📋 Cert loan ('+cl.name+'): partial '+fmt(partial)+' | Remaining: '+fmt(cl.balance));}
       else{addLog('⚠️ Cert loan ('+cl.name+'): missed payment! Still owe '+fmt(cl.balance));G.hi-=15;}
-      if(cl.balance<=0){clPaidNS.push(idx);G.hi+=30;addLog('🎉 Cert loan for '+cl.name+' fully paid off! +30 HI');}
+      if(cl.balance<=0){clPaidNS.push(idx);G.hi+=50;addLog('🎉 Cert loan for '+cl.name+' fully paid off! +50 HI');}
     });
     for(var piNS=clPaidNS.length-1;piNS>=0;piNS--){G.certLoans.splice(clPaidNS[piNS],1);}
   }
@@ -1411,8 +1396,8 @@ function confirmNSYear(){
     // Study First: already have quals → go to grad screen; Work First: go to field selection
     UI.phase=G.quals.length>0?'grad':'field';
   } else {
-    // After NS year 1 (age 18): offer certs like driving licence, swimming
-    var nsCertAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
+    // After NS year 1 (age 18): offer certs like driving licence, swimming (NOT job-only certs)
+    var nsCertAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age&&!c.needsJob);
     if(nsCertAvail){UI.certReturnPhase='ns';UI.phase='cert';}
     // else stay in NS phase for year 2
   }
@@ -1864,11 +1849,14 @@ function confirmStudyYear(){
   if(G.cash<0){G.studyLoan+=Math.abs(G.cash);G.cash=0;
     addLog('📋 Study loan for fees+living: -'+fmt(feeYr+foodCost+transCost));
   }
-  // ── Study stress HI penalties ──
-  // Base study stress (everyone — studying is tough, no income, dependent)
-  var studyStress=isPT?-10:-20;
+  // ── Study stress HI penalties (varies by course difficulty) ──
+  var courseStressMap={ite:-10,hnitec:-12,poly:-15,poly_adv:-15,jc:-20,uni:-25,uni_adv:-25,medschool:-35,lawschool:-35};
+  var courseId=G.studying?G.studying.id:'';
+  var ftStress=courseStressMap[courseId]||-20;
+  var studyStress=isPT?Math.round(ftStress*0.6):ftStress; // PT = 60% of FT stress
   G.hi+=studyStress;
-  addLog('📚 Study stress: '+studyStress+' HI ('+( isPT?'PT — less stress':'FT — no income, dependent')+')');
+  var courseName=G.studying?G.studying.name:'Studies';
+  addLog('📚 Study stress ('+courseName+'): '+studyStress+' HI ('+(isPT?'PT — less intense':'FT — full load, no income')+')');
   // Extra loan anxiety on top
   if(G.studyLoan>0){
     var loanStress=G.studyLoan>20000?-25:G.studyLoan>10000?-15:-8;
@@ -1885,7 +1873,7 @@ function confirmStudyYear(){
       if(G.cash>=pay){G.cash-=pay;cl.balance-=pay;cl.yearsLeft--;addLog('📋 Cert loan ('+cl.name+'): paid '+fmt(pay)+' from pocket money | Remaining: '+fmt(cl.balance));}
       else if(G.cash>0){var partial=G.cash;G.cash=0;cl.balance-=partial;addLog('📋 Cert loan ('+cl.name+'): partial '+fmt(partial)+' | Remaining: '+fmt(cl.balance));}
       else{addLog('⚠️ Cert loan ('+cl.name+'): missed payment! Still owe '+fmt(cl.balance));G.hi-=15;}
-      if(cl.balance<=0){clPaidOff2.push(idx);G.hi+=30;addLog('🎉 Cert loan for '+cl.name+' fully paid off! +30 HI');}
+      if(cl.balance<=0){clPaidOff2.push(idx);G.hi+=50;addLog('🎉 Cert loan for '+cl.name+' fully paid off! +50 HI');}
     });
     for(var pi2=clPaidOff2.length-1;pi2>=0;pi2--){G.certLoans.splice(clPaidOff2[pi2],1);}
   }
@@ -1911,8 +1899,9 @@ function confirmStudyYear(){
     UI.phase=(G.gender==='M'&&!G.nsCompleted)?'ns':'grad';
   }
 
-  // Cert check: age 18+ gets cert popup regardless of study/work status
-  var studyCertAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
+  // Cert check: age 18+ gets cert popup (NOT job-only certs during FT study)
+  var isStudyingFT=G.studying&&!G.studying.ptMode;
+  var studyCertAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age&&(!c.needsJob||!isStudyingFT));
   if(studyCertAvail){
     // If graduating, cert comes first then routes to grad/ns
     UI.certReturnPhase=UI.phase||'study';
@@ -1998,14 +1987,15 @@ function renderGrad(){
     avUpgrades.forEach(up=>{
       const dur=UI.ptMode?up.durPT:up.dur;
       const cost=UI.ptMode?up.costPT:up.cost;
-      h+='<div class="ch'+(UI.jc===up.id?' sel':'')+'" data-up="'+up.id+'" data-upt="false" style="border-color:'+(UI.jc===up.id?f.color:'')+'">';
+      const upSel=UI.jc&&(UI.jc===up.id+'_ft'||UI.jc===up.id+'_pt');
+      h+='<div class="ch'+(upSel?' sel':'')+'" data-up="'+up.id+'" style="border-color:'+(upSel?f.color:'')+'">';
       h+='<div class="chk">✓</div><div class="ci">'+up.icon+'</div>';
       h+='<h4>'+up.name+'</h4>';
       h+='<p class="me">'+up.desc+'</p>';
       if(up.hasPT){
         h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
-        h+='<div class="ch'+(UI.jc===up.id+'_ft'?' sel':'')+'" data-up="'+up.id+'" data-upt="false" style="padding:8px"><h4 style="font-size:10px">FT</h4><p style="font-size:10px;color:#6b7280">'+up.dur+'yr · '+fmt(up.cost)+'</p></div>';
-        h+='<div class="ch'+(UI.jc===up.id+'_pt'?' sel':'')+'" data-up="'+up.id+'" data-upt="true" style="padding:8px"><h4 style="font-size:10px">PT ✅</h4><p style="font-size:10px;color:#16a34a">'+up.durPT+'yr · '+fmt(up.costPT)+'</p></div>';
+        h+='<div class="ch'+(UI.jc===up.id+'_ft'?' sel':'')+'" data-upmode="'+up.id+'" data-upt="false" style="padding:8px"><h4 style="font-size:10px">FT</h4><p style="font-size:10px;color:#6b7280">'+up.dur+'yr · '+fmt(up.cost)+'</p></div>';
+        h+='<div class="ch'+(UI.jc===up.id+'_pt'?' sel':'')+'" data-upmode="'+up.id+'" data-upt="true" style="padding:8px"><h4 style="font-size:10px">PT ✅</h4><p style="font-size:10px;color:#16a34a">'+up.durPT+'yr · '+fmt(up.costPT)+'</p></div>';
         h+='</div>';
       }else{
         h+='<span class="pr prn">'+fmt(-up.cost)+' · '+up.dur+'yr</span>';
@@ -2026,7 +2016,15 @@ function renderGrad(){
 
   el('main').querySelectorAll('[data-up]').forEach(c=>{
     c.addEventListener('click',()=>{
-      UI.jc=c.dataset.up+(c.dataset.upt==='true'?'_pt':'_ft');
+      UI.jc=c.dataset.up+'_ft';
+      UI.ptMode=false;
+      render();
+    });
+  });
+  el('main').querySelectorAll('[data-upmode]').forEach(c=>{
+    c.addEventListener('click',(e)=>{
+      e.stopPropagation(); // prevent outer card from overriding PT/FT selection
+      UI.jc=c.dataset.upmode+(c.dataset.upt==='true'?'_pt':'_ft');
       UI.ptMode=c.dataset.upt==='true';
       render();
     });
@@ -2404,12 +2402,14 @@ function renderAngbao(){
     }
     // Deduct mandatory living IMMEDIATELY so renderAlloc shows correct cash
     var inflMult=G.inflationMult||1.0;
-    var foodBase=Math.round(1800*inflMult); // food costs rise with inflation
-    var transDeduct=G.car?0:Math.round(1440*inflMult); // transport also rises
-    var clothBase=Math.round(600*inflMult);
-    G.cash-=(foodBase+transDeduct+clothBase); // all base costs inflated
+    var marriedDiscount=G.married?0.5:1.0; // spouse shares living costs!
+    var foodBase=Math.round(1800*inflMult*marriedDiscount);
+    var transDeduct=G.car?0:Math.round(1440*inflMult*marriedDiscount);
+    var clothBase=Math.round(600*inflMult*marriedDiscount);
+    var livingTotal=foodBase+transDeduct+clothBase;
+    G.cash-=livingTotal;
     if(G.cash<0){emergencyBorrow(Math.abs(G.cash),'living costs exceeded salary');}
-    addLog('💼 Salary +'+fmt(s-cpfE2)+' | CPF +'+fmt(cpfE2+cpfEr2)+' | Living -$3,240');
+    addLog('💼 Salary +'+fmt(s-cpfE2)+' | CPF +'+fmt(cpfE2+cpfEr2)+' | Living -'+fmt(livingTotal)+(G.married?' (50% off — spouse shares!)':''));
     UI.ac=null;UI.phase='alloc';render();
   });
 }
@@ -2426,7 +2426,7 @@ function renderAlloc(){
   h+='<div class="ct">💳 Allocate Your Money — Age '+G.age+'</div>';
   h+='<h2 style="font-size:18px;font-weight:800;margin-bottom:6px">Where does your money go?</h2>';
   // Show exactly what cash already excludes (salary already netted)
-  h+='<div style="background:#1a1d2e;border-radius:10px;padding:12px 16px;margin-bottom:12px">';
+  h+='<div style="position:sticky;top:0;z-index:50;background:#1a1d2e;border-radius:10px;padding:12px 16px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
   h+='<span style="font-size:12px;font-weight:700;color:#fff">💵 Cash available to allocate</span>';
   h+='<span id="alloc-cash-live" style="font-size:20px;font-weight:800;font-family:monospace;color:#22c55e">'+fmt(G.cash)+'</span>';
@@ -2533,6 +2533,20 @@ function renderAlloc(){
       h+='<span id="carlsv" style="font-size:11px;font-weight:700;color:#dc2626">$0</span>';
       h+='</div></div>';
     }
+    // Car status (always visible when car owned — shows COE timeline)
+    if(G.car&&G.carData){
+      var coeYrsLeft=Math.max(0,10-G.carAge);
+      var coePendingNow=G.coePending;
+      h+='<div style="background:'+(coePendingNow?'#fff5f5':'#fff')+';border-radius:8px;padding:8px 10px;margin-bottom:6px;border:'+(coePendingNow?'2px solid #fca5a5':'none')+'">';
+      h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+      h+='<span>🚗 <strong style="font-size:11px">'+G.car+'</strong> ('+G.carAge+' yr old)</span>';
+      h+='<span style="font-size:10px;color:'+(coePendingNow?'#dc2626':coeYrsLeft<=2?'#d97706':'#6b7280')+';font-weight:700">'+(coePendingNow?'⏰ COE EXPIRED!':'COE: '+coeYrsLeft+' yr left')+'</span>';
+      h+='</div>';
+      h+='<div style="font-size:9px;color:#6b7280;line-height:1.6">';
+      h+='Value: <strong>'+fmt(G.carVal2||0)+'</strong> | Running costs: <strong>~'+fmt(carRunCost(G.carData,G.carAge))+'/yr</strong>';
+      if(coePendingNow){var coeCostEst=Math.round((G.coeLevel||1)*G.carData.coeBase);h+='<br><strong style="color:#dc2626">⚠️ COE renewal cost: ~'+fmt(coeCostEst)+'</strong> — decide in summary screen!';}
+      h+='</div></div>';
+    }
     // Extra study loan repayment slider
     if(G.studyLoan>0){
       h+='<div style="margin-top:4px">';
@@ -2542,6 +2556,21 @@ function renderAlloc(){
       h+='<input type="range" class="sl" id="lsl" min="0" max="'+Math.min(tl,Math.max(0,G.cash))+'" step="500" value="0" style="width:120px">';
       h+='<span style="font-size:13px;font-weight:700;color:#d97706" id="lsv">$0</span>';
       h+='</div></div>';
+    }
+    // Cert loan rows
+    if(G.certLoans&&G.certLoans.length>0){
+      G.certLoans.forEach(function(cl,idx){
+        if(cl.balance<=0)return;
+        h+='<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:6px">';
+        h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+        h+='<span><span class="tag trd" style="font-size:9px">CERT LOAN</span> <strong style="font-size:11px">'+cl.name+': '+fmt(cl.balance)+'</strong></span>';
+        h+='<span style="font-size:10px;color:'+(cl.yearsLeft<=1?'#16a34a':'#6b7280')+'">'+cl.yearsLeft+' yr(s) left</span>';
+        h+='</div>';
+        h+='<div style="font-size:9px;color:#6b7280;line-height:1.9">';
+        h+='💳 Annual payment: <strong>'+fmt(cl.annualPayment)+'/yr</strong> | 6%/yr personal loan<br>';
+        h+='⏱️ Original: '+fmt(cl.principal)+' → Total with interest: '+fmt(Math.round(cl.principal*Math.pow(1.06,3)));
+        h+='</div></div>';
+      });
     }
     h+='</div>';
   }
@@ -2793,6 +2822,14 @@ function renderAlloc(){
     if(hasCCDebt)h+='<button class="btn br bsm" id="bpaycc" style="margin-right:6px;margin-bottom:6px">💳 Pay CC Debt ('+fmt(G.ccDebt)+' @ 26%!)</button>';
     if((G.emergencyDebt||0)>0)h+='<button class="btn br bsm" id="bpayemd" style="margin-right:6px;margin-bottom:6px">🚨 Pay Emergency Debt ('+fmt(G.emergencyDebt)+' @ 26%!)</button>';
     if((G.weddingLoan||0)>0)h+='<button class="btn br bsm" id="bpaywl" style="margin-right:6px;margin-bottom:6px">💍 Pay Wedding Loan ('+fmt(G.weddingLoan)+' @ 8%!)</button>';
+    // Cert loan repayment buttons — one per active cert loan
+    if(G.certLoans&&G.certLoans.length>0){
+      G.certLoans.forEach(function(cl,idx){
+        if(cl.balance>0){
+          h+='<button class="btn br bsm" data-paycl="'+idx+'" style="margin-right:6px;margin-bottom:6px">📋 Pay Cert Loan: '+cl.name+' ('+fmt(cl.balance)+' @ 6%)</button>';
+        }
+      });
+    }
     h+='</div>';
   }
 
@@ -3108,6 +3145,24 @@ function renderAlloc(){
     else addLog('💍 Paid '+fmt(pay)+' wedding loan. Remaining: '+fmt(G.weddingLoan));
     render();
   });
+  // Cert loan repayment button handlers
+  el('main').querySelectorAll('[data-paycl]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      var idx=parseInt(btn.dataset.paycl);
+      var cl=G.certLoans[idx];
+      if(!cl||cl.balance<=0)return;
+      var pay=Math.min(cl.balance,G.cash);
+      if(pay<=0){toast('No cash to pay!','tr');return;}
+      G.cash-=pay;cl.balance-=pay;
+      if(cl.balance<=0){
+        G.hi+=50;addLog('🎉 Cert loan for '+cl.name+' fully paid off! +50 HI');
+        G.certLoans.splice(idx,1);
+      }else{
+        addLog('📋 Paid '+fmt(pay)+' cert loan ('+cl.name+'). Remaining: '+fmt(cl.balance));
+      }
+      render();
+    });
+  });
   el('bpaycc')?.addEventListener('click',()=>{
     var pay=Math.min(G.ccDebt,G.cash);
     G.cash-=pay;G.ccDebt-=pay;
@@ -3362,12 +3417,21 @@ function confirmAlloc(){
   // Lifestyle
   G.lifestyle=UI.lc||G.lifestyle||'basic';
   const lc2=lifeCost();
-  if(lc2>0){if(G.cash>=lc2){G.cash-=lc2;G.hi+=50;addLog('🍱 Eating out lifestyle -'+fmt(lc2)+' +15 HI');}else{G.lifestyle='basic';addLog('⚠️ Cannot afford eating out — back to budget hawker');}}
+  if(lc2>0){if(G.cash>=lc2){G.cash-=lc2;G.hi+=15;addLog('🍱 Eating out lifestyle -'+fmt(lc2)+' +15 HI');}else{G.lifestyle='basic';addLog('⚠️ Cannot afford eating out — back to budget hawker');}}
   // Basic living costs already deducted in angbao handler — do NOT deduct again here
   // (food $1,800 + transport $1,440 = $3,240 deducted immediately when salary received)
   // Car running costs — detailed breakdown
   if(G.car&&G.carData){
     var c2=G.carData;
+    // If COE expired and pending decision, STOP charging running costs — car can't be driven
+    if(G.coePending){
+      // Only COE market fluctuation continues (for pricing the renewal)
+      var coeRnd=Math.random();
+      if(coeRnd<0.15){G.coeLevel=Math.max(0.6,G.coeLevel*0.82);addLog('📉 COE prices dropped! Cars cheaper now.');}
+      else if(coeRnd<0.35){G.coeLevel=Math.min(1.5,G.coeLevel*1.18);addLog('📈 COE prices surged! Cars more expensive.');}
+      else{G.coeLevel=G.coeLevel*0.99+0.01;}
+      addLog('🚗⏰ COE EXPIRED — car cannot be driven! Make a decision in the summary screen.');
+    } else {
     var annualRun=carRunCost(c2,G.carAge);
     // Car loan: FLAT RATE — fixed annual payment over 7 years
     // Each year: equal portion of principal + flat interest on ORIGINAL loan
@@ -3399,6 +3463,7 @@ function confirmAlloc(){
     var runBreakdown='⛽$'+c2.costs.fuel.toLocaleString()+' 🛣️$'+c2.costs.roadTax.toLocaleString()+' 🛡️$'+c2.costs.insurance.toLocaleString()+' 🔧$'+(G.carAge>=6?Math.round(c2.costs.servicing*2.5):c2.costs.servicing).toLocaleString()+' 🅿️$'+c2.costs.parking.toLocaleString();
     addLog('🚗 Car total -'+fmt(annualRun)+' ('+runBreakdown+') | Value: '+fmt(G.carVal2));
     if(G.carAge>=10&&!G.coePending){G.coePending=true;addLog('🚗 COE expiring! Decision required in summary screen.');} 
+    } // end of !coePending block
   }
   // Study loan — MOE Tuition Fee Loan (reducing balance, amortized)
   // 0% interest WHILE studying (grace period). ~5%/yr after graduation.
@@ -3476,7 +3541,7 @@ function confirmAlloc(){
         addLog('⚠️ Cert loan ('+cl.name+'): missed payment! Still owe '+fmt(cl.balance));
         G.hi-=15;
       }
-      if(cl.balance<=0){clPaidOff.push(idx);G.hi+=30;addLog('🎉 Cert loan for '+cl.name+' fully paid off! +30 HI');}
+      if(cl.balance<=0){clPaidOff.push(idx);G.hi+=50;addLog('🎉 Cert loan for '+cl.name+' fully paid off! +50 HI');}
     });
     // Remove paid-off loans
     for(var pi=clPaidOff.length-1;pi>=0;pi--){G.certLoans.splice(clPaidOff[pi],1);}
@@ -3546,12 +3611,26 @@ function confirmAlloc(){
     if(G.cash<0){emergencyBorrow(Math.abs(G.cash),'utilities');}
     addLog('💡 Utilities (elec+water) -'+fmt(utilities)+'/yr');
   }
+  // ── LOAN STRESS: active loans weigh on happiness ──
+  var activeLoanCount=0;
+  if(G.studyLoan>0&&!G.studying)activeLoanCount++; // study loan stress only after graduation
+  if(G.carLoan>0)activeLoanCount++;
+  if((G.weddingLoan||0)>0)activeLoanCount++;
+  if((G.emergencyDebt||0)>0)activeLoanCount++;
+  if((G.ccDebt||0)>0)activeLoanCount++;
+  if(G.certLoans)G.certLoans.forEach(cl=>{if(cl.balance>0)activeLoanCount++;});
+  // Property mortgage excluded — it's normal and expected in SG
+  if(activeLoanCount>0){
+    var loanStressHI=-10*activeLoanCount;
+    G.hi+=loanStressHI;
+    addLog('😰 Loan stress: '+loanStressHI+' HI ('+activeLoanCount+' active loan'+(activeLoanCount>1?'s':'')+' weighing on your mind)');
+  }
   // Family happiness bonus every year (encourages SG birthrate!)
-  if(G.married){G.hi+=30;} // marriage: steady companionship +5 HI/yr
+  if(G.married){G.hi+=5;} // marriage: steady companionship +5 HI/yr
   if(G.hasChildren){
     var childAge=G.age-(G.babyAge||G.age);
-    if(childAge<=18)G.hi+=100; // children bring joy while young +8 HI/yr
-    else G.hi+=20; // grown children: less daily joy but still +3 HI/yr
+    if(childAge<=18)G.hi+=8; // children bring joy while young +8 HI/yr
+    else G.hi+=3; // grown children: less daily joy but still +3 HI/yr
   }
   // Property appreciation
   // Property appreciation for ALL owned properties
@@ -3582,13 +3661,27 @@ function confirmAlloc(){
     toast('🏆 FINANCIAL FREEDOM at age '+G.age+'! Investments now cover living costs — you work by CHOICE!','tg');
     addLog('🏆 FINANCIAL FREEDOM at age '+G.age+'! Yield '+fmt(invYld)+' >= living costs '+fmt(realLivCost)+' +100 HI!');
   }
-  if(G.ffAge){G.hi+=50;} // ongoing: every year after FF = +10 HI (peace of mind, freedom, joy)
+  if(G.ffAge){G.hi+=10;} // ongoing: every year after FF = +10 HI (peace of mind, freedom, joy)
   // Inflation: apply costMod from news each year (cumulative)
   var newsForInflation=NEWS.find(n=>n.id===G.currentNews)||NEWS[1];
   G.inflationMult=(G.inflationMult||1.0)*Math.min(1.04,Math.max(1.0,newsForInflation.costMod||1.02));
   // Job satisfaction HI per year (based on field choice)
   var fld=getField();
   if(fld&&G.jobLevel>=0){G.hi+=(fld.hiPerYear||0);} // only when actually working in field
+  // ── Work stress: working is TOUGH — hardest HI hit in the game ──
+  // Entry-level = most stressful (low pay, grunt work). Improves with seniority.
+  if(G.jobLevel>=0||G.jobLevel<=-2){
+    var workStress;
+    if(G.jobLevel<=-2){workStress=-55;} // universal/gig jobs = hardest grind
+    else if(G.jobLevel<=1){workStress=-50;} // entry level
+    else if(G.jobLevel<=3){workStress=-40;} // mid-career
+    else if(G.jobLevel<=5){workStress=-30;} // senior
+    else{workStress=-25;} // top level — more autonomy but still demanding
+    // PT study while working = split focus, slightly less work stress
+    if(G.studying&&G.studying.ptMode)workStress=Math.round(workStress*0.7);
+    G.hi+=workStress;
+    addLog('💼 Work stress: '+workStress+' HI ('+( G.jobLevel<=1?'entry-level grind':G.jobLevel<=3?'mid-career demands':'senior responsibilities')+')');
+  }
   // ── Work-First HI design ──
   if(G.workFirst){
     // Early years: freedom and income feel great
@@ -3611,6 +3704,8 @@ function confirmAlloc(){
   // Exp growth
   G.yearsWorked++;G.yearsAtLevel++;
   if(!(G.studying&&G.studying.ptMode))G.ftYearsWorked=(G.ftYearsWorked||0)+1; // FT-only experience counter — skip during mid-career PT study
+  // Random event roll for this year (~35% chance, feels natural)
+  G._evThisYear=Math.random()<0.35;
   // Check milestone bonus (5/10/15/20 years)
   var msCheck=MILESTONES.find(m=>m.years===G.yearsWorked&&!(G.milestoneClaimed||[]).includes(m.years));
   if(msCheck){G.milestonePending=msCheck.years;}
@@ -3663,10 +3758,10 @@ function confirmAlloc(){
     const yw2=G.yearsWorked;
     // Milestone bonus takes priority
     if(G.milestonePending){UI.phase='milestone';saveG();render();return;}
-    const ev2=yw2%3===0,qz2=yw2%7===2;
+    const ev2=G._evThisYear,qz2=yw2%7===2;
     // Cert popup: always check if any age-appropriate cert is available (age 18+)
     const cert2Avail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
-    if(cert2Avail){UI.certReturnPhase='event';UI.phase='cert';}
+    if(cert2Avail){UI.certReturnPhase=ev2?'event':qz2?'quiz':'summary';UI.phase='cert';}
     else if(ev2){UI.evShown=false;UI.evPick=null;UI.phase='event';}
     else if(qz2){UI.phase='quiz';}
     else UI.phase='summary';
@@ -3680,10 +3775,10 @@ function confirmAlloc(){
   const yw=G.yearsWorked;
   // Milestone bonus takes priority
   if(G.milestonePending){UI.phase='milestone';saveG();render();return;}
-  const ev=yw%3===0,qz=yw%7===2;
+  const ev=G._evThisYear,qz=yw%7===2;
   // Cert popup: always check if any age-appropriate cert is available (age 18+)
   const certAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age);
-  if(certAvail){UI.certReturnPhase='event';UI.phase='cert';}
+  if(certAvail){UI.certReturnPhase=ev?'event':qz?'quiz':'summary';UI.phase='cert';}
   else if(ev){UI.evShown=false;UI.evPick=null;UI.phase='event';}
   else if(qz){UI.phase='quiz';}
   else UI.phase='summary';
@@ -3856,7 +3951,7 @@ function doSellCar(){
   if(G.carLoan>0&&pr>G.carLoan)G.carLoan=0;
   else if(G.carLoan>0)G.carLoan=Math.max(0,G.carLoan-pr);
   addLog('🚗 Sold '+G.car+' for '+fmt(pr)+'. Net: '+fmt(profit>0?profit:0));
-  G.car=null;G.carData=null;G.carVal2=0;G.carAge=0;G.hi-=hi;
+  G.car=null;G.carData=null;G.carVal2=0;G.carAge=0;G.hi-=hi;G.coePending=false;
   render();
 }
 function doBuyHDB(flatId){
@@ -3909,10 +4004,12 @@ function doBuyHDB(flatId){
 // CERT PROMPT
 // ══════════════════════════════════════
 function renderCert(){
+  const hasJob=G.jobLevel>=0||(G.jobLevel<=-2);
   const allCerts=CERTS.filter(c=>{
     if(G.certs.includes(c.effect))return false;
     if(G.age<c.age)return false;
     if(c.maxAge&&G.age>c.maxAge)return false;
+    if(c.needsJob&&!hasJob)return false;
     return true;
   });
   if(!allCerts.length){
@@ -4011,14 +4108,8 @@ function renderEvent(){
   if(!UI.evPick){
     const pool=EVENTS.filter(e=>{
       if(e.trigger==='marry')return false; // marriage handled as life stage, not random event
-      if(e.needsMarried&&!G.married)return false; // baby etc only if married
-      if(e.needsMarried&&G.hasChildren)return false; // prevent double baby
-      if(e.dividend&&invTot(G.inv)===0)return false;
-      if(e.propBonus&&!G.prop)return false;
       if(e.carOnly&&!G.car)return false; // car accident only if you own a car
       if(e.retrenched&&getField()?.noRetrenched)return false; // medicine cannot be retrenched
-      if(e.hdbWon&&(G.prop||G.married===false))return false; // HDB ballot needs married
-      if(e.hdbFail&&!G.married)return false;
       if(e.pandemic&&G.eventsUsed.includes(e.id))return false; // pandemic once only
       if(e.war&&G.eventsUsed.includes(e.id))return false; // war once only
       return true;
@@ -4039,15 +4130,18 @@ function renderEvent(){
   // Calculate effect
   let money=ev.money||0,hiChange=ev.hi||0,note='',extraNote='';
   if(ev.money==='bonus')money=Math.round(G.jobSal*0.15);
-  if(ev.salNegWin){const raise=Math.round(G.jobSal*0.08);G.jobSal+=raise;money=0;note='💼 Salary raised by '+fmt(raise)+'/yr! New salary: '+fmt(G.jobSal);}
   // Insurance protection (personal insurance OR insurance licence)
   var hasIns=G.insurance||G.certs.includes('Insurance Lic');
-  if(ev.insurable&&hasIns){
+  if(ev.carOnly&&!G.car){money=0;hiChange=0;note='No car — this event does not affect you!';}
+  else if(ev.retrenched){
+    money=Math.round(G.jobSal*0.25); // 3 months severance pay
+    if(G.emergencyFund>0){note='✅ Emergency fund of '+fmt(G.emergencyFund)+' means you can survive while job hunting!';hiChange=-80;}
+    else{note='⚠️ No emergency fund! You are in serious trouble. Look for a new job immediately!';}
+  }else if(ev.insurable&&hasIns){
     var saved=Math.abs(money)*0.8;
     money=Math.round(money*0.2);
     note='🛡️ Insurance covered $'+Math.round(saved).toLocaleString()+'! Without insurance you would have paid '+fmt(Math.abs(ev.money||0))+'!';
-  }else if(ev.insurable&&!hasIns&&!ev.carOnly){
-    // Emergency fund can absorb some of the cost
+  }else if(ev.insurable&&!hasIns){
     if(G.emergencyFund>0&&Math.abs(money)>0){
       var efAbs=Math.min(G.emergencyFund,Math.abs(money)*0.5);
       G.emergencyFund-=efAbs;
@@ -4055,16 +4149,8 @@ function renderEvent(){
       extraNote='🛟 Emergency fund absorbed '+fmt(efAbs)+' of the cost! Remaining EF: '+fmt(G.emergencyFund)+'. Get insurance to protect yourself better!';
     }else extraNote='⚠️ No insurance AND no emergency fund! This expense hits your cash directly.';
   }
-  if(ev.carOnly&&!G.car){money=0;hiChange=0;note='No car — this event does not affect you!';} // car accident only fires if you own a car
-  if(ev.retrenched){money=Math.round(G.jobSal*0.25);hiChange=-300; // 3 months pay
-    if(G.emergencyFund>0){note='✅ Emergency fund of '+fmt(G.emergencyFund)+' means you can survive while job hunting!';hiChange=-80;}
-    else note='⚠️ No emergency fund! You are in serious trouble. Look for a new job immediately!';
-  }
   if(ev.crash){const loss=Math.round(invTot(G.inv)*ev.crash);money=-loss;note='📉 Stay calm — DO NOT sell! Those who held on always recovered. Time IN market beats timing the market.';}
   if(ev.scam&&G.certs.includes('SkillsFuture')){var savedAmt=Math.abs(ev.money||5000);money=0;note='🧠 Financial literacy saved you $'+savedAmt.toLocaleString()+'! You spotted the scam. Others without education lost everything!';}
-  if(ev.dividend)money=Math.round(invTot(G.inv)*0.04);
-  if(ev.hdbWon){note='🎊 You can now buy an HDB BTO flat! Go to Allocate Money and click Buy HDB.';G.hdbBallotWon=true;}
-  if(ev.hdbFail){G.hdbBallots=(G.hdbBallots||0)+1;note='Ballot #'+(G.hdbBallots)+'. Many SG couples ballot 3-5 times before succeeding. Keep saving!';}
   if(ev.ccTrap){G.ccDebt=(G.ccDebt||0)+5000;G.creditCard=true;money=-500;note='💳 $5,000 credit card debt added at 26%/yr interest. Pay it off FIRST before any other spending!';}
   if(ev.pandemic){money=Math.round(-G.jobSal*0.5);note=G.emergencyFund>0?'✅ Emergency fund helped you survive the pandemic!':'⚠️ No emergency fund — you had to take emergency loans!';}
   if(ev.war){
@@ -4072,7 +4158,6 @@ function renderEvent(){
     INV.forEach(i=>{if(i.canNeg)G.inv[i.key]=Math.round(G.inv[i.key]*0.80);});
     money=-warLoss;note='⚔️ Inflation spiked 7%. Stocks dropped 20%. Property and ETFs are best hedges against war inflation!';
   }
-  if(ev.coeSpike){G.coeLevel=Math.min(1.5,(G.coeLevel||1)*1.3);money=0;note='Car prices just got 30% more expensive! Current COE multiplier: '+Math.round(G.coeLevel*100)+'%';}
   // NOTE: G.married and propVal changes applied in click handler, not here
 
   const et=ev.t;
@@ -4082,7 +4167,6 @@ function renderEvent(){
   h+='<div class="efx">';
   h+='<div class="ec2"><label>Money</label><div class="ev '+(money>=0?'ep':'en')+'">'+(money>=0?'+':'')+fmt(money)+'</div></div>';
   h+='<div class="ec2"><label>Happiness</label><div class="ev '+(hiChange>=0?'ep':'en')+'">'+(hiChange>=0?'+':'')+hiChange+'</div></div>';
-  if(ev.propBonus&&G.prop)h+='<div class="ec2"><label>Property</label><div class="ev ep">+'+Math.round(ev.propBonus*100)+'%</div></div>';
   h+='</div>';
   if(note)h+='<div style="background:#eff6ff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:6px">'+note+'</div>';
   if(extraNote)h+='<div style="background:#fffbeb;border-radius:8px;padding:8px 12px;font-size:11px;color:#92400e;margin-bottom:6px">'+extraNote+'</div>';
@@ -4093,7 +4177,6 @@ function renderEvent(){
   el('baev')?.addEventListener('click',()=>{
     G.cash+=money;G.hi+=hiChange;
     if(ev.trigger==='marry')G.married=true;
-    if(ev.propBonus&&G.prop)G.propVal=Math.round(G.propVal*(1+ev.propBonus));
     if(ev.crash&&!ev.war)INV.forEach(i=>{if(i.canNeg)G.inv[i.key]=Math.round(G.inv[i.key]*(1-ev.crash));});
     if(ev.retrenched){G.jobLevel=-1;G.jobSal=0;addLog('😰 Lost job — must find new job next year!');}
     if(ev.ccTrap){G.ccDebt=(G.ccDebt||0)+5000;G.creditCard=true;}
@@ -4159,8 +4242,9 @@ function renderMilestone(){
     G.milestonePending=null;
     // Continue to next phase (event/quiz/summary)
     const yw=G.yearsWorked;
-    const ev=yw%3===0,qz=yw%7===2,cert=yw%3===1&&G.age>=18;
-    if(cert&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)){UI.phase='cert';}
+    const ev=G._evThisYear,qz=yw%7===2;
+    const cert=CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age)&&G.age>=18;
+    if(cert){UI.certReturnPhase=ev?'event':qz?'quiz':'summary';UI.phase='cert';}
     else if(ev){UI.evShown=false;UI.evPick=null;UI.phase='event';}
     else if(qz){UI.phase='quiz';}
     else UI.phase='summary';
@@ -4485,7 +4569,7 @@ function renderSummary(){
       h+='</div>';
     }
     h+='<div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">';
-    if(canAffordWedding)h+='<button class="btn" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;box-shadow:0 4px 12px rgba(236,72,153,.3)" id="bget-married">💍 Get Married! (-$50,000 cash, +200 HI)</button>';
+    if(canAffordWedding)h+='<button class="btn" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;box-shadow:0 4px 12px rgba(236,72,153,.3)" id="bget-married">💍 Get Married! (-$50,000 cash, +100 HI, expenses halved!)</button>';
     if(!canAffordWedding&&(weddingTotalInv>0||weddingEF>0))h+='<button class="btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff" id="bget-married-assets">💍 Marry — Use Investments/EF to cover gap</button>';
     if(!canAffordWedding)h+='<button class="btn" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff" id="bget-married-loan">💍 Marry — Take Wedding Loan for shortfall</button>';
     h+='<button class="btn bs bsm" id="bstay-single">Not this year</button>';
@@ -4507,8 +4591,11 @@ function renderSummary(){
     }
     h+='</div>';
   }
-  // ── BABY TRIGGER (1-3 years after marriage) ──
-  if(G.married&&!G.hasChildren&&G.marriageAge&&G.age>=(G.marriageAge+1)&&G.age<=(G.marriageAge+3)&&!G.babyTriggerShown){
+  // ── BABY TRIGGER (random chance each year after marriage, up to age 45) ──
+  if(G.married&&!G.hasChildren&&G.marriageAge&&G.age>G.marriageAge&&G.age<=45&&!G.babyTriggerShown){
+    // Roll 30% chance per year (cached within same age to handle re-renders)
+    if(G._babyRollAge!==G.age){G._babyRollAge=G.age;G._babyRollHit=Math.random()<0.30;}
+    if(G._babyRollHit){
     G.babyTriggerShown=true;
     h+='<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:14px;padding:18px;margin-bottom:14px;text-align:center">';
     h+='<div style="font-size:40px;margin-bottom:8px">🤰</div>';
@@ -4517,6 +4604,7 @@ function renderSummary(){
     h+='<div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">';
     h+='<button class="btn bg" id="bwelcome-baby">👶 Welcome Baby! (-$25,000, +200 HI)</button>';
     h+='</div></div>';
+    }
   }
 
   if(G.cpf55shown&&G.age===55){
@@ -4715,10 +4803,9 @@ function renderSummary(){
   });
   el('bget-married')?.addEventListener('click',()=>{
     if(G.cash<50000){toast('Need at least $50,000 for wedding costs!','tr');return;}
-    G.cash-=50000;G.married=true;G.marriageAge=G.age;G.hi+=200;
-    G.hi+=300; // marriage +150 HI
+    G.cash-=50000;G.married=true;G.marriageAge=G.age;G.hi+=100;
     if(G.propLoan>0){G.propLoan=Math.round(G.propLoan*0.9);}
-    addLog('💍 MARRIED at age '+G.age+'! -$50,000 +150 HI 🎊 HDB BTO now unlocked!');
+    addLog('💍 MARRIED at age '+G.age+'! -$50,000 +100 HI 🎊 HDB BTO unlocked! Spouse shares expenses!');
     render();
   });
   el('bget-married-assets')?.addEventListener('click',()=>{
@@ -4733,9 +4820,9 @@ function renderSummary(){
     if(need>0){toast('Not enough assets! Still short '+fmt(need),'tr');return;}
     G.cash-=fromCash;
     G.emergencyFund=Math.max(0,(G.emergencyFund||0)-fromEF);
-    G.married=true;G.marriageAge=G.age;G.hi+=200;G.hi+=300;
+    G.married=true;G.marriageAge=G.age;G.hi+=100;
     if(G.propLoan>0){G.propLoan=Math.round(G.propLoan*0.9);}
-    var logParts=['💍 MARRIED at age '+G.age+'! +150 HI 🎊'];
+    var logParts=['💍 MARRIED at age '+G.age+'! +100 HI 🎊 Spouse shares expenses!'];
     if(fromCash>0)logParts.push('Cash: -'+fmt(fromCash));
     if(fromEF>0)logParts.push('EF liquidated: -'+fmt(fromEF));
     if(fromInv>0)logParts.push('Investments sold: -'+fmt(fromInv));
@@ -4749,10 +4836,10 @@ function renderSummary(){
     var loanAmt=50000-fromCash;
     G.cash-=fromCash;
     G.weddingLoan=(G.weddingLoan||0)+loanAmt;
-    G.married=true;G.marriageAge=G.age;G.hi+=200;G.hi+=300;
+    G.married=true;G.marriageAge=G.age;G.hi+=100;
     G.hi-=50; // stress of debt
     if(G.propLoan>0){G.propLoan=Math.round(G.propLoan*0.9);}
-    addLog('💍 MARRIED at age '+G.age+'! Cash: -'+fmt(fromCash)+' | Wedding loan: '+fmt(loanAmt)+' @8%/yr | -50 HI (debt stress)');
+    addLog('💍 MARRIED at age '+G.age+'! Cash: -'+fmt(fromCash)+' | Wedding loan: '+fmt(loanAmt)+' @8%/yr | +50 net HI (100 -50 debt stress). Spouse shares expenses!');
     toast('Married with a '+fmt(loanAmt)+' wedding loan! Pay it off quickly 💍','ty');
     render();
   });
