@@ -284,6 +284,7 @@ td{padding:8px 5px;border-bottom:1px solid #f3f4f6}
       <p style="font-size:14px;font-weight:700;margin-bottom:10px">Teacher Login</p>
       <input class="inp" id="au" placeholder="Username" style="margin-bottom:8px">
       <input class="inp" id="ap" type="password" placeholder="Password" style="margin-bottom:10px">
+      <div id="ale" class="errmsg"></div>
       <button class="btn bs w100" id="bal">🔐 Sign In</button>
     </div>
   </div>
@@ -5046,8 +5047,9 @@ window.createEvent=async function(){
   var hours=parseInt(el('ne-hours')?.value)||48;
   if(!school){toast('Enter a school name','te');return;}
   try{
-    var res=await fetch(SB+'/rest/v1/rpc/create_game_event',{method:'POST',headers:H,body:JSON.stringify({p_school_name:school,p_duration_hours:hours})});
-    var data=res.ok?await res.json():null;
+    var res=await fetch(SB+'/rest/v1/rpc/create_game_event',{method:'POST',headers:H,body:JSON.stringify({p_school_name:school,p_hours:hours})});
+    var json=res.ok?await res.json():null;
+    var data=Array.isArray(json)?json[0]:json;
     if(data){toast('✅ Event created! Code: '+(data.access_code||''),'tg');el('ne-school').value='';loadAdmin();}
     else{toast('⚠️ Error creating event','te');}
   }catch(e){toast('⚠️ Connection error','te');}
@@ -5178,9 +5180,13 @@ async function doLogin(){
 }
 async function doAdminLogin(){
   var u=el('au')?.value?.trim(),p=el('ap')?.value?.trim();
-  var admin=await dbQ('admins',{username:u,password_hash:p},true);
-  if(admin){setScreen('admin');loadAdmin();}
-  else{el('le').style.display='block';el('le').textContent='Invalid credentials.';}
+  var errEl=el('ale');
+  if(!u||!p){if(errEl){errEl.style.display='block';errEl.textContent='Enter username and password.';}return;}
+  try{
+    var admin=await dbQ('admins',{username:u,password_hash:p},true);
+    if(admin){if(errEl)errEl.style.display='none';setScreen('admin');loadAdmin();}
+    else{if(errEl){errEl.style.display='block';errEl.textContent='Invalid credentials.';}}
+  }catch(e){if(errEl){errEl.style.display='block';errEl.textContent='Connection error. Try again.';}}
 }
 
 // ══════════════════════════════════════
