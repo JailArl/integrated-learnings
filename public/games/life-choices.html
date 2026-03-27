@@ -962,7 +962,7 @@ function newG(){return {
   milestonePending:null,  // milestone year pending (5/10/15/20)
   milestoneClaimed:[],    // milestone years already claimed
   retirePlan:null,        // {age, lifestyle, monthlyNeed} — set at age 40
-  log:[],eventsUsed:[],quizIdx:0,resetCount:0,
+  log:[],snapshots:[],eventsUsed:[],quizIdx:0,resetCount:0,
   yearsTotal:0,
   cpf55shown:false,babyTriggerShown:false,
   lastSalary:0,       // for showing salary growth
@@ -1020,7 +1020,15 @@ function getField(){return FIELDS.find(f=>f.id===G.field);}
 function getLadder(){const f=getField();return f?f.ladder:[];}
 function curJob(){const l=getLadder();return l[G.jobLevel]||null;}
 function salWithGrowth(job,yrsExp){return job?Math.round(job.sal*Math.pow(1.03,yrsExp)):0;}
-function addLog(msg){G.log=[...G.log.slice(-20),{age:G.age,msg}];}
+function addLog(msg,tag){G.log.push({age:G.age,msg,t:tag||null});}
+function takeSnapshot(){
+  if(!G.snapshots)G.snapshots=[];
+  G.snapshots.push({age:G.age,inv:{...G.inv},cash:G.cash,cpf:G.cpf,nw:nw(),hi:G.hi,
+    job:G.jobLevel>=0?(getLadder()[G.jobLevel]?.name||'Unknown'):G.jobLevel===-1?'Unemployed':'Universal',
+    sal:G.jobSal,debt:{study:G.studyLoan||0,prop:G.propLoan||0,car:G.carLoan||0,emergency:G.emergencyDebt||0,cc:G.ccDebt||0,wedding:G.weddingLoan||0},
+    ef:G.emergencyFund||0,married:G.married,hasChildren:G.hasChildren,prop:G.prop||null,car:G.car||null,
+    lifestyle:G.lifestyle,insurance:G.insurance,certs:[...G.certs]});
+}
 function lifeCost(){return G.lifestyle==='comfort'?3000:0;} // luxury removed — use Luxuries for one-time treats
 
 function calcScore(){
@@ -3600,6 +3608,9 @@ function confirmAlloc(){
     saveG();render();return;
   }
 
+  // ── TAKE YEARLY SNAPSHOT for reports ──
+  takeSnapshot();
+
   // Next phase
   const yw=G.yearsWorked;
   // Milestone bonus takes priority
@@ -4722,6 +4733,161 @@ function getPersonality(){
     dna:{invest:50,save:50,risk:50,enjoy:60,discipline:50},
   };
 }
+
+// ══════════════════════════════════════
+// PLAYER REPORT ENGINE — analyzePlayer(gs)
+// Reads game_state JSONB, returns full report card
+// Used by admin dashboard + end screen
+// ══════════════════════════════════════
+window.analyzePlayer=function(gs){
+  if(!gs)return null;
+  var inv=gs.inv||{};
+  var snaps=gs.snapshots||[];
+  var log=gs.log||[];
+  var invTotal=Object.values(inv).reduce((s,v)=>s+(v||0),0);
+  var safeTotal=(inv.bank||0)+(inv.fd||0)+(inv.ssb||0);
+  var riskyTotal=(inv.stock||0)+(inv.etf||0)+(inv.reit||0)+(inv.bank_stock||0);
+  var totalDebt=(gs.studyLoan||0)+(gs.propLoan||0)+(gs.carLoan||0)+(gs.emergencyDebt||0)+(gs.ccDebt||0)+(gs.weddingLoan||0);
+
+  // ── 1. TITLES (badges earned) ──
+  var titles=[];
+  // Investment style titles
+  if(invTotal>0&&safeTotal/Math.max(1,invTotal)>0.7) titles.push({id:'safe_investor',name:'Safe Investor',icon:'🛡️',color:'#0891b2',desc:'Over 70% in bank/FD/SSB — plays it very safe'});
+  if(invTotal>0&&riskyTotal/Math.max(1,invTotal)>0.6) titles.push({id:'risk_taker',name:'Risk Taker',icon:'🎲',color:'#dc2626',desc:'Over 60% in stocks/ETF/REIT — not afraid of volatility'});
+  if(invTotal>0&&Math.max(...Object.values(inv))/invTotal<0.4) titles.push({id:'diversifier',name:'Diversifier',icon:'🎯',color:'#7c3aed',desc:'No single instrument over 40% — spread the risk'});
+  if((inv.cpfsa||0)>30000) titles.push({id:'cpf_maximizer',name:'CPF Maximizer',icon:'🏛️',color:'#2563eb',desc:'Built up serious CPF-SA balance via voluntary top-ups'});
+  if((gs.totalDividends||0)>15000) titles.push({id:'dividend_collector',name:'Dividend Collector',icon:'💵',color:'#16a34a',desc:'Earned $15K+ in dividends from REITs and stocks'});
+
+  // Savings behavior
+  if((gs.emergencyFund||0)>20000) titles.push({id:'emergency_ready',name:'Emergency Ready',icon:'🛟',color:'#0d9488',desc:'Built a strong emergency fund cushion — well prepared'});
+  if(invTotal>200000) titles.push({id:'portfolio_builder',name:'Portfolio Builder',icon:'📈',color:'#059669',desc:'Invested portfolio worth over $200K'});
+  if(invTotal>500000) titles.push({id:'half_millionaire',name:'Half Millionaire',icon:'💎',color:'#d97706',desc:'Investment portfolio exceeded $500K!'});
+
+  // Life choices
+  if(gs.ffAge&&gs.ffAge<=45) titles.push({id:'early_ff',name:'Early Retirement',icon:'🏆',color:'#d97706',desc:'Achieved Financial Freedom before age 45!'});
+  if(gs.ffAge&&gs.ffAge<=55) titles.push({id:'ff_achieved',name:'Financial Freedom',icon:'⭐',color:'#eab308',desc:'Reached Financial Freedom — investments cover expenses'});
+  if((gs.luxurySpent||0)>80000) titles.push({id:'big_spender',name:'Big Spender',icon:'🎉',color:'#ec4899',desc:'Spent over $80K on luxuries — lived life to the fullest'});
+  if((gs.luxurySpent||0)<5000&&invTotal>100000) titles.push({id:'frugal_titan',name:'Frugal Titan',icon:'🧙',color:'#4f46e5',desc:'Barely spent on luxuries but built serious wealth'});
+  if(gs.prop&&gs.properties&&gs.properties.length>1) titles.push({id:'property_mogul',name:'Property Mogul',icon:'🏠',color:'#7c3aed',desc:'Owns multiple properties'});
+  if(totalDebt===0&&(gs.yearsWorked||0)>5) titles.push({id:'debt_free',name:'Debt Free',icon:'⚔️',color:'#16a34a',desc:'Zero debt — every dollar works for you'});
+  if((gs.ccDebt||0)>10000) titles.push({id:'debt_trapped',name:'Debt Trapped',icon:'🪤',color:'#dc2626',desc:'Stuck with high-interest credit card debt'});
+  if((gs.emergencyDebt||0)>20000) titles.push({id:'emergency_spiral',name:'Emergency Spiral',icon:'🚨',color:'#dc2626',desc:'Deep in emergency debt at 26% interest'});
+  if((gs.certs||[]).length>=4) titles.push({id:'certified_pro',name:'Certified Pro',icon:'📋',color:'#6366f1',desc:'Collected 4+ certifications — always upskilling'});
+  if(gs.insurance) titles.push({id:'insured',name:'Protected',icon:'🛡️',color:'#059669',desc:'Bought personal insurance — smart risk management'});
+  if((gs.resetCount||0)>=3) titles.push({id:'persistent',name:'Persistent Learner',icon:'🔄',color:'#8b5cf6',desc:'Reset 3+ times — kept trying different strategies'});
+
+  // Behavioral detection from snapshots
+  var panicSwitch=false,lateBloomer=false,consistentGrowth=false;
+  if(snaps.length>=5){
+    // Panic Switcher: was >40% risky, then dropped to <15% risky after a crash
+    for(var si=1;si<snaps.length;si++){
+      var prev=snaps[si-1],curr=snaps[si];
+      var prevInv=Object.values(prev.inv||{}).reduce((s,v)=>s+(v||0),0);
+      var currInv=Object.values(curr.inv||{}).reduce((s,v)=>s+(v||0),0);
+      var prevRisky=((prev.inv?.stock||0)+(prev.inv?.etf||0)+(prev.inv?.reit||0))/Math.max(1,prevInv);
+      var currRisky=((curr.inv?.stock||0)+(curr.inv?.etf||0)+(curr.inv?.reit||0))/Math.max(1,currInv);
+      if(prevRisky>0.4&&currRisky<0.15){panicSwitch=true;break;}
+    }
+    // Late Bloomer: first half NW growth <20%, second half >50%
+    var midIdx=Math.floor(snaps.length/2);
+    var firstNW=snaps[0].nw||0,midNW=snaps[midIdx].nw||0,lastNW=snaps[snaps.length-1].nw||0;
+    if(firstNW>0&&midNW/firstNW<1.2&&lastNW/Math.max(1,midNW)>1.5)lateBloomer=true;
+    // Consistent Growth: NW increased every 3-year window
+    consistentGrowth=true;
+    for(var ci=3;ci<snaps.length;ci+=3){
+      if(snaps[ci].nw<=(snaps[ci-3]?.nw||0)){consistentGrowth=false;break;}
+    }
+  }
+  if(panicSwitch) titles.push({id:'panic_switcher',name:'Panic Switcher',icon:'😱',color:'#f97316',desc:'Moved everything to safe after a crash — fear-driven decision'});
+  if(lateBloomer) titles.push({id:'late_bloomer',name:'Late Bloomer',icon:'🌱',color:'#22c55e',desc:'Slow start but strong finish — learned and improved over time'});
+  if(consistentGrowth&&snaps.length>=6) titles.push({id:'steady_climber',name:'Steady Climber',icon:'📈',color:'#2563eb',desc:'Net worth grew consistently — disciplined approach'});
+
+  // ── 2. KEY MOMENTS (from log) ──
+  var moments=[];
+  log.forEach(function(entry){
+    var m=entry.msg||'';
+    // Crashes + losses
+    if(m.includes('Emergency debt')||m.includes('26%')) moments.push({age:entry.age,type:'danger',text:m});
+    else if(m.includes('Emergency liquidation')) moments.push({age:entry.age,type:'danger',text:m});
+    else if(m.includes('Emergency fund used')) moments.push({age:entry.age,type:'warning',text:m});
+    // Big wins
+    else if(m.includes('DEBT FREE')||m.includes('Debt cleared')) moments.push({age:entry.age,type:'win',text:m});
+    else if(m.includes('Graduated')) moments.push({age:entry.age,type:'milestone',text:m});
+    else if(m.includes('Promoted')) moments.push({age:entry.age,type:'win',text:m});
+    else if(m.includes('MATURED')) moments.push({age:entry.age,type:'win',text:m});
+    else if(m.includes('ORD LOH')) moments.push({age:entry.age,type:'milestone',text:m});
+    // Property
+    else if(m.includes('Bought')&&(m.includes('Condo')||m.includes('HDB'))) moments.push({age:entry.age,type:'milestone',text:m});
+    // Events / scams
+    else if(m.includes('scam')||m.includes('Scam')) moments.push({age:entry.age,type:'danger',text:m});
+    else if(m.includes('Credit card')) moments.push({age:entry.age,type:'warning',text:m});
+    // Career
+    else if(m.includes('Work First:')||m.includes('started as')) moments.push({age:entry.age,type:'milestone',text:m});
+    else if(m.includes('Started')&&m.includes('study'||'Study')) moments.push({age:entry.age,type:'milestone',text:m});
+    // Marriage + baby
+    else if(m.includes('married')||m.includes('Marriage')||m.includes('Wedding')) moments.push({age:entry.age,type:'milestone',text:m});
+    else if(m.includes('baby')||m.includes('Baby')||m.includes('child')) moments.push({age:entry.age,type:'milestone',text:m});
+    // HDB ballot
+    else if(m.includes('BTO Ballot SUCCESS')) moments.push({age:entry.age,type:'win',text:m});
+    else if(m.includes('Ballot failed')) moments.push({age:entry.age,type:'warning',text:m});
+  });
+
+  // ── 3. RISK PROFILE EVOLUTION ──
+  var riskProfile=[];
+  snaps.forEach(function(snap){
+    var tot=Object.values(snap.inv||{}).reduce((s,v)=>s+(v||0),0);
+    if(tot<100)return;
+    var risky=((snap.inv?.stock||0)+(snap.inv?.etf||0)+(snap.inv?.reit||0)+(snap.inv?.bank_stock||0))/tot;
+    riskProfile.push({age:snap.age,risky:Math.round(risky*100),safe:Math.round((1-risky)*100)});
+  });
+
+  // ── 4. INVESTMENT PATTERN ──
+  var invPattern=snaps.map(function(snap){
+    return{age:snap.age,bank:snap.inv?.bank||0,fd:snap.inv?.fd||0,ssb:snap.inv?.ssb||0,
+      cpfsa:snap.inv?.cpfsa||0,etf:snap.inv?.etf||0,reit:snap.inv?.reit||0,
+      bank_stock:snap.inv?.bank_stock||0,stock:snap.inv?.stock||0,total:Object.values(snap.inv||{}).reduce((s,v)=>s+(v||0),0)};
+  });
+
+  // ── 5. LEARNING TIPS ──
+  var tips=[];
+  if(safeTotal/Math.max(1,invTotal)>0.8) tips.push({icon:'📊',text:'Consider diversifying beyond bank savings. ETFs and REITs give higher returns over time with moderate risk.'});
+  if((inv.stock||0)/Math.max(1,invTotal)>0.5) tips.push({icon:'⚠️',text:'Over 50% in growth stocks is very aggressive. A crash could wipe out years of gains. Consider spreading across ETF and REIT too.'});
+  if(!gs.insurance) tips.push({icon:'🛡️',text:'No insurance! One illness or accident could destroy your finances. Insurance is not a cost — it is protection.'});
+  if((gs.emergencyFund||0)<3000&&(gs.yearsWorked||0)>3) tips.push({icon:'🛟',text:'Your emergency fund is too small. Aim for 3-6 months of expenses as a safety net before investing.'});
+  if(totalDebt>50000) tips.push({icon:'🚨',text:'High debt at '+Math.round(totalDebt/1000)+'K. Prioritize paying off high-interest debt (CC at 26%, emergency at 26%) before investing.'});
+  if(panicSwitch) tips.push({icon:'😱',text:'After a crash you moved to all-safe. Historically, markets recover in 3-5 years. Staying invested through crashes usually wins long-term.'});
+  if((gs.ccDebt||0)>0) tips.push({icon:'💳',text:'Credit card debt at 26% interest is an emergency. No investment earns 26%. Pay this off FIRST.'});
+  if(invTotal===0&&(gs.yearsWorked||0)>5) tips.push({icon:'📈',text:'You have not invested anything yet. Even small amounts in ETF/SSB grow significantly over 20+ years via compound interest.'});
+  if((gs.luxurySpent||0)>50000&&invTotal<20000) tips.push({icon:'🎯',text:'You spent '+Math.round((gs.luxurySpent||0)/1000)+'K on luxuries but only invested '+Math.round(invTotal/1000)+'K. The Rule of 72 says that money could have doubled!'});
+  if((inv.cpfsa||0)<5000&&gs.age>35) tips.push({icon:'🏛️',text:'CPF-SA voluntary top-ups give 4% guaranteed + tax relief. It is free money most people miss.'});
+  if(lateBloomer) tips.push({icon:'🌱',text:'You improved a lot in the second half — great! Next round, try starting those good habits earlier to maximize compound growth.'});
+  if(consistentGrowth) tips.push({icon:'👏',text:'Your net worth grew steadily every few years. Consistency and discipline are the real secrets to wealth.'});
+
+  // ── 6. COMPARISON STATS ──
+  var stats={
+    finalNW:snaps.length?snaps[snaps.length-1].nw:0,
+    finalHI:gs.hi||0,
+    finalCPF:gs.cpf||0,
+    totalDebt:totalDebt,
+    invTotal:invTotal,
+    safePercent:invTotal>0?Math.round(safeTotal/invTotal*100):0,
+    riskyPercent:invTotal>0?Math.round(riskyTotal/invTotal*100):0,
+    luxurySpent:gs.luxurySpent||0,
+    taxPaid:gs.totalTaxPaid||0,
+    dividends:gs.totalDividends||0,
+    resetCount:gs.resetCount||0,
+    ffAge:gs.ffAge||null,
+    field:gs.field||null,
+    finalAge:gs.age||65,
+    certs:gs.certs||[],
+    married:gs.married||false,
+    hasChildren:gs.hasChildren||false,
+    properties:gs.properties||[],
+    car:gs.car||null,
+  };
+
+  return{titles:titles,moments:moments.slice(0,20),riskProfile:riskProfile,invPattern:invPattern,tips:tips.slice(0,5),stats:stats,snapshots:snaps};
+};
 
 // ══════════════════════════════════════
 // END GAME
