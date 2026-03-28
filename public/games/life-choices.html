@@ -237,7 +237,26 @@ td{padding:8px 5px;border-bottom:1px solid #f3f4f6}
 .badge-icon{font-size:26px}
 .badge-title{font-size:11px;font-weight:800;color:#d97706}
 .badge-sub{font-size:10px;color:#6b7280}
-@media(max-width:680px){.sb{display:none}.mp{padding:12px}.fcg{grid-template-columns:1fr 1fr}.sg4{grid-template-columns:1fr 1fr}.cg3,.cg4{grid-template-columns:1fr 1fr}}
+@media(max-width:680px){
+  .sb{display:none}.mp{padding:12px}.fcg{grid-template-columns:1fr 1fr}.sg4{grid-template-columns:1fr 1fr}.cg3,.cg4{grid-template-columns:1fr 1fr}
+  /* Larger text on mobile for readability */
+  body{font-size:15px}
+  .btn{font-size:14px;padding:12px 20px}
+  .btn.bsm{font-size:13px;padding:9px 16px}
+  .ch h4{font-size:14px}
+  .ch .me{font-size:12px}
+  .inp{font-size:15px}
+  .sbr{font-size:13px}
+  .it{font-size:13px}
+  .qo{font-size:14px}
+  .lg{font-size:12px}
+  .ct{font-size:11px}
+  .nsv{font-size:14px}
+  .nsl{font-size:10px}
+  .lbl{font-size:11px}
+  .card{padding:14px}
+  .sb2 .sv2{font-size:17px}
+}
 </style>
 </head>
 <body>
@@ -272,6 +291,7 @@ td{padding:8px 5px;border-bottom:1px solid #f3f4f6}
           <div><span class="lbl">Class</span><input class="inp" id="ic" placeholder="e.g. 3A" maxlength="10"></div>
           <div><span class="lbl">Index No.</span><input class="inp" id="ii" placeholder="e.g. 12" maxlength="6"></div>
         </div>
+        <p style="font-size:11px;color:#166534;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:8px 10px;margin-bottom:8px">💾 Already started earlier? Use the same class + index to resume your game.</p>
         <div id="le" class="errmsg"></div>
         <button class="btn bp w100" style="margin-top:10px" id="bl">🚀 Start Playing</button>
         <button class="btn bs w100" style="margin-top:6px;font-size:11px" id="bchgcode">← Change Code</button>
@@ -507,8 +527,8 @@ const CERTS=[
   {id:'drv',name:'Driving Licence',icon:'🚗',cost:3500,effect:'Driving Licence',age:18,desc:'Required to buy a car or be a Grab driver. SG driving test: theory + practical. Most people learn at 18!'},
   {id:'swim',name:'Swimming / Lifesaving Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,maxAge:40,sideIncome:5000,desc:'Side income: +$5,000/yr as part-time swimming coach. Essential life skill! Available until age 40.'},
   {id:'ins',name:'Insurance Licence',icon:'🛡️',cost:1500,effect:'Insurance Lic',age:21,sideIncome:4000,insDiscount:true,desc:'Side income: +$4,000/yr as insurance agent. 50% off your own insurance premiums. Acts as free insurance if you don\'t buy a plan!'},
-  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,salBoost:2000,needsJob:true,desc:'Govt subsidised. Permanent +$2,000/yr salary boost once employed. Scam protection!'},
-  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,salBoost:1000,needsJob:true,desc:'Workforce Skills Qualification. Permanent +$1,000/yr salary boost once employed. Recognised by employers!'},
+  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,salBoost:2000,notDuringNS:true,desc:'Govt subsidised. Permanent +$2,000/yr salary boost once employed. Scam protection! Can take during studies.'},
+  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,salBoost:1000,notDuringNS:true,desc:'Workforce Skills Qualification. Permanent +$1,000/yr salary boost once employed. Can take during studies!'},
 ];
 
 // CARS — SG 2024/2025 OTR prices. Total = basePrice + COE + ARF + taxes.
@@ -565,10 +585,10 @@ const INV=[
    maxPerYear:8000,       // max for tax relief; can top up more but no extra benefit
    needsCDP:false,minAge:null,
    requiresCPF:true,      // must have existing CPF (worked at least 1 yr in CPF job)
-   condition:'Only for Singapore Citizens/PRs. Max $8,000/yr qualifies for income tax relief. Fully LOCKED until age 55.',
-   conditionShort:'Max $8,000/yr for tax relief. Locked till 55.',
-   purpose:'🏛️ Retirement',purposeColor:'#6d28d9',
-   tip:'Exactly 4%/yr guaranteed, NEVER negative. Real gain after inflation: +1%. LOCKED until 55 — only park money you absolutely do not need before retirement.'},
+  condition:'Only for SG Citizens/PRs. Max $8,000/yr for tax relief — saves $280–$1,760/yr in tax depending on your bracket! Locked until 55.',
+  conditionShort:'Max $8,000/yr → saves $280–$1,760 in tax + 4%/yr guaranteed.',
+  purpose:'🏛️ Retirement + Tax Relief',purposeColor:'#6d28d9',
+  tip:'4%/yr guaranteed + UP TO $8,000/yr tax relief! Topping up $8K saves $280–$1,760/yr in tax depending on your income bracket. At 4%/yr compound over 30 years, $8,000 grows to ~$26,000! Locked till 55 = for retirement money only. Not useless AT ALL — it\'s double value: tax savings NOW + retirement compound growth!'},
   {key:'fd',name:'Fixed Deposit',icon:'📜',yield:0.038,risk:'Low',col:'#0891b2',canNeg:false,
    realReturn:0.008,
    minInvest:1000,        // DBS/OCBC/UOB minimum $1,000 per placement
@@ -781,7 +801,7 @@ const LUXURIES=[
 // ABSD (Additional Buyer Stamp Duty) — Singapore 2024, per IRAS:
 // SC 1st property: 0% | SC 2nd: 20% CASH only | SC 3rd+: 30% CASH only
 // HDB BTO: Oct 2024 LTV reduced to 75% (from 80%). Down = 25%, all CPF OK.
-// HDB: max 2 BTO applications lifetime. Cannot own HDB + private simultaneously.
+// HDB: max 2 BTO applications lifetime. After 5-year MOP, CAN own HDB + private simultaneously (HDB becomes rental).
 // MOP: 5 years before can sell/rent out whole HDB flat.
 const ABSD_SC=[0,0.20,0.30]; // index = properties already owned (0→1st,1→2nd,2→3rd+)
 const PROPERTIES=[
@@ -949,8 +969,9 @@ function newG(){return {
   hdbBallots:0,       // number of times balloted
   nsCompleted:false,  // National Service completed (males only)
   nsYear:0,           // current NS year (1 or 2)
-  milestonePending:null,  // milestone year pending (5/10/15/20)
+  milestonePending:null,  // milestone year pending (5/10/15/20/25/30)
   milestoneClaimed:[],    // milestone years already claimed
+  condoUpgradedThisYear:false, // prevent multiple condo upgrades in one year
   retirePlan:null,        // {age, lifestyle, monthlyNeed} — set at age 40
   log:[],snapshots:[],eventsUsed:[],quizIdx:0,resetCount:0,
   yearsTotal:0,
@@ -1056,6 +1077,13 @@ function calcScore(){
 
 async function saveG(done){
   if(!SID||!G)return;
+  G.lastActive=Date.now();
+  try{
+    if(P?.class_id&&P?.index_number){
+      var lk='lc_resume_'+(EVT?.id||'na')+'_'+P.class_id+'_'+P.index_number;
+      localStorage.setItem(lk,JSON.stringify({game_state:G,sid:SID,ts:G.lastActive}));
+    }
+  }catch(_e){}
   await dbU('game_sessions',{age:G.age,cash:G.cash,cpf:G.cpf,happiness:G.hi,net_worth:nw(),final_score:calcScore(),ff_age:G.ffAge||null,game_state:G,is_complete:!!done,updated_at:new Date().toISOString()},SID);
 }
 
@@ -1066,6 +1094,8 @@ function el(id){return document.getElementById(id);}
 function mp(h){el('main').innerHTML=h;}
 
 function render(){
+  // Hide the alloc cash pill when navigating away from alloc phase
+  if(UI.phase!=='alloc'){var p0=el('alloc-cash-pill');if(p0)p0.style.display='none';}
   updateNav();updateSB();
   const p=UI.phase;
   if(p==='start')renderStart();
@@ -1085,6 +1115,7 @@ function render(){
   else if(p==='retire_plan')renderRetirePlan();
   else if(p==='quiz')renderQuiz();
   else if(p==='summary')renderSummary();
+  if(typeof resetInactivityTimer==='function')resetInactivityTimer();
 }
 
 function updateNav(){
@@ -1099,7 +1130,7 @@ function updateNav(){
   el('nh').style.color=G.hi<0?'#dc2626':G.hi<20?'#d97706':'';
   el('hf').style.width=Math.min(100,Math.max(0,G.hi/10))+'%';
   // Passive income display (use stable version — no random flicker)
-  var passiveInc=Math.round(INV.reduce(function(a,i){return a+(G.inv[i.key]||0)*dynamicReturnStable(i.key,G.currentNews);},0));
+  var passiveInc=Math.max(0,Math.round(INV.reduce(function(a,i){return a+(G.inv[i.key]||0)*dynamicReturnStable(i.key,G.currentNews);},0)));
   // Add rental income from investment properties
   if(G.properties&&G.properties.length>1){
     G.properties.slice(1).forEach(function(pp){if(pp.rentEnabled&&pp.propData?.rent)passiveInc+=pp.propData.rent*12;});
@@ -1393,11 +1424,22 @@ function confirmNSYear(){
     G.nsCompleted=true;
     G.hi+=200;
     addLog('🎖️ ORD LOH! 🇸🇬 National Service completed at age '+G.age+' +200 HI 🎉 | 🏛️ Government career UNLOCKED!');
+    if(G.field&&G.field!=='govt'&&FIELDS.some(f=>f.id==='govt')){
+      var swGov=confirm('🎖️ Government careers are now unlocked after NS.\n\nSwitch your field to Government now?\n(You can still remain in your current field.)');
+      if(swGov){
+        G.field='govt';
+        G.jobLevel=0;
+        G.yearsAtLevel=0;
+        var gField=getField();
+        if(gField&&gField.ladder&&gField.ladder[0])G.jobSal=gField.ladder[0].sal+(G.certSalBoost||0);
+        addLog('🏛️ Switched to Government field after NS. Started at entry-level government role.');
+      }
+    }
     // Study First: already have quals → go to grad screen; Work First: go to field selection
     UI.phase=G.quals.length>0?'grad':'field';
   } else {
     // After NS year 1 (age 18): offer certs like driving licence, swimming (NOT job-only certs)
-    var nsCertAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age&&!c.needsJob);
+    var nsCertAvail=G.certs.length<CERTS.length&&G.age>=18&&CERTS.some(c=>!G.certs.includes(c.effect)&&(!c.maxAge||G.age<=c.maxAge)&&G.age>=c.age&&!c.needsJob&&!c.notDuringNS);
     if(nsCertAvail){UI.certReturnPhase='ns';UI.phase='cert';}
     // else stay in NS phase for year 2
   }
@@ -1413,6 +1455,9 @@ function renderField(){
   h+=G.workFirst?stepBar(0,['Choose Field','Work & Earn!']):stepBar(0,['Choose Field','Choose Path','Study','Work & Invest']);
   h+='<div class="card"><h2 style="font-size:20px;font-weight:800;margin-bottom:6px">🎯 What field do you want to work in?</h2>';
   h+='<p style="font-size:13px;color:#6b7280;margin-bottom:18px;line-height:1.7">Your field determines your career ladder for life. '+(G.workFirst?'You will start at entry-level — studying PT later unlocks higher rungs!':'Choose based on your interests — not just salary! All fields can reach Financial Freedom.')+'</p>';
+  if(G.gender==='M'&&!G.nsCompleted){
+    h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:#1e40af">🎖️ Government careers are locked now and will unlock immediately after you complete NS.</div>';
+  }
   h+='<div class="cg cg2">';
   FIELDS.forEach(f=>{
     // NS-only field: hide for females / non-NS males
@@ -1926,6 +1971,10 @@ function renderGrad(){
     if(!p.availForFields.includes(G.field))return false;
     if(p.req&&!G.quals.includes(p.req))return false;
     if(G.quals.includes(p.grants))return false;
+    // Poly diploma holders should use the advanced poly→uni path, not the JC→uni route
+    if(p.id==='uni'&&G.quals.includes('Diploma'))return false;
+    // Don't show JC path if already have a Diploma or higher
+    if(p.id==='jc'&&(G.quals.includes('Diploma')||G.quals.includes('Degree')))return false;
     return true;
   });
 
@@ -2042,8 +2091,12 @@ function renderGrad(){
     addLog('📚 Enrolled: '+up.name+(UI.ptMode?' (PT — fees yearly)':' (FT — fees yearly)')+' · '+fmt(cost)+' total ('+fmt(Math.round(cost/dur))+'/yr)');
     UI.jc=null;
     // FT: go to study phase; PT mid-career: go back to working cycle
+    // PT with no work experience: need to pick a field/job first, then study in parallel
     if(UI.ptMode&&G.yearsWorked>0){
       UI.phase='news'; // continue working, study happens in parallel
+    }else if(UI.ptMode&&G.yearsWorked===0){
+      // Post-NS or fresh grad picking PT: need a job first. Send to field selection, study auto-enrolled.
+      UI.phase=G.field?'news':'field';
     }else{
       UI.phase='study';
     }
@@ -2094,9 +2147,17 @@ function renderNews(){
   h+='</div></div></div>';
   h+='<div style="margin-top:10px;font-size:10px;color:#92400e;background:#fffde7;padding:6px 10px;border-radius:6px;border-left:3px solid #f59e0b">💡 '+news.tip+'</div>';
   h+='</div></div>';
+  if(G.jobLevel!==-1&&G.jobSal>0&&G.age>=40){
+    h+='<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:12px">';
+    h+='<p style="font-size:12px;font-weight:700;color:#166534;margin-bottom:5px">⚡ Quick Year Skip</p>';
+    h+='<p style="font-size:11px;color:#15803d;line-height:1.6;margin-bottom:8px">Skip job + allocation screens this year. Salary is processed, mandatory expenses are paid, and remaining cash is auto-saved to bank.</p>';
+    h+='<button class="btn bg bsm" id="bskipyear">⚡ Skip Detailed Allocation</button>';
+    h+='</div>';
+  }
 
   h+=abar([{t:'Continue →',id:'bafternews'}]);
   mp(h);
+  el('bskipyear')?.addEventListener('click',()=>quickSkipYear(news));
   el('bafternews')?.addEventListener('click',()=>{
     if(news.cashBonus>0){G.cash+=news.cashBonus;addLog('🏛️ CDC/GST vouchers +$'+news.cashBonus);}
     // Apply property appreciation from news
@@ -2107,6 +2168,61 @@ function renderNews(){
     }
     UI.phase='job';UI.jl=null;render();
   });
+}
+
+function quickSkipYear(news){
+  if(G.jobLevel===-1||!G.jobSal){toast('Pick a job first before using quick skip.','ty');return;}
+  if(news.cashBonus>0){G.cash+=news.cashBonus;addLog('🏛️ CDC/GST vouchers +$'+news.cashBonus);}
+  if(news.propBonus>0&&G.prop&&G.propVal>0){
+    var extra=Math.round(G.propVal*news.propBonus);
+    G.propVal+=extra;
+    addLog('🏠 Property boom! +'+fmt(extra)+' value this year');
+  }
+
+  const rawS=G.jobSal||0;
+  const isMidPT=G.studying&&G.studying.ptMode&&G.jobLevel!==(-1);
+  const s=isMidPT?Math.round(rawS*0.85):rawS;
+  const isUniv=G.jobLevel<0;
+  const uIdx=isUniv?(-G.jobLevel-2):0;
+  const uj=isUniv?UNIVERSAL[uIdx]:null;
+  const lj=!isUniv?getLadder()[G.jobLevel]:null;
+  const job=lj||uj;
+  const cpfE=job?.cpf?cpfEmployee(s):0;
+  const cpfEr=job?.cpf?cpfEmployer(s):0;
+  var taxAmt=calcTax(s,G.married,G.hasChildren,1,G.cpfsaThisYear||0,G.age);
+
+  G.cash+=s-cpfE-taxAmt;
+  G.cpf+=cpfE+cpfEr;
+  G.totalTaxPaid=(G.totalTaxPaid||0)+taxAmt;
+  if(taxAmt>0)addLog('🏛️ Tax paid: '+fmt(taxAmt));
+
+  if(isMidPT){
+    var ptFee=Math.round(G.studying.cost/G.studying.total);
+    G.cash-=ptFee;
+    if(G.cash<0){G.studyLoan+=Math.abs(G.cash);G.cash=0;}
+    addLog('📚 PT study fee -'+fmt(ptFee)+' | Salary at 85% ('+fmt(rawS)+' → '+fmt(s)+')');
+  }
+
+  var inflMult=G.inflationMult||1.0;
+  var marriedDiscount=G.married?0.5:1.0;
+  var foodBase=Math.round(1800*inflMult*marriedDiscount);
+  var transDeduct=G.car?0:Math.round(1440*inflMult*marriedDiscount);
+  var clothBase=Math.round(600*inflMult*marriedDiscount);
+  var livingTotal=foodBase+transDeduct+clothBase;
+  G.cash-=livingTotal;
+  if(G.cash<0){emergencyBorrow(Math.abs(G.cash),'living costs exceeded salary');}
+  addLog('⚡ Quick-skip salary +'+fmt(s-cpfE)+' | CPF +'+fmt(cpfE+cpfEr)+' | Living -'+fmt(livingTotal));
+
+  if(G.cash>0){
+    var autoBank=G.cash;
+    G.inv.bank=(G.inv.bank||0)+autoBank;
+    G.investedTotal=(G.investedTotal||0)+autoBank;
+    G.cash=0;
+    addLog('🏦 Quick skip auto-save: '+fmt(autoBank)+' moved to bank savings.');
+  }
+
+  UI.ac=null;UI.sideGig=null;UI.luxPick=[];UI.lc=null;UI.ie={};UI.is={};
+  confirmAlloc();
 }
 
 // ══════════════════════════════════════
@@ -2421,6 +2537,20 @@ function renderAlloc(){
   const tl=loans();
   const ti=invTot(G.inv);
 
+  // Fixed cash pill at bottom for mobile (always visible while scrolling)
+  var fixedPill=document.getElementById('alloc-cash-pill');
+  if(!fixedPill){
+    fixedPill=document.createElement('div');
+    fixedPill.id='alloc-cash-pill';
+    fixedPill.style.cssText='position:fixed;bottom:70px;right:14px;z-index:999;background:#1a1d2e;color:#22c55e;font-size:13px;font-weight:800;font-family:monospace;padding:8px 14px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,0.4);pointer-events:none;display:none';
+    document.body.appendChild(fixedPill);
+  }
+  fixedPill.textContent='💵 '+fmt(G.cash);
+  fixedPill.style.display='block';
+  // Hide pill when leaving alloc phase
+  var _pillCleanup=function(){fixedPill.style.display='none';document.removeEventListener('lc-phase-change',_pillCleanup);};
+  document.addEventListener('lc-phase-change',_pillCleanup);
+
   let h='';
   h+='<div class="card">';
   h+='<div class="ct">💳 Allocate Your Money — Age '+G.age+'</div>';
@@ -2443,10 +2573,16 @@ function renderAlloc(){
   var targetEF=monthlyExpenses*6;
   var efPct=G.emergencyFund>0?Math.min(100,Math.round(G.emergencyFund/targetEF*100)):0;
   var efColor=efPct>=100?'#16a34a':efPct>=50?'#d97706':'#dc2626';
-  h+='<div style="background:#f8fafc;border-radius:10px;padding:12px;margin-bottom:12px;border:1px solid #e5e7eb">';
+  // Combined bank savings (inv.bank) display alongside EF for clarity
+  var bankBal=G.inv.bank||0;
+  var combinedSavings=bankBal+(G.emergencyFund||0);
+  h+='<div style="background:#f0fdf4;border-radius:10px;padding:12px;margin-bottom:12px;border:1.5px solid #86efac">';
+  h+='<div style="background:#dcfce7;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:11px;color:#166534;line-height:1.6">';
+  h+='💡 <strong>Bank Savings = Emergency Fund!</strong> They are the same thing — money kept liquid in the bank. Target: 3–6 months of expenses (<strong>'+fmt(targetEF)+'</strong>) before investing in higher-risk assets.';
+  h+='</div>';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  h+='<span style="font-size:11px;font-weight:700">🛟 Emergency Fund (6-month goal: '+fmt(targetEF)+')</span>';
-  h+='<span style="font-size:11px;font-weight:700;color:'+efColor+'">'+efPct+'% ('+fmt(G.emergencyFund)+')</span>';
+  h+='<span style="font-size:11px;font-weight:700">🏦 Bank Savings / Emergency Fund</span>';
+  h+='<span style="font-size:11px;font-weight:700;color:'+efColor+'">'+efPct+'% of goal (EF: '+fmt(G.emergencyFund)+(bankBal>0?' | Bank: '+fmt(bankBal):'')+' | Total: '+fmt(combinedSavings)+')</span>';
   h+='</div>';
   h+='<div style="height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:'+efPct+'%;background:'+efColor+';border-radius:3px;transition:width .4s"></div></div>';
   h+='<div style="display:flex;align-items:center;gap:8px">';
@@ -2514,6 +2650,35 @@ function renderAlloc(){
       h+='⏱️ Payoff: <strong style="color:#2563eb">age '+mortPayoffAge+' ('+mortLeft2+' years left)</strong> | Rate: '+Math.round(mortRate2*100)+'%/yr reducing balance';
       h+='</div></div>';
     }
+      if(G.propLoan>0){
+        h+='<div style="margin-top:4px;margin-bottom:6px">';
+        h+='<p style="font-size:10px;color:#9ca3af;margin-bottom:4px">💡 Extra home loan repayment (saves '+Math.round(mortRate2*100)+'%/yr interest):</p>';
+        h+='<div style="display:flex;align-items:center;gap:8px">';
+        h+='<span style="font-size:10px;color:#6b7280">Extra repayment:</span>';
+        h+='<input type="range" class="sl" id="mortlsl" min="0" max="'+Math.min(G.propLoan,Math.max(0,G.cash))+'" step="500" value="0" style="width:120px">';
+        h+='<span style="font-size:11px;font-weight:700;color:#2563eb" id="mortlsv">$0</span>';
+        h+='</div></div>';
+      }
+      // Investment property mortgages (individual sliders)
+      if(G.properties&&G.properties.length>1){
+        G.properties.slice(1).forEach(function(pp,pidx){
+          if(!pp.propLoan||pp.propLoan<=0)return;
+          var pLeft2=Math.max(1,(pp.propData?.loanYrs||25)-(pp.propLoanYearsPaid||0));
+          var pRate2=pp.propData?.loanRate||0.026;
+          var pPmt=amortizedAnnualPayment(pp.propLoan,pRate2,pLeft2);
+          h+='<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:6px">';
+          h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+          h+='<span><span class="tag tpu" style="font-size:9px">INV PROPERTY</span> <strong style="font-size:11px">'+pp.name+' Loan: '+fmt(pp.propLoan)+'</strong></span>';
+          h+='<span style="font-size:10px;color:#6b7280">'+pLeft2+' yrs left</span>';
+          h+='</div>';
+          h+='<div style="font-size:9px;color:#6b7280;line-height:1.6">';
+          h+='💳 Auto payment: <strong>'+fmt(Math.round(pPmt))+'/yr</strong> | Extra repayment:';
+          h+='<div style="display:flex;align-items:center;gap:8px;margin-top:4px">';
+          h+='<input type="range" class="sl" id="invmort'+pidx+'" min="0" max="'+Math.min(pp.propLoan,Math.max(0,G.cash))+'" step="500" value="0" style="width:100px">';
+          h+='<span style="font-size:11px;font-weight:700;color:#7c3aed" id="invmortv'+pidx+'">$0</span>';
+          h+='</div></div></div>';
+        });
+      }
     // Car loan row
     var carYrsLeft2=Math.max(0,(G.carTenure||7)-(G.carLoanYearsPaid||0));
     var carPayoffAge=G.age+carYrsLeft2;
@@ -2640,6 +2805,7 @@ function renderAlloc(){
   h+='<p style="font-size:9px;color:#78350f;margin-top:6px">Example: $1,000 in ETF (7%) → $2,000 in ~10 yrs → $4,000 in ~20 yrs → $8,000 in ~30 yrs! 🚀</p>';
   h+='</div>';
   h+='<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:10px;color:#5b21b6">🏛️ <strong>CPF-SA:</strong> Voluntary CASH top-up (not salary CPF). Grows at 4%/yr, locked till 55. Max $8K/yr for tax relief!</div>';
+    h+='<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:10px;color:#5b21b6">🏛️ <strong>CPF-SA Voluntary Top-Up</strong> — Double value! ① 4%/yr guaranteed interest (better than any FD). ② $8K/yr tax relief = saves <strong>$280–$1,760/yr</strong> on your tax bill depending on income. Locked till 55 — use for retirement money only. Many Singaporeans overlook this FREE savings tool!</div>';
   // Strategy guide
   h+='<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:10px">';
   h+='<p style="font-weight:800;color:#1a1d2e;margin-bottom:5px">🧠 The SG Investment Ladder — Use All Tiers!</p>';
@@ -2758,7 +2924,7 @@ function renderAlloc(){
   var canCondo=G.cash>Math.round(900000*0.25*(1+absdNext))&&G.age>=21; // can always buy private if rich enough
   var canLuxCondo=G.cash>Math.round(1800000*0.25*(1+absdNext))&&G.age>=21;
   // Investment property: own 2+ properties (must have at least 1)
-  var canInvestProp=ownCount>=1&&ownCount<3&&G.cash>Math.round(900000*0.25*(1+absdNext));
+  var canInvestProp=ownCount>=1&&ownCount<4&&G.cash>Math.round(900000*0.25*(1+absdNext));
   const canSell=!!G.car;
   const canBuyIns=!G.insurance&&G.age>=21;
   const hasCCDebt=(G.ccDebt||0)>0;
@@ -2800,19 +2966,53 @@ function renderAlloc(){
       h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🌇 Luxury Condo — Need: '+fmt(luxCondoDown-G.cash)+' more cash</div>';
     }
     if(canInvestProp)h+='<button class="btn bs bsm" id="bbinvprop" style="margin-right:6px;margin-bottom:6px;border-color:#f59e0b">🏢 Buy Investment Property #'+(ownCount+1)+absdLabel+'</button>';
-    else if(ownCount>=1&&ownCount<3){
+    else if(ownCount>=1&&ownCount<4){
       var invPropDown=Math.round(900000*0.25*(1+absdNext));
       h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏢 Investment Property — Need: '+fmt(invPropDown-G.cash)+' more cash'+absdLabel+'</div>';
     }
     if(!G.prop&&!G.married&&G.age>=21)h+='<div style="font-size:10px;color:#dc2626;margin-top:4px">⚠️ Singles can only buy Condo or Landed. HDB requires marriage. <span style=\"color:#16a34a\">Get married to unlock HDB BTO!</span></div>';
-    // Property upgrade — always visible when owning property
+    // Property upgrade / buy private — SG law: after HDB MOP, can keep HDB + buy private
     if(G.prop&&G.propData){
-      const nextProp=PROPERTIES.find(p=>p.price>G.propData.price);
-      if(nextProp){
-        if(G.cash>100000)h+='<button class="btn bs bsm" id="bupgprop" style="margin-right:6px;margin-bottom:6px">⬆️ Upgrade to '+nextProp.name+' ('+fmt(nextProp.price)+')</button>';
-        else h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 ⬆️ Upgrade to '+nextProp.name+' — Need: '+fmt(100000-G.cash)+' more cash</div>';
+      var mainProp=G.properties&&G.properties[0];
+      var isHDBPrimary=mainProp&&mainProp.propData?.isHDB;
+      var hdbMopDone=isHDBPrimary&&(mainProp.mopYearsDone||0)>=5;
+      if(isHDBPrimary&&hdbMopDone){
+        // After HDB MOP: offer Buy Private (keep HDB as rental) OR Sell HDB & Upgrade
+        var privProps=PROPERTIES.filter(p=>!p.isHDB);
+        var absd2nd=ABSD_SC[Math.min(G.properties.length,2)];
+        var cheapestPrivDown=Math.round(privProps[0].price*privProps[0].downPct)+Math.round(privProps[0].price*absd2nd);
+        if(G.cash>=cheapestPrivDown)h+='<button class="btn bg bsm" id="bbuypriv_keephdb" style="margin-right:6px;margin-bottom:6px;border-color:#16a34a">🏢 Buy Private Property (Keep HDB as Rental) — '+Math.round(absd2nd*100)+'% ABSD</button>';
+        else h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🏢 Buy Private (Keep HDB) — Need: '+fmt(cheapestPrivDown-G.cash)+' more cash (down+ABSD)</div>';
+        // Also offer sell HDB & upgrade (0% ABSD)
+        var nextProp=PROPERTIES.find(p=>p.price>G.propData.price);
+        if(nextProp){
+          var equity=Math.max(0,(mainProp.propVal||0)-(mainProp.propLoan||0));
+          if(G.cash+equity>Math.round(nextProp.price*nextProp.downPct))h+='<button class="btn bs bsm" id="bupgprop" style="margin-right:6px;margin-bottom:6px">⬆️ Sell HDB & Buy '+nextProp.name+' (0% ABSD)</button>';
+        }
+      }else if(isHDBPrimary&&!hdbMopDone){
+        // HDB MOP not done yet
+        var mopLeft=5-(mainProp.mopYearsDone||0);
+        h+='<div style="display:inline-block;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;font-size:11px;color:#92400e">🔒 ⏳ HDB MOP: '+mopLeft+' yr'+(mopLeft>1?'s':'')+' left — After MOP you can buy private property (keep or sell HDB)</div>';
+      }else{
+        // Primary home is private — can upgrade to next tier
+        const nextProp=PROPERTIES.find(p=>p.price>G.propData.price);
+        if(nextProp){
+          if(G.cash>100000)h+='<button class="btn bs bsm" id="bupgprop" style="margin-right:6px;margin-bottom:6px">⬆️ Upgrade to '+nextProp.name+' ('+fmt(nextProp.price)+')</button>';
+          else h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 ⬆️ Upgrade to '+nextProp.name+' — Need: '+fmt(100000-G.cash)+' more cash</div>';
+        }
       }
     }
+      // Sell appreciated investment properties (2nd, 3rd...)
+      if(G.properties&&G.properties.length>1){
+        G.properties.slice(1).forEach(function(pp,pidx){
+          var sellProfit=Math.max(0,pp.propVal-(pp.propLoan||0));
+          var buyPrice=pp.propData?.price||pp.propVal;
+          var appreciated=pp.propVal>buyPrice;
+          h+='<button class="btn bsm" data-sellinvprop="'+pidx+'" style="margin-right:6px;margin-bottom:6px;background:'+(appreciated?'#f0fdf4':'#f9fafb')+';border:1.5px solid '+(appreciated?'#86efac':'#e5e7eb')+';color:'+(appreciated?'#15803d':'#6b7280')+'">';
+          h+=(appreciated?'📈':'📉')+' Sell '+pp.name+' ('+fmt(pp.propVal)+(pp.propLoan>0?' | Loan: '+fmt(pp.propLoan):'')+' | Equity: '+fmt(sellProfit)+')';
+          h+='</button>';
+        });
+      }
     // Show asset summary badge
     if(!G.prop)h+='<div style="font-size:10px;color:#dc2626;margin-top:6px">🏚️ Renting: -$7,200/yr goes to landlord! Property ownership builds YOUR wealth instead.</div>';
     // Insurance — always visible
@@ -2904,6 +3104,8 @@ function renderAlloc(){
 
   el('lsl')?.addEventListener('input',()=>{el('lsv').textContent=fmt(parseInt(el('lsl').value)||0);});
   el('carlsl')?.addEventListener('input',()=>{el('carlsv').textContent=fmt(parseInt(el('carlsl').value)||0);});
+    el('mortlsl')?.addEventListener('input',()=>{el('mortlsv').textContent=fmt(parseInt(el('mortlsl').value)||0);updateAllocLiveCash();});
+    if(G.properties&&G.properties.length>1){G.properties.slice(1).forEach(function(_,pidx){var sl=el('invmort'+pidx);if(sl)sl.addEventListener('input',function(){el('invmortv'+pidx).textContent=fmt(parseInt(sl.value)||0);updateAllocLiveCash();});});}
   function updateAllocLiveCash(){
     // Sum all investment inputs + EF input to show live remaining cash
     var committed=0;
@@ -2920,11 +3122,19 @@ function renderAlloc(){
     var efWithdraw=parseInt(el('ef-withdraw')?.value)||0;
     committed+=efAdd;
     committed-=efWithdraw;
+      committed+=parseInt(el('mortlsl')?.value)||0;
+      if(G.properties&&G.properties.length>1){G.properties.slice(1).forEach(function(_,pidx){committed+=parseInt(el('invmort'+pidx)?.value)||0;});}
     var remaining=G.cash-committed+sellBack;
     var liveEl=el('alloc-cash-live');
     if(liveEl){
       liveEl.textContent=fmt(remaining);
       liveEl.style.color=remaining<0?'#ef4444':remaining<5000?'#f59e0b':'#22c55e';
+    }
+    // Also update the fixed mobile pill
+    var pillEl=el('alloc-cash-pill');
+    if(pillEl){
+      pillEl.textContent='💵 '+fmt(remaining);
+      pillEl.style.background=remaining<0?'#991b1b':remaining<5000?'#92400e':'#1a1d2e';
     }
     // Show warning if over-allocated
     var warnEl=el('alloc-warn');
@@ -3093,6 +3303,41 @@ function renderAlloc(){
     render();
   });
   el('bupgprop')?.addEventListener('click',()=>{doUpgradeProp();});
+  el('bbuypriv_keephdb')?.addEventListener('click',()=>{
+    // Modal to pick which private property to buy while keeping HDB as rental
+    var props=G.properties||[];
+    var absdRate=ABSD_SC[Math.min(props.length,2)];
+    var m=document.createElement('div');m.className='ov';m.id='buypriv_keephdb_mod';
+    var hdb=props[0];
+    var hdbRent=(hdb?.propData?.rent||2800);
+    var h='<div class="mo"><h3>🏢 Buy Private Property (Keep HDB)</h3>';
+    h+='<div style="background:#f0fdf4;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:#166534">';
+    h+='🏠 Your '+hdb.name+' will become a <strong>rental property</strong> earning ~'+fmt(hdbRent)+'/mth (~'+fmt(hdbRent*12)+'/yr passive income)!<br>';
+    h+='You move into the new private property as your primary home.</div>';
+    h+='<div style="background:#fff7ed;border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:#92400e">';
+    h+='⚠️ ABSD '+Math.round(absdRate*100)+'% applies (2nd property). <strong>Cash-only</strong> tax on top of 25% down payment.</div>';
+    PROPERTIES.filter(x=>!x.isHDB).forEach(p=>{
+      var absd=Math.round(p.price*absdRate);
+      var down=Math.round(p.price*p.downPct);
+      var totalCash=down+absd;
+      var canAfford=G.cash>=totalCash;
+      h+='<div style="background:'+(canAfford?'#f0fdf4':'#fff5f5')+';border-radius:8px;padding:10px 12px;margin-bottom:8px">';
+      h+=p.icon+' <strong>'+p.name+'</strong><br>';
+      h+='<div style="font-size:10px;color:#6b7280;line-height:1.8;margin-top:4px">';
+      h+='Price: '+fmt(p.price)+' | 25% Down: '+fmt(down)+'<br>';
+      h+='ABSD '+Math.round(absdRate*100)+'% (CASH): <strong style="color:#dc2626">'+fmt(absd)+'</strong><br>';
+      h+='Total cash needed: <strong style="color:#dc2626">'+fmt(totalCash)+'</strong><br>';
+      h+='You keep HDB rental income: ~'+fmt(hdbRent*12)+'/yr';
+      h+='</div>';
+      if(canAfford)h+='<button class="btn bg bsm" style="margin-top:6px;cursor:pointer" data-privkeephdb="'+p.id+'">Buy '+p.name+' & Keep HDB</button>';
+      else h+='<div style="font-size:10px;color:#dc2626;margin-top:4px">Need '+fmt(totalCash-G.cash)+' more cash</div>';
+      h+='</div>';
+    });
+    h+='<button class="btn bs bsm" id="buypriv_cancel">Cancel</button>';
+    h+='</div>';m.innerHTML=h;document.body.appendChild(m);
+    m.querySelectorAll('[data-privkeephdb]').forEach(btn=>{btn.addEventListener('click',()=>{doBuyPrivateKeepHDB(btn.dataset.privkeephdb);document.getElementById('buypriv_keephdb_mod')?.remove();});});
+    m.querySelector('#buypriv_cancel')?.addEventListener('click',()=>m.remove());
+  });
   el('bbinvprop')?.addEventListener('click',()=>{
     // Show modal to pick investment property type
     var props=G.properties||[];
@@ -3170,6 +3415,13 @@ function renderAlloc(){
     else addLog('💳 Paid $'+pay.toLocaleString()+' CC debt. Remaining: '+fmt(G.ccDebt));
     render();
   });
+    // Sell investment property buttons
+    el('main').querySelectorAll('[data-sellinvprop]').forEach(function(btn){
+      btn.addEventListener('click',function(){
+        var pidx=parseInt(btn.dataset.sellinvprop);
+        doSellInvestmentProp(pidx);
+      });
+    });
   el('main').querySelectorAll('[data-lux]').forEach(c=>{
     c.addEventListener('click',()=>{
       const lid=c.dataset.lux;
@@ -3292,6 +3544,14 @@ function confirmAlloc(){
     var carPay=Math.min(parseInt(carlsl.value)||0,G.carLoan,G.cash);
     if(carPay>0){G.cash-=carPay;G.carLoan-=carPay;addLog('🚗 Car loan extra repay -'+fmt(carPay)+' | Remaining: '+fmt(G.carLoan));}
   }
+    // Primary home mortgage extra repayment
+    var mortlsl=el('mortlsl');
+    if(mortlsl){
+      var mortPay=Math.min(parseInt(mortlsl.value)||0,G.propLoan||0,G.cash);
+      if(mortPay>0){G.cash-=mortPay;G.propLoan=Math.max(0,(G.propLoan||0)-mortPay);if(G.properties&&G.properties[0])G.properties[0].propLoan=G.propLoan;addLog('🏠 Home loan extra repay -'+fmt(mortPay)+' | Remaining: '+fmt(G.propLoan));}
+    }
+    // Investment property mortgages extra repayment
+    if(G.properties&&G.properties.length>1){G.properties.slice(1).forEach(function(pp,pidx){var sl=el('invmort'+pidx);if(!sl)return;var pay=Math.min(parseInt(sl.value)||0,pp.propLoan||0,G.cash);if(pay>0){G.cash-=pay;pp.propLoan=Math.max(0,(pp.propLoan||0)-pay);addLog('🏠 '+pp.name+' mortgage extra repay -'+fmt(pay)+' | Remaining: '+fmt(pp.propLoan));}});}
   // Investments — SELL first (liquidate holdings)
   INV.forEach(i=>{
     var sellAmt=UI.is?Math.min(UI.is[i.key]||0,G.inv[i.key]||0):0;
@@ -3731,6 +3991,7 @@ function confirmAlloc(){
   }
   // Age 55 CPF milestone
   if(G.age===55&&!G.cpf55shown){G.cpf55shown=true;addLog('🏛️ CPF age 55 reached! Check your CPF withdrawal options in summary.');}
+  G.condoUpgradedThisYear=false; // reset per-year condo upgrade limit
   UI.lc=null;UI.ie={};UI.is={};
 
   // ── MID-CAREER PT STUDY TICK ──
@@ -3883,6 +4144,8 @@ window.pickCar=function(el2_or_id){var id=typeof el2_or_id==='string'?el2_or_id:
 function doUpgradeProp(){
   // "Upgrade" = sell current home, buy a better one (owner-occupied, no ABSD)
   if(!G.prop||!G.propData||(G.properties||[]).length===0)return;
+  // Allow only ONE property upgrade per year
+  if(G.condoUpgradedThisYear){toast('You can only upgrade your home once per year!','tr');return;}
   var ownedProp=G.properties[0]; // first property = main home
   // MOP check: HDB must be held for 5 years before selling/upgrading
   if(ownedProp.propData?.isHDB&&(ownedProp.mopYearsDone||0)<5){
@@ -3911,7 +4174,49 @@ function doUpgradeProp(){
   // Update legacy fields
   G.prop=nextProp.name;G.propVal=nextProp.price;G.propLoan=loanAmt;G.propData=nextProp;G.propLoanYearsPaid=0;
   G.hi+=nextProp.hi-ownedProp.propData.hi;
+  G.condoUpgradedThisYear=true; // lock further upgrades this year
   addLog('🏠 Upgraded home! Sold '+ownedProp.name+' equity: '+fmt(equity)+' | Bought '+nextProp.name+' | New loan: '+fmt(loanAmt));
+  render();
+}
+
+function doBuyPrivateKeepHDB(propId){
+  // Buy private property while KEEPING HDB as rental (SG law allows after MOP)
+  // Player pays ABSD (20% for 2nd property) — HDB stays and generates rental income
+  var p=PROPERTIES.find(x=>x.id===propId);
+  if(!p||p.isHDB){toast('Must select a private property!','tr');return;}
+  if(!G.prop||!G.propData||(G.properties||[]).length===0)return;
+  var hdb=G.properties[0];
+  if(!hdb.propData?.isHDB){toast('Primary home is not HDB!','tr');return;}
+  if((hdb.mopYearsDone||0)<5){toast('HDB MOP not complete yet! Need '+(5-(hdb.mopYearsDone||0))+' more year(s).','tr');return;}
+  if(G.condoUpgradedThisYear){toast('Already made a property move this year!','tr');return;}
+  if(G.properties.length>=4){toast('Max 4 properties owned! Sell one first.','tr');return;}
+  var absdRate=ABSD_SC[Math.min(G.properties.length,2)]; // 20% for 2nd property
+  var price=p.price;
+  var down=Math.round(price*p.downPct);
+  var absd=Math.round(price*absdRate);
+  var totalCash=down+absd;
+  if(G.cash<totalCash){
+    toast('Need '+fmt(totalCash)+' cash (Down: '+fmt(down)+' + ABSD '+Math.round(absdRate*100)+'%: '+fmt(absd)+')','tr');return;
+  }
+  G.cash-=totalCash;
+  var loanAmt=price-down;
+  // HDB moves to investment slot with rental enabled
+  hdb.rentEnabled=true;
+  G.properties.splice(0,1); // remove HDB from index 0
+  // Add new private as primary home (index 0)
+  var newPropObj={id:p.id,name:p.name,icon:p.icon,propVal:price,
+    propLoan:loanAmt,propLoanYearsPaid:0,propData:p,mopYearsDone:0,rentEnabled:false,purchaseAge:G.age};
+  G.properties.unshift(newPropObj);
+  // Push HDB back as investment at index 1
+  G.properties.splice(1,0,hdb);
+  // Update legacy fields to new primary home
+  G.prop=p.name;G.propVal=price;G.propLoan=loanAmt;G.propData=p;G.propLoanYearsPaid=0;
+  G.hi+=p.hi; // new home happiness (HDB HI kept since still owned)
+  G.condoUpgradedThisYear=true;
+  addLog('🏢 Bought '+p.name+' as new home! HDB kept as rental property 🏠→💰');
+  addLog('🏛️ ABSD '+Math.round(absdRate*100)+'% paid: '+fmt(absd)+' cash (SG cooling measure)');
+  addLog('🏠 HDB now renting out: ~'+fmt((hdb.propData?.rent||2800)*12)+'/yr passive income! 🎉');
+  toast('🏢 Moved to '+p.name+'! HDB earns ~'+fmt(hdb.propData?.rent||2800)+'/mth rent!','tg');
   render();
 }
 
@@ -3922,6 +4227,7 @@ function doBuyInvestmentProp(propId){
   var props=G.properties||[];
   var ownedCount=props.length;
   if(ownedCount===0){toast('Buy your first home first!','tr');return;}
+  if(ownedCount>=4){toast('Max 4 properties! Sell one first.','tr');return;}
   var absdRate=ABSD_SC[Math.min(ownedCount,2)]; // 20% for 2nd, 30% for 3rd
   var price=p.price;
   var down=Math.round(price*p.downPct);
@@ -3954,6 +4260,24 @@ function doSellCar(){
   G.car=null;G.carData=null;G.carVal2=0;G.carAge=0;G.hi-=hi;G.coePending=false;
   render();
 }
+// Sell an investment property (index in G.properties.slice(1))
+function doSellInvestmentProp(pidx){
+  if(!G.properties||G.properties.length<2)return;
+  var realIdx=pidx+1; // +1 because slice(1)
+  var pp=G.properties[realIdx];
+  if(!pp){toast('Property not found','tr');return;}
+  var equity=Math.max(0,pp.propVal-(pp.propLoan||0));
+  var buyPrice=pp.propData?.price||pp.propVal;
+  var gain=pp.propVal-buyPrice;
+  if(!confirm('Sell '+pp.name+'?\nCurrent value: '+fmt(pp.propVal)+'\nOriginal price: '+fmt(buyPrice)+'\nCapital gain: '+fmt(gain)+'\nEquity to cash: '+fmt(equity)+'\n\nProceed?'))return;
+  G.cash+=equity;
+  G.properties.splice(realIdx,1);
+  G.hi+=30; // relief of one less mortgage
+  addLog('🏠 Sold investment '+pp.name+' for '+fmt(pp.propVal)+'! Capital gain: '+fmt(gain)+' | Equity to cash: +'+fmt(equity)+' | +30 HI');
+  toast('Sold '+pp.name+'! +'+fmt(equity)+' cash','tg');
+  render();
+}
+
 function doBuyHDB(flatId){
   flatId=flatId||'hdb4';
   var p=PROPERTIES.find(x=>x.id===flatId);
@@ -4004,12 +4328,15 @@ function doBuyHDB(flatId){
 // CERT PROMPT
 // ══════════════════════════════════════
 function renderCert(){
-  const hasJob=G.jobLevel>=0||(G.jobLevel<=-2);
+  const isStudyingFT=G.studying&&!G.studying.ptMode;
+  const hasJob=(G.jobLevel>=0||(G.jobLevel<=-2))&&!isStudyingFT;
+  const isInNS=G.gender==='M'&&!G.nsCompleted&&G.nsYear>0&&G.nsYear<2;
   const allCerts=CERTS.filter(c=>{
     if(G.certs.includes(c.effect))return false;
     if(G.age<c.age)return false;
     if(c.maxAge&&G.age>c.maxAge)return false;
     if(c.needsJob&&!hasJob)return false;
+    if(c.notDuringNS&&isInNS)return false;
     return true;
   });
   if(!allCerts.length){
@@ -4200,6 +4527,8 @@ const MILESTONES=[
   {years:10, months:3,  hi:180, icon:'🌟',   title:'10-Year Milestone!',       color:'#2563eb',bg:'#eff6ff',border:'#93c5fd',note:'A decade of service! You are now a senior pillar. 3-month bonus (~25% of annual pay).'},
   {years:15, months:4,  hi:280, icon:'🏆',   title:'15-Year Milestone!',       color:'#7c3aed',bg:'#f5f3ff',border:'#c4b5fd',note:'Incredible commitment! Few stay this long. 4-month bonus (~33% of annual pay).'},
   {years:20, months:6,  hi:400, icon:'👑',   title:'20-Year Milestone!',       color:'#dc2626',bg:'#fef2f2',border:'#fecaca',note:'Two decades! You are a legend. 6-month bonus (50% of annual pay!) — loyalty like this is rare.'},
+  {years:25, months:8,  hi:550, icon:'💎',   title:'25-Year Milestone!',       color:'#0891b2',bg:'#ecfeff',border:'#a5f3fc',note:'A quarter century of excellence! You are a true organisational institution. 8-month bonus (~67% of annual pay!).'},
+  {years:30, months:12, hi:750, icon:'🏅',   title:'30-Year Milestone!',       color:'#059669',bg:'#f0fdf4',border:'#6ee7b7',note:'Thirty years! An extraordinary career of service. A full 12-month bonus — one extra year of salary as recognition of your legendary commitment!'},
 ];
 
 function renderMilestone(){
@@ -4508,6 +4837,27 @@ function renderSummary(){
   h+='<span style="font-size:16px;font-weight:800;font-family:monospace;color:'+(n>=0?'#2563eb':'#dc2626')+'">'+fmt(n)+'</span>';
   h+='</div></div>';
 
+  var yrReport=analyzePlayer(G);
+  var luxSpent=G.luxurySpent||0;
+  var luxTier=luxSpent>=80000?'High Spender 🎉':luxSpent>=30000?'Balanced Enjoyment 😊':'Very Frugal 🧊';
+  h+='<div class="card"><div class="ct">🧠 Investor Profile & Spending Style</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
+  (yrReport.titles||[]).slice(0,4).forEach(function(t){h+='<span class="tag tgn" style="font-size:10px">'+t.icon+' '+t.name+'</span>';});
+  if(!yrReport.titles||yrReport.titles.length===0)h+='<span class="tag" style="font-size:10px">🌱 Building your investor identity</span>';
+  h+='</div>';
+  h+='<div style="font-size:11px;color:#374151;line-height:1.8;background:#f8fafc;border-radius:8px;padding:10px 12px">';
+  h+='<div><strong>Investor DNA:</strong> '+(yrReport.personality?.name||'Developing')+'</div>';
+  h+='<div><strong>Net worth rank:</strong> '+(yrReport.comparison?.rank||'N/A')+'</div>';
+  h+='<div><strong>Pleasure spending:</strong> '+fmt(luxSpent)+' total · '+luxTier+'</div>';
+  h+='</div>';
+  if(yrReport.tips&&yrReport.tips.length){
+    h+='<div style="font-size:10px;color:#1d4ed8;background:#eff6ff;border-radius:8px;padding:8px 10px;margin-top:8px">💡 '+yrReport.tips[0]+'</div>';
+  }
+  if(G.nsCompleted&&G.field&&G.field!=='govt'&&FIELDS.some(ff=>ff.id==='govt')&&G.age<=30){
+    h+='<div style="margin-top:8px;background:#ecfeff;border:1px solid #a5f3fc;border-radius:8px;padding:8px 10px;font-size:10px;color:#155e75">🎖️ NS completed. Government field is now available if you want a stable career track. <button class="btn bsm" id="bswitch-govt" style="margin-left:6px">Switch to Govt</button></div>';
+  }
+  h+='</div>';
+
   h+='<div class="card"><div class="ct">📊 Year '+G.age+' Summary</div>';
   h+='<div class="sg sg4">';
   h+='<div class="sb2"><label>Cash</label><div class="sv2 '+(G.cash>=0?'p':'n')+'">'+fmt(G.cash)+'</div></div>';
@@ -4756,6 +5106,16 @@ function renderSummary(){
     };
   });
   el('bnoneg')?.addEventListener('click',()=>render());
+  el('bswitch-govt')?.addEventListener('click',()=>{
+    if(!confirm('Switch to Government field now? This will place you at entry-level in the Government ladder.'))return;
+    G.field='govt';
+    G.jobLevel=0;
+    G.yearsAtLevel=0;
+    var gf=getField();
+    if(gf&&gf.ladder&&gf.ladder[0])G.jobSal=gf.ladder[0].sal+(G.certSalBoost||0);
+    addLog('🏛️ Switched to Government field after NS completion.');
+    saveG();render();toast('Switched to Government field.','tg');
+  });
 
   el('bny')?.addEventListener('click',()=>{
     G.lastSalary=G.jobSal; // track for growth display
@@ -5316,9 +5676,35 @@ async function doLogin(){
     if(RD&&player.id){
       var sess=await dbQ('game_sessions',{player_id:player.id,round_id:RD.id},false);
       var s=Array.isArray(sess)?sess[0]:null;
-      if(s&&!s.is_complete&&s.game_state){G=s.game_state;SID=s.id;setScreen('game');render();toast('Welcome back '+cls+'-'+idx+'! Resuming 👋','tg');return;}
-      else if(s){SID=s.id;await dbU('game_sessions',{age:17,cash:500,cpf:0,happiness:50,net_worth:500,final_score:0,is_complete:false,game_state:G},s.id);}
-      else{var ns=await dbI('game_sessions',{player_id:player.id,round_id:RD.id,event_id:EVT.id,age:17,cash:500,cpf:0,happiness:50,net_worth:500,final_score:0,is_complete:false,game_state:G});if(ns)SID=ns.id;}
+      if(s&&!s.is_complete&&s.game_state){
+        G=s.game_state;SID=s.id;
+        var lastA=G.lastActive||0;
+        var fastRejoin=lastA>0&&(Date.now()-lastA)<=120000;
+        setScreen('game');render();
+        btn.textContent='🚀 Start Playing';btn.disabled=false;
+        toast((fastRejoin?'⚡ Quick rejoin! ':'')+'Welcome back '+cls+'-'+idx+'! Resuming 👋','tg');
+        return;
+      }
+
+      var localRecovered=false;
+      try{
+        var lk='lc_resume_'+(EVT?.id||'na')+'_'+cls+'_'+idx;
+        var raw=localStorage.getItem(lk);
+        if(raw){
+          var local=JSON.parse(raw);
+          if(local&&local.game_state&&!s?.is_complete){G=local.game_state;localRecovered=true;}
+        }
+      }catch(_e){}
+
+      if(s){
+        SID=s.id;
+        await dbU('game_sessions',{age:G.age||17,cash:G.cash||500,cpf:G.cpf||0,happiness:G.hi||50,net_worth:nw(),final_score:calcScore(),is_complete:false,game_state:G},s.id);
+      }else{
+        var ns=await dbI('game_sessions',{player_id:player.id,round_id:RD.id,event_id:EVT.id,age:G.age||17,cash:G.cash||500,cpf:G.cpf||0,happiness:G.hi||50,net_worth:nw(),final_score:calcScore(),is_complete:false,game_state:G});
+        if(ns)SID=ns.id;
+      }
+
+      if(localRecovered){setScreen('game');render();btn.textContent='🚀 Start Playing';btn.disabled=false;toast('Recovered your recent local session 👋','tg');return;}
     }
     setScreen('game');render();toast('Let\'s go '+cls+'-'+idx+'! 🚀','tg');
   }catch(e){G=newG();P={id:null,class_id:cls,index_number:idx};setScreen('game');render();toast('Playing offline 🎮','');}
@@ -5332,6 +5718,34 @@ function setScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classLi
 let _tt;
 function toast(msg,type){const t=el('toast');t.textContent=msg;t.className='toast show '+(type||'');clearTimeout(_tt);_tt=setTimeout(()=>t.className='toast',3500);}
 
+let _inactivityTimer=null,_inactivityWarnTimer=null,_inactivityCountdownInt=null,_inactivityLeft=30;
+function clearInactivityWarning(){
+  clearTimeout(_inactivityWarnTimer);_inactivityWarnTimer=null;
+  if(_inactivityCountdownInt){clearInterval(_inactivityCountdownInt);_inactivityCountdownInt=null;}
+  var warn=document.getElementById('inact-warn');if(warn)warn.remove();
+}
+function triggerInactivityWarning(){
+  if(!G||!document.getElementById('s-game')?.classList.contains('active'))return;
+  clearInactivityWarning();
+  _inactivityLeft=30;
+  var w=document.createElement('div');w.className='ov';w.id='inact-warn';
+  w.innerHTML='<div class="mo" style="text-align:center"><div style="font-size:48px;margin-bottom:8px">⏰</div><h3 style="margin-bottom:8px">Still there?</h3><p style="font-size:13px;color:#6b7280;line-height:1.7;margin-bottom:12px">No activity detected for 90 seconds. Auto-logout in <strong id="inact-cdown">30</strong> seconds.</p><button class="btn bg" id="binact-stay">Yes, keep me in</button></div>';
+  document.body.appendChild(w);
+  document.getElementById('binact-stay')?.addEventListener('click',()=>{clearInactivityWarning();resetInactivityTimer();});
+  _inactivityCountdownInt=setInterval(()=>{
+    _inactivityLeft--;
+    var ce=document.getElementById('inact-cdown');
+    if(ce)ce.textContent=String(Math.max(0,_inactivityLeft));
+    if(_inactivityLeft<=0&&_inactivityCountdownInt){clearInterval(_inactivityCountdownInt);_inactivityCountdownInt=null;}
+  },1000);
+  _inactivityWarnTimer=setTimeout(()=>{clearInactivityWarning();el('bex')?.click();toast('Logged out due to inactivity.','ty');},30000);
+}
+function resetInactivityTimer(){
+  clearTimeout(_inactivityTimer);
+  if(!G||!document.getElementById('s-game')?.classList.contains('active'))return;
+  _inactivityTimer=setTimeout(triggerInactivityWarning,90000);
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   // Access code flow
   el('bvc')?.addEventListener('click',verifyCode);
@@ -5340,6 +5754,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   // Student login
   el('bl')?.addEventListener('click',doLogin);
   ['ic','ii'].forEach(id=>el(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();}));
+  ['click','keydown','touchstart','scroll','mousemove'].forEach(ev=>document.addEventListener(ev,resetInactivityTimer,{passive:true}));
   el('blb')?.addEventListener('click',loadLb);
   // Update event timer every minute
   setInterval(updateEventTimer,60000);
@@ -5355,6 +5770,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   el('bclb')?.addEventListener('click',()=>el('lbmod').classList.add('hidden'));
   el('lbmod')?.addEventListener('click',e=>{if(e.target===el('lbmod'))el('lbmod').classList.add('hidden');});
   el('bex')?.addEventListener('click',async()=>{
+    clearInactivityWarning();
+    clearTimeout(_inactivityTimer);
     // Reset the database session so next login starts fresh
     if(SID){
       try{await dbU('game_sessions',{game_state:null,is_complete:true,age:17,cash:500,cpf:0,happiness:50,net_worth:500,final_score:0},SID);}catch(e){}
