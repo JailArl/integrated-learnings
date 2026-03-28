@@ -1080,6 +1080,7 @@ function calcScore(){
 async function saveG(done){
   if(!SID||!G)return;
   G.lastActive=Date.now();
+  G.uiState={phase:UI.phase,fc:UI.fc,pc:UI.pc,ptMode:UI.ptMode,certReturnPhase:UI.certReturnPhase};
   try{
     if(P?.class_id&&P?.index_number){
       var lk='lc_resume_'+(EVT?.id||'na')+'_'+P.class_id+'_'+P.index_number;
@@ -1428,17 +1429,7 @@ function confirmNSYear(){
     G.nsCompleted=true;
     G.hi+=200;
     addLog('🎖️ ORD LOH! 🇸🇬 National Service completed at age '+G.age+' +200 HI 🎉 | 🏛️ Government career UNLOCKED!');
-    if(G.field&&G.field!=='govt'&&G.quals.length===0&&FIELDS.some(f=>f.id==='govt')){
-      var swGov=confirm('🎖️ Government careers are now unlocked after NS.\n\nSwitch your field to Government now?\n(You can still remain in your current field.)');
-      if(swGov){
-        G.field='govt';
-        G.jobLevel=0;
-        G.yearsAtLevel=0;
-        var gField=getField();
-        if(gField&&gField.ladder&&gField.ladder[0])G.jobSal=gField.ladder[0].sal+(G.certSalBoost||0);
-        addLog('🏛️ Switched to Government field after NS. Started at entry-level government role.');
-      }
-    }
+    // Government field switch is available later via sidebar banner once employed (age ≤ 30)
     // Study First: already have quals → go to grad screen; Work First: go to field selection
     UI.phase=G.quals.length>0?'grad':'field';
   } else {
@@ -5663,6 +5654,7 @@ async function doLogin(){
       var s=Array.isArray(sess)?sess[0]:null;
       if(s&&!s.is_complete&&s.game_state){
         G=s.game_state;SID=s.id;
+        if(G.uiState){UI.phase=G.uiState.phase||'start';UI.fc=G.uiState.fc||null;UI.pc=G.uiState.pc||null;UI.ptMode=!!G.uiState.ptMode;UI.certReturnPhase=G.uiState.certReturnPhase||null;}
         var lastA=G.lastActive||0;
         var fastRejoin=lastA>0&&(Date.now()-lastA)<=120000;
         setScreen('game');render();
@@ -5677,7 +5669,7 @@ async function doLogin(){
         var raw=localStorage.getItem(lk);
         if(raw){
           var local=JSON.parse(raw);
-          if(local&&local.game_state&&!s?.is_complete){G=local.game_state;localRecovered=true;}
+          if(local&&local.game_state&&!s?.is_complete){G=local.game_state;localRecovered=true;if(G.uiState){UI.phase=G.uiState.phase||'start';UI.fc=G.uiState.fc||null;UI.pc=G.uiState.pc||null;UI.ptMode=!!G.uiState.ptMode;UI.certReturnPhase=G.uiState.certReturnPhase||null;}}
         }
       }catch(_e){}
 
