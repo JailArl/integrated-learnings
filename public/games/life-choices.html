@@ -1346,8 +1346,8 @@ function renderNS(){
   h+='<p style="font-size:13px;font-weight:700;margin-bottom:10px">💰 What will you do with your NS savings? (~'+fmt(netNS)+')</p>';
   const nsOpts=[
     {id:'spend',icon:'🎮',l:'Spend it all!',d:'Games, outings, treats',hi:'+50 HI',color:'#16a34a',warn:'Money gone but great memories with section mates!'},
-    {id:'save',icon:'🏦',l:'Save in bank',d:'Build emergency fund',hi:'+20 HI',color:'#d97706',warn:'Smart! You\'ll start adult life with a safety net.'},
-    {id:'invest',icon:'📈',l:'Invest it',d:'Start early, grow wealth',hi:'-10 HI',color:'#dc2626',warn:'$'+fmt(netNS)+' invested at 7% → $'+fmt(Math.round(netNS*Math.pow(1.07,65-G.age)))+' by age 65!'},
+    {id:'cash',icon:'💵',l:'Keep as Cash',d:'Easy access anytime',hi:'+10 HI',color:'#2563eb',warn:'Cash on hand — spend or invest it later when you\'re ready.'},
+    {id:'save',icon:'🏦',l:'Save in Bank',d:'Build emergency fund',hi:'+20 HI',color:'#d97706',warn:'Smart! Bank savings earns ~3.5%/yr interest. Safety net for adult life!'},
   ];
   h+='<div class="cg cg3">';
   nsOpts.forEach(o=>{
@@ -1393,16 +1393,14 @@ function confirmNSYear(){
   if(UI.ac==='spend'){
     G.hi+=50;
     addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+ ' | Spent savings on fun +50 HI');
+  }else if(UI.ac==='cash'){
+    G.cash+=netNS;
+    G.hi+=10;
+    addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+' | Kept '+fmt(netNS)+' as cash on hand +10 HI');
   }else if(UI.ac==='save'){
     G.inv.bank+=netNS;
     G.hi+=20;
     addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+' | Saved '+fmt(netNS)+' in bank savings +20 HI');
-  }else if(UI.ac==='invest'){
-    var aPool=['bank','etf','reit','bank_stock'];
-    var aPick=aPool[Math.floor(Math.random()*aPool.length)];
-    G.inv[aPick]=(G.inv[aPick]||0)+netNS;
-    G.hi-=10;
-    addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+' | Invested '+fmt(netNS)+' in '+aPick+' -10 HI 📈');
   }
 
   G.nsYear++;
