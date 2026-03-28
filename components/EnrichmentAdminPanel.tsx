@@ -39,6 +39,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
   const [newRoundName, setNewRoundName] = useState('');
   const [newRoundGoal, setNewRoundGoal] = useState('combined');
   const [selectedSession, setSelectedSession] = useState<any>(null);
+  const [showRoundReport, setShowRoundReport] = useState(false);
 
   // Load events on mount
   useEffect(() => { loadEvents(); }, []);
@@ -168,7 +169,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     if (invTotal > 0 && Math.max(...Object.values(inv).map((v: any) => v || 0)) / invTotal < 0.4) titles.push({ id: 'diversifier', name: 'Diversifier', icon: '🎯', color: '#7c3aed', desc: 'No single instrument over 40% — diversified' });
     if ((inv.cpfsa || 0) > 30000) titles.push({ id: 'cpf_maximizer', name: 'CPF Maximizer', icon: '🏛️', color: '#2563eb', desc: 'Built serious CPF-SA via voluntary top-ups' });
     if ((gs.totalDividends || 0) > 15000) titles.push({ id: 'dividend_collector', name: 'Dividend Collector', icon: '💵', color: '#16a34a', desc: 'Earned $15K+ in dividends' });
-    if ((gs.emergencyFund || 0) > 20000) titles.push({ id: 'emergency_ready', name: 'Emergency Ready', icon: '🛟', color: '#0d9488', desc: 'Strong emergency fund cushion' });
+    if ((inv.bank || 0) > 20000) titles.push({ id: 'emergency_ready', name: 'Emergency Ready', icon: '🛟', color: '#0d9488', desc: 'Strong bank savings cushion' });
     if (invTotal > 200000) titles.push({ id: 'portfolio_builder', name: 'Portfolio Builder', icon: '📈', color: '#059669', desc: 'Portfolio worth over $200K' });
     if (invTotal > 500000) titles.push({ id: 'half_millionaire', name: 'Half Millionaire', icon: '💎', color: '#d97706', desc: 'Portfolio exceeded $500K!' });
     if (gs.ffAge && gs.ffAge <= 45) titles.push({ id: 'early_ff', name: 'Early Retirement', icon: '🏆', color: '#d97706', desc: 'Financial Freedom before 45!' });
@@ -227,7 +228,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     if (safeTotal / Math.max(1, invTotal) > 0.8) tips.push('📊 Consider diversifying beyond bank savings. ETFs and REITs give higher returns over time with moderate risk.');
     if ((inv.stock || 0) / Math.max(1, invTotal) > 0.5) tips.push('⚠️ Over 50% in growth stocks is very aggressive. A crash could wipe out years of gains.');
     if (!gs.insurance) tips.push('🛡️ No insurance! One illness or accident could destroy your finances.');
-    if ((gs.emergencyFund || 0) < 3000 && (gs.yearsWorked || 0) > 3) tips.push('🛟 Emergency fund too small. Aim for 3-6 months of expenses before investing.');
+    if ((inv.bank || 0) < 3000 && (gs.yearsWorked || 0) > 3) tips.push('🛟 Bank savings (emergency fund) too small. Aim for 3-6 months of expenses before investing.');
     if (totalDebt > 50000) tips.push('🚨 High debt. Prioritize paying off high-interest debt (CC/emergency at 26%) before investing.');
     if (panicSwitch) tips.push('😱 After a crash you moved to all-safe. Markets usually recover in 3-5 years. Staying invested wins long-term.');
     if ((gs.ccDebt || 0) > 0) tips.push('💳 CC debt at 26% is an emergency. No investment earns 26%. Pay this off FIRST.');
@@ -383,6 +384,308 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     );
   };
 
+  // ── Player Status Helper ──
+  const playerStatus = (s: any): { label: string; color: string; bg: string } => {
+    if (s.is_complete) return { label: 'Done', color: 'text-green-700', bg: 'bg-green-100' };
+    const updatedAt = s.updated_at ? new Date(s.updated_at).getTime() : 0;
+    const staleMs = Date.now() - updatedAt;
+    if (staleMs > 120000) return { label: 'Offline', color: 'text-gray-500', bg: 'bg-gray-100' };
+    return { label: 'Playing', color: 'text-yellow-700', bg: 'bg-yellow-100' };
+  };
+
+  // ── Round Report with Rankings, Tiebreakers, Highlights, PDF Export ──
+  const renderRoundReport = () => {
+    if (!showRoundReport) return null;
+    const activeRound = rounds.find((r: any) => r.is_active);
+    if (!activeRound) return null;
+    const goal = activeRound.goal || 'combined';
+    const goalLabel = GOAL_LABELS[goal] || goal;
+
+    // Build ranked list with tiebreaker data
+    const ranked = sessions
+      .filter((s: any) => s.final_score > 0)
+      .map((s: any) => {
+        const gs = s.game_state || {};
+        const inv = gs.inv || {};
+        const invTotal = Object.values(inv).reduce((sum: number, v: any) => sum + (v || 0), 0);
+        const report = analyzePlayer(gs);
+        return {
+          ...s,
+          student: `${s.players?.class_id}-${s.players?.index_number}`,
+          nw: s.net_worth || 0,
+          hi: s.happiness || 0,
+          cpf: s.cpf || 0,
+          ffAge: gs.ffAge || null,
+          invTotal,
+          field: gs.field || 'Unknown',
+          married: gs.married || false,
+          hasChildren: gs.hasChildren || false,
+          certs: (gs.certs || []).length,
+          luxurySpent: gs.luxurySpent || 0,
+          titles: report?.titles || [],
+          moments: report?.moments || [],
+          tips: report?.tips || [],
+        };
+      })
+      .sort((a: any, b: any) => {
+        if (b.final_score !== a.final_score) return b.final_score - a.final_score;
+        // Tiebreakers by goal
+        if (goal === 'ff_earliest') return (a.ffAge || 99) - (b.ffAge || 99);
+        if (goal === 'highest_nw') return b.nw - a.nw;
+        if (goal === 'highest_hi') { if (b.hi !== a.hi) return b.hi - a.hi; return b.nw - a.nw; }
+        if (goal === 'highest_cpf') return b.cpf - a.cpf;
+        // combined / balanced_life: score → nw → hi → cpf
+        if (b.nw !== a.nw) return b.nw - a.nw;
+        if (b.hi !== a.hi) return b.hi - a.hi;
+        return b.cpf - a.cpf;
+      });
+
+    // Tiebreaker explanation between two players
+    const tieExplain = (higher: any, lower: any): string | null => {
+      if (!higher || !lower || higher.final_score !== lower.final_score) return null;
+      if (goal === 'ff_earliest' && higher.ffAge && lower.ffAge && higher.ffAge !== lower.ffAge)
+        return `Earlier Financial Freedom (age ${higher.ffAge} vs ${lower.ffAge})`;
+      if ((goal === 'combined' || goal === 'balanced_life' || goal === 'highest_nw') && higher.nw !== lower.nw)
+        return `Higher Net Worth (${fmtFull(higher.nw)} vs ${fmtFull(lower.nw)})`;
+      if (higher.hi !== lower.hi)
+        return `Higher Happiness (${higher.hi} vs ${lower.hi})`;
+      if (higher.cpf !== lower.cpf)
+        return `Higher CPF (${fmtFull(higher.cpf)} vs ${fmtFull(lower.cpf)})`;
+      return null;
+    };
+
+    // Find interesting behavioral highlights across all players
+    const highlights: { icon: string; text: string }[] = [];
+    const allTitles: Record<string, string[]> = {};
+    ranked.forEach((p: any) => {
+      p.titles.forEach((t: any) => {
+        if (!allTitles[t.name]) allTitles[t.name] = [];
+        allTitles[t.name].push(p.student);
+      });
+    });
+
+    // Most common & rarest titles
+    const titleEntries = Object.entries(allTitles).sort((a, b) => b[1].length - a[1].length);
+    if (titleEntries.length > 0) {
+      const most = titleEntries[0];
+      highlights.push({ icon: '📊', text: `Most common behavior: "${most[0]}" — ${most[1].length} player(s): ${most[1].slice(0, 5).join(', ')}` });
+    }
+    const rare = titleEntries.filter(e => e[1].length === 1);
+    if (rare.length > 0) {
+      const pick = rare[Math.floor(Math.random() * rare.length)];
+      highlights.push({ icon: '💎', text: `Unique achievement: "${pick[0]}" — only ${pick[1][0]} earned this!` });
+    }
+
+    // Biggest spender, most frugal, most certs
+    const byLuxury = [...ranked].sort((a: any, b: any) => b.luxurySpent - a.luxurySpent);
+    if (byLuxury.length > 0 && byLuxury[0].luxurySpent > 10000)
+      highlights.push({ icon: '🎉', text: `Biggest spender: ${byLuxury[0].student} spent ${fmtFull(byLuxury[0].luxurySpent)} on luxuries!` });
+    const frugal = byLuxury[byLuxury.length - 1];
+    if (frugal && frugal.luxurySpent < 5000 && frugal.invTotal > 50000)
+      highlights.push({ icon: '🧙', text: `Most frugal investor: ${frugal.student} — only ${fmtFull(frugal.luxurySpent)} on luxuries, ${fmtFull(frugal.invTotal)} invested!` });
+    const byCerts = [...ranked].sort((a: any, b: any) => b.certs - a.certs);
+    if (byCerts.length > 0 && byCerts[0].certs >= 3)
+      highlights.push({ icon: '📋', text: `Most certified: ${byCerts[0].student} with ${byCerts[0].certs} certifications!` });
+
+    // Anyone with panic switch or debt spiral
+    const panickers = ranked.filter((p: any) => p.titles.some((t: any) => t.id === 'panic_switcher'));
+    if (panickers.length > 0)
+      highlights.push({ icon: '😱', text: `Panic sold after crash: ${panickers.map((p: any) => p.student).join(', ')} — key lesson about staying invested!` });
+    const debtSpiral = ranked.filter((p: any) => p.titles.some((t: any) => t.id === 'emergency_spiral' || t.id === 'debt_trapped'));
+    if (debtSpiral.length > 0)
+      highlights.push({ icon: '🚨', text: `Fell into debt trap: ${debtSpiral.map((p: any) => p.student).join(', ')} — great discussion topic on credit card danger!` });
+
+    // FF achievers
+    const ffPlayers = ranked.filter((p: any) => p.ffAge);
+    if (ffPlayers.length > 0)
+      highlights.push({ icon: '🏁', text: `Achieved Financial Freedom: ${ffPlayers.map((p: any) => `${p.student} (age ${p.ffAge})`).join(', ')}` });
+
+    const handlePrint = () => {
+      const el = document.getElementById('round-report-content');
+      if (!el) return;
+      const win = window.open('', '_blank', 'width=900,height=700');
+      if (!win) return;
+      win.document.write(`<!DOCTYPE html><html><head><title>Round Report - ${detail.school_name}</title>
+        <style>
+          *{margin:0;padding:0;box-sizing:border-box}
+          body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:24px;color:#1e293b;font-size:12px;line-height:1.6}
+          h1{font-size:20px;margin-bottom:4px} h2{font-size:16px;margin:16px 0 8px;color:#334155;border-bottom:2px solid #e2e8f0;padding-bottom:4px}
+          h3{font-size:13px;margin:12px 0 6px;color:#475569}
+          .medal{font-size:18px;margin-right:4px} .score{font-family:monospace;font-weight:700;color:#2563eb}
+          .tie{font-size:10px;color:#d97706;font-style:italic;margin-left:8px}
+          table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px}
+          th{background:#f1f5f9;text-align:left;padding:6px 8px;font-weight:700;border-bottom:2px solid #cbd5e1}
+          td{padding:5px 8px;border-bottom:1px solid #e2e8f0}
+          tr:nth-child(even){background:#f8fafc}
+          .highlight{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin:4px 0;font-size:11px}
+          .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin:1px 2px}
+          .meta{color:#6b7280;font-size:11px}
+          @media print{body{padding:12px} .no-print{display:none!important}}
+        </style></head><body>`);
+      win.document.write(el.innerHTML);
+      win.document.write('</body></html>');
+      win.document.close();
+      setTimeout(() => { win.print(); }, 500);
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowRoundReport(false)}>
+        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          {/* Header with actions */}
+          <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-xl z-10">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">📊 Round Report: {activeRound.round_name}</h3>
+              <p className="text-xs text-gray-400">{detail.school_name} · {goalLabel} · {ranked.length} players · {sessions.filter((s: any) => s.is_complete).length} completed</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={handlePrint} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700 flex items-center gap-1">
+                📄 Export PDF
+              </button>
+              <button onClick={() => setShowRoundReport(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+          </div>
+
+          {/* Report Content (used for PDF export) */}
+          <div id="round-report-content" className="p-6 space-y-5">
+            <div>
+              <h1 style={{ fontSize: '20px', fontWeight: 800 }}>🏫 {detail.school_name} — Round Report</h1>
+              <p className="meta" style={{ fontSize: '12px', color: '#6b7280' }}>
+                Round {activeRound.round_number}: {activeRound.round_name} · Goal: {goalLabel} · {new Date().toLocaleDateString()}
+              </p>
+            </div>
+
+            {/* Top 3 Podium */}
+            <div>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '12px' }}>🏆 Top 3 Positions</h2>
+              {ranked.slice(0, 3).map((p: any, i: number) => {
+                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
+                const position = i === 0 ? '1st' : i === 1 ? '2nd' : '3rd';
+                const tieNote = i > 0 ? tieExplain(ranked[i - 1], p) : null;
+                return (
+                  <div key={p.id} style={{ background: i === 0 ? '#fefce8' : i === 1 ? '#f0f9ff' : '#fff7ed', border: `1.5px solid ${i === 0 ? '#fde68a' : i === 1 ? '#bae6fd' : '#fed7aa'}`, borderRadius: '10px', padding: '12px 16px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: '22px', marginRight: '8px' }}>{medal}</span>
+                        <strong style={{ fontSize: '15px' }}>{position}: {p.student}</strong>
+                        <span className="score" style={{ marginLeft: '12px', fontSize: '14px', fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{p.final_score.toLocaleString()} pts</span>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '11px', color: '#6b7280' }}>
+                        Age {p.age} · {p.field}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px', marginTop: '6px', fontSize: '11px', color: '#475569' }}>
+                      <span>💰 NW: {fmtFull(p.nw)}</span>
+                      <span>😊 HI: {p.hi}</span>
+                      <span>🏛️ CPF: {fmtFull(p.cpf)}</span>
+                      {p.ffAge && <span>🏁 FF: Age {p.ffAge}</span>}
+                      <span>📋 {p.certs} certs</span>
+                      {p.married && <span>💍</span>}
+                      {p.hasChildren && <span>👶</span>}
+                    </div>
+                    {/* Titles/badges */}
+                    {p.titles.length > 0 && (
+                      <div style={{ marginTop: '6px', display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {p.titles.slice(0, 6).map((t: any) => (
+                          <span key={t.id} className="badge" style={{ backgroundColor: t.color + '20', color: t.color }}>{t.icon} {t.name}</span>
+                        ))}
+                      </div>
+                    )}
+                    {tieNote && (
+                      <div className="tie" style={{ marginTop: '4px', fontSize: '10px', color: '#d97706', fontStyle: 'italic' }}>
+                        ⚖️ Tiebreaker vs {ranked[i - 1].student}: {tieNote}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+              {ranked.length === 0 && <p style={{ color: '#9ca3af', textAlign: 'center', padding: '16px' }}>No scores yet!</p>}
+            </div>
+
+            {/* Full Standings Table */}
+            <div>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '8px' }}>📋 Full Standings</h2>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
+                <thead>
+                  <tr style={{ background: '#f1f5f9' }}>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>#</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Student</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Score</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Net Worth</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>HI</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>CPF</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>FF Age</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Status</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Badges</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ranked.map((p: any, i: number) => {
+                    const st = playerStatus(p);
+                    return (
+                      <tr key={p.id} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                        <td style={{ padding: '5px 8px', fontWeight: 700 }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</td>
+                        <td style={{ padding: '5px 8px', fontWeight: 600 }}>{p.student}</td>
+                        <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{p.final_score.toLocaleString()}</td>
+                        <td style={{ padding: '5px 8px', fontFamily: 'monospace' }}>{fmtFull(p.nw)}</td>
+                        <td style={{ padding: '5px 8px' }}>{p.hi}</td>
+                        <td style={{ padding: '5px 8px', fontFamily: 'monospace' }}>{fmtFull(p.cpf)}</td>
+                        <td style={{ padding: '5px 8px' }}>{p.ffAge || '—'}</td>
+                        <td style={{ padding: '5px 8px' }}><span className={`px-2 py-0.5 rounded-full text-xs ${st.bg} ${st.color}`}>{st.label}</span></td>
+                        <td style={{ padding: '5px 8px' }}>
+                          {p.titles.slice(0, 3).map((t: any) => (
+                            <span key={t.id} style={{ fontSize: '10px', marginRight: '2px' }} title={t.name}>{t.icon}</span>
+                          ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Behavioral Highlights */}
+            {highlights.length > 0 && (
+              <div>
+                <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '8px' }}>🔍 Interesting Highlights</h2>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {highlights.map((h, i) => (
+                    <div key={i} className="highlight" style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '6px', padding: '8px 12px', fontSize: '12px' }}>
+                      {h.icon} {h.text}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Class Summary Stats */}
+            <div>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '8px' }}>📈 Class Summary</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', fontSize: '12px' }}>
+                {[
+                  { label: 'Avg Score', value: ranked.length > 0 ? Math.round(ranked.reduce((s: number, p: any) => s + p.final_score, 0) / ranked.length).toLocaleString() : '—' },
+                  { label: 'Avg Net Worth', value: ranked.length > 0 ? fmtFull(Math.round(ranked.reduce((s: number, p: any) => s + p.nw, 0) / ranked.length)) : '—' },
+                  { label: 'Avg Happiness', value: ranked.length > 0 ? Math.round(ranked.reduce((s: number, p: any) => s + p.hi, 0) / ranked.length).toString() : '—' },
+                  { label: 'FF Achieved', value: `${ffPlayers.length} / ${ranked.length}` },
+                  { label: 'Highest Score', value: ranked.length > 0 ? ranked[0].final_score.toLocaleString() : '—' },
+                  { label: 'Lowest Score', value: ranked.length > 0 ? ranked[ranked.length - 1].final_score.toLocaleString() : '—' },
+                  { label: 'Total Players', value: sessions.length.toString() },
+                  { label: 'Completed', value: sessions.filter((s: any) => s.is_complete).length.toString() },
+                ].map((stat, i) => (
+                  <div key={i} style={{ background: '#f8fafc', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#1e293b' }}>{stat.value}</div>
+                    <div style={{ fontSize: '10px', color: '#6b7280' }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ─── Event Detail View ───
   if (detail) {
     const expired = new Date(detail.expires_at) < new Date();
@@ -394,6 +697,8 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
       <div className="space-y-4">
         {/* Report Card Modal */}
         {renderReportCard()}
+        {/* Round Report Modal */}
+        {renderRoundReport()}
 
         {/* Back button */}
         <button onClick={() => setDetail(null)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
@@ -495,9 +800,14 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-bold text-gray-900">🏆 Leaderboard {activeRound ? `— Round ${activeRound.round_number}` : ''}</h4>
-              <button onClick={() => loadDetail(detail)} className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                <RefreshCw size={14} /> Refresh
-              </button>
+              <div className="flex gap-2">
+                <button onClick={() => setShowRoundReport(true)} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700 flex items-center gap-1">
+                  📊 Round Report
+                </button>
+                <button onClick={() => loadDetail(detail)} className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                  <RefreshCw size={14} /> Refresh
+                </button>
+              </div>
             </div>
             <div className="space-y-1">
               {sessions.filter((s: any) => s.final_score > 0).slice(0, 15).map((s: any, i: number) => (
@@ -513,9 +823,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                       </span>
                     ) : null;
                   })()}
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${s.is_complete ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                    {s.is_complete ? 'Done' : 'Playing'}
-                  </span>
+                  {(() => { const st = playerStatus(s); return (
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${st.bg} ${st.color}`}>{st.label}</span>
+                  ); })()}
                   <span className="font-bold font-mono text-blue-600">{s.final_score?.toLocaleString()}</span>
                 </div>
               ))}
@@ -548,9 +858,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                       <td className="py-2">{s.happiness}</td>
                       <td className="py-2 font-bold text-blue-600">{s.final_score?.toLocaleString()}</td>
                       <td className="py-2">
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${s.is_complete ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                          {s.is_complete ? 'Done' : 'Playing'}
-                        </span>
+                        {(() => { const st = playerStatus(s); return (
+                          <span className={`px-2 py-0.5 rounded-full text-xs ${st.bg} ${st.color}`}>{st.label}</span>
+                        ); })()}
                       </td>
                       <td className="py-2">
                         <button
