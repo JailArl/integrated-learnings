@@ -532,8 +532,8 @@ const CERTS=[
   {id:'drv',name:'Driving Licence',icon:'🚗',cost:3500,effect:'Driving Licence',age:18,desc:'Required to buy a car or be a Grab driver. SG driving test: theory + practical. Most people learn at 18!'},
   {id:'swim',name:'Swimming / Lifesaving Cert',icon:'🏊',cost:2000,effect:'Swimming Coach',age:18,maxAge:40,sideIncome:5000,desc:'Side income: +$5,000/yr as part-time swimming coach. Essential life skill! Available until age 40.'},
   {id:'ins',name:'Insurance Licence',icon:'🛡️',cost:1500,effect:'Insurance Lic',age:21,sideIncome:4000,insDiscount:true,desc:'Side income: +$4,000/yr as insurance agent. 50% off your own insurance premiums. Acts as free insurance if you don\'t buy a plan!'},
-  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,salBoost:2000,notDuringNS:true,desc:'Govt subsidised. Permanent +$2,000/yr salary boost once employed. Scam protection! Can take during studies.'},
-  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,salBoost:1000,notDuringNS:true,desc:'Workforce Skills Qualification. Permanent +$1,000/yr salary boost once employed. Can take during studies!'},
+  {id:'sf',name:'SkillsFuture Course',icon:'📈',cost:500,effect:'SkillsFuture',age:21,salBoost:2000,notDuringNS:true,notPreU:true,desc:'Govt subsidised. Permanent +$2,000/yr salary boost once employed. Scam protection! Available during Poly/Uni studies or while working.'},
+  {id:'wsh',name:'Workforce Skills (WSQ)',icon:'🏗️',cost:800,effect:'WSQ Cert',age:18,salBoost:1000,notDuringNS:true,notPreU:true,desc:'Workforce Skills Qualification. Permanent +$1,000/yr salary boost once employed. Available during Poly/Uni studies or while working.'},
 ];
 
 // CARS — SG 2024/2025 OTR prices. Total = basePrice + COE + ARF + taxes.
@@ -4325,6 +4325,7 @@ function renderCert(){
     if(c.maxAge&&G.age>c.maxAge)return false;
     if(c.needsJob&&!hasJob)return false;
     if(c.notDuringNS&&isInNS)return false;
+    if(c.notPreU&&G.studying&&(G.studying.id==='jc'||G.studying.id==='ite'))return false;
     return true;
   });
   if(!allCerts.length){
