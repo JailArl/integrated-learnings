@@ -1428,7 +1428,7 @@ function confirmNSYear(){
     G.nsCompleted=true;
     G.hi+=200;
     addLog('🎖️ ORD LOH! 🇸🇬 National Service completed at age '+G.age+' +200 HI 🎉 | 🏛️ Government career UNLOCKED!');
-    if(G.field&&G.field!=='govt'&&FIELDS.some(f=>f.id==='govt')){
+    if(G.field&&G.field!=='govt'&&G.quals.length===0&&FIELDS.some(f=>f.id==='govt')){
       var swGov=confirm('🎖️ Government careers are now unlocked after NS.\n\nSwitch your field to Government now?\n(You can still remain in your current field.)');
       if(swGov){
         G.field='govt';
@@ -4841,7 +4841,7 @@ function renderSummary(){
   if(yrReport.tips&&yrReport.tips.length){
     h+='<div style="font-size:10px;color:#1d4ed8;background:#eff6ff;border-radius:8px;padding:8px 10px;margin-top:8px">💡 '+yrReport.tips[0]+'</div>';
   }
-  if(G.nsCompleted&&G.field&&G.field!=='govt'&&FIELDS.some(ff=>ff.id==='govt')&&G.age<=30){
+  if(G.nsCompleted&&G.jobSal>0&&G.field&&G.field!=='govt'&&FIELDS.some(ff=>ff.id==='govt')&&G.age<=30){
     h+='<div style="margin-top:8px;background:#ecfeff;border:1px solid #a5f3fc;border-radius:8px;padding:8px 10px;font-size:10px;color:#155e75">🎖️ NS completed. Government field is now available if you want a stable career track. <button class="btn bsm" id="bswitch-govt" style="margin-left:6px">Switch to Govt</button></div>';
   }
   h+='</div>';
