@@ -148,7 +148,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .lnum.d{background:#16a34a;color:#fff}
 .lnum.f{background:#e5e7eb;color:#9ca3af}
 /* ACTION BAR */
-.ab{position:sticky;bottom:0;background:#fff;border-top:1px solid #e5e7eb;padding:11px 20px;display:flex;align-items:center;gap:8px;margin:-20px -20px -20px;margin-top:18px}
+.ab{position:sticky;bottom:0;background:#fff;border-top:1px solid #e5e7eb;padding:11px 20px 55px;display:flex;align-items:center;gap:8px;margin:-20px -20px -20px;margin-top:18px}
 /* LB */
 .lbr{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:3px}
 .lbr.me{background:#eff6ff}
@@ -238,24 +238,29 @@ td{padding:8px 5px;border-bottom:1px solid #f3f4f6}
 .badge-title{font-size:11px;font-weight:800;color:#d97706}
 .badge-sub{font-size:10px;color:#6b7280}
 @media(max-width:680px){
-  .sb{display:none}.mp{padding:12px}.fcg{grid-template-columns:1fr 1fr}.sg4{grid-template-columns:1fr 1fr}.cg3,.cg4{grid-template-columns:1fr 1fr}
+  .sb{display:none}.mp{padding:10px}.fcg{grid-template-columns:1fr 1fr}.sg4{grid-template-columns:1fr 1fr}.cg3,.cg4{grid-template-columns:1fr 1fr}
   /* Larger text on mobile for readability */
-  body{font-size:15px}
-  .btn{font-size:14px;padding:12px 20px}
-  .btn.bsm{font-size:13px;padding:9px 16px}
-  .ch h4{font-size:14px}
-  .ch .me{font-size:12px}
-  .inp{font-size:15px}
-  .sbr{font-size:13px}
-  .it{font-size:13px}
-  .qo{font-size:14px}
-  .lg{font-size:12px}
-  .ct{font-size:11px}
-  .nsv{font-size:14px}
-  .nsl{font-size:10px}
-  .lbl{font-size:11px}
+  body{font-size:16px}
+  .btn{font-size:15px;padding:13px 22px}
+  .btn.bsm{font-size:14px;padding:10px 16px}
+  .ch h4{font-size:15px}
+  .ch .me{font-size:13px}
+  .inp{font-size:16px}
+  .sbr{font-size:14px}
+  .it{font-size:14px}
+  .qo{font-size:15px}
+  .lg{font-size:13px}
+  .ct{font-size:12px}
+  .nsv{font-size:15px}
+  .nsl{font-size:11px}
+  .lbl{font-size:12px}
   .card{padding:14px}
-  .sb2 .sv2{font-size:17px}
+  .sb2 .sv2{font-size:18px}
+  .edesc{font-size:14px}
+  .etitle{font-size:18px}
+  .les{font-size:13px}
+  .receipt-hdr h4{font-size:14px}
+  .rrow{font-size:13px}
 }
 </style>
 </head>
@@ -2542,10 +2547,10 @@ function renderAlloc(){
   if(!fixedPill){
     fixedPill=document.createElement('div');
     fixedPill.id='alloc-cash-pill';
-    fixedPill.style.cssText='position:fixed;bottom:70px;right:14px;z-index:999;background:#1a1d2e;color:#22c55e;font-size:13px;font-weight:800;font-family:monospace;padding:8px 14px;border-radius:20px;box-shadow:0 4px 14px rgba(0,0,0,0.4);pointer-events:none;display:none';
+    fixedPill.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:999;background:#1a1d2e;color:#fff;padding:10px 18px;display:none;box-shadow:0 -4px 20px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
     document.body.appendChild(fixedPill);
   }
-  fixedPill.textContent='💵 '+fmt(G.cash);
+  fixedPill.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto"><span style="font-size:14px;font-weight:700">💵 Cash to Allocate</span><span style="font-size:22px;font-weight:800;font-family:monospace;color:'+(G.cash>=0?'#22c55e':'#ef4444')+'">'+(G.cash>=0?'':'−')+fmt(Math.abs(G.cash))+'</span></div>';
   fixedPill.style.display='block';
   // Hide pill when leaving alloc phase
   var _pillCleanup=function(){fixedPill.style.display='none';document.removeEventListener('lc-phase-change',_pillCleanup);};
@@ -2556,14 +2561,14 @@ function renderAlloc(){
   h+='<div class="ct">💳 Allocate Your Money — Age '+G.age+'</div>';
   h+='<h2 style="font-size:18px;font-weight:800;margin-bottom:6px">Where does your money go?</h2>';
   // Show exactly what cash already excludes (salary already netted)
-  h+='<div style="position:sticky;top:0;z-index:50;background:#1a1d2e;border-radius:10px;padding:12px 16px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,0.3)">';
-  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  h+='<span style="font-size:12px;font-weight:700;color:#fff">💵 Cash available to allocate</span>';
-  h+='<span id="alloc-cash-live" style="font-size:20px;font-weight:800;font-family:monospace;color:#22c55e">'+fmt(G.cash)+'</span>';
+  h+='<div style="background:#f0f2f8;border-radius:10px;padding:10px 14px;margin-bottom:12px;border:1px solid #e5e7eb">';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+  h+='<span style="font-size:13px;font-weight:700;color:#374151">💵 Starting Cash</span>';
+  h+='<span id="alloc-cash-live" style="font-size:20px;font-weight:800;font-family:monospace;color:'+(G.cash>=0?'#16a34a':'#dc2626')+'">'+fmt(G.cash)+'</span>';
   h+='</div>';
-  h+='<p style="font-size:9px;color:#9ca3af;line-height:1.7">This is AFTER: ✅ Salary received → ✅ CPF deducted → ✅ Income tax paid → ✅ Food, transport & clothing ($3,240) deducted';
-  if(G.studying&&G.studying.ptMode&&G.jobLevel>=-1)h+=' → ✅ PT study fees deducted';
-  h+='<br>💡 Investments are processed in order (top to bottom). If cash runs out mid-way, later ones are skipped with a warning.</p>';
+  h+='<p style="font-size:10px;color:#6b7280;line-height:1.6">After: salary → CPF → tax → living costs ($3,240)';
+  if(G.studying&&G.studying.ptMode&&G.jobLevel>=-1)h+=' → PT fees';
+  h+='<br>💡 Live cash balance shown in bottom bar as you allocate.</p>';
   h+='</div>';
   h+='<div id="alloc-warn" style="display:none;background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:11px;font-weight:700;color:#dc2626"></div>';
   // Emergency fund goal = 6 months of ALL expenses including salary-linked costs
@@ -3130,10 +3135,10 @@ function renderAlloc(){
       liveEl.textContent=fmt(remaining);
       liveEl.style.color=remaining<0?'#ef4444':remaining<5000?'#f59e0b':'#22c55e';
     }
-    // Also update the fixed mobile pill
+    // Also update the fixed bottom bar
     var pillEl=el('alloc-cash-pill');
     if(pillEl){
-      pillEl.textContent='💵 '+fmt(remaining);
+      pillEl.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto"><span style="font-size:14px;font-weight:700">💵 Cash to Allocate</span><span style="font-size:22px;font-weight:800;font-family:monospace;color:'+(remaining>=0?'#22c55e':'#ef4444')+'">'+(remaining>=0?'':'−')+fmt(Math.abs(remaining))+'</span></div>';
       pillEl.style.background=remaining<0?'#991b1b':remaining<5000?'#92400e':'#1a1d2e';
     }
     // Show warning if over-allocated
