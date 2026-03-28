@@ -409,6 +409,12 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
         const inv = gs.inv || {};
         const invTotal = Object.values(inv).reduce((sum: number, v: any) => sum + (v || 0), 0);
         const report = analyzePlayer(gs);
+        // Compute combined score for tiebreaking (mirrors game's combined formula)
+        const _nw = s.net_worth || 0;
+        const _hi = gs.hi || 0;
+        const _cpf = gs.cpf || 0;
+        const _ffAge = gs.ffAge || 0;
+        const combinedScore = Math.max(0, Math.round(_nw / 200 + _hi * 5 + _cpf / 500 + (_ffAge ? (65 - _ffAge) * 200 : 0)));
         return {
           ...s,
           student: `${s.players?.class_id}-${s.players?.index_number}`,
@@ -417,6 +423,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
           cpf: s.cpf || 0,
           ffAge: gs.ffAge || null,
           invTotal,
+          combinedScore,
           field: gs.field || 'Unknown',
           married: gs.married || false,
           hasChildren: gs.hasChildren || false,
@@ -428,29 +435,63 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
         };
       })
       .sort((a: any, b: any) => {
-        if (b.final_score !== a.final_score) return b.final_score - a.final_score;
-        // Tiebreakers by goal
-        if (goal === 'ff_earliest') return (a.ffAge || 99) - (b.ffAge || 99);
-        if (goal === 'highest_nw') return b.nw - a.nw;
-        if (goal === 'highest_hi') { if (b.hi !== a.hi) return b.hi - a.hi; return b.nw - a.nw; }
-        if (goal === 'highest_cpf') return b.cpf - a.cpf;
-        // combined / balanced_life: score → nw → hi → cpf
-        if (b.nw !== a.nw) return b.nw - a.nw;
-        if (b.hi !== a.hi) return b.hi - a.hi;
-        return b.cpf - a.cpf;
+        // Primary ranking by the round's goal metric
+        if (goal === 'ff_earliest') {
+          const aFF = a.ffAge || 999, bFF = b.ffAge || 999;
+          if (aFF !== bFF) return aFF - bFF; // earliest FF wins
+          return b.combinedScore - a.combinedScore; // tiebreak: combined
+        }
+        if (goal === 'highest_nw') {
+          if (b.nw !== a.nw) return b.nw - a.nw;
+          return b.combinedScore - a.combinedScore;
+        }
+        if (goal === 'highest_hi') {
+          if (b.hi !== a.hi) return b.hi - a.hi;
+          return b.combinedScore - a.combinedScore;
+        }
+        if (goal === 'highest_cpf') {
+          if (b.cpf !== a.cpf) return b.cpf - a.cpf;
+          return b.combinedScore - a.combinedScore;
+        }
+        if (goal === 'balanced_life' || goal === 'combined') {
+          if (b.final_score !== a.final_score) return b.final_score - a.final_score;
+          if (b.nw !== a.nw) return b.nw - a.nw;
+          if (b.hi !== a.hi) return b.hi - a.hi;
+          return b.cpf - a.cpf;
+        }
+        return b.final_score - a.final_score;
       });
+
+    // Goal-specific primary metric labels
+    const GOAL_PRIMARY: Record<string, string> = {
+      ff_earliest: 'Earliest Financial Freedom Age',
+      highest_nw: 'Highest Net Worth',
+      highest_hi: 'Highest Happiness Index',
+      highest_cpf: 'Highest CPF Balance',
+      balanced_life: 'Balanced Life Score',
+      combined: 'Combined Score',
+    };
 
     // Tiebreaker explanation between two players
     const tieExplain = (higher: any, lower: any): string | null => {
-      if (!higher || !lower || higher.final_score !== lower.final_score) return null;
-      if (goal === 'ff_earliest' && higher.ffAge && lower.ffAge && higher.ffAge !== lower.ffAge)
-        return `Earlier Financial Freedom (age ${higher.ffAge} vs ${lower.ffAge})`;
-      if ((goal === 'combined' || goal === 'balanced_life' || goal === 'highest_nw') && higher.nw !== lower.nw)
-        return `Higher Net Worth (${fmtFull(higher.nw)} vs ${fmtFull(lower.nw)})`;
-      if (higher.hi !== lower.hi)
-        return `Higher Happiness (${higher.hi} vs ${lower.hi})`;
-      if (higher.cpf !== lower.cpf)
-        return `Higher CPF (${fmtFull(higher.cpf)} vs ${fmtFull(lower.cpf)})`;
+      if (!higher || !lower) return null;
+      if (goal === 'ff_earliest') {
+        const hFF = higher.ffAge || 999, lFF = lower.ffAge || 999;
+        if (hFF === lFF && higher.combinedScore !== lower.combinedScore)
+          return `Same FF age (${hFF === 999 ? 'not achieved' : hFF}) — higher Combined Score (${higher.combinedScore.toLocaleString()} vs ${lower.combinedScore.toLocaleString()})`;
+        return null;
+      }
+      if (goal === 'highest_nw' && higher.nw === lower.nw && higher.combinedScore !== lower.combinedScore)
+        return `Same Net Worth — higher Combined Score (${higher.combinedScore.toLocaleString()} vs ${lower.combinedScore.toLocaleString()})`;
+      if (goal === 'highest_hi' && higher.hi === lower.hi && higher.combinedScore !== lower.combinedScore)
+        return `Same Happiness — higher Combined Score (${higher.combinedScore.toLocaleString()} vs ${lower.combinedScore.toLocaleString()})`;
+      if (goal === 'highest_cpf' && higher.cpf === lower.cpf && higher.combinedScore !== lower.combinedScore)
+        return `Same CPF — higher Combined Score (${higher.combinedScore.toLocaleString()} vs ${lower.combinedScore.toLocaleString()})`;
+      if ((goal === 'balanced_life' || goal === 'combined') && higher.final_score === lower.final_score) {
+        if (higher.nw !== lower.nw) return `Same score — higher Net Worth (${fmtFull(higher.nw)} vs ${fmtFull(lower.nw)})`;
+        if (higher.hi !== lower.hi) return `Same score & NW — higher Happiness (${higher.hi} vs ${lower.hi})`;
+        if (higher.cpf !== lower.cpf) return `Same score, NW & HI — higher CPF (${fmtFull(higher.cpf)} vs ${fmtFull(lower.cpf)})`;
+      }
       return null;
     };
 
@@ -558,18 +599,24 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
 
             {/* Top 3 Podium */}
             <div>
-              <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '12px' }}>🏆 Top 3 Positions</h2>
+              <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '4px' }}>🏆 Top 3 Positions</h2>
+              <p style={{ fontSize: '11px', color: '#6b7280', marginBottom: '12px' }}>Ranked by: <strong>{GOAL_PRIMARY[goal]}</strong> · Tiebreaker: Combined Score</p>
               {ranked.slice(0, 3).map((p: any, i: number) => {
                 const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
                 const position = i === 0 ? '1st' : i === 1 ? '2nd' : '3rd';
                 const tieNote = i > 0 ? tieExplain(ranked[i - 1], p) : null;
+                const primaryVal = goal === 'ff_earliest' ? (p.ffAge ? `FF Age ${p.ffAge}` : 'Not achieved')
+                  : goal === 'highest_nw' ? fmtFull(p.nw)
+                  : goal === 'highest_hi' ? `HI: ${p.hi}`
+                  : goal === 'highest_cpf' ? fmtFull(p.cpf)
+                  : `${p.final_score.toLocaleString()} pts`;
                 return (
                   <div key={p.id} style={{ background: i === 0 ? '#fefce8' : i === 1 ? '#f0f9ff' : '#fff7ed', border: `1.5px solid ${i === 0 ? '#fde68a' : i === 1 ? '#bae6fd' : '#fed7aa'}`, borderRadius: '10px', padding: '12px 16px', marginBottom: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <span style={{ fontSize: '22px', marginRight: '8px' }}>{medal}</span>
                         <strong style={{ fontSize: '15px' }}>{position}: {p.student}</strong>
-                        <span className="score" style={{ marginLeft: '12px', fontSize: '14px', fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{p.final_score.toLocaleString()} pts</span>
+                        <span style={{ marginLeft: '12px', fontSize: '14px', fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{primaryVal}</span>
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '11px', color: '#6b7280' }}>
                         Age {p.age} · {p.field}
@@ -583,6 +630,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                       <span>📋 {p.certs} certs</span>
                       {p.married && <span>💍</span>}
                       {p.hasChildren && <span>👶</span>}
+                      <span style={{ color: '#9ca3af' }}>Combined: {p.combinedScore.toLocaleString()}</span>
                     </div>
                     {/* Titles/badges */}
                     {p.titles.length > 0 && (
@@ -611,7 +659,8 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                   <tr style={{ background: '#f1f5f9' }}>
                     <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>#</th>
                     <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Student</th>
-                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Score</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>{GOAL_PRIMARY[goal]}</th>
+                    <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Combined</th>
                     <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>Net Worth</th>
                     <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>HI</th>
                     <th style={{ padding: '6px 8px', textAlign: 'left', borderBottom: '2px solid #cbd5e1' }}>CPF</th>
@@ -627,7 +676,8 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                       <tr key={p.id} style={{ background: i % 2 === 0 ? '#fff' : '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
                         <td style={{ padding: '5px 8px', fontWeight: 700 }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</td>
                         <td style={{ padding: '5px 8px', fontWeight: 600 }}>{p.student}</td>
-                        <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{p.final_score.toLocaleString()}</td>
+                        <td style={{ padding: '5px 8px', fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{goal === 'ff_earliest' ? (p.ffAge ? `Age ${p.ffAge}` : '—') : goal === 'highest_nw' ? fmtFull(p.nw) : goal === 'highest_hi' ? p.hi : goal === 'highest_cpf' ? fmtFull(p.cpf) : p.final_score.toLocaleString()}</td>
+                        <td style={{ padding: '5px 8px', fontFamily: 'monospace', color: '#6b7280' }}>{p.combinedScore.toLocaleString()}</td>
                         <td style={{ padding: '5px 8px', fontFamily: 'monospace' }}>{fmtFull(p.nw)}</td>
                         <td style={{ padding: '5px 8px' }}>{p.hi}</td>
                         <td style={{ padding: '5px 8px', fontFamily: 'monospace' }}>{fmtFull(p.cpf)}</td>
