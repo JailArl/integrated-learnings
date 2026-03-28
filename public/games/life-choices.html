@@ -4202,7 +4202,6 @@ function confirmAlloc(){
     var wfBonus=G.yearsWorked<4?20:G.yearsWorked<8?10:0;
     if(wfBonus>0){G.hi+=wfBonus;addLog('💼 Work-first freedom: +'+wfBonus+' HI (earning independently!)');}
     // Career frustration: stuck at entry level while study-first peers advance
-    var entryLevelJob=getLadder()[0];
     var isStuckAtEntry=G.jobLevel===0&&(G.yearsAtLevel||0)>=3&&!G.studying;
     if(isStuckAtEntry){
       var frustration=-25;
