@@ -3783,11 +3783,18 @@ function confirmAlloc(){
     // Remove paid-off loans
     for(var pi=clPaidOff.length-1;pi>=0;pi--){G.certLoans.splice(clPaidOff[pi],1);}
   }
-  // Child costs (if has children)
+  // Child costs (if has children) — escalate with child's age
   if(G.hasChildren&&(G.childCost||0)>0){
+    var childAge=G.age-(G.babyAge||G.age);
+    // Costs grow as child ages: 0-6 childcare $12K, 7-12 primary+tuition $15K, 13-17 secondary $18K, 18+ uni/adult $8K
+    var newChildCost=childAge<=6?12000:childAge<=12?15000:childAge<=17?18000:8000;
+    if(newChildCost!==G.childCost){
+      addLog('👶 Child costs '+(newChildCost>G.childCost?'increased':'decreased')+': '+fmt(G.childCost)+'→'+fmt(newChildCost)+'/yr (child age '+childAge+')');
+      G.childCost=newChildCost;
+    }
     G.cash-=G.childCost;
     if(G.cash<0){emergencyBorrow(Math.abs(G.cash),'child costs');addLog('⚠️ Child costs exceeded cash — emergency loan taken!');}
-    addLog('👶 Child costs -'+fmt(G.childCost)+'/yr (childcare, needs)');
+    addLog('👶 Child costs -'+fmt(G.childCost)+'/yr'+(childAge<=6?' (childcare)':childAge<=12?' (primary school + tuition)':childAge<=17?' (secondary/JC)':' (adult child)'));
   }
   // Mortgage — process ALL owned properties
   if(G.properties&&G.properties.length>0){
