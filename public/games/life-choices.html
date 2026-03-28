@@ -311,7 +311,7 @@ td{padding:8px 5px;border-bottom:1px solid #f3f4f6}
     <span class="nbrand">💰 Life Choices</span>
     <div class="nstats">
       <div class="ns"><span class="nsl">Age</span><span class="nsv" id="na">17</span></div>
-      <div class="ns"><span class="nsl">Cash</span><span class="nsv p" id="nc">$500</span></div>
+      <div class="ns"><span class="nsl">Cash on Hand</span><span class="nsv p" id="nc">$500</span></div>
       <div class="ns"><span class="nsl">Net Worth</span><span class="nsv b" id="nn">$500</span></div>
       <div class="ns"><span class="nsl">CPF</span><span class="nsv v" id="ncp">$0</span></div>
       <div class="ns"><span class="nsl">Loans owed</span><span class="nsv" id="nl">$0</span></div>
@@ -959,7 +959,7 @@ function newG(){return {
   married:false,ffAge:null,marriageAge:null,babyAge:null,hasChildren:false,spouseIncome:0,
   lifestyle:'basic',
   pocketMoney:true,
-  emergencyFund:0,    // 6-month expenses savings buffer
+  emergencyFund:0,    // DEPRECATED — merged into inv.bank. Kept for save compatibility.
   coeLevel:1.0,       // COE market multiplier (fluctuates)
   coePending:false,   // COE expired — decision pending
   inflationMult:1.0,  // cumulative cost of living multiplier
@@ -1003,12 +1003,9 @@ function loans(){
 }
 function emergencyBorrow(amt,reason){
   var remaining=amt;
-  // 1. Use emergency fund first
-  if(G.emergencyFund>0&&remaining>0){
-    var efUse=Math.min(G.emergencyFund,remaining);
-    G.emergencyFund-=efUse;remaining-=efUse;
-    addLog('🛟 Emergency fund used: -'+fmt(efUse)+' for '+reason+' (EF remaining: '+fmt(G.emergencyFund)+')');
-  }
+  // Migrate any legacy emergencyFund into bank savings
+  if((G.emergencyFund||0)>0){G.inv.bank=(G.inv.bank||0)+(G.emergencyFund||0);G.emergencyFund=0;}
+  // 1. Use bank savings first (this IS your emergency fund)
   // 2. Liquidate investments (bank savings first, then liquid assets)
   var sellOrder=['bank','etf','reit','bank_stock','stock'];
   sellOrder.forEach(function(key){
@@ -1043,7 +1040,7 @@ function takeSnapshot(){
   G.snapshots.push({age:G.age,inv:{...G.inv},cash:G.cash,cpf:G.cpf,nw:nw(),hi:G.hi,
     job:G.jobLevel>=0?(getLadder()[G.jobLevel]?.name||'Unknown'):G.jobLevel===-1?'Unemployed':'Universal',
     sal:G.jobSal,debt:{study:G.studyLoan||0,prop:G.propLoan||0,car:G.carLoan||0,emergency:G.emergencyDebt||0,cc:G.ccDebt||0,wedding:G.weddingLoan||0},
-    ef:G.emergencyFund||0,married:G.married,hasChildren:G.hasChildren,prop:G.prop||null,car:G.car||null,
+    ef:(G.inv.bank||0)+(G.emergencyFund||0),married:G.married,hasChildren:G.hasChildren,prop:G.prop||null,car:G.car||null,
     lifestyle:G.lifestyle,insurance:G.insurance,certs:[...G.certs]});
 }
 function lifeCost(){return G.lifestyle==='comfort'?3000:0;} // luxury removed — use Luxuries for one-time treats
@@ -1192,8 +1189,10 @@ function updateSB(){
   else h+=sr('','<span class="tag trd" style="font-size:9px">⚠️ No Insurance</span>');
   if((G.ccDebt||0)>0)h+=sr('<span style="color:#dc2626">CC Debt ⚠️</span>','<span class="tag trd">'+fmt(G.ccDebt)+'@26%</span>');
   if(G.certLoans&&G.certLoans.length>0){var clTotal=G.certLoans.reduce((s,cl)=>s+cl.balance,0);h+=sr('📋 Cert Loans','<span class="tag" style="background:#fef3c7;color:#92400e">'+fmt(clTotal)+'@6%</span>');}
-  var efPctSB=G.emergencyFund>0?Math.min(100,Math.round(G.emergencyFund/((3240+5000)/12*6)*100)):0;
-  h+=sr('🛟 Emergency Fund','<span style="color:'+(efPctSB>=100?'#16a34a':efPctSB>=50?'#d97706':'#dc2626')+'">'+fmt(G.emergencyFund)+'</span>');
+  var bankSavings=(G.inv.bank||0)+(G.emergencyFund||0);
+  var efTargetSB=Math.round((3240+5000)/12*6);
+  var efPctSB=bankSavings>0?Math.min(100,Math.round(bankSavings/efTargetSB*100)):0;
+  h+=sr('🏦 Bank Savings','<span style="color:'+(efPctSB>=100?'#16a34a':efPctSB>=50?'#d97706':'#dc2626')+'">'+fmt(bankSavings)+'</span>');
 
   if(G.certs.length){
     h+='<div class="sbh">🎖️ Certs</div><div style="display:flex;flex-wrap:wrap">';
@@ -2550,7 +2549,7 @@ function renderAlloc(){
     fixedPill.style.cssText='position:fixed;bottom:0;left:0;right:0;z-index:999;background:#1a1d2e;color:#fff;padding:10px 18px;display:none;box-shadow:0 -4px 20px rgba(0,0,0,0.3);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif';
     document.body.appendChild(fixedPill);
   }
-  fixedPill.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto"><span style="font-size:14px;font-weight:700">💵 Cash to Allocate</span><span style="font-size:22px;font-weight:800;font-family:monospace;color:'+(G.cash>=0?'#22c55e':'#ef4444')+'">'+(G.cash>=0?'':'−')+fmt(Math.abs(G.cash))+'</span></div>';
+  fixedPill.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto"><span style="font-size:14px;font-weight:700">💵 Cash on Hand (remaining)</span><span style="font-size:22px;font-weight:800;font-family:monospace;color:'+(G.cash>=0?'#22c55e':'#ef4444')+'">'+(G.cash>=0?'':'−')+fmt(Math.abs(G.cash))+'</span></div>';
   fixedPill.style.display='block';
   // Hide pill when leaving alloc phase
   var _pillCleanup=function(){fixedPill.style.display='none';document.removeEventListener('lc-phase-change',_pillCleanup);};
@@ -2576,30 +2575,19 @@ function renderAlloc(){
   var monthlyMandatory=Math.round((3240+lifeCost()+(G.propLoan>0&&G.propData?amortizedAnnualPayment(G.propLoan,G.propData.loanRate||0.026,Math.max(1,(G.propData.loanYrs||25)-(G.propLoanYearsPaid||0)))/12:7200/12))/12);
   var monthlyExpenses=Math.max(monthlyMandatory,Math.round((G.jobSal>0?G.jobSal*0.5:3240)/12)); // 50% of salary or mandatory costs
   var targetEF=monthlyExpenses*6;
-  var efPct=G.emergencyFund>0?Math.min(100,Math.round(G.emergencyFund/targetEF*100)):0;
+  var bankBal=(G.inv.bank||0)+(G.emergencyFund||0);
+  var efPct=bankBal>0?Math.min(100,Math.round(bankBal/targetEF*100)):0;
   var efColor=efPct>=100?'#16a34a':efPct>=50?'#d97706':'#dc2626';
-  // Combined bank savings (inv.bank) display alongside EF for clarity
-  var bankBal=G.inv.bank||0;
-  var combinedSavings=bankBal+(G.emergencyFund||0);
   h+='<div style="background:#f0fdf4;border-radius:10px;padding:12px;margin-bottom:12px;border:1.5px solid #86efac">';
   h+='<div style="background:#dcfce7;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:11px;color:#166534;line-height:1.6">';
   h+='💡 <strong>Bank Savings = Emergency Fund!</strong> They are the same thing — money kept liquid in the bank. Target: 3–6 months of expenses (<strong>'+fmt(targetEF)+'</strong>) before investing in higher-risk assets.';
   h+='</div>';
   h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-  h+='<span style="font-size:11px;font-weight:700">🏦 Bank Savings / Emergency Fund</span>';
-  h+='<span style="font-size:11px;font-weight:700;color:'+efColor+'">'+efPct+'% of goal (EF: '+fmt(G.emergencyFund)+(bankBal>0?' | Bank: '+fmt(bankBal):'')+' | Total: '+fmt(combinedSavings)+')</span>';
+  h+='<span style="font-size:11px;font-weight:700">🏦 Bank Savings (Emergency Fund)</span>';
+  h+='<span style="font-size:11px;font-weight:700;color:'+efColor+'">'+fmt(bankBal)+' — '+efPct+'% of EF goal</span>';
   h+='</div>';
   h+='<div style="height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden;margin-bottom:8px"><div style="height:100%;width:'+efPct+'%;background:'+efColor+';border-radius:3px;transition:width .4s"></div></div>';
-  h+='<div style="display:flex;align-items:center;gap:8px">';
-  h+='<input type="number" min="0" step="500" id="ef-inp" value="" placeholder="Top up amount (any amount!)" class="inp" style="flex:1;padding:7px 10px;font-size:12px">';
-  h+='<span style="font-size:10px;color:#9ca3af">Protects you from retrenchment/emergencies!</span>';
-  h+='</div>';
-  if(G.emergencyFund>0){
-    h+='<div style="display:flex;align-items:center;gap:8px;margin-top:6px">';
-    h+='<input type="number" min="0" max="'+G.emergencyFund+'" step="500" id="ef-withdraw" value="" placeholder="Withdraw from EF (max '+fmt(G.emergencyFund)+')" class="inp" style="flex:1;padding:7px 10px;font-size:12px;border-color:#fca5a5">';
-    h+='<span style="font-size:10px;color:#dc2626">⚠️ Withdrawing reduces your safety net!</span>';
-    h+='</div>';
-  }
+  h+='<p style="font-size:10px;color:#6b7280;margin:0">Use the <strong>High-Yield Bank Savings</strong> slider below to add or withdraw. This IS your emergency fund.</p>';
   h+='</div>';
 
   // Loans — with year-end projection
@@ -3138,7 +3126,7 @@ function renderAlloc(){
     // Also update the fixed bottom bar
     var pillEl=el('alloc-cash-pill');
     if(pillEl){
-      pillEl.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto"><span style="font-size:14px;font-weight:700">💵 Cash to Allocate</span><span style="font-size:22px;font-weight:800;font-family:monospace;color:'+(remaining>=0?'#22c55e':'#ef4444')+'">'+(remaining>=0?'':'−')+fmt(Math.abs(remaining))+'</span></div>';
+      pillEl.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto"><span style="font-size:14px;font-weight:700">💵 Cash on Hand (remaining)</span><span style="font-size:22px;font-weight:800;font-family:monospace;color:'+(remaining>=0?'#22c55e':'#ef4444')+'">'+(remaining>=0?'':'−')+fmt(Math.abs(remaining))+'</span></div>';
       pillEl.style.background=remaining<0?'#991b1b':remaining<5000?'#92400e':'#1a1d2e';
     }
     // Show warning if over-allocated
@@ -3525,12 +3513,7 @@ function confirmAlloc(){
   }
   UI.sideGig=null;
 
-  // Emergency fund top-up
-  var efInp=el('ef-inp');var efAdd=parseInt(efInp?.value)||0;
-  if(efAdd>0&&G.cash>=efAdd){G.cash-=efAdd;G.emergencyFund=(G.emergencyFund||0)+efAdd;addLog('🛟 Emergency fund +'+fmt(efAdd)+' = '+fmt(G.emergencyFund)+' total');}
-  // Emergency fund withdrawal
-  var efWithdrawInp=el('ef-withdraw');var efWithdraw=Math.min(parseInt(efWithdrawInp?.value)||0,G.emergencyFund||0);
-  if(efWithdraw>0){G.emergencyFund=Math.max(0,(G.emergencyFund||0)-efWithdraw);G.cash+=efWithdraw;addLog('🛟 Emergency fund withdrawn -'+fmt(efWithdraw)+' → EF: '+fmt(G.emergencyFund)+' | Use wisely!');}
+  // Legacy: EF top-up/withdraw removed — bank savings slider handles this now
   // Loan repayment
   const lsl=el('lsl');
   if(lsl){
@@ -4467,24 +4450,24 @@ function renderEvent(){
   if(ev.carOnly&&!G.car){money=0;hiChange=0;note='No car — this event does not affect you!';}
   else if(ev.retrenched){
     money=Math.round(G.jobSal*0.25); // 3 months severance pay
-    if(G.emergencyFund>0){note='✅ Emergency fund of '+fmt(G.emergencyFund)+' means you can survive while job hunting!';hiChange=-80;}
+    if((G.inv.bank||0)>0){note='✅ Bank savings of '+fmt(G.inv.bank)+' means you can survive while job hunting!';hiChange=-80;}
     else{note='⚠️ No emergency fund! You are in serious trouble. Look for a new job immediately!';}
   }else if(ev.insurable&&hasIns){
     var saved=Math.abs(money)*0.8;
     money=Math.round(money*0.2);
     note='🛡️ Insurance covered $'+Math.round(saved).toLocaleString()+'! Without insurance you would have paid '+fmt(Math.abs(ev.money||0))+'!';
   }else if(ev.insurable&&!hasIns){
-    if(G.emergencyFund>0&&Math.abs(money)>0){
-      var efAbs=Math.min(G.emergencyFund,Math.abs(money)*0.5);
-      G.emergencyFund-=efAbs;
+    if((G.inv.bank||0)>0&&Math.abs(money)>0){
+      var efAbs=Math.min(G.inv.bank,Math.abs(money)*0.5);
+      G.inv.bank-=efAbs;
       money=Math.round(money*0.5);
-      extraNote='🛟 Emergency fund absorbed '+fmt(efAbs)+' of the cost! Remaining EF: '+fmt(G.emergencyFund)+'. Get insurance to protect yourself better!';
-    }else extraNote='⚠️ No insurance AND no emergency fund! This expense hits your cash directly.';
+      extraNote='🛟 Bank savings absorbed '+fmt(efAbs)+' of the cost! Remaining: '+fmt(G.inv.bank)+'. Get insurance to protect yourself better!';
+    }else extraNote='⚠️ No insurance AND no savings! This expense hits your cash directly.';
   }
   if(ev.crash){const loss=Math.round(invTot(G.inv)*ev.crash);money=-loss;note='📉 Stay calm — DO NOT sell! Those who held on always recovered. Time IN market beats timing the market.';}
   if(ev.scam&&G.certs.includes('SkillsFuture')){var savedAmt=Math.abs(ev.money||5000);money=0;note='🧠 Financial literacy saved you $'+savedAmt.toLocaleString()+'! You spotted the scam. Others without education lost everything!';}
   if(ev.ccTrap){G.ccDebt=(G.ccDebt||0)+5000;G.creditCard=true;money=-500;note='💳 $5,000 credit card debt added at 26%/yr interest. Pay it off FIRST before any other spending!';}
-  if(ev.pandemic){money=Math.round(-G.jobSal*0.5);note=G.emergencyFund>0?'✅ Emergency fund helped you survive the pandemic!':'⚠️ No emergency fund — you had to take emergency loans!';}
+  if(ev.pandemic){money=Math.round(-G.jobSal*0.5);note=(G.inv.bank||0)>0?'✅ Bank savings helped you survive the pandemic!':'⚠️ No emergency fund — you had to take emergency loans!';}
   if(ev.war){
     var warLoss=Math.round(INV.filter(i=>i.canNeg).reduce((s,i)=>s+(G.inv[i.key]||0),0)*0.20);
     INV.forEach(i=>{if(i.canNeg)G.inv[i.key]=Math.round(G.inv[i.key]*0.80);});
@@ -4907,7 +4890,7 @@ function renderSummary(){
   var weddingCost=50000;
   var weddingShortfall=Math.max(0,weddingCost-G.cash);
   var weddingTotalInv=invTot(G.inv);
-  var weddingEF=G.emergencyFund||0;
+  var weddingEF=G.inv.bank||0;
   var weddingCanFundFromAssets=(G.cash+weddingTotalInv+weddingEF)>=weddingCost;
   if(!G.married&&G.age>=28&&G.age<=42){
     h+='<div style="background:linear-gradient(135deg,#fdf2f8,#fce7f3);border:2px solid #f9a8d4;border-radius:14px;padding:18px;margin-bottom:14px;text-align:center">';
@@ -4918,14 +4901,14 @@ function renderSummary(){
       h+='<div style="background:#fff7ed;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#92400e;text-align:left;line-height:1.8">';
       h+='💸 Wedding costs <strong>$50,000</strong>. You have <strong>'+fmt(G.cash)+'</strong> cash.';
       if(weddingShortfall>0)h+=' Short by <strong style="color:#dc2626">'+fmt(weddingShortfall)+'</strong>.';
-      h+='<br>💰 Investments: <strong>'+fmt(weddingTotalInv)+'</strong> · 🛟 Emergency Fund: <strong>'+fmt(weddingEF)+'</strong>';
+      h+='<br>💰 Investments: <strong>'+fmt(weddingTotalInv)+'</strong> · 🏦 Bank Savings: <strong>'+fmt(weddingEF)+'</strong>';
       if(weddingCanFundFromAssets)h+='<br><span style="color:#16a34a">✅ You can fund the wedding by liquidating assets!</span>';
       else h+='<br><span style="color:#dc2626">⚠️ Not enough total assets. You can take a wedding loan to cover the gap!</span>';
       h+='</div>';
     }
     h+='<div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">';
     if(canAffordWedding)h+='<button class="btn" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;box-shadow:0 4px 12px rgba(236,72,153,.3)" id="bget-married">💍 Get Married! (-$50,000 cash, +100 HI, expenses halved!)</button>';
-    if(!canAffordWedding&&(weddingTotalInv>0||weddingEF>0))h+='<button class="btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff" id="bget-married-assets">💍 Marry — Use Investments/EF to cover gap</button>';
+    if(!canAffordWedding&&(weddingTotalInv>0||weddingEF>0))h+='<button class="btn" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff" id="bget-married-assets">💍 Marry — Use Investments/Savings to cover gap</button>';
     if(!canAffordWedding)h+='<button class="btn" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff" id="bget-married-loan">💍 Marry — Take Wedding Loan for shortfall</button>';
     h+='<button class="btn bs bsm" id="bstay-single">Not this year</button>';
     h+='</div>';
@@ -4940,7 +4923,7 @@ function renderSummary(){
     var lateCost=50000;
     if(G.cash>=lateCost)h+='<br><button class="btn bsm" style="background:linear-gradient(135deg,#ec4899,#be185d);color:#fff;margin-top:8px" id="bget-married">💍 Get Married Now! (-$50,000)</button>';
     else{
-      var lateInv=invTot(G.inv),lateEF=G.emergencyFund||0;
+      var lateInv=invTot(G.inv),lateEF=G.inv.bank||0;
       if(lateInv>0||lateEF>0)h+='<br><button class="btn bsm" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;margin-top:8px" id="bget-married-assets">💍 Marry — Liquidate assets</button>';
       h+='<br><button class="btn bsm" style="background:linear-gradient(135deg,#dc2626,#991b1b);color:#fff;margin-top:4px" id="bget-married-loan">💍 Marry — Wedding loan</button>';
     }
@@ -5174,23 +5157,20 @@ function renderSummary(){
     render();
   });
   el('bget-married-assets')?.addEventListener('click',()=>{
-    // Liquidate investments + EF to fund wedding shortfall
+    // Liquidate investments to fund wedding shortfall (bank savings is first in sellOrder)
     var need=50000;
     var fromCash=Math.min(G.cash,need);need-=fromCash;
-    var fromEF=Math.min(G.emergencyFund||0,need);need-=fromEF;
     // Liquidate investments (sell in order: bank, etf, reit, bank_stock, stock)
     var sellOrder=['bank','etf','reit','bank_stock','stock','fd'];
     var fromInv=0;
     sellOrder.forEach(function(k){if(need>0&&G.inv[k]>0){var take=Math.min(G.inv[k],need);G.inv[k]-=take;need-=take;fromInv+=take;}});
     if(need>0){toast('Not enough assets! Still short '+fmt(need),'tr');return;}
     G.cash-=fromCash;
-    G.emergencyFund=Math.max(0,(G.emergencyFund||0)-fromEF);
     G.married=true;G.marriageAge=G.age;G.hi+=100;
     if(G.propLoan>0){G.propLoan=Math.round(G.propLoan*0.9);}
     var logParts=['💍 MARRIED at age '+G.age+'! +100 HI 🎊 Spouse shares expenses!'];
     if(fromCash>0)logParts.push('Cash: -'+fmt(fromCash));
-    if(fromEF>0)logParts.push('EF liquidated: -'+fmt(fromEF));
-    if(fromInv>0)logParts.push('Investments sold: -'+fmt(fromInv));
+    if(fromInv>0)logParts.push('Assets liquidated: -'+fmt(fromInv));
     addLog(logParts.join(' | '));
     toast('Married! Used savings + investments to fund wedding 💍','tg');
     render();
@@ -5319,7 +5299,7 @@ window.analyzePlayer=function(gs){
   if((gs.totalDividends||0)>15000) titles.push({id:'dividend_collector',name:'Dividend Collector',icon:'💵',color:'#16a34a',desc:'Earned $15K+ in dividends from REITs and stocks'});
 
   // Savings behavior
-  if((gs.emergencyFund||0)>20000) titles.push({id:'emergency_ready',name:'Emergency Ready',icon:'🛟',color:'#0d9488',desc:'Built a strong emergency fund cushion — well prepared'});
+  if((inv.bank||0)>20000) titles.push({id:'emergency_ready',name:'Emergency Ready',icon:'🛟',color:'#0d9488',desc:'Built a strong bank savings cushion — well prepared for emergencies'});
   if(invTotal>200000) titles.push({id:'portfolio_builder',name:'Portfolio Builder',icon:'📈',color:'#059669',desc:'Invested portfolio worth over $200K'});
   if(invTotal>500000) titles.push({id:'half_millionaire',name:'Half Millionaire',icon:'💎',color:'#d97706',desc:'Investment portfolio exceeded $500K!'});
 
@@ -5413,7 +5393,7 @@ window.analyzePlayer=function(gs){
   if(safeTotal/Math.max(1,invTotal)>0.8) tips.push({icon:'📊',text:'Consider diversifying beyond bank savings. ETFs and REITs give higher returns over time with moderate risk.'});
   if((inv.stock||0)/Math.max(1,invTotal)>0.5) tips.push({icon:'⚠️',text:'Over 50% in growth stocks is very aggressive. A crash could wipe out years of gains. Consider spreading across ETF and REIT too.'});
   if(!gs.insurance) tips.push({icon:'🛡️',text:'No insurance! One illness or accident could destroy your finances. Insurance is not a cost — it is protection.'});
-  if((gs.emergencyFund||0)<3000&&(gs.yearsWorked||0)>3) tips.push({icon:'🛟',text:'Your emergency fund is too small. Aim for 3-6 months of expenses as a safety net before investing.'});
+  if((inv.bank||0)<3000&&(gs.yearsWorked||0)>3) tips.push({icon:'🛟',text:'Your bank savings (emergency fund) is too small. Aim for 3-6 months of expenses as a safety net before investing.'});
   if(totalDebt>50000) tips.push({icon:'🚨',text:'High debt at '+Math.round(totalDebt/1000)+'K. Prioritize paying off high-interest debt (CC at 26%, emergency at 26%) before investing.'});
   if(panicSwitch) tips.push({icon:'😱',text:'After a crash you moved to all-safe. Historically, markets recover in 3-5 years. Staying invested through crashes usually wins long-term.'});
   if((gs.ccDebt||0)>0) tips.push({icon:'💳',text:'Credit card debt at 26% interest is an emergency. No investment earns 26%. Pay this off FIRST.'});
