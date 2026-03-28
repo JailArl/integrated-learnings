@@ -594,8 +594,8 @@ const INV=[
   conditionShort:'Max $8,000/yr → saves $280–$1,760 in tax + 4%/yr guaranteed.',
   purpose:'🏛️ Retirement + Tax Relief',purposeColor:'#6d28d9',
   tip:'4%/yr guaranteed + UP TO $8,000/yr tax relief! Topping up $8K saves $280–$1,760/yr in tax depending on your income bracket. At 4%/yr compound over 30 years, $8,000 grows to ~$26,000! Locked till 55 = for retirement money only. Not useless AT ALL — it\'s double value: tax savings NOW + retirement compound growth!'},
-  {key:'fd',name:'Fixed Deposit',icon:'📜',yield:0.038,risk:'Low',col:'#0891b2',canNeg:false,
-   realReturn:0.008,
+  {key:'fd',name:'Fixed Deposit',icon:'📜',yield:0.042,risk:'Low',col:'#0891b2',canNeg:false,
+   realReturn:0.012,
    minInvest:1000,        // DBS/OCBC/UOB minimum $1,000 per placement
    lumpSumOnly:true,      // cannot drip-feed; each placement is a fixed lump sum
    lockYears:2,
@@ -604,7 +604,7 @@ const INV=[
    condition:'Minimum $1,000 per placement. Full amount locked 2 years. Early withdrawal = 0% interest (lose all gains!).',
    conditionShort:'Min $1,000 lump sum. 2yr lock. Early exit = no interest.',
    purpose:'🎯 Savings Goal (BTO / Car)',purposeColor:'#0891b2',
-   tip:'3.5–4%/yr. Capital NEVER negative. Best for money earmarked for a goal 2+ years away — BTO down payment, car, overseas trip. Matures automatically to cash with interest.'},
+   tip:'4.2%/yr guaranteed — best SAFE rate for money you WON\'T need for 2+ years. Beats bank (3.5%) and SSB (3.2%). Use it for BTO down payment or car fund. DO NOT put emergency money here — early withdrawal = 0% interest! Only lock money you can afford to not touch.'},
   {key:'etf',name:'STI ETF / Index Fund',icon:'📈',yield:0.07,risk:'Medium',col:'#d97706',canNeg:true,
    realReturn:0.04,
    minInvest:500,         // RSP from $100/mth = $1,200/yr; single purchase ~$340 per lot
@@ -2787,14 +2787,14 @@ function renderAlloc(){
   h+='<p style="font-size:9px;color:#78350f;margin-top:6px">Example: $1,000 in ETF (7%) → $2,000 in ~10 yrs → $4,000 in ~20 yrs → $8,000 in ~30 yrs! 🚀</p>';
   h+='</div>';
   h+='<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:10px;color:#5b21b6">🏛️ <strong>CPF-SA:</strong> Voluntary CASH top-up (not salary CPF). Grows at 4%/yr, locked till 55. Max $8K/yr for tax relief!</div>';
-    h+='<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:10px;color:#5b21b6">🏛️ <strong>CPF-SA Voluntary Top-Up</strong> — Double value! ① 4%/yr guaranteed interest (better than any FD). ② $8K/yr tax relief = saves <strong>$280–$1,760/yr</strong> on your tax bill depending on income. Locked till 55 — use for retirement money only. Many Singaporeans overlook this FREE savings tool!</div>';
+    h+='<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:10px;color:#5b21b6">🏛️ <strong>CPF-SA Voluntary Top-Up</strong> — Double value! ① 4%/yr guaranteed interest (almost as good as FD but no lock!). ② $8K/yr tax relief = saves <strong>$280–$1,760/yr</strong> on your tax bill depending on income. Locked till 55 — use for retirement money only. Many Singaporeans overlook this FREE savings tool!</div>';
   // Strategy guide
   h+='<div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:10px">';
   h+='<p style="font-weight:800;color:#1a1d2e;margin-bottom:5px">🧠 The SG Investment Ladder — Use All Tiers!</p>';
   h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
   h+='<div style="background:#eff6ff;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#1d4ed8;margin-bottom:2px">Step 1 — Safety</p><p style="color:#6b7280;line-height:1.5">Bank (3.5%) + CPF-SA (4%) for Emergency Fund and retirement</p></div>';
   h+='<div style="background:#fff0f6;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#e11d48;margin-bottom:2px">Step 2 — SSB</p><p style="color:#6b7280;line-height:1.5">SG Savings Bonds (3.2%) — govt-backed, redeem anytime, beats bank!</p></div>';
-  h+='<div style="background:#f0fdf4;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#166534;margin-bottom:2px">Step 3 — Goals</p><p style="color:#6b7280;line-height:1.5">FD (3.8%) for BTO/car — locked 2yrs, capital safe</p></div>';
+  h+='<div style="background:#f0fdf4;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#166534;margin-bottom:2px">Step 3 — Goals</p><p style="color:#6b7280;line-height:1.5">FD (4.2%) for BTO/car — locked 2yrs, best safe rate</p></div>';
   h+='<div style="background:#fffbeb;border-radius:6px;padding:6px 8px"><p style="font-weight:700;color:#92400e;margin-bottom:2px">Step 4 — Growth</p><p style="color:#6b7280;line-height:1.5">ETF/REIT/Stocks for long-term wealth you WON\'T need for 10+ years</p></div>';
   h+='</div>';
   h+='<p style="color:#dc2626;font-size:9px;margin-top:6px;font-weight:600">⚠️ Never put your emergency fund in ETF/Stocks — a crash forces you to sell at -30%!</p>';
