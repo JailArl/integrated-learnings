@@ -1394,9 +1394,9 @@ function confirmNSYear(){
     G.hi+=50;
     addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+ ' | Spent savings on fun +50 HI');
   }else if(UI.ac==='save'){
-    G.cash+=netNS;
+    G.inv.bank+=netNS;
     G.hi+=20;
-    addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+' | Saved '+fmt(netNS)+' in bank +20 HI');
+    addLog('🪖 NS Year '+yr+': '+(yr===1?'+100 HI (army life!)':'Last year!')+' | Saved '+fmt(netNS)+' in bank savings +20 HI');
   }else if(UI.ac==='invest'){
     var aPool=['bank','etf','reit','bank_stock'];
     var aPick=aPool[Math.floor(Math.random()*aPool.length)];
