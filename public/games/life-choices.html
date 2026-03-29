@@ -476,16 +476,17 @@ const FIELDS=[
      // Realistic SG SAF Regular career: sign-on at 3SG (after SCS) → NCO → WO → sponsored study → Officer
      // Sources: MINDEF careers portal, SAF salary benchmarks, Seedly/HWZ forums
      // Regulars do NOT start as Private — PTE is NSF only. Sign-on starts at 3SG.
+     // SAF sends regulars for sponsored Diploma within first 2-3 years, Degree around year 10-12.
      // Max realistic rank for non-scholar: MAJ (officer path) or MWO (specialist path).
      {level:0,name:'3rd Sergeant (3SG)',sal:28000,req:null,cpf:true,type:'FT',yrsExp:0,
       note:'Sign-on as regular after SCS. $15K sign-on bonus!'},
-     {level:1,name:'2nd Sergeant (2SG)',sal:32000,req:null,cpf:true,type:'FT',yrsExp:2},
-     {level:2,name:'1st Sergeant (1SG)',sal:38000,req:null,cpf:true,type:'FT',yrsExp:5},
-     {level:3,name:'Staff Sergeant (SSG)',sal:46000,req:'Diploma',cpf:true,type:'FT',yrsExp:8,
-      note:'SAF sponsors your Poly Diploma (free!). Promoted on graduation.'},
-     {level:4,name:'Master Sergeant (MSG)',sal:55000,req:'Diploma',cpf:true,type:'FT',yrsExp:12},
-     {level:5,name:'3rd Warrant Officer (3WO)',sal:64000,req:'Degree',cpf:true,type:'FT',yrsExp:16,
-      note:'SAF sponsors your Degree (free!). Commissioned path opens.'},
+     {level:1,name:'2nd Sergeant (2SG)',sal:32000,req:'Diploma',cpf:true,type:'FT',yrsExp:2,
+      note:'SAF sponsors your Poly Diploma (free!) within first 2 years. Promoted on graduation.'},
+     {level:2,name:'1st Sergeant (1SG)',sal:38000,req:'Diploma',cpf:true,type:'FT',yrsExp:8},
+     {level:3,name:'Staff Sergeant (SSG)',sal:46000,req:'Diploma',cpf:true,type:'FT',yrsExp:10},
+     {level:4,name:'Master Sergeant (MSG)',sal:55000,req:'Degree',cpf:true,type:'FT',yrsExp:12,
+      note:'SAF sponsors your Degree (free!). Commissioned path opens on graduation.'},
+     {level:5,name:'3rd Warrant Officer (3WO)',sal:64000,req:'Degree',cpf:true,type:'FT',yrsExp:16},
      {level:6,name:'Captain (CPT)',sal:78000,req:'Degree',cpf:true,type:'FT',yrsExp:20,
       note:'Crossed to officer track after degree. Commissioned via OCS.'},
      {level:7,name:'Major (MAJ)',sal:100000,req:'Degree',cpf:true,type:'FT',yrsExp:25,
