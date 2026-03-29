@@ -4288,9 +4288,15 @@ function confirmAlloc(){
           if(ep){
             // SAF sponsors use FT duration — dedicated study time, not regular PT
             var safDur=ep.dur||ep.durPT;
-            G.studying={id:ep.id,name:ep.name+' (SAF-Sponsored)',grants:ep.grants,ptMode:true,total:safDur,left:safDur,cost:0,safSponsored:true};
+            // Diploma = 100% sponsored (free). Degree = 50% sponsored.
+            var safCost=(nextRung.req==='Degree')?Math.round(ep.cost*0.5):0;
+            G.studying={id:ep.id,name:ep.name+' (SAF-Sponsored)',grants:ep.grants,ptMode:true,total:safDur,left:safDur,cost:safCost,safSponsored:true};
             G.safStudyPrompted=true;
-            addLog('🎓 SAF sponsors your '+ep.name+'! FREE education (dedicated study). Duration: '+safDur+' years.');
+            if(safCost>0){
+              addLog('🎓 SAF sponsors 50% of your '+ep.name+'! You pay '+fmt(safCost)+' (originally '+fmt(ep.cost)+'). Duration: '+safDur+' years.');
+            }else{
+              addLog('🎓 SAF sponsors your '+ep.name+'! FREE education (dedicated study). Duration: '+safDur+' years.');
+            }
             addLog('🎖️ On graduation, you will be promoted to '+nextRung.name+' ('+fmt(nextRung.sal)+'/yr)!');
           }
         }
