@@ -4262,7 +4262,8 @@ function confirmAlloc(){
     var nextLvl=curLvl+1;
     if(nextLvl<safLadder.length){
       var nextRung=safLadder[nextLvl];
-      var meetsExp=G.yearsAtLevel>=nextRung.yrsExp;
+      // yrsExp on SAF ladder = cumulative career years from sign-on, use ftYearsWorked (not yearsAtLevel which resets each promo)
+      var meetsExp=(G.ftYearsWorked||0)>=nextRung.yrsExp;
       var meetsReq=!nextRung.req||G.quals.includes(nextRung.req);
       // SAF sponsored education: auto-enrol when you meet experience but need qualification
       if(meetsExp&&nextRung.req&&!G.quals.includes(nextRung.req)&&!G.studying&&!G.safStudyPrompted){
