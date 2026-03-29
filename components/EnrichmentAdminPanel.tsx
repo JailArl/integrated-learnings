@@ -28,6 +28,22 @@ const GOAL_LABELS: Record<string, string> = {
   combined: '🥇 Combined',
 };
 
+type RunLevel = 'class' | 'school';
+
+const RUN_LEVEL_NOTE_RE = /\[run_level:(class|school)\]/i;
+
+function getRunLevelFromNotes(notes: string | null | undefined): RunLevel {
+  if (!notes) return 'class';
+  const match = notes.match(RUN_LEVEL_NOTE_RE);
+  return match?.[1]?.toLowerCase() === 'school' ? 'school' : 'class';
+}
+
+function withRunLevelNote(notes: string | null | undefined, runLevel: RunLevel): string {
+  const base = (notes || '').replace(RUN_LEVEL_NOTE_RE, '').trim();
+  const prefix = `[run_level:${runLevel}]`;
+  return base ? `${prefix} ${base}` : prefix;
+}
+
 const EnrichmentAdminPanel: React.FC<Props> = ({
   events, setEvents, detail, setDetail,
   rounds, setRounds, sessions, setSessions,
@@ -38,6 +54,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
   const [creating, setCreating] = useState(false);
   const [newRoundName, setNewRoundName] = useState('');
   const [newRoundGoal, setNewRoundGoal] = useState('combined');
+  const [newRunLevel, setNewRunLevel] = useState<RunLevel>('class');
+  const [dashboardViewMode, setDashboardViewMode] = useState<RunLevel>('class');
+  const [extendingEventId, setExtendingEventId] = useState<string | null>(null);
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [showRoundReport, setShowRoundReport] = useState(false);
 
@@ -58,14 +77,59 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     const { data, error } = await supabase.rpc('create_game_event', {
       p_school_name: newSchool.trim(),
       p_hours: newHours,
+      p_notes: withRunLevelNote('', newRunLevel),
     });
     if (data && !error) {
       setNewSchool('');
+      setNewRunLevel('class');
       loadEvents();
     } else {
       alert('Error creating event: ' + (error?.message || 'Unknown'));
     }
     setCreating(false);
+  };
+
+  const updateEventRunLevel = async (eventId: string, runLevel: RunLevel, notes: string | null | undefined) => {
+    if (!supabase) return;
+    const mergedNotes = withRunLevelNote(notes, runLevel);
+    const { error } = await supabase.from('game_events').update({ notes: mergedNotes }).eq('id', eventId);
+    if (error) {
+      alert('Unable to update event level: ' + error.message);
+      return;
+    }
+
+    setDashboardViewMode(runLevel);
+    if (detail?.id === eventId) {
+      setDetail({ ...detail, notes: mergedNotes });
+      await loadDetail({ ...detail, notes: mergedNotes });
+    }
+    await loadEvents();
+  };
+
+  const prolongAccessCode = async (eventId: string, expiresAt: string, addHours: number) => {
+    if (!supabase) return;
+    setExtendingEventId(eventId);
+    const baseTs = Math.max(Date.now(), new Date(expiresAt).getTime());
+    const nextExpiry = new Date(baseTs + addHours * 60 * 60 * 1000).toISOString();
+
+    const { error } = await supabase
+      .from('game_events')
+      .update({ expires_at: nextExpiry, is_active: true })
+      .eq('id', eventId);
+
+    if (error) {
+      alert('Unable to prolong access code: ' + error.message);
+      setExtendingEventId(null);
+      return;
+    }
+
+    if (detail?.id === eventId) {
+      const updatedDetail = { ...detail, expires_at: nextExpiry, is_active: true };
+      setDetail(updatedDetail);
+      await loadDetail(updatedDetail);
+    }
+    await loadEvents();
+    setExtendingEventId(null);
   };
 
   const toggleEvent = async (id: string, activate: boolean) => {
@@ -101,6 +165,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
   const loadDetail = async (evt: any) => {
     if (!supabase) return;
     setDetail(evt);
+    setDashboardViewMode(getRunLevelFromNotes(evt?.notes));
     const { data: rds } = await supabase.from('game_rounds').select('*').eq('event_id', evt.id).order('round_number');
     setRounds(rds || []);
     const { data: pls } = await supabase.from('players').select('*').eq('event_id', evt.id);
@@ -742,6 +807,51 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     const active = detail.is_active && !expired;
     const activeRound = rounds.find((r: any) => r.is_active);
     const completed = sessions.filter((s: any) => s.is_complete);
+    const eventRunLevel = getRunLevelFromNotes(detail.notes);
+    const byClassMap = players.reduce((acc: Record<string, any[]>, p: any) => {
+      const key = p.class_id || 'UNASSIGNED';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(p);
+      return acc;
+    }, {});
+    const classProgress = Object.entries(byClassMap)
+      .map(([classId, classPlayers]: [string, any[]]) => {
+        const classPlayerIds = new Set(classPlayers.map((p: any) => p.id));
+        const classSessions = sessions.filter((s: any) => classPlayerIds.has(s.player_id));
+        const started = new Set(classSessions.map((s: any) => s.player_id)).size;
+        const completedCount = new Set(classSessions.filter((s: any) => s.is_complete).map((s: any) => s.player_id)).size;
+        const playingNow = classSessions.filter((s: any) => {
+          if (s.is_complete) return false;
+          const updatedAt = s.updated_at ? new Date(s.updated_at).getTime() : 0;
+          return Date.now() - updatedAt <= 120000;
+        }).length;
+        const registered = classPlayers.length;
+        const participationRate = registered > 0 ? Math.round((started / registered) * 100) : 0;
+        const completionRate = registered > 0 ? Math.round((completedCount / registered) * 100) : 0;
+
+        return {
+          classId,
+          registered,
+          started,
+          completed: completedCount,
+          playingNow,
+          participationRate,
+          completionRate,
+        };
+      })
+      .sort((a, b) => a.classId.localeCompare(b.classId));
+
+    const totalRegistered = players.length;
+    const totalStarted = new Set(sessions.map((s: any) => s.player_id)).size;
+    const totalCompleted = new Set(sessions.filter((s: any) => s.is_complete).map((s: any) => s.player_id)).size;
+    const totalPlayingNow = sessions.filter((s: any) => {
+      if (s.is_complete) return false;
+      const updatedAt = s.updated_at ? new Date(s.updated_at).getTime() : 0;
+      return Date.now() - updatedAt <= 120000;
+    }).length;
+    const notStarted = Math.max(0, totalRegistered - totalStarted);
+    const schoolParticipationRate = totalRegistered > 0 ? Math.round((totalStarted / totalRegistered) * 100) : 0;
+    const schoolCompletionRate = totalRegistered > 0 ? Math.round((totalCompleted / totalRegistered) * 100) : 0;
 
     return (
       <div className="space-y-4">
@@ -774,11 +884,49 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                   ⏱️ {timeLeft(detail.expires_at)}
                 </p>
               )}
+              <div className="mt-3 flex gap-2 justify-end">
+                <button
+                  onClick={() => prolongAccessCode(detail.id, detail.expires_at, 24)}
+                  disabled={extendingEventId === detail.id}
+                  className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs hover:bg-amber-100 disabled:opacity-50"
+                >
+                  {extendingEventId === detail.id ? 'Updating...' : '+24h Code'}
+                </button>
+                <button
+                  onClick={() => prolongAccessCode(detail.id, detail.expires_at, 72)}
+                  disabled={extendingEventId === detail.id}
+                  className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg text-xs hover:bg-green-100 disabled:opacity-50"
+                >
+                  {extendingEventId === detail.id ? 'Updating...' : '+72h Code'}
+                </button>
+              </div>
             </div>
           </div>
           <p className="text-sm text-gray-400 mt-3">
             Share this code with students: <strong>integratedlearnings.com.sg/games/life-choices.html</strong>
           </p>
+          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Run Level</p>
+              <p className="text-sm font-semibold text-gray-700">
+                {eventRunLevel === 'school' ? 'School level cohort' : 'Class level cohorts'}
+              </p>
+            </div>
+            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => updateEventRunLevel(detail.id, 'class', detail.notes)}
+                className={`px-3 py-1.5 text-xs font-semibold ${eventRunLevel === 'class' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                Class Level
+              </button>
+              <button
+                onClick={() => updateEventRunLevel(detail.id, 'school', detail.notes)}
+                className={`px-3 py-1.5 text-xs font-semibold ${eventRunLevel === 'school' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                School Level
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Stats */}
@@ -798,6 +946,100 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
             <p className="text-3xl font-bold">{completed.length}</p>
             <p className="text-xs text-gray-500">Completed</p>
           </div>
+        </div>
+
+        {/* Participation Visibility */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div>
+              <h4 className="font-bold text-gray-900">👥 Participation Visibility</h4>
+              <p className="text-xs text-gray-500">
+                Track exactly who has joined, who is active now, and completion by class or whole-school cohort.
+              </p>
+            </div>
+            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => setDashboardViewMode('class')}
+                className={`px-3 py-1.5 text-xs font-semibold ${dashboardViewMode === 'class' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                Class View
+              </button>
+              <button
+                onClick={() => setDashboardViewMode('school')}
+                className={`px-3 py-1.5 text-xs font-semibold ${dashboardViewMode === 'school' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                School View
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+            {[
+              { label: 'Registered', value: totalRegistered.toString() },
+              { label: 'Started', value: totalStarted.toString() },
+              { label: 'Playing Now', value: totalPlayingNow.toString() },
+              { label: 'Completed', value: totalCompleted.toString() },
+              { label: 'Not Started', value: notStarted.toString() },
+            ].map((stat, i) => (
+              <div key={i} className="bg-gray-50 rounded-lg px-3 py-2 text-center">
+                <p className="text-xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-[11px] uppercase tracking-wide text-gray-500">{stat.label}</p>
+              </div>
+            ))}
+          </div>
+
+          {dashboardViewMode === 'school' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="rounded-lg border border-gray-200 p-4">
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">School Participation</p>
+                <p className="text-3xl font-bold text-blue-600">{schoolParticipationRate}%</p>
+                <p className="text-xs text-gray-500 mt-1">{totalStarted}/{Math.max(1, totalRegistered)} started the round</p>
+              </div>
+              <div className="rounded-lg border border-gray-200 p-4">
+                <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">School Completion</p>
+                <p className="text-3xl font-bold text-green-600">{schoolCompletionRate}%</p>
+                <p className="text-xs text-gray-500 mt-1">{totalCompleted}/{Math.max(1, totalRegistered)} completed this round</p>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-gray-500 border-b">
+                    <th className="pb-2">Class</th>
+                    <th className="pb-2">Registered</th>
+                    <th className="pb-2">Started</th>
+                    <th className="pb-2">Playing Now</th>
+                    <th className="pb-2">Completed</th>
+                    <th className="pb-2">Start %</th>
+                    <th className="pb-2">Done %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {classProgress.map((row) => (
+                    <tr key={row.classId} className="border-b border-gray-100">
+                      <td className="py-2 font-semibold text-gray-800">{row.classId}</td>
+                      <td className="py-2">{row.registered}</td>
+                      <td className="py-2">{row.started}</td>
+                      <td className="py-2">{row.playingNow}</td>
+                      <td className="py-2">{row.completed}</td>
+                      <td className="py-2">
+                        <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{row.participationRate}%</span>
+                      </td>
+                      <td className="py-2">
+                        <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs font-semibold">{row.completionRate}%</span>
+                      </td>
+                    </tr>
+                  ))}
+                  {classProgress.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="py-6 text-center text-gray-400">No class roster detected yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Rounds */}
@@ -965,6 +1207,17 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <div className="w-44">
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Run Level</label>
+            <select
+              value={newRunLevel}
+              onChange={e => setNewRunLevel(e.target.value as RunLevel)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="class">Class level</option>
+              <option value="school">School level</option>
+            </select>
+          </div>
           <button
             onClick={createEvent}
             disabled={creating || !newSchool.trim()}
@@ -996,6 +1249,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
       {events.map((evt: any) => {
         const expired = new Date(evt.expires_at) < new Date();
         const active = evt.is_active && !expired;
+        const runLevel = getRunLevelFromNotes(evt.notes);
 
         return (
           <div key={evt.id} className={`bg-white rounded-lg shadow p-5 border-l-4 ${active ? 'border-green-500' : expired ? 'border-red-300' : 'border-gray-300'}`}>
@@ -1003,6 +1257,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
               <div>
                 <h4 className="font-bold text-gray-900">🏫 {evt.school_name}</h4>
                 <p className="text-xs text-gray-400 mt-0.5">Created: {new Date(evt.created_at).toLocaleString()}</p>
+                <p className="text-xs mt-1 text-indigo-600 font-semibold">
+                  {runLevel === 'school' ? 'School level cohort mode' : 'Class level cohort mode'}
+                </p>
               </div>
               <div className="text-right">
                 <div className="text-2xl font-mono font-bold tracking-widest text-blue-600">{evt.access_code}</div>
@@ -1025,6 +1282,13 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
             <div className="flex gap-2 mt-3 flex-wrap">
               <button onClick={() => loadDetail(evt)} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs hover:bg-blue-700 flex items-center gap-1">
                 📊 Dashboard
+              </button>
+              <button
+                onClick={() => prolongAccessCode(evt.id, evt.expires_at, 24)}
+                disabled={extendingEventId === evt.id}
+                className="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs hover:bg-amber-100 disabled:opacity-50"
+              >
+                {extendingEventId === evt.id ? 'Updating...' : '+24h Code'}
               </button>
               {active && (
                 <button onClick={() => toggleEvent(evt.id, false)} className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs hover:bg-red-100">

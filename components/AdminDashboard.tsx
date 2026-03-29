@@ -145,7 +145,7 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors' | 'rankings'>('overview');
-  const [activeSection, setActiveSection] = useState<'tuition' | 'enrichment'>('tuition');
+  const [activeSection, setActiveSection] = useState<'tuition' | 'enrichment'>('enrichment');
   const [enrichmentEvents, setEnrichmentEvents] = useState<any[]>([]);
   const [enrichmentDetail, setEnrichmentDetail] = useState<any>(null);
   const [enrichmentRounds, setEnrichmentRounds] = useState<any[]>([]);
@@ -478,12 +478,6 @@ export default function AdminDashboard() {
               className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/tutors' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
             >
               Tutor Review
-            </button>
-            <button
-              onClick={() => navigate('/enrichment/game')}
-              className="px-4 py-2 rounded-lg font-semibold transition bg-green-100 text-green-700 hover:bg-green-200"
-            >
-              🎮 Preview Game
             </button>
           </div>
         </div>
