@@ -2959,7 +2959,8 @@ function renderAlloc(){
       h+='</div>';
       h+='<div style="display:flex;align-items:center;gap:8px">';
       h+='<span style="font-size:10px;color:#6b7280">Extra repayment:</span>';
-      h+='<input type="range" class="sl" id="carlsl" min="0" max="'+Math.min(G.carLoan,Math.max(0,G.cash))+'" step="500" value="0" style="width:100px">';
+      var carSliderStep=G.carLoan<500?1:500;
+      h+='<input type="range" class="sl" id="carlsl" min="0" max="'+Math.min(G.carLoan,Math.max(0,G.cash))+'" step="'+carSliderStep+'" value="0" style="width:100px">';
       h+='<span id="carlsv" style="font-size:11px;font-weight:700;color:#dc2626">$0</span>';
       h+='</div></div>';
     }
@@ -3802,8 +3803,8 @@ function confirmAlloc(){
     if(pay>0){
       G.cash-=pay;
       let rem=pay;
-      ['studyLoan','propLoan','carLoan'].forEach(k=>{if(G[k]>0){const p=Math.min(rem,G[k]);G[k]-=p;rem-=p;}});
-      if(loans()===0){G.hi+=300;addLog('🎉 DEBT FREE! +100 HI 🎊 — financial weight lifted!');}
+      ['studyLoan','propLoan','carLoan'].forEach(k=>{var before=G[k]||0;if(before>0){const p=Math.min(rem,before);G[k]-=p;rem-=p;if(G[k]<=0){G[k]=0;G.hi+=50;addLog('🎉 '+k.replace('Loan','')+' loan PAID OFF early! +50 HI');}}});
+      if(loans()===0){G.hi+=200;addLog('🎉 DEBT FREE! +200 HI 🎊 — financial weight lifted!');}
       else addLog('📋 Loan repay -'+fmt(pay)+' (remaining: '+fmt(loans())+')');
     }
   }
@@ -3811,13 +3812,17 @@ function confirmAlloc(){
   var carlsl=el('carlsl');
   if(carlsl){
     var carPay=Math.min(parseInt(carlsl.value)||0,G.carLoan,G.cash);
-    if(carPay>0){G.cash-=carPay;G.carLoan-=carPay;addLog('🚗 Car loan extra repay -'+fmt(carPay)+' | Remaining: '+fmt(G.carLoan));}
+    if(carPay>0){
+      G.cash-=carPay;G.carLoan=Math.max(0,G.carLoan-carPay);
+      if(G.carLoan===0){G.hi+=50;addLog('🚗🎉 Car loan PAID OFF early! +50 HI 🎊');}
+      else{addLog('🚗 Car loan extra repay -'+fmt(carPay)+' | Remaining: '+fmt(G.carLoan));}
+    }
   }
     // Primary home mortgage extra repayment
     var mortlsl=el('mortlsl');
     if(mortlsl){
       var mortPay=Math.min(parseInt(mortlsl.value)||0,G.propLoan||0,G.cash);
-      if(mortPay>0){G.cash-=mortPay;G.propLoan=Math.max(0,(G.propLoan||0)-mortPay);if(G.properties&&G.properties[0])G.properties[0].propLoan=G.propLoan;addLog('🏠 Home loan extra repay -'+fmt(mortPay)+' | Remaining: '+fmt(G.propLoan));}
+      if(mortPay>0){G.cash-=mortPay;G.propLoan=Math.max(0,(G.propLoan||0)-mortPay);if(G.properties&&G.properties[0])G.properties[0].propLoan=G.propLoan;if(G.propLoan<=0){G.propLoan=0;G.hi+=50;addLog('🏠🎉 Home loan PAID OFF early! +50 HI 🎊');}else{addLog('🏠 Home loan extra repay -'+fmt(mortPay)+' | Remaining: '+fmt(G.propLoan));}}
     }
     // Investment property mortgages extra repayment
     if(G.properties&&G.properties.length>1){G.properties.slice(1).forEach(function(pp,pidx){var sl=el('invmort'+pidx);if(!sl)return;var pay=Math.min(parseInt(sl.value)||0,pp.propLoan||0,G.cash);if(pay>0){G.cash-=pay;pp.propLoan=Math.max(0,(pp.propLoan||0)-pay);addLog('🏠 '+pp.name+' mortgage extra repay -'+fmt(pay)+' | Remaining: '+fmt(pp.propLoan));}});}
@@ -3972,6 +3977,8 @@ function confirmAlloc(){
       var principalPerYr=Math.round(origLoan/carTen);
       G.cash-=carPayment;
       G.carLoan=Math.max(0,G.carLoan-principalPerYr);
+      // Clean up rounding remainders — if under $100 left, treat as paid off
+      if(G.carLoan>0&&G.carLoan<100){G.cash-=G.carLoan;G.carLoan=0;}
       G.carLoanYearsPaid=(G.carLoanYearsPaid||0)+1;
       if(G.cash<0){emergencyBorrow(Math.abs(G.cash),'car loan payment');G.cash=0;}
       if(G.carLoan<=0){
@@ -4290,7 +4297,15 @@ function confirmAlloc(){
             var safDur=ep.dur||ep.durPT;
             // Diploma = 100% sponsored (free). Degree = 50% sponsored.
             var safCost=(nextRung.req==='Degree')?Math.round(ep.cost*0.5):0;
-            G.studying={id:ep.id,name:ep.name+' (SAF-Sponsored)',grants:ep.grants,ptMode:true,total:safDur,left:safDur,cost:safCost,safSponsored:true};
+            // If soldier can't afford their share, auto-take study loan for the shortfall
+            var safShortfall=Math.max(0,safCost-G.cash);
+            if(safShortfall>0){
+              G.studyLoan=(G.studyLoan||0)+safShortfall;
+              addLog('📋 Study loan taken for degree fees: '+fmt(safShortfall)+' (SAF covers the other 50%)');
+            }
+            if(safCost>0&&G.cash>=safCost){G.cash-=safCost;}
+            else if(safCost>0){G.cash=0;}
+            G.studying={id:ep.id,name:ep.name+' (SAF-Sponsored)',grants:ep.grants,ptMode:true,total:safDur,left:safDur,cost:0,safSponsored:true};
             G.safStudyPrompted=true;
             if(safCost>0){
               addLog('🎓 SAF sponsors 50% of your '+ep.name+'! You pay '+fmt(safCost)+' (originally '+fmt(ep.cost)+'). Duration: '+safDur+' years.');
