@@ -460,25 +460,26 @@ const FIELDS=[
    noMoonlight:true,    // SAF regulars cannot moonlight
    safRegular:true,     // special SAF career path
    nsOnly:true,  // only available at ORD for work-first males
-   desc:'Sign on as SAF Regular after NS. Army sponsors your Diploma & Degree. Steady climb from Specialist to Officer. Bonded — no field switch.',
+   desc:'Sign on as SAF Regular after NS. Start as 3SG Specialist. Army sponsors your Diploma & Degree. Climb from NCO to Officer. Bonded — no field switch.',
    available:['ns_signon'],  // only via ORD sign-on choice, not normal field selection
    ladder:[
-     // Realistic SG SAF career: enlistee sign-on → Specialist Cadet School → NCO → sponsored study → Officer
+     // Realistic SG SAF Regular career: sign-on at 3SG (after SCS) → NCO → WO → sponsored study → Officer
      // Sources: MINDEF careers portal, SAF salary benchmarks, Seedly/HWZ forums
-     // Max realistic rank for normal sign-on: LTC (Lieutenant Colonel). COL/BG/General = scholar/elite track only.
-     {level:0,name:'Private (Regular)',sal:24000,req:null,cpf:true,type:'FT',yrsExp:0},
-     {level:1,name:'3SG Specialist',sal:31000,req:null,cpf:true,type:'FT',yrsExp:1,
-      note:'After Specialist Cadet School (SCS). +$10K sign-on bonus.'},
-     {level:2,name:'Staff Sergeant (SSG)',sal:38000,req:null,cpf:true,type:'FT',yrsExp:3},
-     {level:3,name:'Master Sergeant (MSG)',sal:46000,req:'Diploma',cpf:true,type:'FT',yrsExp:5,
+     // Regulars do NOT start as Private — PTE is NSF only. Sign-on starts at 3SG.
+     // Max realistic rank for non-scholar: MAJ (officer path) or MWO (specialist path).
+     {level:0,name:'3rd Sergeant (3SG)',sal:28000,req:null,cpf:true,type:'FT',yrsExp:0,
+      note:'Sign-on as regular after SCS. $15K sign-on bonus!'},
+     {level:1,name:'2nd Sergeant (2SG)',sal:32000,req:null,cpf:true,type:'FT',yrsExp:2},
+     {level:2,name:'1st Sergeant (1SG)',sal:38000,req:null,cpf:true,type:'FT',yrsExp:5},
+     {level:3,name:'Staff Sergeant (SSG)',sal:46000,req:'Diploma',cpf:true,type:'FT',yrsExp:8,
       note:'SAF sponsors your Poly Diploma (free!). Promoted on graduation.'},
-     {level:4,name:'Warrant Officer (WO)',sal:58000,req:'Diploma',cpf:true,type:'FT',yrsExp:8},
-     {level:5,name:'Officer (2LT/LTA)',sal:72000,req:'Degree',cpf:true,type:'FT',yrsExp:10,
-      note:'SAF sponsors your Degree (free!). Commissioned as Officer on graduation.'},
-     {level:6,name:'Captain (CPT)',sal:96000,req:'Degree',cpf:true,type:'FT',yrsExp:14},
-     {level:7,name:'Major (MAJ)',sal:120000,req:'Degree',cpf:true,type:'FT',yrsExp:18},
-     {level:8,name:'Lt Colonel (LTC)',sal:156000,req:'Degree',cpf:true,type:'FT',yrsExp:25,
-      note:'Highest realistic rank for normal sign-on. COL/BG/General requires scholar track.'},
+     {level:4,name:'Master Sergeant (MSG)',sal:55000,req:'Diploma',cpf:true,type:'FT',yrsExp:12},
+     {level:5,name:'3rd Warrant Officer (3WO)',sal:64000,req:'Degree',cpf:true,type:'FT',yrsExp:16,
+      note:'SAF sponsors your Degree (free!). Commissioned path opens.'},
+     {level:6,name:'Captain (CPT)',sal:78000,req:'Degree',cpf:true,type:'FT',yrsExp:20,
+      note:'Crossed to officer track after degree. Commissioned via OCS.'},
+     {level:7,name:'Major (MAJ)',sal:100000,req:'Degree',cpf:true,type:'FT',yrsExp:25,
+      note:'Highest realistic rank for non-scholar regular sign-on.'},
    ]},
 ];
 
@@ -1486,18 +1487,18 @@ function renderORDChoice(){
   h+='<div style="font-size:32px">🎖️</div>';
   h+='<div style="flex:1">';
   h+='<h3 style="font-size:16px;font-weight:700;color:#1e3a5f;margin-bottom:4px">Path 1: Sign On as SAF Regular</h3>';
-  h+='<p style="font-size:12px;color:#6b7280;line-height:1.6;margin-bottom:8px">Career soldier. SAF <strong>sponsors your Diploma & Degree for FREE</strong>. Climb from Specialist → Warrant Officer → Officer → up to Lt Colonel. Iron rice bowl — cannot be retrenched. No side gigs allowed.</p>';
+  h+='<p style="font-size:12px;color:#6b7280;line-height:1.6;margin-bottom:8px">Career soldier. Start as <strong>3SG Specialist</strong> after SCS. SAF <strong>sponsors your Diploma & Degree for FREE</strong>. Climb from NCO → Warrant Officer → Officer → up to Major. Iron rice bowl — cannot be retrenched. No side gigs allowed.</p>';
   h+='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
   h+='<span class="tag tgn" style="font-size:9px">🛡️ Cannot be retrenched</span>';
   h+='<span class="tag tbl" style="font-size:9px">🎓 FREE education (Diploma + Degree)</span>';
-  h+='<span class="tag tpu" style="font-size:9px">💰 $10K sign-on bonus</span>';
+  h+='<span class="tag tpu" style="font-size:9px">💰 $15K sign-on bonus</span>';
   h+='<span class="tag tam" style="font-size:9px">⚠️ No side gigs / moonlighting</span>';
   h+='<span class="tag tam" style="font-size:9px">🔒 Bonded — no field switch</span>';
   h+='</div>';
   h+='<div style="font-size:11px;color:#1e3a5f;background:#eff6ff;border-radius:8px;padding:8px 10px;line-height:1.6">';
-  h+='<strong>Career Ladder:</strong> Private $24K → 3SG $31K → SSG $38K → MSG $46K (Diploma) → WO $58K → Officer $72K (Degree) → CPT $96K → MAJ $120K → LTC $156K';
+  h+='<strong>Career Ladder:</strong> 3SG $28K → 2SG $32K → 1SG $38K → SSG $46K (Diploma) → MSG $55K → 3WO $64K (Degree) → CPT $78K → MAJ $100K';
   h+='</div>';
-  h+='<div style="font-size:10px;color:#6b7280;margin-top:6px">❤️ +15 HI/yr — purpose & brotherhood, but regimented life. Max rank for normal sign-on: LTC (General requires scholar track)</div>';
+  h+='<div style="font-size:10px;color:#6b7280;margin-top:6px">❤️ +15 HI/yr — purpose & brotherhood, but regimented life. Max rank for normal sign-on: MAJ (General requires scholar track)</div>';
   h+='</div></div></div>';
 
   // Path 2: Freelancer
@@ -1553,9 +1554,9 @@ function renderORDChoice(){
       G.safSignOn=true;
       var safF=FIELDS.find(f=>f.id==='saf');
       G.jobSal=safF.ladder[0].sal;
-      G.cash+=10000; // sign-on bonus
+      G.cash+=15000; // sign-on bonus
       G.hi+=50;
-      addLog('🎖️ Signed on as SAF Regular! Starting as Private at '+fmt(safF.ladder[0].sal)+'/yr. 💰 $10,000 sign-on bonus!');
+      addLog('🎖️ Signed on as SAF Regular! Starting as 3SG Specialist at '+fmt(safF.ladder[0].sal)+'/yr. 💰 $15,000 sign-on bonus!');
       addLog('🎓 SAF will sponsor your Diploma and Degree — FREE education as you climb the ranks!');
       UI.phase='news';
       saveG();render();
@@ -4227,8 +4228,9 @@ function confirmAlloc(){
   if(!(G.studying&&G.studying.ptMode))G.ftYearsWorked=(G.ftYearsWorked||0)+1; // FT-only experience counter — skip during mid-career PT study
   // Random event roll for this year (~35% chance, feels natural)
   G._evThisYear=Math.random()<0.35;
-  // Check milestone bonus (5/10/15/20 years)
-  var msCheck=MILESTONES.find(m=>m.years===G.yearsWorked&&!(G.milestoneClaimed||[]).includes(m.years));
+  // Check milestone bonus (5/10/15/20 years) — uses ftYearsWorked (full-time only, excludes PT study years)
+  var ftYW=G.ftYearsWorked||0;
+  var msCheck=MILESTONES.find(m=>m.years===ftYW&&!(G.milestoneClaimed||[]).includes(m.years));
   if(msCheck){G.milestonePending=msCheck.years;}
   // Natural salary growth + persistent cert salary boost
   if(G.jobLevel>=0){
