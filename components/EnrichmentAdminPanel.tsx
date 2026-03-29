@@ -64,6 +64,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
   const [newInstructorName, setNewInstructorName] = useState('');
   const [creatingCode, setCreatingCode] = useState(false);
   const [classRoundStatuses, setClassRoundStatuses] = useState<any[]>([]);
+  const [showDayChampion, setShowDayChampion] = useState(false);
+  const [dayChampionData, setDayChampionData] = useState<any>(null);
+  const [loadingDayChampion, setLoadingDayChampion] = useState(false);
 
   // Load events on mount
   useEffect(() => { loadEvents(); }, []);
@@ -775,6 +778,53 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
               {ranked.length === 0 && <p style={{ color: '#9ca3af', textAlign: 'center', padding: '16px' }}>No scores yet!</p>}
             </div>
 
+            {/* Class Champions */}
+            {(() => {
+              const classGroups: Record<string, any[]> = {};
+              ranked.forEach((p: any) => {
+                const cls = p.players?.class_id || 'UNKNOWN';
+                if (!classGroups[cls]) classGroups[cls] = [];
+                classGroups[cls].push(p);
+              });
+              const classChamps = Object.entries(classGroups)
+                .map(([cls, players]) => ({ cls, champ: players[0], count: players.length }))
+                .sort((a, b) => a.cls.localeCompare(b.cls));
+              if (classChamps.length <= 1) return null;
+              return (
+                <div>
+                  <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '8px' }}>🏅 Class Champions</h2>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+                    {classChamps.map(({ cls, champ, count }) => {
+                      const primaryVal = goal === 'ff_earliest' ? (champ.ffAge ? `FF Age ${champ.ffAge}` : 'N/A')
+                        : goal === 'highest_nw' ? fmtFull(champ.nw)
+                        : goal === 'highest_hi' ? `HI: ${champ.hi}`
+                        : goal === 'highest_cpf' ? fmtFull(champ.cpf)
+                        : `${champ.final_score.toLocaleString()} pts`;
+                      return (
+                        <div key={cls} style={{ background: '#fefce8', border: '1.5px solid #fde68a', borderRadius: '10px', padding: '10px 14px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <strong style={{ fontSize: '14px' }}>Class {cls}</strong>
+                            <span style={{ fontSize: '10px', color: '#6b7280' }}>{count} players</span>
+                          </div>
+                          <div style={{ marginTop: '4px', fontSize: '13px' }}>
+                            🏆 <strong>{champ.student}</strong>
+                            <span style={{ marginLeft: '8px', fontFamily: 'monospace', fontWeight: 700, color: '#2563eb', fontSize: '12px' }}>{primaryVal}</span>
+                          </div>
+                          {champ.titles.length > 0 && (
+                            <div style={{ marginTop: '4px', display: 'flex', flexWrap: 'wrap', gap: '3px' }}>
+                              {champ.titles.slice(0, 3).map((t: any) => (
+                                <span key={t.id} style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '9999px', backgroundColor: t.color + '20', color: t.color, fontWeight: 700 }}>{t.icon} {t.name}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Full Standings Table */}
             <div>
               <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '8px' }}>📋 Full Standings</h2>
@@ -860,6 +910,213 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     );
   };
 
+  // ── Day Champion: aggregate all rounds ──
+  const loadDayChampion = async () => {
+    if (!supabase || !detail) return;
+    setLoadingDayChampion(true);
+    // Get all sessions across all rounds for this event
+    const { data: allSess } = await supabase
+      .from('game_sessions')
+      .select('*, players(class_id, index_number)')
+      .eq('event_id', detail.id)
+      .order('final_score', { ascending: false });
+
+    if (!allSess || allSess.length === 0) {
+      setDayChampionData({ players: [], rounds: rounds, roundResults: [] });
+      setShowDayChampion(true);
+      setLoadingDayChampion(false);
+      return;
+    }
+
+    // Group by player (using player_id)
+    const playerMap: Record<string, { playerId: string; student: string; classId: string; roundScores: any[]; totalScore: number; bestScore: number; roundsPlayed: number; lastGs: any }> = {};
+    allSess.forEach((s: any) => {
+      if (!s.final_score || s.final_score <= 0) return;
+      const pid = s.player_id;
+      const student = `${s.players?.class_id}-${s.players?.index_number}`;
+      if (!playerMap[pid]) {
+        playerMap[pid] = { playerId: pid, student, classId: s.players?.class_id || '?', roundScores: [], totalScore: 0, bestScore: 0, roundsPlayed: 0, lastGs: null };
+      }
+      const rd = rounds.find((r: any) => r.id === s.round_id);
+      playerMap[pid].roundScores.push({
+        roundId: s.round_id,
+        roundNum: rd?.round_number || 0,
+        roundName: rd?.round_name || '?',
+        goal: rd?.goal || 'combined',
+        score: s.final_score,
+        nw: s.net_worth || 0,
+        hi: s.happiness || 0,
+        cpf: s.cpf || 0,
+        ffAge: s.game_state?.ffAge || null,
+        isComplete: s.is_complete,
+      });
+      playerMap[pid].totalScore += s.final_score;
+      if (s.final_score > playerMap[pid].bestScore) playerMap[pid].bestScore = s.final_score;
+      playerMap[pid].roundsPlayed++;
+      if (!playerMap[pid].lastGs || s.final_score > (playerMap[pid].lastGs?.final_score || 0)) {
+        playerMap[pid].lastGs = s.game_state;
+      }
+    });
+
+    const allPlayers = Object.values(playerMap).sort((a, b) => b.totalScore - a.totalScore);
+
+    // Per-round winners
+    const roundResults = rounds.map((r: any) => {
+      const roundSessions = allSess
+        .filter((s: any) => s.round_id === r.id && s.final_score > 0)
+        .sort((a: any, b: any) => b.final_score - a.final_score);
+      const winner = roundSessions[0];
+      return {
+        round: r,
+        winner: winner ? `${winner.players?.class_id}-${winner.players?.index_number}` : null,
+        winnerScore: winner?.final_score || 0,
+        playerCount: roundSessions.length,
+      };
+    });
+
+    // Class champions (overall)
+    const classGroups: Record<string, typeof allPlayers> = {};
+    allPlayers.forEach(p => {
+      if (!classGroups[p.classId]) classGroups[p.classId] = [];
+      classGroups[p.classId].push(p);
+    });
+    const classChamps = Object.entries(classGroups)
+      .map(([cls, pls]) => ({ cls, champ: pls[0], count: pls.length }))
+      .sort((a, b) => a.cls.localeCompare(b.cls));
+
+    setDayChampionData({ players: allPlayers, rounds, roundResults, classChamps });
+    setShowDayChampion(true);
+    setLoadingDayChampion(false);
+  };
+
+  const renderDayChampion = () => {
+    if (!showDayChampion || !dayChampionData) return null;
+    const { players: allPlayers, roundResults, classChamps } = dayChampionData;
+    const top3 = allPlayers.slice(0, 3);
+
+    return (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center overflow-y-auto p-4">
+        <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full my-8">
+          <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white rounded-t-xl z-10">
+            <h3 className="text-lg font-bold">🏆 Overall Day Champion — {detail?.school_name}</h3>
+            <button onClick={() => setShowDayChampion(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={18} /></button>
+          </div>
+          <div className="p-6 space-y-6">
+            {/* Overall Top 3 */}
+            <div>
+              <h4 className="font-bold text-gray-900 mb-3 text-sm border-b-2 border-gray-200 pb-1">👑 Overall Top 3 — Cumulative Score Across All Rounds</h4>
+              {top3.length === 0 && <p className="text-gray-400 text-center py-4">No scores yet!</p>}
+              {top3.map((p: any, i: number) => {
+                const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉';
+                const bg = i === 0 ? 'bg-yellow-50 border-yellow-200' : i === 1 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200';
+                const report = p.lastGs ? analyzePlayer(p.lastGs) : null;
+                return (
+                  <div key={p.playerId} className={`${bg} border-2 rounded-xl p-4 mb-2`}>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <span className="text-2xl mr-2">{medal}</span>
+                        <strong className="text-base">{p.student}</strong>
+                        <span className="ml-3 font-mono font-bold text-blue-600 text-lg">{p.totalScore.toLocaleString()} pts</span>
+                        <span className="ml-2 text-xs text-gray-400">({p.roundsPlayed} round{p.roundsPlayed > 1 ? 's' : ''} played)</span>
+                      </div>
+                      <span className="text-xs text-gray-400">Best: {p.bestScore.toLocaleString()}</span>
+                    </div>
+                    {/* Round breakdown */}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {p.roundScores.sort((a: any, b: any) => a.roundNum - b.roundNum).map((rs: any) => (
+                        <span key={rs.roundId} className="px-2 py-1 bg-white/70 rounded text-xs border border-gray-200">
+                          R{rs.roundNum}: <strong className="text-blue-600">{rs.score.toLocaleString()}</strong>
+                          <span className="ml-1 text-gray-400">{rs.isComplete ? '✅' : '🎮'}</span>
+                        </span>
+                      ))}
+                    </div>
+                    {report && report.titles.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {report.titles.slice(0, 5).map((t: any) => (
+                          <span key={t.id} className="px-2 py-0.5 rounded-full text-[10px] font-bold" style={{ backgroundColor: t.color + '15', color: t.color }}>{t.icon} {t.name}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Per-Round Winners */}
+            <div>
+              <h4 className="font-bold text-gray-900 mb-3 text-sm border-b-2 border-gray-200 pb-1">🔄 Round-by-Round Winners</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {roundResults.map((rr: any) => (
+                  <div key={rr.round.id} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                    <div className="text-xs text-gray-400 font-semibold">Round {rr.round.round_number}</div>
+                    <div className="text-sm font-bold truncate">{rr.round.round_name}</div>
+                    <div className="text-xs text-gray-400">{GOAL_LABELS[rr.round.goal] || rr.round.goal} · {rr.playerCount} players</div>
+                    {rr.winner ? (
+                      <div className="mt-1 text-sm">🏆 <strong>{rr.winner}</strong> <span className="font-mono text-blue-600">{rr.winnerScore.toLocaleString()}</span></div>
+                    ) : (
+                      <div className="mt-1 text-xs text-gray-300">No scores</div>
+                    )}
+                  </div>
+                ))}
+                {roundResults.length === 0 && <p className="text-gray-400 text-sm col-span-3 text-center py-4">No rounds yet.</p>}
+              </div>
+            </div>
+
+            {/* Class Champions */}
+            {classChamps && classChamps.length > 1 && (
+              <div>
+                <h4 className="font-bold text-gray-900 mb-3 text-sm border-b-2 border-gray-200 pb-1">🏅 Class Champions — Overall</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {classChamps.map(({ cls, champ, count }: any) => (
+                    <div key={cls} className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                      <div className="flex justify-between">
+                        <strong className="text-sm">Class {cls}</strong>
+                        <span className="text-[10px] text-gray-400">{count} players</span>
+                      </div>
+                      <div className="mt-1 text-sm">🏆 <strong>{champ.student}</strong></div>
+                      <div className="text-xs font-mono text-blue-600">{champ.totalScore.toLocaleString()} pts ({champ.roundsPlayed}R)</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Full Overall Standings */}
+            <div>
+              <h4 className="font-bold text-gray-900 mb-3 text-sm border-b-2 border-gray-200 pb-1">📋 Full Overall Standings</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-gray-500 border-b-2 border-gray-200 text-xs">
+                      <th className="pb-2 pr-2">#</th>
+                      <th className="pb-2 pr-2">Student</th>
+                      <th className="pb-2 pr-2">Class</th>
+                      <th className="pb-2 pr-2">Total Score</th>
+                      <th className="pb-2 pr-2">Best Round</th>
+                      <th className="pb-2 pr-2">Rounds</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allPlayers.slice(0, 50).map((p: any, i: number) => (
+                      <tr key={p.playerId} className={`border-b border-gray-50 ${i < 3 ? 'bg-yellow-50/50' : ''}`}>
+                        <td className="py-1.5 pr-2 text-xs">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</td>
+                        <td className="py-1.5 pr-2 font-semibold">{p.student}</td>
+                        <td className="py-1.5 pr-2 text-gray-400 text-xs">{p.classId}</td>
+                        <td className="py-1.5 pr-2 font-bold font-mono text-blue-600">{p.totalScore.toLocaleString()}</td>
+                        <td className="py-1.5 pr-2 font-mono text-xs">{p.bestScore.toLocaleString()}</td>
+                        <td className="py-1.5 pr-2 text-xs text-gray-400">{p.roundsPlayed}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ─── Event Detail View ───
   if (detail) {
     const expired = new Date(detail.expires_at) < new Date();
@@ -918,6 +1175,8 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
         {renderReportCard()}
         {/* Round Report Modal */}
         {renderRoundReport()}
+        {/* Day Champion Modal */}
+        {renderDayChampion()}
 
         {/* Back + Delete */}
         <div className="flex items-center justify-between">
@@ -1263,6 +1522,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
               <div className="flex gap-2">
                 <button onClick={() => setShowRoundReport(true)} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700 flex items-center gap-1">
                   📊 Round Report
+                </button>
+                <button onClick={loadDayChampion} disabled={loadingDayChampion} className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs hover:bg-amber-700 flex items-center gap-1 disabled:opacity-50">
+                  {loadingDayChampion ? '⏳...' : '👑 Day Champion'}
                 </button>
                 <button onClick={() => loadDetail(detail)} className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
                   <RefreshCw size={14} /> Refresh
