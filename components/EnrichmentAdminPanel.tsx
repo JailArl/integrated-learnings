@@ -860,10 +860,18 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
         {/* Round Report Modal */}
         {renderRoundReport()}
 
-        {/* Back button */}
-        <button onClick={() => setDetail(null)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-          <ChevronLeft size={16} /> Back to Events
-        </button>
+        {/* Back + Delete */}
+        <div className="flex items-center justify-between">
+          <button onClick={() => setDetail(null)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+            <ChevronLeft size={16} /> Back to Events
+          </button>
+          <button
+            onClick={() => deleteEvent(detail.id)}
+            className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 rounded-lg text-xs hover:bg-red-100 flex items-center gap-1"
+          >
+            <Trash2 size={14} /> Delete Event
+          </button>
+        </div>
 
         {/* Event header */}
         <div className="bg-white rounded-lg shadow p-6">

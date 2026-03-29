@@ -458,30 +458,6 @@ export default function AdminDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Admin Page Navigation */}
-        <div className="mb-6 flex items-center border-b border-gray-200 pb-4">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigate('/admin')}
-              className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              Dashboard
-            </button>
-            <button
-              onClick={() => navigate('/admin/matching')}
-              className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/matching' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              Matching
-            </button>
-            <button
-              onClick={() => navigate('/admin/tutors')}
-              className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/tutors' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-            >
-              Tutor Review
-            </button>
-          </div>
-        </div>
-
         {/* Section Toggle: Tuition vs Enrichment */}
         <div className="mb-6 flex bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
           <button
@@ -505,6 +481,32 @@ export default function AdminDashboard() {
             🎮 Enrichment
           </button>
         </div>
+
+        {/* Admin Page Navigation — only for Tuition */}
+        {activeSection === 'tuition' && (
+          <div className="mb-6 flex items-center border-b border-gray-200 pb-4">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => navigate('/admin')}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => navigate('/admin/matching')}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/matching' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Matching
+              </button>
+              <button
+                onClick={() => navigate('/admin/tutors')}
+                className={`px-4 py-2 rounded-lg font-semibold transition ${location.pathname === '/admin/tutors' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Tutor Review
+              </button>
+            </div>
+          </div>
+        )}
 
         {activeSection === 'enrichment' && (
           <EnrichmentAdminPanel
