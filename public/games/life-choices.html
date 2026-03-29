@@ -4230,8 +4230,10 @@ function confirmAlloc(){
   // Random event roll for this year (~35% chance, feels natural)
   G._evThisYear=Math.random()<0.35;
   // Check milestone bonus (5/10/15/20 years) — uses ftYearsWorked (full-time only, excludes PT study years)
+  // Freelancers (self-employed: hawker, grab, content creator) have no employer → no milestones
+  var isFreelancer=G.jobLevel<=-2;
   var ftYW=G.ftYearsWorked||0;
-  var msCheck=MILESTONES.find(m=>m.years===ftYW&&!(G.milestoneClaimed||[]).includes(m.years));
+  var msCheck=!isFreelancer?MILESTONES.find(m=>m.years===ftYW&&!(G.milestoneClaimed||[]).includes(m.years)):null;
   if(msCheck){G.milestonePending=msCheck.years;}
   // Natural salary growth + persistent cert salary boost
   if(G.jobLevel>=0){
@@ -4861,12 +4863,30 @@ function renderEvent(){
 // MILESTONE BONUS (5yr/10yr/15yr/20yr)
 // ══════════════════════════════════════
 const MILESTONES=[
-  {years:5,  months:2,  hi:100, icon:'⭐',   title:'5-Year Milestone!',        color:'#d97706',bg:'#fffbeb',border:'#fde68a',note:'Half a decade of dedication! Your employer rewards your loyalty with a 2-month bonus (~17% of annual pay).'},
-  {years:10, months:3,  hi:180, icon:'🌟',   title:'10-Year Milestone!',       color:'#2563eb',bg:'#eff6ff',border:'#93c5fd',note:'A decade of service! You are now a senior pillar. 3-month bonus (~25% of annual pay).'},
-  {years:15, months:4,  hi:280, icon:'🏆',   title:'15-Year Milestone!',       color:'#7c3aed',bg:'#f5f3ff',border:'#c4b5fd',note:'Incredible commitment! Few stay this long. 4-month bonus (~33% of annual pay).'},
-  {years:20, months:6,  hi:400, icon:'👑',   title:'20-Year Milestone!',       color:'#dc2626',bg:'#fef2f2',border:'#fecaca',note:'Two decades! You are a legend. 6-month bonus (50% of annual pay!) — loyalty like this is rare.'},
-  {years:25, months:8,  hi:550, icon:'💎',   title:'25-Year Milestone!',       color:'#0891b2',bg:'#ecfeff',border:'#a5f3fc',note:'A quarter century of excellence! You are a true organisational institution. 8-month bonus (~67% of annual pay!).'},
-  {years:30, months:12, hi:750, icon:'🏅',   title:'30-Year Milestone!',       color:'#059669',bg:'#f0fdf4',border:'#6ee7b7',note:'Thirty years! An extraordinary career of service. A full 12-month bonus — one extra year of salary as recognition of your legendary commitment!'},
+  {years:5,  months:2,  hi:100, icon:'⭐',   title:'5-Year Milestone!',        color:'#d97706',bg:'#fffbeb',border:'#fde68a',
+   note:'Half a decade of dedication! Your employer rewards your loyalty with a 2-month bonus (~17% of annual pay).',
+   safNote:'5 years of service to the nation! SAF Performance Bonus (SAFPB) — 2-month bonus for dedication to defence.',
+   safTitle:'5-Year Service Award! 🎖️'},
+  {years:10, months:3,  hi:180, icon:'🌟',   title:'10-Year Milestone!',       color:'#2563eb',bg:'#eff6ff',border:'#93c5fd',
+   note:'A decade of service! You are now a senior pillar. 3-month bonus (~25% of annual pay).',
+   safNote:'A decade defending Singapore! NS Long Service Medal + 3-month SAFPB. You are now eligible for the INVEST pension plan — SAF contributes to your retirement fund on top of CPF!',
+   safTitle:'10-Year Long Service Medal! 🎖️'},
+  {years:15, months:4,  hi:280, icon:'🏆',   title:'15-Year Milestone!',       color:'#7c3aed',bg:'#f5f3ff',border:'#c4b5fd',
+   note:'Incredible commitment! Few stay this long. 4-month bonus (~33% of annual pay).',
+   safNote:'15 years in uniform! Commendation Medal + 4-month SAFPB. Your INVEST pension is growing steadily. You are the backbone of the SAF.',
+   safTitle:'15-Year Commendation Medal! 🎖️'},
+  {years:20, months:6,  hi:400, icon:'👑',   title:'20-Year Milestone!',       color:'#dc2626',bg:'#fef2f2',border:'#fecaca',
+   note:'Two decades! You are a legend. 6-month bonus (50% of annual pay!) — loyalty like this is rare.',
+   safNote:'20 years of distinguished service! Long Service Medal (with clasp) + 6-month SAFPB. INVEST pension now substantial. You can retire with full pension benefits at any time!',
+   safTitle:'20-Year Distinguished Service! 🎖️'},
+  {years:25, months:8,  hi:550, icon:'💎',   title:'25-Year Milestone!',       color:'#0891b2',bg:'#ecfeff',border:'#a5f3fc',
+   note:'A quarter century of excellence! You are a true organisational institution. 8-month bonus (~67% of annual pay!).',
+   safNote:'25 years — a quarter century defending Singapore! Meritorious Service Medal + 8-month SAFPB. Full pension eligibility. You are an institution in the SAF.',
+   safTitle:'25-Year Meritorious Service! 🎖️'},
+  {years:30, months:12, hi:750, icon:'🏅',   title:'30-Year Milestone!',       color:'#059669',bg:'#f0fdf4',border:'#6ee7b7',
+   note:'Thirty years! An extraordinary career of service. A full 12-month bonus — one extra year of salary as recognition of your legendary commitment!',
+   safNote:'30 years in the SAF! Pingat Jasa Gemilang (PJG) — national recognition for exceptional service to Singapore\'s defence. 12-month SAFPB + full pension + lifetime medical benefits!',
+   safTitle:'30-Year PJG National Award! 🎖️'},
 ];
 
 function renderMilestone(){
@@ -4875,25 +4895,34 @@ function renderMilestone(){
   const bonus=Math.round((G.jobSal||0)*(ms.months/12));
   const fld=getField();
   const jobName=G.jobLevel>=0&&fld?fld.ladder[G.jobLevel]?.name:(G.jobLevel<=-2?UNIVERSAL[(-G.jobLevel-2)]?.name:'your job');
+  const isSAF=G.field==='saf';
+  const msTitle=isSAF&&ms.safTitle?ms.safTitle:ms.title;
+  const msNote=isSAF&&ms.safNote?ms.safNote:ms.note;
+  const bonusLabel=isSAF?'SAF Performance Bonus (SAFPB)':'Loyalty Bonus';
 
   let h='<div style="text-align:center;padding:20px 0 16px">';
-  h+='<div style="font-size:64px;margin-bottom:8px">'+ms.icon+'</div>';
-  h+='<h2 style="font-size:24px;font-weight:800;color:'+ms.color+';margin-bottom:6px">'+ms.title+'</h2>';
-  h+='<p style="font-size:14px;color:#6b7280;margin-bottom:4px">'+ms.years+' years at work — Age '+G.age+'</p>';
+  h+='<div style="font-size:64px;margin-bottom:8px">'+(isSAF?'🎖️':ms.icon)+'</div>';
+  h+='<h2 style="font-size:24px;font-weight:800;color:'+ms.color+';margin-bottom:6px">'+msTitle+'</h2>';
+  h+='<p style="font-size:14px;color:#6b7280;margin-bottom:4px">'+ms.years+' years'+(isSAF?' in the SAF':' at work')+' — Age '+G.age+'</p>';
   if(fld)h+='<p style="font-size:12px;color:'+fld.color+';font-weight:600">'+fld.icon+' '+fld.name+' · '+jobName+'</p>';
   h+='</div>';
 
   h+='<div class="card" style="background:'+ms.bg+';border-color:'+ms.border+'">';
-  h+='<p style="font-size:13px;color:'+ms.color+';font-weight:700;margin-bottom:10px">'+ms.note+'</p>';
+  h+='<p style="font-size:13px;color:'+ms.color+';font-weight:700;margin-bottom:10px">'+msNote+'</p>';
 
   h+='<table class="it">';
-  h+='<tr><td colspan="2" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;padding-bottom:6px">MILESTONE REWARDS</td></tr>';
-  h+='<tr><td>🎁 Loyalty Bonus ('+ms.months+' month'+(ms.months>1?'s':'')+' salary)</td><td class="p" style="font-weight:800">+'+fmt(bonus)+'</td></tr>';
-  h+='<tr><td>😊 Happiness Boost (career satisfaction)</td><td class="p" style="font-weight:800;color:'+ms.color+'">+'+ms.hi+' HI</td></tr>';
+  h+='<tr><td colspan="2" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#9ca3af;padding-bottom:6px">'+(isSAF?'SAF SERVICE REWARDS':'MILESTONE REWARDS')+'</td></tr>';
+  h+='<tr><td>🎁 '+bonusLabel+' ('+ms.months+' month'+(ms.months>1?'s':'')+' salary)</td><td class="p" style="font-weight:800">+'+fmt(bonus)+'</td></tr>';
+  h+='<tr><td>😊 '+(isSAF?'Morale & Pride':'Happiness Boost')+' (career satisfaction)</td><td class="p" style="font-weight:800;color:'+ms.color+'">+'+ms.hi+' HI</td></tr>';
+  if(isSAF&&ms.years>=10)h+='<tr><td>🏛️ INVEST Pension Contribution</td><td class="p" style="font-weight:800;color:#7c3aed">Active</td></tr>';
   h+='</table>';
 
   h+='<div style="background:rgba(255,255,255,.7);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:11px;color:#374151;line-height:1.7">';
-  h+='💡 <strong>SG Reality:</strong> Many companies give long-service awards and loyalty bonuses. In the civil service, the Annual Variable Component (AVC) and National Bonus reward long-serving officers. Staying committed compounds your career growth!';
+  if(isSAF){
+    h+='💡 <strong>SG Reality:</strong> SAF regulars receive the SAF Performance Bonus (SAFPB) annually, plus long-service medals at 10/15/20/25 years. The INVEST plan (from 10 years) is a pension scheme on top of CPF — MINDEF contributes to your retirement. At 20+ years, you qualify for full pension benefits upon retirement.';
+  }else{
+    h+='💡 <strong>SG Reality:</strong> Many companies give long-service awards and loyalty bonuses. In the civil service, the Annual Variable Component (AVC) and National Bonus reward long-serving officers. Staying committed compounds your career growth!';
+  }
   h+='</div>';
   h+='</div>';
 
@@ -5948,17 +5977,26 @@ async function verifyCode(){
       el('bvc').textContent='🔓 Verify Code';el('bvc').disabled=false;return;
     }
     // Valid! Store event info and show step 2
-    EVT={id:row.event_id,school:row.school_name,expires:new Date(row.expires_at),code:code};
+    EVT={id:row.event_id,school:row.school_name,expires:new Date(row.expires_at),code:code,mode:'cohort'};
+    // Fetch session_mode from game_events
+    var evtRow=await dbQ('game_events',{id:EVT.id},true);
+    if(evtRow&&evtRow.session_mode)EVT.mode=evtRow.session_mode;
     el('event-school').textContent='🏫 '+row.school_name;
     updateEventTimer();
     // Load rounds for this event
     var rounds=await dbJ('game_rounds','*',{event_id:EVT.id},'round_number.asc');
-    var activeRd=Array.isArray(rounds)?rounds.find(r=>r.is_active):null;
-    if(activeRd){
-      RD=activeRd;
+    if(EVT.mode==='classroom'){
+      // In classroom mode, round is determined per-class at login — show info banner
       el('round-banner').style.display='block';
-      var gls={ff_earliest:'🏁 Race to Financial Freedom',highest_nw:'💰 Highest Net Worth',highest_hi:'😊 Happiest Life',highest_cpf:'🏛️ Best Retirement Fund',balanced_life:'⚖️ Most Balanced Life',combined:'🥇 Combined Score'};
-      el('round-info').textContent='Round '+activeRd.round_number+': '+(gls[activeRd.goal]||activeRd.round_name);
+      el('round-info').textContent='📚 Classroom mode — your round starts when your instructor activates it';
+    }else{
+      var activeRd=Array.isArray(rounds)?rounds.find(r=>r.is_active):null;
+      if(activeRd){
+        RD=activeRd;
+        el('round-banner').style.display='block';
+        var gls={ff_earliest:'🏁 Race to Financial Freedom',highest_nw:'💰 Highest Net Worth',highest_hi:'😊 Happiest Life',highest_cpf:'🏛️ Best Retirement Fund',balanced_life:'⚖️ Most Balanced Life',combined:'🥇 Combined Score'};
+        el('round-info').textContent='Round '+activeRd.round_number+': '+(gls[activeRd.goal]||activeRd.round_name);
+      }
     }
     el('login-step1').classList.add('hidden');
     el('login-step2').classList.remove('hidden');
@@ -5997,8 +6035,17 @@ async function doLogin(){
     P=player;
     // Get active round
     if(!RD){
-      var rounds=await dbQ('game_rounds',{event_id:EVT.id,is_active:true},false);
-      RD=Array.isArray(rounds)?rounds[0]||null:null;
+      if(EVT.mode==='classroom'){
+        // Classroom mode: check class_round_status for this class
+        var crs=await dbQ('class_round_status',{event_id:EVT.id,class_id:cls,is_active:true},true);
+        if(crs&&crs.round_id){
+          var rdRow=await dbQ('game_rounds',{id:crs.round_id},true);
+          if(rdRow)RD=rdRow;
+        }
+      }else{
+        var rounds=await dbQ('game_rounds',{event_id:EVT.id,is_active:true},false);
+        RD=Array.isArray(rounds)?rounds[0]||null:null;
+      }
     }
     G=newG();SID=null;
     if(RD&&player.id){

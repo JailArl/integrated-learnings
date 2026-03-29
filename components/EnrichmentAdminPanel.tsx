@@ -59,6 +59,10 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
   const [extendingEventId, setExtendingEventId] = useState<string | null>(null);
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [showRoundReport, setShowRoundReport] = useState(false);
+  const [classroomCodes, setClassroomCodes] = useState<any[]>([]);
+  const [newClassId, setNewClassId] = useState('');
+  const [newInstructorName, setNewInstructorName] = useState('');
+  const [creatingCode, setCreatingCode] = useState(false);
 
   // Load events on mount
   useEffect(() => { loadEvents(); }, []);
@@ -170,6 +174,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     setRounds(rds || []);
     const { data: pls } = await supabase.from('players').select('*').eq('event_id', evt.id);
     setPlayers(pls || []);
+    loadClassroomCodes(evt.id);
     const activeRound = (rds || []).find((r: any) => r.is_active);
     if (activeRound) {
       const { data: sess } = await supabase
@@ -204,6 +209,44 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     });
     setNewRoundName('');
     loadDetail(detail);
+  };
+
+  // ── Classroom Codes ──
+  const loadClassroomCodes = async (eventId: string) => {
+    if (!supabase) return;
+    const { data } = await supabase.from('classroom_codes').select('*').eq('event_id', eventId).order('class_id');
+    setClassroomCodes(data || []);
+  };
+
+  const createClassroomCode = async () => {
+    if (!supabase || !detail || !newClassId.trim()) return;
+    setCreatingCode(true);
+    const { data, error } = await supabase.rpc('create_classroom_code', {
+      p_event_id: detail.id,
+      p_class_id: newClassId.trim(),
+      p_instructor_name: newInstructorName.trim() || null,
+    });
+    if (error) {
+      alert('Error creating classroom code: ' + error.message);
+    } else {
+      setNewClassId('');
+      setNewInstructorName('');
+      await loadClassroomCodes(detail.id);
+    }
+    setCreatingCode(false);
+  };
+
+  const toggleClassroomCode = async (codeId: string, activate: boolean) => {
+    if (!supabase) return;
+    await supabase.from('classroom_codes').update({ is_active: activate }).eq('id', codeId);
+    if (detail) loadClassroomCodes(detail.id);
+  };
+
+  const deleteClassroomCode = async (codeId: string) => {
+    if (!supabase) return;
+    if (!confirm('Delete this classroom code? The instructor will lose access.')) return;
+    await supabase.from('classroom_codes').delete().eq('id', codeId);
+    if (detail) loadClassroomCodes(detail.id);
   };
 
   const fmt = (n: number) => n >= 1000 ? `$${(n / 1000).toFixed(0)}K` : `$${n}`;
@@ -934,6 +977,68 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                 School Level
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Classroom Codes — for part-time instructors */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h4 className="font-bold text-gray-900 mb-1">🔑 Classroom Instructor Codes</h4>
+          <p className="text-xs text-gray-500 mb-4">
+            Generate sub-codes for part-time instructors. They use these at <strong>/classroom-admin</strong> to monitor their class only.
+          </p>
+          {classroomCodes.length > 0 && (
+            <div className="space-y-2 mb-4">
+              {classroomCodes.map((cc: any) => (
+                <div key={cc.id} className="flex items-center gap-3 py-2 px-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <span className="font-mono font-bold text-blue-600 tracking-wider text-sm">{cc.sub_code}</span>
+                  <span className="text-sm font-semibold text-gray-800">Class {cc.class_id}</span>
+                  {cc.instructor_name && <span className="text-xs text-gray-500">({cc.instructor_name})</span>}
+                  <span className={`ml-auto px-2 py-0.5 rounded-full text-xs font-semibold ${cc.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
+                    {cc.is_active ? 'Active' : 'Disabled'}
+                  </span>
+                  <button
+                    onClick={() => toggleClassroomCode(cc.id, !cc.is_active)}
+                    className="px-2 py-1 text-xs border border-gray-200 rounded hover:bg-gray-100"
+                  >
+                    {cc.is_active ? 'Disable' : 'Enable'}
+                  </button>
+                  <button
+                    onClick={() => deleteClassroomCode(cc.id)}
+                    className="px-2 py-1 text-xs text-red-600 border border-red-200 rounded hover:bg-red-50"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2 items-end flex-wrap">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Class ID</label>
+              <input
+                value={newClassId}
+                onChange={e => setNewClassId(e.target.value.toUpperCase())}
+                placeholder="e.g. 3A"
+                maxLength={10}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-24"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase mb-1">Instructor Name (optional)</label>
+              <input
+                value={newInstructorName}
+                onChange={e => setNewInstructorName(e.target.value)}
+                placeholder="e.g. Mr Tan"
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-40"
+              />
+            </div>
+            <button
+              onClick={createClassroomCode}
+              disabled={creatingCode || !newClassId.trim()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50"
+            >
+              {creatingCode ? 'Creating...' : '+ Generate Code'}
+            </button>
           </div>
         </div>
 
