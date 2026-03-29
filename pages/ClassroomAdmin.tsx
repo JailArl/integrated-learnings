@@ -112,6 +112,15 @@ const ClassroomAdmin: React.FC = () => {
     if (!supabase || !auth) return;
     setLoading(true);
 
+    // Re-fetch session_mode from game_events (chief may have changed it)
+    const { data: evtData } = await supabase.from('game_events').select('session_mode').eq('id', auth.eventId).single();
+    if (evtData && evtData.session_mode !== auth.sessionMode) {
+      const updated = { ...auth, sessionMode: evtData.session_mode };
+      setAuth(updated);
+      sessionStorage.setItem('classroom_auth', JSON.stringify(updated));
+    }
+    const currentMode = evtData?.session_mode || auth.sessionMode;
+
     // Load rounds for this event
     const { data: rds } = await supabase.from('game_rounds').select('*').eq('event_id', auth.eventId).order('round_number');
     setRounds(rds || []);
@@ -127,7 +136,7 @@ const ClassroomAdmin: React.FC = () => {
     // Determine active round for this class
     const classActiveRound = (crs || []).find((cr: any) => cr.is_active);
     const globalActiveRound = (rds || []).find((r: any) => r.is_active);
-    const activeRoundId = auth.sessionMode === 'classroom'
+    const activeRoundId = currentMode === 'classroom'
       ? classActiveRound?.round_id
       : globalActiveRound?.id;
 
