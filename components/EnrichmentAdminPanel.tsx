@@ -63,6 +63,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
   const [newClassId, setNewClassId] = useState('');
   const [newInstructorName, setNewInstructorName] = useState('');
   const [creatingCode, setCreatingCode] = useState(false);
+  const [classRoundStatuses, setClassRoundStatuses] = useState<any[]>([]);
 
   // Load events on mount
   useEffect(() => { loadEvents(); }, []);
@@ -175,6 +176,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     const { data: pls } = await supabase.from('players').select('*').eq('event_id', evt.id);
     setPlayers(pls || []);
     loadClassroomCodes(evt.id);
+    // Load class round statuses for classroom mode
+    const { data: crs } = await supabase.from('class_round_status').select('*').eq('event_id', evt.id);
+    setClassRoundStatuses(crs || []);
     const activeRound = (rds || []).find((r: any) => r.is_active);
     if (activeRound) {
       const { data: sess } = await supabase
@@ -1157,25 +1161,42 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
 
         {/* Rounds */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h4 className="font-bold text-gray-900 mb-3">🔄 Rounds</h4>
+          <h4 className="font-bold text-gray-900 mb-3">🔄 Rounds {detail.session_mode === 'classroom' ? <span className="text-xs font-normal text-amber-600 ml-2">📚 Classroom mode — each instructor controls their own class rounds</span> : ''}</h4>
           <div className="space-y-2">
-            {rounds.map((r: any) => (
-              <div key={r.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${r.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {r.is_active ? '● LIVE' : '○'}
-                </span>
-                <span className="flex-1 font-semibold text-sm">Round {r.round_number}: {r.round_name}</span>
-                <span className="text-xs text-gray-400">{GOAL_LABELS[r.goal] || r.goal}</span>
-                {!r.is_active && (
-                  <button
-                    onClick={() => activateRound(r.id, detail.id)}
-                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    ▶ Activate
-                  </button>
+            {rounds.map((r: any) => {
+              // In classroom mode, show per-class status instead of global activate button
+              const classStatuses = detail.session_mode === 'classroom'
+                ? classRoundStatuses.filter((crs: any) => crs.round_id === r.id && crs.is_active)
+                : [];
+              return (
+              <div key={r.id} className="py-2 border-b border-gray-100 last:border-0">
+                <div className="flex items-center gap-3">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${r.is_active ? 'bg-green-100 text-green-700' : detail.session_mode === 'classroom' && classStatuses.length > 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {r.is_active ? '● LIVE (all)' : detail.session_mode === 'classroom' && classStatuses.length > 0 ? `● ${classStatuses.length} class${classStatuses.length > 1 ? 'es' : ''}` : '○'}
+                  </span>
+                  <span className="flex-1 font-semibold text-sm">Round {r.round_number}: {r.round_name}</span>
+                  <span className="text-xs text-gray-400">{GOAL_LABELS[r.goal] || r.goal}</span>
+                  {detail.session_mode !== 'classroom' && !r.is_active && (
+                    <button
+                      onClick={() => activateRound(r.id, detail.id)}
+                      className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                      ▶ Activate
+                    </button>
+                  )}
+                </div>
+                {detail.session_mode === 'classroom' && classStatuses.length > 0 && (
+                  <div className="mt-1 ml-8 flex flex-wrap gap-1">
+                    {classStatuses.map((cs: any) => (
+                      <span key={cs.id} className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">
+                        Class {cs.class_id}
+                      </span>
+                    ))}
+                  </div>
                 )}
               </div>
-            ))}
+              );
+            })}
           </div>
           {/* Add round */}
           <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
