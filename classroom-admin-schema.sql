@@ -47,7 +47,7 @@ CREATE OR REPLACE FUNCTION create_classroom_code(
   p_class_id VARCHAR(20),
   p_instructor_name TEXT DEFAULT NULL
 )
-RETURNS TABLE(sub_code VARCHAR(12), class_id VARCHAR(20)) AS $$
+RETURNS TABLE(out_sub_code VARCHAR(12), out_class_id VARCHAR(20)) AS $$
 DECLARE
   v_event_code VARCHAR(8);
   v_sub_code VARCHAR(12);
