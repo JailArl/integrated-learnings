@@ -5248,8 +5248,8 @@ function renderSummary(){
   h+='<div class="sb2"><label>Happiness</label><div class="sv2 '+(G.hi<0?'n':G.hi<20?'a':'v')+'">'+G.hi+(G.hi<0?' 😩':G.hi<20?' 😟':' 😊')+'</div></div>';
   h+='</div>';
 
-  // ── SALARY ENVY: work-first, age 24+, still no qual ──
-  if(G.workFirst&&G.age>=24&&G.quals.length===0&&!G.studying){
+  // ── SALARY ENVY: work-first, age 24+, still no qual (skip SAF — education is auto-sponsored) ──
+  if(G.workFirst&&G.age>=24&&G.quals.length===0&&!G.studying&&G.field!=='saf'){
     var myField=getField();
     var degreeJob=myField?myField.ladder.find(j=>j.req==='Degree'):null;
     var entryJob=myField?myField.ladder[0]:null;
