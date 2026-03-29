@@ -230,6 +230,18 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     loadDetail(detail);
   };
 
+  const deleteRound = async (roundId: string) => {
+    if (!supabase || !detail) return;
+    if (!confirm('Delete this round and all its sessions? This cannot be undone.')) return;
+    // Delete class_round_status entries for this round
+    await supabase.from('class_round_status').delete().eq('round_id', roundId);
+    // Delete sessions for this round
+    await supabase.from('game_sessions').delete().eq('round_id', roundId);
+    // Delete the round itself
+    await supabase.from('game_rounds').delete().eq('id', roundId);
+    loadDetail(detail);
+  };
+
   // ── Classroom Codes ──
   const loadClassroomCodes = async (eventId: string) => {
     if (!supabase) return;
@@ -1475,6 +1487,15 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                       className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                     >
                       ▶ Activate
+                    </button>
+                  )}
+                  {!r.is_active && (
+                    <button
+                      onClick={() => deleteRound(r.id)}
+                      className="px-2 py-1 text-xs text-red-500 hover:bg-red-50 rounded-lg"
+                      title="Delete round"
+                    >
+                      🗑
                     </button>
                   )}
                 </div>
