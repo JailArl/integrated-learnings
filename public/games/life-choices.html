@@ -2895,13 +2895,20 @@ function renderAlloc(){
       h+='</div></div>';
     }
       if(G.propLoan>0){
-        h+='<div style="margin-top:4px;margin-bottom:6px">';
-        h+='<p style="font-size:10px;color:#9ca3af;margin-bottom:4px">💡 Extra home loan repayment (saves '+Math.round(mortRate2*100)+'%/yr interest):</p>';
-        h+='<div style="display:flex;align-items:center;gap:8px">';
+        var mortMaxRepay=Math.min(G.propLoan,Math.max(0,G.cash));
+        h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:8px;padding:10px 12px;margin-top:6px;margin-bottom:6px">';
+        h+='<p style="font-size:11px;font-weight:700;color:#1d4ed8;margin-bottom:6px">💰 Early Home Loan Repayment <span style="font-size:9px;font-weight:400;color:#6b7280">(saves '+Math.round(mortRate2*100)+'%/yr interest)</span></p>';
+        h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
         h+='<span style="font-size:10px;color:#6b7280">Extra repayment:</span>';
-        h+='<input type="range" class="sl" id="mortlsl" min="0" max="'+Math.min(G.propLoan,Math.max(0,G.cash))+'" step="500" value="0" style="width:120px">';
+        h+='<input type="range" class="sl" id="mortlsl" min="0" max="'+mortMaxRepay+'" step="500" value="0" style="width:120px">';
         h+='<span style="font-size:11px;font-weight:700;color:#2563eb" id="mortlsv">$0</span>';
-        h+='</div></div>';
+        h+='</div>';
+        if(mortMaxRepay>=G.propLoan){
+          h+='<button id="mortpayoff" style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;width:100%">🏠 Pay Off Entire Mortgage ('+fmt(G.propLoan)+')</button>';
+        }else if(mortMaxRepay>0){
+          h+='<p style="font-size:9px;color:#6b7280;margin:0">Max extra repayment: '+fmt(mortMaxRepay)+' (limited by available cash)</p>';
+        }
+        h+='</div>';
       }
       // Investment property mortgages (individual sliders)
       if(G.properties&&G.properties.length>1){
@@ -3357,6 +3364,7 @@ function renderAlloc(){
   el('lsl')?.addEventListener('input',()=>{el('lsv').textContent=fmt(parseInt(el('lsl').value)||0);});
   el('carlsl')?.addEventListener('input',()=>{el('carlsv').textContent=fmt(parseInt(el('carlsl').value)||0);});
     el('mortlsl')?.addEventListener('input',()=>{el('mortlsv').textContent=fmt(parseInt(el('mortlsl').value)||0);updateAllocLiveCash();});
+    el('mortpayoff')?.addEventListener('click',()=>{var ml=el('mortlsl');if(ml){ml.value=ml.max;el('mortlsv').textContent=fmt(parseInt(ml.value)||0);updateAllocLiveCash();}});
     if(G.properties&&G.properties.length>1){G.properties.slice(1).forEach(function(_,pidx){var sl=el('invmort'+pidx);if(sl)sl.addEventListener('input',function(){el('invmortv'+pidx).textContent=fmt(parseInt(sl.value)||0);updateAllocLiveCash();});});}
   function updateAllocLiveCash(){
     // Sum all investment inputs + EF input to show live remaining cash
@@ -4318,11 +4326,18 @@ function confirmAlloc(){
       G.studyLoanTenure=(ptSlGrant==='Degree'||ptSlGrant==='Medical Degree'||ptSlGrant==='Law Degree')?20:10;
       G.studyLoanYearsPaid=0;
       addLog('🎓 Graduated (PT, mid-career)! Earned: '+ptSlGrant+' +30 HI 🎉 | Loan tenure: '+G.studyLoanTenure+'yr');
+      // Reset SAF study flag so next qualification can be sponsored (e.g. Diploma→Degree path)
+      if(G.studying.safSponsored)G.safStudyPrompted=false;
       G.studying=null;
       midCareerGrad=true;
     }
     // Next phase
     if(midCareerGrad){
+      // If milestone also pending this year, show milestone first, then grad
+      if(G.milestonePending){
+        G._pendingGrad=true;
+        saveG();UI.phase='milestone';render();return;
+      }
       saveG();UI.phase='grad';render();return;
     }
     const yw2=G.yearsWorked;
@@ -4889,6 +4904,12 @@ function renderMilestone(){
     G.milestoneClaimed.push(ms.years);
     addLog(ms.icon+' '+ms.years+'-Year Milestone! Bonus: +'+fmt(bonus)+' ('+ms.months+'mo salary) | +'+ms.hi+' HI 🎉');
     G.milestonePending=null;
+    // If mid-career graduation is pending, show grad screen next
+    if(G._pendingGrad){
+      G._pendingGrad=false;
+      UI.phase='grad';
+      saveG();render();return;
+    }
     // Continue to next phase (event/quiz/summary)
     const yw=G.yearsWorked;
     const ev=G._evThisYear,qz=yw%7===2;
