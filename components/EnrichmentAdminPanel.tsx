@@ -111,6 +111,18 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     await loadEvents();
   };
 
+  const updateSessionMode = async (eventId: string, mode: 'cohort' | 'classroom') => {
+    if (!supabase) return;
+    const { error } = await supabase.from('game_events').update({ session_mode: mode }).eq('id', eventId);
+    if (error) { alert('Unable to update session mode: ' + error.message); return; }
+    if (detail?.id === eventId) {
+      const updated = { ...detail, session_mode: mode };
+      setDetail(updated);
+      await loadDetail(updated);
+    }
+    await loadEvents();
+  };
+
   const prolongAccessCode = async (eventId: string, expiresAt: string, addHours: number) => {
     if (!supabase) return;
     setExtendingEventId(eventId);
@@ -979,6 +991,28 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                 className={`px-3 py-1.5 text-xs font-semibold ${eventRunLevel === 'school' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
               >
                 School Level
+              </button>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-xs text-gray-500 uppercase tracking-wide">Round Control</p>
+              <p className="text-sm font-semibold text-gray-700">
+                {detail.session_mode === 'classroom' ? '📚 Classroom — each instructor controls rounds' : '🎯 Cohort — you control all rounds'}
+              </p>
+            </div>
+            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => updateSessionMode(detail.id, 'cohort')}
+                className={`px-3 py-1.5 text-xs font-semibold ${detail.session_mode !== 'classroom' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                🎯 Cohort
+              </button>
+              <button
+                onClick={() => updateSessionMode(detail.id, 'classroom')}
+                className={`px-3 py-1.5 text-xs font-semibold ${detail.session_mode === 'classroom' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+              >
+                📚 Classroom
               </button>
             </div>
           </div>
