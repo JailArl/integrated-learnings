@@ -4225,7 +4225,8 @@ function confirmAlloc(){
   }
   // Exp growth
   G.yearsWorked++;G.yearsAtLevel++;
-  if(!(G.studying&&G.studying.ptMode))G.ftYearsWorked=(G.ftYearsWorked||0)+1; // FT-only experience counter — skip during mid-career PT study
+  // FT-only experience counter — skip during mid-career PT study, BUT SAF regulars still serve full-time during sponsored study
+  if(!(G.studying&&G.studying.ptMode)||(G.studying&&G.studying.safSponsored))G.ftYearsWorked=(G.ftYearsWorked||0)+1;
   // Random event roll for this year (~35% chance, feels natural)
   G._evThisYear=Math.random()<0.35;
   // Check milestone bonus (5/10/15/20 years) — uses ftYearsWorked (full-time only, excludes PT study years)
