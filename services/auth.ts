@@ -259,52 +259,6 @@ export const signOut = async (): Promise<{ success: boolean; error?: string }> =
   }
 };
 
-// Valid school access codes for enrichment program signup
-const VALID_SCHOOL_CODES = new Set([
-  'ENRICH2026',
-  'ILSG2026',
-  'FINLIT2026',
-]);
-
-// Sign up a student (enrichment program)
-export const signUpStudent = async (
-  email: string,
-  password: string,
-  data: { fullName: string; schoolCode: string }
-): Promise<AuthResult> => {
-  if (!supabase) {
-    return { success: false, error: 'Supabase not configured' };
-  }
-
-  // Validate school access code
-  if (!VALID_SCHOOL_CODES.has(data.schoolCode.toUpperCase())) {
-    return { success: false, error: 'Invalid school access code. Please check with your teacher.' };
-  }
-
-  try {
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/enrichment/login`,
-        data: {
-          role: 'student',
-          full_name: data.fullName,
-          school_code: data.schoolCode.toUpperCase(),
-        },
-      },
-    });
-
-    if (authError) throw authError;
-    if (!authData.user) throw new Error('User creation failed');
-
-    const hasSession = !!authData.session;
-    return { success: true, user: authData.user, needsEmailVerification: !hasSession };
-  } catch (error: any) {
-    return { success: false, error: formatAuthError(error.message || 'Unknown error') };
-  }
-};
-
 // Get current user
 export const getCurrentUser = async (): Promise<{
   user: any | null;

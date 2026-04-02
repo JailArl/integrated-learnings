@@ -92,7 +92,7 @@ export const ResetPassword: React.FC = () => {
 
       setSuccess(true);
       setTimeout(() => {
-        navigate(userType === 'tutor' ? '/tutors/login' : '/parents/login');
+        navigate(userType === 'tutor' ? '/tutor-login' : '/studypulse/login');
       }, 2000);
     } catch (err: any) {
       console.error('Password reset error:', err);
@@ -132,7 +132,7 @@ export const ResetPassword: React.FC = () => {
             <h1 className="text-xl font-bold text-gray-900 mb-2">Reset Link Invalid</h1>
             <p className="text-gray-600 mb-6">{error}</p>
             <Link
-              to={userType === 'tutor' ? '/tutors/login' : '/parents/login'}
+              to={userType === 'tutor' ? '/tutor-login' : '/studypulse/login'}
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg font-semibold transition duration-200"
             >
               Back to Login

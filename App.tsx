@@ -3,15 +3,20 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import MainLanding from './pages/MainLanding';
-import TuitionHome from './pages/TuitionHome';
+import FamilyHome from './pages/FamilyHome';
 import EnrichmentHome from './pages/EnrichmentHome';
+import StudyPulseLanding from './pages/StudyPulseLanding';
+import StudyPulseApp from './pages/StudyPulseApp';
+import StudyPulseSetup from './pages/StudyPulseSetup';
+import StudyPulseAdmin from './pages/StudyPulseAdmin';
+import StudyPulseLogin from './pages/StudyPulseLogin';
 import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
 import { AdminDashboard } from './pages/AdminDashboard'; 
 import { AdminMatching } from './pages/AdminMatching';
 import { AdminTutors } from './pages/AdminTutors';
 import { AdminLogin } from './pages/AdminLogin';
-import { About, Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding, TutorRequest, SpecializedRequest } from './pages/ContentPages';
+import { Contact, ExtraLearnings, HolidayPrograms, CourseworkSupport, Policies, TutorLanding } from './pages/ContentPages';
 import InternationalStudents from './pages/InternationalStudents';
 import PersonalityDecode from './pages/PersonalityDecode';
 import ServiceDetail from './pages/ServiceDetail';
@@ -128,11 +133,20 @@ const App: React.FC = () => {
           <Route path="/tutors/interview-results" element={<TutorInterviewResults />} />
           
           {/* Tuition Service Routes */}
-          <Route path="/tuition" element={<TuitionHome />} />
+          <Route path="/tuition" element={<FamilyHome />} />
+          <Route path="/studypulse" element={<StudyPulseLanding />} />
+          <Route path="/studypulse/login" element={<StudyPulseLogin />} />
+          <Route path="/studypulse/app" element={<StudyPulseApp />} />
+          <Route path="/studypulse/setup" element={<StudyPulseSetup />} />
+          <Route path="/studypulse/admin" element={<AdminRoute><StudyPulseAdmin /></AdminRoute>} />
+          {/* Legacy StudyQuest → StudyPulse redirects */}
+          <Route path="/studyquest" element={<Navigate to="/studypulse" replace />} />
+          <Route path="/studyquest/*" element={<Navigate to="/studypulse" replace />} />
           <Route path="/service/:serviceId" element={<ServiceDetail />} />
           <Route path="/tuition/roadmap" element={<RoadmapLanding />} />
           <Route path="/tuition/roadmap/:topicId" element={<RoadmapDetail />} />
           <Route path="/tuition/pricing" element={<Pricing />} />
+          <Route path="/tutor-request" element={<Navigate to="/tuition#parent-inquiry" replace />} />
           <Route path="/tuition/parents" element={<Navigate to="/tuition#parent-inquiry" replace />} />
           <Route path="/tuition/tutors" element={<NewTutorDashboard />} />
           <Route path="/tuition/teach" element={<TutorLanding />} />

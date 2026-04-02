@@ -123,8 +123,23 @@ const Pricing: React.FC = () => {
              to="/tuition#parent-inquiry"
              className="inline-block px-8 py-3 font-bold shadow-lg bg-white hover:bg-slate-100 text-secondary rounded-full transition"
            >
-              📝 Start Learning Assessment →
+              Start Learning Assessment →
            </Link>
+        </div>
+        
+        {/* StudyPulse Cross-sell */}
+        <div className="mt-12 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-8 text-center">
+          <h3 className="text-lg font-bold text-slate-900 mb-2">Already have a tutor? Track if your child is using the time well.</h3>
+          <p className="text-sm text-slate-600 mb-4 max-w-xl mx-auto">
+            Most parents spend $200–$600/month on tuition but have no visibility into daily study habits.
+            StudyPulse gives you check-ins, weekly reports, and exam tracking from <strong>$0/month</strong>.
+          </p>
+          <Link 
+            to="/studypulse"
+            className="inline-block px-6 py-3 font-bold shadow bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-full transition text-sm"
+          >
+            Try Free Study Monitoring →
+          </Link>
         </div>
         
         {/* Simple Policy Link */}

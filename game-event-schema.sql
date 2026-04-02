@@ -83,10 +83,9 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Insert default admin (change password after first login!)
-INSERT INTO admins (username, password_hash)
-VALUES ('teacher', 'lifechoices2025')
-ON CONFLICT (username) DO NOTHING;
+-- Default admin was created during initial setup.
+-- To reset the admin password, use the Supabase dashboard or an Edge Function.
+-- NEVER store plaintext passwords in source code.
 
 -- ══════════════════════════════════════════════════════════════
 -- ACCESS CODE GENERATION FUNCTION
