@@ -59,18 +59,20 @@ ALTER TABLE whatsapp_contacts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_message_templates ENABLE ROW LEVEL SECURITY;
 
--- Create RLS Policies
--- Allow admins to view all WhatsApp contacts
+-- Create RLS Policies (drop first if they exist)
+DROP POLICY IF EXISTS "Admins can view all whatsapp contacts" ON whatsapp_contacts;
+DROP POLICY IF EXISTS "Admins can update whatsapp contacts" ON whatsapp_contacts;
+DROP POLICY IF EXISTS "Admins can view all conversations" ON whatsapp_conversations;
+DROP POLICY IF EXISTS "Admins can insert conversations" ON whatsapp_conversations;
+
 CREATE POLICY "Admins can view all whatsapp contacts"
   ON whatsapp_contacts FOR SELECT
   USING (true);
 
--- Allow admins to update contacts
 CREATE POLICY "Admins can update whatsapp contacts"
   ON whatsapp_contacts FOR UPDATE
   USING (true);
 
--- Conversations - similar policies
 CREATE POLICY "Admins can view all conversations"
   ON whatsapp_conversations FOR SELECT
   USING (true);
@@ -87,7 +89,7 @@ CREATE INDEX IF NOT EXISTS idx_whatsapp_conversations_contact ON whatsapp_conver
 CREATE INDEX IF NOT EXISTS idx_whatsapp_conversations_intent ON whatsapp_conversations(intent);
 CREATE INDEX IF NOT EXISTS idx_whatsapp_conversations_timestamp ON whatsapp_conversations(message_timestamp DESC);
 
--- Insert Default Message Templates
+-- Insert Default Message Templates (skip if already exist)
 INSERT INTO whatsapp_message_templates (template_name, template_type, contact_stage, message_text, requires_personalization, ai_generated)
 VALUES
   (
@@ -113,4 +115,5 @@ VALUES
     'Perfect! I''ve recorded your enquiry: 📚 Subject: {subject}, 👨‍🎓 Level: {level}, 📍 Location: {location}. Our tutors will start bidding to teach your child!',
     true,
     false
-  );
+  )
+ON CONFLICT (template_name) DO NOTHING;
