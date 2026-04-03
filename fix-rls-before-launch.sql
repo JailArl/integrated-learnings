@@ -7,6 +7,9 @@
 DROP POLICY IF EXISTS "parent_requests_select_policy" ON parent_requests;
 DROP POLICY IF EXISTS "parent_requests_insert_policy" ON parent_requests;
 DROP POLICY IF EXISTS "parent_requests_update_policy" ON parent_requests;
+DROP POLICY IF EXISTS "parent_requests_insert" ON parent_requests;
+DROP POLICY IF EXISTS "parent_requests_select_own" ON parent_requests;
+DROP POLICY IF EXISTS "parent_requests_update_admin" ON parent_requests;
 
 -- Anyone can submit a request (public form), but only the submitter or admin read it
 CREATE POLICY "parent_requests_insert" ON parent_requests
@@ -26,6 +29,9 @@ CREATE POLICY "parent_requests_update_admin" ON parent_requests
 DROP POLICY IF EXISTS "tutor_bids_select_policy" ON tutor_bids;
 DROP POLICY IF EXISTS "tutor_bids_insert_policy" ON tutor_bids;
 DROP POLICY IF EXISTS "tutor_bids_update_policy" ON tutor_bids;
+DROP POLICY IF EXISTS "tutor_bids_select" ON tutor_bids;
+DROP POLICY IF EXISTS "tutor_bids_insert" ON tutor_bids;
+DROP POLICY IF EXISTS "tutor_bids_update" ON tutor_bids;
 
 CREATE POLICY "tutor_bids_select" ON tutor_bids
   FOR SELECT USING (
@@ -44,6 +50,9 @@ CREATE POLICY "tutor_bids_update" ON tutor_bids
 DROP POLICY IF EXISTS "matches_select_policy" ON matches;
 DROP POLICY IF EXISTS "matches_insert_policy" ON matches;
 DROP POLICY IF EXISTS "matches_update_policy" ON matches;
+DROP POLICY IF EXISTS "matches_select" ON matches;
+DROP POLICY IF EXISTS "matches_insert_admin" ON matches;
+DROP POLICY IF EXISTS "matches_update" ON matches;
 
 CREATE POLICY "matches_select" ON matches
   FOR SELECT USING (
@@ -67,6 +76,8 @@ DROP POLICY IF EXISTS "classroom_codes_public_read" ON classroom_codes;
 DROP POLICY IF EXISTS "classroom_codes_public_insert" ON classroom_codes;
 DROP POLICY IF EXISTS "classroom_codes_public_update" ON classroom_codes;
 DROP POLICY IF EXISTS "classroom_codes_public_delete" ON classroom_codes;
+DROP POLICY IF EXISTS "classroom_codes_read" ON classroom_codes;
+DROP POLICY IF EXISTS "classroom_codes_admin_write" ON classroom_codes;
 
 CREATE POLICY "classroom_codes_read" ON classroom_codes
   FOR SELECT USING (is_active = true);
@@ -79,6 +90,9 @@ DROP POLICY IF EXISTS "class_round_status_public_read" ON class_round_status;
 DROP POLICY IF EXISTS "class_round_status_public_insert" ON class_round_status;
 DROP POLICY IF EXISTS "class_round_status_public_update" ON class_round_status;
 DROP POLICY IF EXISTS "class_round_status_public_delete" ON class_round_status;
+DROP POLICY IF EXISTS "class_round_status_read" ON class_round_status;
+DROP POLICY IF EXISTS "class_round_status_write" ON class_round_status;
+DROP POLICY IF EXISTS "class_round_status_update" ON class_round_status;
 
 CREATE POLICY "class_round_status_read" ON class_round_status
   FOR SELECT USING (true);
@@ -94,6 +108,8 @@ DROP POLICY IF EXISTS "Anyone can validate access codes" ON game_events;
 DROP POLICY IF EXISTS "game_events_public_insert" ON game_events;
 DROP POLICY IF EXISTS "game_events_public_update" ON game_events;
 DROP POLICY IF EXISTS "game_events_public_delete" ON game_events;
+DROP POLICY IF EXISTS "game_events_read" ON game_events;
+DROP POLICY IF EXISTS "game_events_admin_write" ON game_events;
 
 CREATE POLICY "game_events_read" ON game_events
   FOR SELECT USING (is_active = true);
@@ -106,6 +122,9 @@ DROP POLICY IF EXISTS "Anyone can read players" ON players;
 DROP POLICY IF EXISTS "Anyone can create players" ON players;
 DROP POLICY IF EXISTS "players_public_update" ON players;
 DROP POLICY IF EXISTS "players_public_delete" ON players;
+DROP POLICY IF EXISTS "players_read" ON players;
+DROP POLICY IF EXISTS "players_insert" ON players;
+DROP POLICY IF EXISTS "players_update_own" ON players;
 
 CREATE POLICY "players_read" ON players
   FOR SELECT USING (true);
@@ -121,6 +140,9 @@ DROP POLICY IF EXISTS "Anyone can read sessions" ON game_sessions;
 DROP POLICY IF EXISTS "Anyone can create sessions" ON game_sessions;
 DROP POLICY IF EXISTS "Anyone can update own session" ON game_sessions;
 DROP POLICY IF EXISTS "game_sessions_public_delete" ON game_sessions;
+DROP POLICY IF EXISTS "game_sessions_read" ON game_sessions;
+DROP POLICY IF EXISTS "game_sessions_insert" ON game_sessions;
+DROP POLICY IF EXISTS "game_sessions_update" ON game_sessions;
 
 CREATE POLICY "game_sessions_read" ON game_sessions
   FOR SELECT USING (true);
@@ -135,6 +157,9 @@ CREATE POLICY "game_sessions_update" ON game_sessions
 DROP POLICY IF EXISTS "game_rounds_public_read" ON game_rounds;
 DROP POLICY IF EXISTS "game_rounds_public_insert" ON game_rounds;
 DROP POLICY IF EXISTS "game_rounds_public_update" ON game_rounds;
+DROP POLICY IF EXISTS "game_rounds_read" ON game_rounds;
+DROP POLICY IF EXISTS "game_rounds_insert" ON game_rounds;
+DROP POLICY IF EXISTS "game_rounds_update" ON game_rounds;
 
 CREATE POLICY "game_rounds_read" ON game_rounds
   FOR SELECT USING (true);
@@ -149,6 +174,7 @@ CREATE POLICY "game_rounds_update" ON game_rounds
 -- ─── 5. ADMINS TABLE: no public read ───
 DROP POLICY IF EXISTS "admins_public_read" ON admins;
 DROP POLICY IF EXISTS "admins_select" ON admins;
+DROP POLICY IF EXISTS "admins_service_only" ON admins;
 
 CREATE POLICY "admins_service_only" ON admins
   FOR ALL USING (auth.jwt()->>'role' = 'service_role');
@@ -161,9 +187,14 @@ CREATE POLICY "admins_service_only" ON admins
 
 -- ─── 6. WHATSAPP TABLES: no public read ───
 DROP POLICY IF EXISTS "Admins can view all whatsapp contacts" ON whatsapp_contacts;
+DROP POLICY IF EXISTS "Admins can update whatsapp contacts" ON whatsapp_contacts;
 DROP POLICY IF EXISTS "whatsapp_contacts_public_read" ON whatsapp_contacts;
+DROP POLICY IF EXISTS "whatsapp_contacts_admin" ON whatsapp_contacts;
+DROP POLICY IF EXISTS "Admins can view all conversations" ON whatsapp_conversations;
+DROP POLICY IF EXISTS "Admins can insert conversations" ON whatsapp_conversations;
 DROP POLICY IF EXISTS "whatsapp_conversations_public_read" ON whatsapp_conversations;
 DROP POLICY IF EXISTS "whatsapp_conversations_public_insert" ON whatsapp_conversations;
+DROP POLICY IF EXISTS "whatsapp_conversations_admin" ON whatsapp_conversations;
 
 CREATE POLICY "whatsapp_contacts_admin" ON whatsapp_contacts
   FOR ALL USING (auth.jwt()->>'role' = 'service_role');
