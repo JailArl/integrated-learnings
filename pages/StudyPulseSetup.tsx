@@ -49,7 +49,7 @@ const StudyPulseSetup: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   // Plan
-  const [plan, setPlan] = useState<PlanType>(searchParams.get('plan') === 'premium' ? 'premium' : 'free');
+  const [plan, setPlan] = useState<PlanType>(searchParams.get('plan') === 'premium' ? 'premium' : searchParams.get('plan') === 'family_plus' ? 'family_plus' : 'free');
   const limits = PLAN_LIMITS[plan];
   const availableSubjects = plan === 'free' ? FREE_SUBJECTS : PREMIUM_SUBJECTS;
 
@@ -207,16 +207,21 @@ const StudyPulseSetup: React.FC = () => {
         </div>
 
         {/* Plan selector */}
-        <div className="mb-6 flex gap-3">
-          <button onClick={() => { setPlan('free'); setChildren((prev) => prev.slice(0, 1).map((c) => ({ ...c, subjects: c.subjects.slice(0, 1) }))); }} className={`flex-1 rounded-xl border-2 p-4 text-left transition ${plan === 'free' ? 'border-slate-900 bg-white' : 'border-slate-200 bg-slate-50'}`}>
+        <div className="mb-6 grid grid-cols-3 gap-3">
+          <button onClick={() => { setPlan('free'); setChildren((prev) => prev.slice(0, 1).map((c) => ({ ...c, subjects: c.subjects.slice(0, 1) }))); }} className={`rounded-xl border-2 p-4 text-left transition ${plan === 'free' ? 'border-slate-900 bg-white' : 'border-slate-200 bg-slate-50'}`}>
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Free</p>
             <p className="mt-1 text-lg font-black text-slate-900">$0<span className="text-sm font-normal text-slate-400">/mo</span></p>
             <p className="mt-1 text-xs text-slate-500">1 child · 1 subject · weekly</p>
           </button>
-          <button onClick={() => setPlan('premium')} className={`flex-1 rounded-xl border-2 p-4 text-left transition ${plan === 'premium' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-slate-50'}`}>
+          <button onClick={() => setPlan('premium')} className={`rounded-xl border-2 p-4 text-left transition ${plan === 'premium' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-slate-50'}`}>
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-600">Premium</p>
             <p className="mt-1 text-lg font-black text-slate-900">$9.90<span className="text-sm font-normal text-slate-400">/mo</span></p>
             <p className="mt-1 text-xs text-slate-500">3 children · 3 subjects · daily</p>
+          </button>
+          <button onClick={() => setPlan('family_plus')} className={`rounded-xl border-2 p-4 text-left transition ${plan === 'family_plus' ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-slate-50'}`}>
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-600">Family+</p>
+            <p className="mt-1 text-lg font-black text-slate-900">$12.90<span className="text-sm font-normal text-slate-400">/mo</span></p>
+            <p className="mt-1 text-xs text-slate-500">5 children · 3 subjects · daily</p>
           </button>
         </div>
 
