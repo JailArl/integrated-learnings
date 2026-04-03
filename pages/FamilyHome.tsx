@@ -105,19 +105,23 @@ const FamilyHome: React.FC = () => {
             </div>
           </div>
 
-          {/* Trust Stats */}
-          <div className="mt-14 grid grid-cols-2 gap-6 border-t border-white/10 pt-8 sm:grid-cols-4">
-            {[
-              { val: 'P1 – JC2', label: 'All Levels' },
-              { val: '15+', label: 'Subjects Covered' },
-              { val: 'Daily', label: 'Study Reports' },
-              { val: '< 3 days', label: 'Avg. Tutor Match' },
-            ].map((s) => (
-              <div key={s.label} className="text-center">
-                <p className="text-2xl font-black text-white sm:text-3xl">{s.val}</p>
-                <p className="mt-1 text-xs text-slate-400">{s.label}</p>
-              </div>
-            ))}
+          {/* Singapore Parent Pain Points */}
+          <div className="mt-14 border-t border-white/10 pt-8">
+            <p className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Sound familiar?</p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                { emoji: '😩', pain: '"I come home tired and I have no energy left to check if they\'ve done their homework."' },
+                { emoji: '📱', pain: '"They say they\'re studying but they\'re on their phone the whole time."' },
+                { emoji: '🤷', pain: '"I work late. By the time I\'m home, I have no idea what they did all evening."' },
+                { emoji: '😤', pain: '"Every time I ask about homework it becomes an argument."' },
+              ].map((p) => (
+                <div key={p.pain} className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-sm">
+                  <span className="text-2xl">{p.emoji}</span>
+                  <p className="mt-2 text-sm leading-relaxed text-slate-300">{p.pain}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-6 text-center text-sm text-slate-400">StudyPulse replaces the guesswork with a simple daily check-in — no nagging required.</p>
           </div>
         </div>
       </section>
