@@ -12,16 +12,6 @@ import {
 } from 'lucide-react';
 import ParentInquiryForm from '../components/ParentInquiryForm';
 
-/* ── tiny mock data for dashboard preview ── */
-const MOCK_SUBJECTS = [
-  { subj: 'Mathematics', status: 'Completed', color: 'emerald' as const },
-  { subj: 'English', status: 'In Progress', color: 'amber' as const },
-  { subj: 'Science', status: 'Not Started', color: 'slate' as const },
-];
-
-const COLOR_MAP = { emerald: 'bg-emerald-400', amber: 'bg-amber-400', slate: 'bg-slate-500' } as const;
-const TEXT_MAP = { emerald: 'text-emerald-400', amber: 'text-amber-400', slate: 'text-slate-500' } as const;
-
 const FamilyHome: React.FC = () => {
   return (
     <div className="min-h-screen bg-stone-50 text-slate-900">
@@ -39,21 +29,21 @@ const FamilyHome: React.FC = () => {
             {/* Left — Copy + CTAs */}
             <div>
               <p className="mb-4 inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
-                For Families
+                For Singapore Parents
               </p>
               <h1 className="font-sans text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
-                Your Child&rsquo;s Education,
-                <span className="block text-amber-300">Sorted.</span>
+                You can&rsquo;t be there
+                <span className="block text-amber-300">every evening.</span>
               </h1>
               <p className="mt-5 max-w-lg text-base leading-7 text-slate-300 sm:text-lg">
-                Build daily study habits together. Find the right tutor. Get homework help when your child is stuck. Everything Singapore parents need — in one place.
+                You work hard. You pay for tuition. But when you get home, you still don&rsquo;t know if they actually studied. StudyPulse gives you a simple daily answer — without the nagging.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
                   to="/studypulse"
                   className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/25 transition hover:bg-amber-400"
                 >
-                  Try StudyPulse Free
+                  Try Free — No App Needed
                   <ArrowRight size={16} className="ml-2" />
                 </Link>
                 <a
@@ -63,45 +53,69 @@ const FamilyHome: React.FC = () => {
                   Find a Tutor
                 </a>
               </div>
+              <p className="mt-4 text-xs text-slate-500">Works via WhatsApp. Your child doesn&rsquo;t need to install anything.</p>
             </div>
 
-            {/* Right — Dashboard Preview (CSS mockup, no images needed) */}
+            {/* Right — WhatsApp Conversation Mockup */}
             <div className="hidden lg:block" aria-hidden="true">
               <div className="rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
-                <div className="rounded-xl bg-slate-900/80 p-5">
-                  <div className="mb-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                      <span className="text-xs font-medium text-slate-400">StudyPulse Dashboard</span>
+                <div className="rounded-xl bg-[#0b141a] p-4">
+                  {/* WhatsApp header */}
+                  <div className="mb-3 flex items-center gap-3 border-b border-white/10 pb-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-slate-900">SP</div>
+                    <div>
+                      <p className="text-sm font-semibold text-white">StudyPulse</p>
+                      <p className="text-[10px] text-slate-500">online</p>
                     </div>
-                    <span className="text-xs text-slate-500">Today</span>
                   </div>
 
+                  {/* Chat bubbles */}
                   <div className="space-y-2.5">
-                    {MOCK_SUBJECTS.map((item) => (
-                      <div key={item.subj} className="flex items-center justify-between rounded-lg bg-slate-800/60 px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-2 w-2 rounded-full ${COLOR_MAP[item.color]}`} />
-                          <span className="text-sm font-medium text-slate-200">{item.subj}</span>
-                        </div>
-                        <span className={`text-xs font-medium ${TEXT_MAP[item.color]}`}>{item.status}</span>
+                    {/* Bot message */}
+                    <div className="max-w-[80%]">
+                      <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
+                        <p className="text-sm text-slate-200">Hi Ahmad! 👋 Time for your daily check-in. Did you study today?</p>
+                        <p className="mt-1 text-right text-[10px] text-slate-500">8:30 PM</p>
                       </div>
-                    ))}
+                    </div>
+                    {/* Kid reply */}
+                    <div className="ml-auto max-w-[70%]">
+                      <div className="rounded-lg rounded-tr-none bg-[#005c4b] px-3 py-2">
+                        <p className="text-sm text-white">Yes! Finished Math worksheet ✓</p>
+                        <p className="mt-1 text-right text-[10px] text-emerald-400/70">8:33 PM ✓✓</p>
+                      </div>
+                    </div>
+                    {/* Bot follow-up */}
+                    <div className="max-w-[80%]">
+                      <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
+                        <p className="text-sm text-slate-200">Nice work! 📚 What topic?</p>
+                        <p className="mt-1 text-right text-[10px] text-slate-500">8:33 PM</p>
+                      </div>
+                    </div>
+                    {/* Kid reply 2 */}
+                    <div className="ml-auto max-w-[70%]">
+                      <div className="rounded-lg rounded-tr-none bg-[#005c4b] px-3 py-2">
+                        <p className="text-sm text-white">Fractions — chapter 5</p>
+                        <p className="mt-1 text-right text-[10px] text-emerald-400/70">8:34 PM ✓✓</p>
+                      </div>
+                    </div>
+                    {/* Bot celebration */}
+                    <div className="max-w-[80%]">
+                      <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
+                        <p className="text-sm text-slate-200">🔥 5-day streak! Keep it going!</p>
+                        <p className="mt-1 text-right text-[10px] text-slate-500">8:34 PM</p>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Exam countdown bar */}
-                  <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-amber-300">PSLE &mdash; 127 days left</span>
-                      <span className="text-xs text-amber-400/70">68% on track</span>
-                    </div>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-700">
-                      <div className="h-full w-[68%] rounded-full bg-amber-400" />
-                    </div>
+                  {/* Parent notification preview */}
+                  <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">You receive at 9:45 PM</p>
+                    <p className="mt-1 text-xs text-amber-200/80">✅ Ahmad checked in — Done! Math (Fractions). 🔥 5-day streak.</p>
                   </div>
                 </div>
               </div>
-              <p className="mt-3 text-center text-xs text-slate-500">Your child&rsquo;s daily progress at a glance</p>
+              <p className="mt-3 text-center text-xs text-slate-500">This is how it works. Every evening. No app needed.</p>
             </div>
           </div>
 
