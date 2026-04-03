@@ -32,90 +32,86 @@ const FamilyHome: React.FC = () => {
                 For Singapore Parents
               </p>
               <h1 className="font-sans text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">
-                You can&rsquo;t be there
-                <span className="block text-amber-300">every evening.</span>
+                The right tutor.
+                <span className="block text-amber-300">Daily study habits.</span>
               </h1>
               <p className="mt-5 max-w-lg text-base leading-7 text-slate-300 sm:text-lg">
-                You work hard. You pay for tuition. But when you get home, you still don&rsquo;t know if they actually studied. StudyPulse gives you a simple daily answer — without the nagging.
+                Find a vetted tutor who fits your child&rsquo;s learning style — and track if they&rsquo;re actually studying every day, via WhatsApp. One platform, two problems solved.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href="#parent-inquiry"
+                  className="inline-flex items-center justify-center rounded-xl bg-sky-500 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-sky-500/25 transition hover:bg-sky-400"
+                >
+                  Find a Tutor
+                  <Search size={16} className="ml-2" />
+                </a>
                 <Link
                   to="/studypulse"
                   className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-bold text-slate-950 shadow-lg shadow-amber-500/25 transition hover:bg-amber-400"
                 >
-                  Try Free — No App Needed
+                  Try Study Monitoring — Free
                   <ArrowRight size={16} className="ml-2" />
                 </Link>
-                <a
-                  href="#parent-inquiry"
-                  className="inline-flex items-center justify-center rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
-                >
-                  Find a Tutor
-                </a>
               </div>
-              <p className="mt-4 text-xs text-slate-500">Works via WhatsApp. Your child doesn&rsquo;t need to install anything.</p>
+              <p className="mt-4 text-xs text-slate-500">Tutor matching is free. Study monitoring works via WhatsApp — no app needed.</p>
             </div>
 
-            {/* Right — WhatsApp Conversation Mockup */}
-            <div className="hidden lg:block" aria-hidden="true">
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-1 backdrop-blur-sm">
-                <div className="rounded-xl bg-[#0b141a] p-4">
-                  {/* WhatsApp header */}
-                  <div className="mb-3 flex items-center gap-3 border-b border-white/10 pb-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500 text-sm font-bold text-slate-900">SP</div>
-                    <div>
-                      <p className="text-sm font-semibold text-white">StudyPulse</p>
-                      <p className="text-[10px] text-slate-500">online</p>
-                    </div>
+            {/* Right — Two value props side by side */}
+            <div className="hidden lg:block space-y-4" aria-hidden="true">
+              {/* Tutor matching card */}
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/20 text-sky-300">
+                    <Search size={22} />
                   </div>
-
-                  {/* Chat bubbles */}
-                  <div className="space-y-2.5">
-                    {/* Bot message */}
-                    <div className="max-w-[80%]">
-                      <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
-                        <p className="text-sm text-slate-200">Hi Ahmad! 👋 Time for your daily check-in. Did you study today?</p>
-                        <p className="mt-1 text-right text-[10px] text-slate-500">8:30 PM</p>
-                      </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">Tutor Matching</h3>
+                    <p className="mt-1 text-sm text-slate-400">Tell us the subject, level &amp; location. We match by teaching style — not just availability.</p>
+                    <div className="mt-3 flex gap-2">
+                      {['P1–JC2', 'All Subjects', 'No Lock-in'].map((tag) => (
+                        <span key={tag} className="rounded-full bg-sky-500/10 px-2.5 py-1 text-[10px] font-semibold text-sky-300">{tag}</span>
+                      ))}
                     </div>
-                    {/* Kid reply */}
-                    <div className="ml-auto max-w-[70%]">
-                      <div className="rounded-lg rounded-tr-none bg-[#005c4b] px-3 py-2">
-                        <p className="text-sm text-white">Yes! Finished Math worksheet ✓</p>
-                        <p className="mt-1 text-right text-[10px] text-emerald-400/70">8:33 PM ✓✓</p>
-                      </div>
-                    </div>
-                    {/* Bot follow-up */}
-                    <div className="max-w-[80%]">
-                      <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
-                        <p className="text-sm text-slate-200">Nice work! 📚 What topic?</p>
-                        <p className="mt-1 text-right text-[10px] text-slate-500">8:33 PM</p>
-                      </div>
-                    </div>
-                    {/* Kid reply 2 */}
-                    <div className="ml-auto max-w-[70%]">
-                      <div className="rounded-lg rounded-tr-none bg-[#005c4b] px-3 py-2">
-                        <p className="text-sm text-white">Fractions — chapter 5</p>
-                        <p className="mt-1 text-right text-[10px] text-emerald-400/70">8:34 PM ✓✓</p>
-                      </div>
-                    </div>
-                    {/* Bot celebration */}
-                    <div className="max-w-[80%]">
-                      <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
-                        <p className="text-sm text-slate-200">🔥 5-day streak! Keep it going!</p>
-                        <p className="mt-1 text-right text-[10px] text-slate-500">8:34 PM</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Parent notification preview */}
-                  <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">You receive at 9:45 PM</p>
-                    <p className="mt-1 text-xs text-amber-200/80">✅ Ahmad checked in — Done! Math (Fractions). 🔥 5-day streak.</p>
                   </div>
                 </div>
               </div>
-              <p className="mt-3 text-center text-xs text-slate-500">This is how it works. Every evening. No app needed.</p>
+
+              {/* Study monitoring card */}
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300">
+                    <BarChart3 size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">Study Monitoring</h3>
+                    <p className="mt-1 text-sm text-slate-400">Daily WhatsApp check-ins with your child. See if they studied — without the nagging.</p>
+                    <div className="mt-3 flex gap-2">
+                      {['WhatsApp', 'Streaks', 'Reports'].map((tag) => (
+                        <span key={tag} className="rounded-full bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold text-amber-300">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick WhatsApp preview */}
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/20 text-violet-300">
+                    <MessageCircle size={22} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white">Homework Help</h3>
+                    <p className="mt-1 text-sm text-slate-400">Stuck on a problem sum? WhatsApp us anytime — a qualified tutor will guide your child through it.</p>
+                    <div className="mt-3 flex gap-2">
+                      {['Any Subject', 'Instant Help', 'Guided Steps'].map((tag) => (
+                        <span key={tag} className="rounded-full bg-violet-500/10 px-2.5 py-1 text-[10px] font-semibold text-violet-300">{tag}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -45,6 +45,8 @@ const StudyPulseSetup: React.FC = () => {
   const [parentName, setParentName] = useState('');
   const [parentEmail, setParentEmail] = useState('');
   const [parentWhatsapp, setParentWhatsapp] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Plan
   const [plan, setPlan] = useState<PlanType>(searchParams.get('plan') === 'premium' ? 'premium' : 'free');
@@ -91,6 +93,8 @@ const StudyPulseSetup: React.FC = () => {
     if (!parentName.trim()) return 'Parent name is required';
     if (!parentEmail.trim() || !/\S+@\S+\.\S+/.test(parentEmail)) return 'Valid email is required';
     if (!parentWhatsapp.trim()) return 'WhatsApp number is required';
+    if (password.length < 8) return 'Password must be at least 8 characters';
+    if (password !== confirmPassword) return 'Passwords do not match';
     return '';
   };
 
@@ -135,7 +139,7 @@ const StudyPulseSetup: React.FC = () => {
       // Try sign up
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: parentEmail,
-        password: parentWhatsapp.slice(-8).padStart(8, '0'), // temp password from phone tail
+        password,
         options: { data: { full_name: parentName, role: 'parent' } },
       });
 
@@ -143,7 +147,7 @@ const StudyPulseSetup: React.FC = () => {
         // If already exists, try sign in
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email: parentEmail,
-          password: parentWhatsapp.slice(-8).padStart(8, '0'),
+          password,
         });
         if (signInError) { setError('Account issue: ' + signInError.message); setLoading(false); return; }
         userId = signInData.user!.id;
@@ -232,6 +236,14 @@ const StudyPulseSetup: React.FC = () => {
               <div>
                 <label className={labelCls}>WhatsApp Number</label>
                 <input className={inputCls} type="tel" placeholder="+65 9123 4567" value={parentWhatsapp} onChange={(e) => setParentWhatsapp(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Password</label>
+                <input className={inputCls} type="password" placeholder="At least 8 characters" value={password} onChange={(e) => setPassword(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Confirm Password</label>
+                <input className={inputCls} type="password" placeholder="Re-enter your password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
               </div>
             </div>
           </div>
