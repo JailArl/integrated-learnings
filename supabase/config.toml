@@ -1,2 +1,11 @@
 [functions.interview-message]
 verify_jwt = false
+
+[functions.send-whatsapp]
+verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.studypulse-cron]
+verify_jwt = false
