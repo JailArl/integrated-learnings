@@ -16,11 +16,14 @@ async function sendTwilioWhatsApp(
 ): Promise<{ success: boolean; sid?: string; error?: string }> {
   const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
-  const from = Deno.env.get("TWILIO_WHATSAPP_FROM"); // e.g. "whatsapp:+14155238886"
+  const fromRaw = Deno.env.get("TWILIO_WHATSAPP_FROM"); // e.g. "whatsapp:+14155238886" or just "+14155238886"
 
-  if (!accountSid || !authToken || !from) {
-    return { success: false, error: "Twilio credentials not configured" };
+  if (!accountSid || !authToken || !fromRaw) {
+    return { success: false, error: `Twilio credentials not configured. SID: ${!!accountSid}, Token: ${!!authToken}, From: ${fromRaw || 'missing'}` };
   }
+
+  // Ensure `from` has whatsapp: prefix
+  const from = fromRaw.startsWith("whatsapp:") ? fromRaw : `whatsapp:${fromRaw}`;
 
   // Ensure `to` is in whatsapp: format
   const toFormatted = to.startsWith("whatsapp:") ? to : `whatsapp:${to}`;
@@ -47,7 +50,8 @@ async function sendTwilioWhatsApp(
     return {
       success: false,
       error: data?.message || `Twilio error ${resp.status}`,
-    };
+      debug: { to: toFormatted, from, code: data?.code, moreInfo: data?.more_info },
+    } as { success: boolean; error: string; sid?: string; debug?: unknown };
   }
 
   return { success: true, sid: data.sid };
