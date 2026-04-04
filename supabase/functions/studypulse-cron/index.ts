@@ -217,19 +217,44 @@ async function sendCheckinPrompts(
 
     if (existing && existing.length > 0) continue; // Already sent
 
+    // Get today's target (if any)
+    const weekStart = getWeekStart(today);
+    const { data: targets } = await sb
+      .from("sq_weekly_targets")
+      .select("subject_name, daily_quantity, target_unit, remaining_quantity")
+      .eq("child_id", child.id)
+      .eq("week_start", weekStart);
+
+    const hasTargets = targets && targets.length > 0;
+    const todayTarget = hasTargets ? targets[0] : null;
+
     // Create pending checkin record
     await sb.from("sq_checkins").insert({
       child_id: child.id,
       checkin_date: today,
       status: "pending",
       prompt_sent_at: new Date().toISOString(),
+      ...(todayTarget && {
+        target_quantity: todayTarget.daily_quantity,
+        target_unit: todayTarget.target_unit,
+        subject_reported: todayTarget.subject_name,
+      }),
     });
 
-    // Send WhatsApp prompt
+    // Send WhatsApp prompt — target-based or generic
     const isPremium = membership?.plan_type !== "free";
-    const message = isPremium
-      ? `Hey ${child.name}! 📚 Time for your study check-in.\n\nReply with:\n✅ *done* — finished all tasks\n⚡ *did extra* — went beyond the plan\n📝 *partially* — did some\n❌ *no* — didn't study today`
-      : `Hey ${child.name}! 📚 Study check-in time!\n\nDid you study today?\nReply: *yes* or *no*`;
+    let message: string;
+
+    if (hasTargets && isPremium) {
+      const targetLine = targets!.map(t =>
+        `• ${t.subject_name}: *${t.daily_quantity} ${t.target_unit}s*`
+      ).join("\n");
+      message = `Hey ${child.name}! 📚 Today's target:\n${targetLine}\n\nHave you finished? Reply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
+    } else if (isPremium) {
+      message = `Hey ${child.name}! 📚 Time for your study check-in.\n\nReply with:\n✅ *done* — finished all tasks\n⚡ *did extra* — went beyond the plan\n📝 *partially* — did some\n❌ *no* — didn't study today`;
+    } else {
+      message = `Hey ${child.name}! 📚 Study check-in time!\n\nDid you study today?\nReply: *yes* or *no*`;
+    }
 
     await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
     sent++;
@@ -470,6 +495,15 @@ async function sendWeeklySummaries(
 }
 
 // ── TIME HELPERS ──
+
+function getWeekStart(todayStr: string): string {
+  const d = new Date(todayStr);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().split("T")[0];
+}
 
 function isWithinWindow(
   current: string,

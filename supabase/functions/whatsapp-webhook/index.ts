@@ -3,34 +3,21 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 /**
- * WhatsApp Webhook — receives inbound messages + delivery status from Twilio.
+ * WhatsApp Webhook v2 — Target-based check-in system
  *
- * Flow:
- *  1. Kid taps check-in button  →  Twilio POSTs here
- *  2. We parse the reply, create/update sq_checkins
- *  3. Run lightweight anti-cheat (fast-reply detection)
- *  4. Send confirmation / follow-up back via send-whatsapp
+ * Conversation states:
+ *   idle              → normal check-in mode
+ *   setting_target    → kid is setting weekly targets per subject
+ *   partial_count     → kid said "partially", asking how many they did
  */
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Helper: call our own send-whatsapp function
-async function sendReply(to: string, templateName: string, variables?: Record<string, string>) {
-  const url = `${supabaseUrl}/functions/v1/send-whatsapp`;
-  await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${supabaseKey}`,
-    },
-    body: JSON.stringify({ to, template_name: templateName, variables }),
-  });
-}
+// ── SEND HELPERS ──
 
 async function sendRaw(to: string, message: string) {
-  const url = `${supabaseUrl}/functions/v1/send-whatsapp`;
-  await fetch(url, {
+  await fetch(`${supabaseUrl}/functions/v1/send-whatsapp`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -40,78 +27,95 @@ async function sendRaw(to: string, message: string) {
   });
 }
 
-// Map kid's text replies to a check-in status
-function parseCheckinStatus(body: string): { status: string; subject?: string } | null {
+async function sendTemplate(to: string, templateName: string, variables?: Record<string, string>) {
+  await fetch(`${supabaseUrl}/functions/v1/send-whatsapp`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${supabaseKey}`,
+    },
+    body: JSON.stringify({ to, template_name: templateName, variables }),
+  });
+}
+
+// ── PARSERS ──
+
+function parseTargetReply(body: string): { quantity: number; unit: string } | null {
+  const lower = body.trim().toLowerCase();
+  // Match: "20 questions", "3 chapters", "10 pages", "5 worksheets"
+  const match = lower.match(/^(\d+)\s*(questions?|chapters?|pages?|worksheets?|topics?|exercises?|problems?|sums?|passages?|compositions?|practices?)/);
+  if (match) {
+    return { quantity: parseInt(match[1]), unit: match[2].replace(/s$/, "") };
+  }
+  // Just a number — default to "question"
+  const numMatch = lower.match(/^(\d+)$/);
+  if (numMatch) {
+    return { quantity: parseInt(numMatch[1]), unit: "question" };
+  }
+  return null;
+}
+
+function parseCheckinStatus(body: string): { status: string; count?: number } | null {
   const lower = body.trim().toLowerCase();
 
-  // Direct status words
-  if (["yes", "done", "did extra", "extra"].includes(lower)) {
-    return { status: lower === "did extra" || lower === "extra" ? "did_extra" : "yes" };
+  if (["yes", "done", "finished", "completed", "did extra", "extra"].includes(lower)) {
+    return { status: lower === "did extra" || lower === "extra" ? "did_extra" : "done" };
   }
-  if (["partially", "half", "a bit", "some"].includes(lower)) {
+  if (["partially", "half", "a bit", "some", "not yet", "not done"].includes(lower)) {
     return { status: "partially" };
   }
   if (["no", "nope", "didn't", "didnt", "skip", "skipped"].includes(lower)) {
     return { status: "no" };
   }
-
-  // Subject replies (after "what subject?" follow-up)
-  const subjects = ["math", "science", "chinese", "english", "malay", "tamil", "history", "geography", "literature"];
-  for (const s of subjects) {
-    if (lower.includes(s)) {
-      return { status: "subject_reply", subject: s.charAt(0).toUpperCase() + s.slice(1) };
-    }
-  }
-
-  // CONFIRM / ADJUST from parent
   if (lower === "confirm") return { status: "parent_confirm" };
   if (lower === "adjust") return { status: "parent_adjust" };
+
+  // Number reply (for partial count: "2", "3")
+  const numMatch = lower.match(/^(\d+)$/);
+  if (numMatch) {
+    return { status: "number_reply", count: parseInt(numMatch[1]) };
+  }
 
   return null;
 }
 
-// Determine level group from child's level string
-function getLevelGroup(level: string): string {
-  const l = level.toUpperCase();
-  if (/^P[1-3]$/.test(l)) return "primary_lower";
-  if (/^P[4-6]$/.test(l)) return "primary_upper";
-  if (/^SEC[1-3]$/i.test(l)) return "secondary_lower";
-  return "secondary_upper_jc";
+function getWeekStart(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().split("T")[0];
 }
 
+// ── MAIN HANDLER ──
+
 serve(async (req) => {
-  // Twilio sends form-urlencoded POST
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
   try {
     const formData = await req.formData();
-    const from = formData.get("From")?.toString() || "";        // whatsapp:+65XXXXXXXX
+    const from = formData.get("From")?.toString() || "";
     const body = formData.get("Body")?.toString() || "";
     const messageSid = formData.get("MessageSid")?.toString() || "";
-    const messageStatus = formData.get("MessageStatus")?.toString(); // delivery status callback
+    const messageStatus = formData.get("MessageStatus")?.toString();
 
     const phone = from.replace("whatsapp:", "");
-
     const sb = createClient(supabaseUrl, supabaseKey);
 
-    // ── STATUS CALLBACK (delivery receipts) ──
+    // ── STATUS CALLBACK ──
     if (messageStatus && !body) {
-      // Update conversation log with delivery status
       if (messageSid) {
-        await sb
-          .from("whatsapp_conversations")
-          .update({ message_type: messageStatus }) // sent/delivered/read/failed
+        await sb.from("whatsapp_conversations")
+          .update({ message_type: messageStatus })
           .eq("twilio_sid", messageSid);
       }
-      // Return empty TwiML (Twilio expects XML response)
-      return new Response("<Response></Response>", {
-        headers: { "Content-Type": "text/xml" },
-      });
+      return ok();
     }
 
-    // ── LOG INBOUND MESSAGE ──
+    // ── LOG INBOUND ──
     const { error: logError } = await sb.from("whatsapp_conversations").insert({
       contact_phone: phone,
       direction: "inbound",
@@ -120,20 +124,17 @@ serve(async (req) => {
       message_type: "reply",
       twilio_sid: messageSid,
     });
+    if (logError) console.error("Log error:", JSON.stringify(logError));
 
-    if (logError) {
-      console.error("Failed to log inbound message:", JSON.stringify(logError));
-    }
-
-    // ── FIND CHILD BY WHATSAPP NUMBER ──
+    // ── FIND CHILD ──
     const { data: child } = await sb
       .from("sq_children")
-      .select("id, name, parent_id, level")
+      .select("id, name, parent_id, level, conversation_state, conversation_context")
       .eq("whatsapp_number", phone)
       .single();
 
     if (!child) {
-      // Also check if it's a parent phone (for CONFIRM/ADJUST)
+      // Check if parent (for CONFIRM/ADJUST)
       const { data: membership } = await sb
         .from("sq_memberships")
         .select("user_id, parent_name")
@@ -146,60 +147,200 @@ serve(async (req) => {
           await handleParentReply(sb, membership, parsed.status, phone);
         }
       }
-
-      return new Response("<Response></Response>", {
-        headers: { "Content-Type": "text/xml" },
-      });
+      return ok();
     }
 
-    // ── PARSE REPLY ──
-    const parsed = parseCheckinStatus(body);
+    const state = child.conversation_state || "idle";
+    const context = (child.conversation_context as Record<string, unknown>) || {};
     const now = new Date();
     const today = now.toISOString().split("T")[0];
+    const weekStart = getWeekStart();
 
-    if (!parsed) {
-      // Unrecognised — send a gentle prompt
-      await sendRaw(
-        phone,
-        "Hey! Just reply with: yes / no / partially / done / did extra 😊",
-      );
-      return new Response("<Response></Response>", {
-        headers: { "Content-Type": "text/xml" },
-      });
-    }
+    // Get membership
+    const { data: membership } = await sb
+      .from("sq_memberships")
+      .select("parent_phone, parent_name, plan_type")
+      .eq("user_id", child.parent_id)
+      .single();
 
-    // ── SUBJECT REPLY (follow-up to "what subject?") ──
-    if (parsed.status === "subject_reply" && parsed.subject) {
-      // Update the most recent checkin for today with the subject
-      const { data: recentCheckin } = await sb
-        .from("sq_checkins")
-        .select("id")
-        .eq("child_id", child.id)
-        .eq("checkin_date", today)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .single();
+    const isPremium = membership?.plan_type !== "free";
 
-      if (recentCheckin) {
-        await sb
-          .from("sq_checkins")
-          .update({
-            subject_reported: parsed.subject,
-            reply_received_at: now.toISOString(),
-          })
-          .eq("id", recentCheckin.id);
+    // ══════════════════════════════════════
+    // STATE: SETTING TARGETS
+    // ══════════════════════════════════════
+    if (state === "setting_target") {
+      const currentSubject = context.current_subject as string;
+      const remainingSubjects = (context.remaining_subjects as string[]) || [];
+      const studyDays = (context.study_days as number) || 5;
+
+      const targetParsed = parseTargetReply(body);
+
+      if (!targetParsed) {
+        await sendRaw(phone,
+          `Hmm, I didn't get that. Reply with a number and unit like:\n` +
+          `• *20 questions*\n• *3 chapters*\n• *10 pages*\n• *5 worksheets*`
+        );
+        return ok();
       }
 
-      await sendRaw(phone, `Got it — ${parsed.subject}! Keep it up 💪`);
-      return new Response("<Response></Response>", {
-        headers: { "Content-Type": "text/xml" },
-      });
+      const daily = Math.max(1, Math.ceil(targetParsed.quantity / studyDays));
+
+      // Save weekly target
+      await sb.from("sq_weekly_targets").upsert({
+        child_id: child.id,
+        subject_name: currentSubject,
+        week_start: weekStart,
+        target_text: body.trim(),
+        target_quantity: targetParsed.quantity,
+        target_unit: targetParsed.unit,
+        daily_quantity: daily,
+        remaining_quantity: targetParsed.quantity,
+      }, { onConflict: "child_id,subject_name,week_start" });
+
+      if (remainingSubjects.length > 0) {
+        const nextSubject = remainingSubjects[0];
+        const rest = remainingSubjects.slice(1);
+
+        await sb.from("sq_children").update({
+          conversation_state: "setting_target",
+          conversation_context: { current_subject: nextSubject, remaining_subjects: rest, study_days: studyDays },
+        }).eq("id", child.id);
+
+        await sendRaw(phone,
+          `Got it! ${currentSubject}: ${targetParsed.quantity} ${targetParsed.unit}s → *${daily}/day* 📊\n\n` +
+          `Now, what's your *${nextSubject}* target this week?\n` +
+          `(e.g. "3 chapters", "10 pages", "5 worksheets")`
+        );
+      } else {
+        // All subjects done
+        await sb.from("sq_children").update({
+          conversation_state: "idle",
+          conversation_context: {},
+        }).eq("id", child.id);
+
+        await sendRaw(phone,
+          `Got it! ${currentSubject}: ${targetParsed.quantity} ${targetParsed.unit}s → *${daily}/day* 📊\n\n` +
+          `All targets set! ✅ You'll get your daily check-in at the usual time. Let's go! 💪`
+        );
+
+        if (membership?.parent_phone && membership.parent_phone !== phone) {
+          await sendRaw(membership.parent_phone,
+            `${child.name} has set their weekly targets! 📊 Check-ins start from the next scheduled time.`
+          );
+        }
+      }
+
+      return ok();
     }
 
-    // ── CHECK-IN STATUS REPLY ──
-    // Find if a prompt was sent today (to calculate response time)
-    const { data: existingCheckin } = await sb
-      .from("sq_checkins")
+    // ══════════════════════════════════════
+    // STATE: PARTIAL COUNT
+    // ══════════════════════════════════════
+    if (state === "partial_count") {
+      const parsed = parseCheckinStatus(body);
+      const targetQ = (context.target_quantity as number) || 0;
+      const targetUnit = (context.target_unit as string) || "question";
+      const subject = (context.subject as string) || "";
+
+      let completedCount = 0;
+      if (parsed?.status === "number_reply" && parsed.count !== undefined) {
+        completedCount = parsed.count;
+      } else {
+        // Also accept target parse ("3 questions")
+        const tp = parseTargetReply(body);
+        if (tp) {
+          completedCount = tp.quantity;
+        } else {
+          await sendRaw(phone, `How many ${targetUnit}s did you finish? Just reply with a number.`);
+          return ok();
+        }
+      }
+
+      const remaining = Math.max(0, targetQ - completedCount);
+
+      // Update checkin
+      await sb.from("sq_checkins")
+        .update({ status: "partially", completed_quantity: completedCount, reply_received_at: now.toISOString() })
+        .eq("child_id", child.id)
+        .eq("checkin_date", today);
+
+      // Update weekly target remaining
+      if (subject) {
+        const { data: wt } = await sb.from("sq_weekly_targets")
+          .select("remaining_quantity")
+          .eq("child_id", child.id)
+          .eq("subject_name", subject)
+          .eq("week_start", weekStart)
+          .single();
+
+        if (wt) {
+          await sb.from("sq_weekly_targets")
+            .update({ remaining_quantity: Math.max(0, wt.remaining_quantity - completedCount) })
+            .eq("child_id", child.id)
+            .eq("subject_name", subject)
+            .eq("week_start", weekStart);
+        }
+      }
+
+      // Reset state
+      await sb.from("sq_children").update({
+        conversation_state: "idle",
+        conversation_context: {},
+      }).eq("id", child.id);
+
+      if (remaining > 0) {
+        await sendRaw(phone,
+          `Nice — ${completedCount} ${targetUnit}s done! 📝\n` +
+          `You have *${remaining} ${targetUnit}s* left. Try to finish them by tomorrow! 💪`
+        );
+      } else {
+        await sendRaw(phone,
+          `Wait, you actually finished all ${targetQ}! 🎉 That counts as *done*. Updated!`
+        );
+        await sb.from("sq_checkins").update({ status: "yes" })
+          .eq("child_id", child.id).eq("checkin_date", today);
+      }
+
+      if (membership?.parent_phone && membership.parent_phone !== phone) {
+        await sendRaw(membership.parent_phone,
+          `📝 ${child.name}: ${completedCount}/${targetQ} ${targetUnit}s done today${subject ? ` (${subject})` : ""}. ` +
+          (remaining > 0 ? `${remaining} left — encouraged to finish tomorrow.` : `Completed the full target!`)
+        );
+      }
+
+      return ok();
+    }
+
+    // ══════════════════════════════════════
+    // STATE: IDLE (normal check-in)
+    // ══════════════════════════════════════
+    const parsed = parseCheckinStatus(body);
+
+    if (!parsed) {
+      await sendRaw(phone,
+        isPremium
+          ? "Hey! Reply with: *done* / *partially* / *no* / *did extra* 😊"
+          : "Hey! Reply with: *yes* or *no* 😊"
+      );
+      return ok();
+    }
+
+    if (parsed.status === "number_reply") {
+      await sendRaw(phone, "Hey! Reply with: *done* / *partially* / *no* 😊");
+      return ok();
+    }
+
+    // ── GET TODAY'S TARGET ──
+    const { data: todayTargets } = await sb.from("sq_weekly_targets")
+      .select("subject_name, daily_quantity, target_unit, remaining_quantity")
+      .eq("child_id", child.id)
+      .eq("week_start", weekStart);
+
+    const hasTargets = todayTargets && todayTargets.length > 0;
+    const todayTarget = hasTargets ? todayTargets[0] : null;
+
+    // ── FIND OR CREATE CHECKIN ──
+    const { data: existingCheckin } = await sb.from("sq_checkins")
       .select("id, prompt_sent_at")
       .eq("child_id", child.id)
       .eq("checkin_date", today)
@@ -209,92 +350,132 @@ serve(async (req) => {
 
     let responseSeconds: number | null = null;
     if (existingCheckin?.prompt_sent_at) {
-      const sentAt = new Date(existingCheckin.prompt_sent_at).getTime();
-      responseSeconds = Math.round((now.getTime() - sentAt) / 1000);
+      responseSeconds = Math.round((now.getTime() - new Date(existingCheckin.prompt_sent_at).getTime()) / 1000);
     }
+
+    const checkinStatus = parsed.status === "did_extra" || parsed.status === "done" ? "yes" : parsed.status;
 
     const checkinData: Record<string, unknown> = {
       child_id: child.id,
       checkin_date: today,
-      status: parsed.status === "did_extra" ? "yes" : parsed.status,
+      status: checkinStatus,
       reply_received_at: now.toISOString(),
       response_seconds: responseSeconds,
+      ...(todayTarget && {
+        target_quantity: todayTarget.daily_quantity,
+        target_unit: todayTarget.target_unit,
+        subject_reported: todayTarget.subject_name,
+      }),
     };
 
     if (existingCheckin) {
-      // Update existing (prompt was sent earlier)
       await sb.from("sq_checkins").update(checkinData).eq("id", existingCheckin.id);
     } else {
-      // Insert new (kid replied without a prompt — still valid)
       checkinData.prompt_sent_at = null;
       await sb.from("sq_checkins").insert(checkinData);
     }
 
-    // ── ANTI-CHEAT: fast reply detection ──
-    // Only send a kid reply when necessary (saves cost — 1 msg instead of 2)
+    // ── ANTI-CHEAT: fast reply ──
     if (responseSeconds !== null && responseSeconds < 10) {
-      // Suspiciously fast — ask follow-up (kid only, no parent msg yet)
-      await sendReply(phone, "sp_verify_quick_reply");
-    } else if (parsed.status === "yes" || parsed.status === "did_extra") {
-      // Ask what subject they studied (kid only — parent notified after subject reply)
-      await sendReply(phone, "sp_verify_what_subject");
+      await sendTemplate(phone, "sp_verify_quick_reply");
+      return ok();
     }
-    // For "no" and "partially" — no separate kid message, parent gets the combined notification below
 
-    // ── STREAK CALCULATION ──
+    // ── DONE / DID EXTRA ──
+    if (parsed.status === "done" || parsed.status === "did_extra") {
+      if (todayTarget) {
+        // Update remaining
+        const { data: wt } = await sb.from("sq_weekly_targets")
+          .select("remaining_quantity")
+          .eq("child_id", child.id)
+          .eq("subject_name", todayTarget.subject_name)
+          .eq("week_start", weekStart)
+          .single();
+
+        if (wt) {
+          await sb.from("sq_weekly_targets")
+            .update({ remaining_quantity: Math.max(0, wt.remaining_quantity - todayTarget.daily_quantity) })
+            .eq("child_id", child.id)
+            .eq("subject_name", todayTarget.subject_name)
+            .eq("week_start", weekStart);
+        }
+
+        await sb.from("sq_checkins").update({ completed_quantity: todayTarget.daily_quantity })
+          .eq("child_id", child.id).eq("checkin_date", today);
+      }
+
+      const doneMsg = hasTargets
+        ? `✅ ${todayTarget!.daily_quantity} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name} — done! Great work, ${child.name}! 💪`
+        : `✅ Nice work, ${child.name}! Keep it up 💪`;
+
+      const extraMsg = parsed.status === "did_extra" ? `\n⚡ Extra effort today — respect!` : "";
+
+      await sendRaw(phone, doneMsg + extraMsg);
+
+      if (membership?.parent_phone && membership.parent_phone !== phone) {
+        const parentMsg = hasTargets
+          ? `✅ ${child.name} completed today's target: ${todayTarget!.daily_quantity} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name}!`
+          : `✅ ${child.name} checked in — studied today!`;
+        await sendRaw(membership.parent_phone, parentMsg + (parsed.status === "did_extra" ? " ⚡ Did extra!" : ""));
+      }
+
+    // ── PARTIALLY ──
+    } else if (parsed.status === "partially") {
+      if (hasTargets) {
+        await sb.from("sq_children").update({
+          conversation_state: "partial_count",
+          conversation_context: {
+            target_quantity: todayTarget!.daily_quantity,
+            target_unit: todayTarget!.target_unit,
+            subject: todayTarget!.subject_name,
+          },
+        }).eq("id", child.id);
+
+        await sendRaw(phone,
+          `No problem! How many ${todayTarget!.target_unit}s did you finish out of ${todayTarget!.daily_quantity}?`
+        );
+      } else {
+        await sendRaw(phone,
+          `Good effort, ${child.name}! 📝 Try to finish the rest by tomorrow — small steps add up.`
+        );
+        if (membership?.parent_phone && membership.parent_phone !== phone) {
+          await sendRaw(membership.parent_phone,
+            `📝 ${child.name} checked in — partially done today. Encouraged to finish tomorrow.`
+          );
+        }
+      }
+
+    // ── NO ──
+    } else if (parsed.status === "no") {
+      await sendRaw(phone,
+        `Thanks for being honest, ${child.name}. Not every day is a study day — checking in still counts. 💪\n\nTomorrow is a fresh start!`
+      );
+
+      if (membership?.parent_phone && membership.parent_phone !== phone) {
+        await sendRaw(membership.parent_phone,
+          `📋 ${child.name} checked in — didn't study today. Checking in still counts as showing up.`
+        );
+      }
+    }
+
+    // ── STREAK ──
     await updateStreak(sb, child.id);
 
-    // ── NOTIFY PARENT ──
-    const { data: membership } = await sb
-      .from("sq_memberships")
-      .select("parent_phone, parent_name, plan_type")
-      .eq("user_id", child.parent_id)
-      .single();
-
-    // ── SINGLE COMBINED MESSAGE (kid acknowledgment + parent status) ──
-    // For "yes"/"did_extra" → kid already got "what subject?" follow-up above, so only notify parent
-    // For "no"/"partially" → send ONE message that works for both kid and parent
-    if (parsed.status === "no") {
-      // Kid gets honesty reward (one message only)
-      await sendRaw(phone, `Thanks for being honest, ${child.name}. Not every day is a study day — checking in still counts. 💪\n\nTomorrow is a fresh start!`);
-    } else if (parsed.status === "partially") {
-      // Kid gets encouragement + tomorrow nudge (one message only)
-      await sendRaw(phone, `Good effort, ${child.name}! 📝 Try to finish the rest by tomorrow — small steps add up.`);
-    }
-
-    // Notify parent (only if parent phone is different from kid phone, or for yes/did_extra)
-    if (membership?.parent_phone && (parsed.status === "yes" || parsed.status === "did_extra" || membership.parent_phone !== phone)) {
-      const statusMessages: Record<string, string> = {
-        yes: `✅ ${child.name} checked in — yes, studied today!`,
-        did_extra: `⚡ ${child.name} did extra study today!`,
-        partially: `📝 ${child.name} checked in — partially done today. Encouraged to finish the rest by tomorrow.`,
-        no: `📋 ${child.name} checked in — didn't study today. A small check-in still counts as showing up.`,
-      };
-
-      const msg = statusMessages[parsed.status] || `${child.name} checked in today.`;
-      await sendRaw(membership.parent_phone, msg);
-    }
-
-    return new Response("<Response></Response>", {
-      headers: { "Content-Type": "text/xml" },
-    });
+    return ok();
   } catch (error) {
     console.error("Webhook error:", error);
-    return new Response("<Response></Response>", {
-      headers: { "Content-Type": "text/xml" },
-    });
+    return ok();
   }
 });
 
-// ── HELPERS ──
+function ok() {
+  return new Response("<Response></Response>", { headers: { "Content-Type": "text/xml" } });
+}
 
-async function updateStreak(
-  sb: ReturnType<typeof createClient>,
-  childId: string,
-) {
-  // Count consecutive days with a check-in (status != 'pending')
-  const { data: checkins } = await sb
-    .from("sq_checkins")
+// ── STREAK HELPER ──
+
+async function updateStreak(sb: ReturnType<typeof createClient>, childId: string) {
+  const { data: checkins } = await sb.from("sq_checkins")
     .select("checkin_date, status")
     .eq("child_id", childId)
     .neq("status", "pending")
@@ -308,55 +489,31 @@ async function updateStreak(
   for (let i = 0; i < checkins.length; i++) {
     const expected = new Date(today);
     expected.setDate(expected.getDate() - i);
-    const expectedDate = expected.toISOString().split("T")[0];
-
-    if (checkins[i].checkin_date === expectedDate) {
+    if (checkins[i].checkin_date === expected.toISOString().split("T")[0]) {
       streak++;
     } else {
       break;
     }
   }
 
-  // Check for milestone notifications
   const milestones: Record<number, string> = {
-    3: "sp_streak_3",
-    7: "sp_streak_7",
-    14: "sp_streak_14",
-    30: "sp_streak_30",
+    3: "sp_streak_3", 7: "sp_streak_7", 14: "sp_streak_14", 30: "sp_streak_30",
   };
 
   if (milestones[streak]) {
-    const { data: child } = await sb
-      .from("sq_children")
-      .select("name, parent_id")
-      .eq("id", childId)
-      .single();
-
+    const { data: child } = await sb.from("sq_children")
+      .select("name, parent_id").eq("id", childId).single();
     if (child) {
-      const { data: membership } = await sb
-        .from("sq_memberships")
-        .select("parent_phone")
-        .eq("user_id", child.parent_id)
-        .single();
-
-      if (membership?.parent_phone) {
-        const url = `${supabaseUrl}/functions/v1/send-whatsapp`;
-        await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${supabaseKey}`,
-          },
-          body: JSON.stringify({
-            to: membership.parent_phone,
-            template_name: milestones[streak],
-            variables: { child_name: child.name },
-          }),
-        });
+      const { data: m } = await sb.from("sq_memberships")
+        .select("parent_phone").eq("user_id", child.parent_id).single();
+      if (m?.parent_phone) {
+        await sendTemplate(m.parent_phone, milestones[streak], { child_name: child.name });
       }
     }
   }
 }
+
+// ── PARENT REPLY HANDLER ──
 
 async function handleParentReply(
   sb: ReturnType<typeof createClient>,
@@ -364,45 +521,28 @@ async function handleParentReply(
   action: string,
   phone: string,
 ) {
-  // Find the parent's children
-  const { data: children } = await sb
-    .from("sq_children")
-    .select("id, name")
-    .eq("parent_id", membership.user_id);
-
+  const { data: children } = await sb.from("sq_children")
+    .select("id, name").eq("parent_id", membership.user_id);
   if (!children || children.length === 0) return;
 
   const today = new Date().toISOString().split("T")[0];
 
   if (action === "parent_confirm") {
-    // Mark today's checkin as parent_confirmed
-    for (const child of children) {
-      await sb
-        .from("sq_checkins")
-        .update({ parent_confirmed: true })
-        .eq("child_id", child.id)
-        .eq("checkin_date", today);
+    for (const c of children) {
+      await sb.from("sq_checkins").update({ parent_confirmed: true })
+        .eq("child_id", c.id).eq("checkin_date", today);
     }
     await sendRaw(phone, "Thanks for confirming! ✅");
   } else if (action === "parent_adjust") {
-    // Mark as needing adjustment — parent can adjust on dashboard
-    for (const child of children) {
-      await sb
-        .from("sq_checkins")
-        .update({ parent_adjusted: true })
-        .eq("child_id", child.id)
-        .eq("checkin_date", today);
-
+    for (const c of children) {
+      await sb.from("sq_checkins").update({ parent_adjusted: true })
+        .eq("child_id", c.id).eq("checkin_date", today);
       await sb.from("sq_parent_adjustments").insert({
-        child_id: child.id,
-        checkin_date: today,
-        original_status: "unknown",
-        adjusted_status: "pending_adjustment",
+        child_id: c.id, checkin_date: today,
+        original_status: "unknown", adjusted_status: "pending_adjustment",
         parent_id: membership.user_id,
       });
     }
-    await sendReply(phone, "sp_parent_adjusted", {
-      child_name: children.map((c) => c.name).join(" & "),
-    });
+    await sendRaw(phone, `Got it — we've updated ${children.map(c => c.name).join(" & ")}'s record. Thanks!`);
   }
 }
