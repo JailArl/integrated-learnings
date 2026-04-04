@@ -231,19 +231,15 @@ serve(async (req) => {
     }
 
     // ── ANTI-CHEAT: fast reply detection ──
+    // Only send a kid reply when necessary (saves cost — 1 msg instead of 2)
     if (responseSeconds !== null && responseSeconds < 10) {
-      // Suspiciously fast — ask follow-up
+      // Suspiciously fast — ask follow-up (kid only, no parent msg yet)
       await sendReply(phone, "sp_verify_quick_reply");
     } else if (parsed.status === "yes" || parsed.status === "did_extra") {
-      // Ask what subject they studied
+      // Ask what subject they studied (kid only — parent notified after subject reply)
       await sendReply(phone, "sp_verify_what_subject");
-    } else if (parsed.status === "no") {
-      // Honesty reward
-      await sendReply(phone, "sp_brave_checkin", { child_name: child.name });
-    } else {
-      // partially — simple acknowledgment
-      await sendRaw(phone, `Thanks for checking in, ${child.name}! Every bit counts 📚`);
     }
+    // For "no" and "partially" — no separate kid message, parent gets the combined notification below
 
     // ── STREAK CALCULATION ──
     await updateStreak(sb, child.id);
@@ -255,34 +251,28 @@ serve(async (req) => {
       .eq("user_id", child.parent_id)
       .single();
 
-    if (membership?.parent_phone) {
-      const statusMap: Record<string, string> = {
-        yes: "sp_checkin_yes_free",
-        did_extra: "sp_checkin_did_extra",
-        partially: "sp_checkin_partially",
-        no: "sp_checkin_no",
+    // ── SINGLE COMBINED MESSAGE (kid acknowledgment + parent status) ──
+    // For "yes"/"did_extra" → kid already got "what subject?" follow-up above, so only notify parent
+    // For "no"/"partially" → send ONE message that works for both kid and parent
+    if (parsed.status === "no") {
+      // Kid gets honesty reward (one message only)
+      await sendRaw(phone, `Thanks for being honest, ${child.name}. Not every day is a study day — checking in still counts. 💪\n\nTomorrow is a fresh start!`);
+    } else if (parsed.status === "partially") {
+      // Kid gets encouragement + tomorrow nudge (one message only)
+      await sendRaw(phone, `Good effort, ${child.name}! 📝 Try to finish the rest by tomorrow — small steps add up.`);
+    }
+
+    // Notify parent (only if parent phone is different from kid phone, or for yes/did_extra)
+    if (membership?.parent_phone && (parsed.status === "yes" || parsed.status === "did_extra" || membership.parent_phone !== phone)) {
+      const statusMessages: Record<string, string> = {
+        yes: `✅ ${child.name} checked in — yes, studied today!`,
+        did_extra: `⚡ ${child.name} did extra study today!`,
+        partially: `📝 ${child.name} checked in — partially done today. Encouraged to finish the rest by tomorrow.`,
+        no: `📋 ${child.name} checked in — didn't study today. A small check-in still counts as showing up.`,
       };
-      const tpl = statusMap[parsed.status] || "sp_checkin_done";
 
-      // Get current streak for the message
-      const { data: streakData } = await sb
-        .from("sq_weekly_summaries")
-        .select("checkins_completed")
-        .eq("child_id", child.id)
-        .order("week_start", { ascending: false })
-        .limit(1)
-        .single();
-
-      const streakMsg = streakData
-        ? `Current streak: ${streakData.checkins_completed} days`
-        : "";
-
-      await sendReply(membership.parent_phone, tpl, {
-        child_name: child.name,
-        streak_msg: streakMsg,
-        parent_name: membership.parent_name || "Parent",
-        status: parsed.status,
-      });
+      const msg = statusMessages[parsed.status] || `${child.name} checked in today.`;
+      await sendRaw(membership.parent_phone, msg);
     }
 
     return new Response("<Response></Response>", {
