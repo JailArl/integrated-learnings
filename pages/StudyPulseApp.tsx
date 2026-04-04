@@ -16,12 +16,15 @@ import {
   FileText,
   Flame,
   GraduationCap,
+  Loader2,
   Microscope,
+  Plus,
   Search,
   Settings,
   Sparkles,
   Star,
   Target,
+  Trash2,
   TrendingDown,
   TrendingUp,
   UserPlus,
@@ -42,6 +45,7 @@ import {
   type DailyTaskStatus,
   type PlanApproval,
   type ExamReason,
+  type ExamType,
   getMembership,
   getChildren,
   getSubjects,
@@ -59,6 +63,10 @@ import {
   addExamTarget,
   getRecommendedStartDate,
   getActiveExamLimit,
+  createChild,
+  addSubject,
+  upsertStudySettings,
+  createMembership,
   PLAN_LIMITS,
   FREE_CHECKIN_DAYS,
 } from '../services/studyquest';
@@ -113,8 +121,11 @@ const StudyPulseApp: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/studypulse/login'); return; }
       setUserId(user.id);
-      const m = await getMembership(user.id);
-      if (!m) { navigate('/studypulse/setup'); return; }
+      // Ensure membership exists (Google OAuth users may not have one yet)
+      let m = await getMembership(user.id);
+      if (!m) {
+        m = await createMembership(user.id, 'free', { email: user.email || '' });
+      }
       setMembership(m);
       const kids = await getChildren(user.id);
       setChildren(kids);
@@ -140,7 +151,15 @@ const StudyPulseApp: React.FC = () => {
   }, [child]);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-100"><div className="text-center"><div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600" /><p className="text-sm text-slate-500">Loading dashboard…</p></div></div>;
-  if (!membership || children.length === 0) return <div className="flex min-h-screen items-center justify-center bg-slate-100"><div className="text-center"><p className="text-lg font-bold text-slate-700">No setup found</p><Link to="/studypulse/setup" className="mt-4 inline-block rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white">Complete Setup</Link></div></div>;
+
+  // ── Inline onboarding when no children exist yet ──
+  if (!membership || children.length === 0) return <OnboardingWizard userId={userId!} membership={membership} onComplete={async () => {
+    if (!userId) return;
+    const m = await getMembership(userId);
+    setMembership(m);
+    const kids = await getChildren(userId);
+    setChildren(kids);
+  }} />;
 
   const displayChildren = premium ? children : children.slice(0, 1);
   const displaySubjects = premium ? subjects : subjects.slice(0, 1);
@@ -908,6 +927,220 @@ const StudyPulseApp: React.FC = () => {
           </div>
         )}
       </main>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════
+   ONBOARDING WIZARD — shown inside dashboard
+   when no children are set up yet
+   ═══════════════════════════════════════════ */
+const LEVELS = [
+  'Primary 1','Primary 2','Primary 3','Primary 4','Primary 5','Primary 6',
+  'Secondary 1','Secondary 2','Secondary 3','Secondary 4','Secondary 5',
+  'JC 1','JC 2',
+];
+const SUBJECT_OPTIONS = ['Math','Science','Chinese','English','Malay','Tamil','Other'];
+
+interface OnboardingWizardProps {
+  userId: string;
+  membership: Membership | null;
+  onComplete: () => Promise<void>;
+}
+
+const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership, onComplete }) => {
+  const [step, setStep] = useState(1); // 1=profile, 2=child, 3=subject, 4=done
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  // Step 1 — profile
+  const [fullName, setFullName] = useState(membership?.parent_name || '');
+  const [whatsapp, setWhatsapp] = useState(membership?.parent_phone || '');
+
+  // Step 2 — child
+  const [childName, setChildName] = useState('');
+  const [childLevel, setChildLevel] = useState('');
+  const [childWhatsapp, setChildWhatsapp] = useState('');
+
+  // Step 3 — subject + exam
+  const [subjectName, setSubjectName] = useState('');
+  const [examType, setExamType] = useState<'normal' | 'major'>('normal');
+  const [examDate, setExamDate] = useState('');
+
+  // Created child ID (from step 2)
+  const [createdChildId, setCreatedChildId] = useState('');
+
+  const inputCls = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
+  const labelCls = 'block text-xs font-bold uppercase tracking-[0.12em] text-slate-500 mb-1.5';
+
+  const handleSaveProfile = async () => {
+    if (!fullName.trim()) { setError('Full name is required.'); return; }
+    if (!whatsapp.trim()) { setError('WhatsApp number is required.'); return; }
+    setError('');
+    setSaving(true);
+    await createMembership(userId, membership?.plan_type || 'free', { name: fullName, email: membership?.parent_email || '', phone: whatsapp });
+    if (supabase) {
+      await supabase.from('parent_profiles').upsert({ id: userId, full_name: fullName, email: membership?.parent_email || '', phone: whatsapp }, { onConflict: 'id' });
+    }
+    setSaving(false);
+    setStep(2);
+  };
+
+  const handleSaveChild = async () => {
+    if (!childName.trim()) { setError('Child name is required.'); return; }
+    if (!childLevel) { setError('Select your child\'s level.'); return; }
+    if (!childWhatsapp.trim()) { setError('Child WhatsApp number is required.'); return; }
+    setError('');
+    setSaving(true);
+    const child = await createChild(userId, { name: childName, level: childLevel, whatsapp_number: childWhatsapp });
+    if (!child) { setError('Failed to save child. Try again.'); setSaving(false); return; }
+    setCreatedChildId(child.id);
+    // Create default study settings
+    await upsertStudySettings(child.id, {
+      commence_date: new Date().toISOString().split('T')[0],
+      study_days_per_week: 5,
+      first_reminder_time: '16:00',
+      check_completion_time: '21:00',
+    });
+    setSaving(false);
+    setStep(3);
+  };
+
+  const handleSaveSubject = async () => {
+    if (!subjectName) { setError('Select a subject.'); return; }
+    if (!examDate) { setError('Enter the next exam date.'); return; }
+    setError('');
+    setSaving(true);
+    const subj = await addSubject(createdChildId, subjectName);
+    if (subj) {
+      await addExamTarget({ subject_id: subj.id, child_id: createdChildId, exam_type: examType, exam_date: examDate });
+    }
+    setSaving(false);
+    setStep(4);
+    // Trigger parent refresh
+    await onComplete();
+  };
+
+  const stepLabels = ['Your Details', 'Add Child', 'Subject & Exam', 'Ready!'];
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4 py-8">
+      <div className="w-full max-w-lg">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-black text-slate-900">Welcome to StudyPulse</h1>
+          <p className="mt-2 text-sm text-slate-500">Let&apos;s get you set up in under a minute.</p>
+        </div>
+
+        {/* Progress */}
+        <div className="mb-8 flex gap-2">
+          {stepLabels.map((label, i) => (
+            <div key={label} className={`flex-1 rounded-full py-2 text-center text-xs font-bold transition-colors ${step > i + 1 ? 'bg-emerald-100 text-emerald-700' : step === i + 1 ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-400'}`}>
+              {step > i + 1 ? <Check size={14} className="inline mr-1" /> : null}{label}
+            </div>
+          ))}
+        </div>
+
+        {error && <div className="mb-4 rounded-xl bg-red-50 border border-red-200 p-3 text-sm text-red-700">{error}</div>}
+
+        {/* STEP 1: Profile */}
+        {step === 1 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-5 text-lg font-black text-slate-900">Your Details</h2>
+            <div className="space-y-4">
+              <div>
+                <label className={labelCls}>Full Name</label>
+                <input className={inputCls} placeholder="Your full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>WhatsApp Number</label>
+                <input className={inputCls} type="tel" placeholder="+65 9123 4567" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+              </div>
+            </div>
+            <button onClick={handleSaveProfile} disabled={saving} className="mt-6 flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50">
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <>Next <ArrowRight size={16} className="ml-1.5" /></>}
+            </button>
+          </div>
+        )}
+
+        {/* STEP 2: Add Child */}
+        {step === 2 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-5 text-lg font-black text-slate-900">Add Your Child</h2>
+            <div className="space-y-4">
+              <div>
+                <label className={labelCls}>Child Name</label>
+                <input className={inputCls} placeholder="Child's name" value={childName} onChange={(e) => setChildName(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>Level</label>
+                <select className={inputCls} value={childLevel} onChange={(e) => setChildLevel(e.target.value)}>
+                  <option value="">Select level</option>
+                  {LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Child WhatsApp Number</label>
+                <input className={inputCls} type="tel" placeholder="+65 8123 4567" value={childWhatsapp} onChange={(e) => setChildWhatsapp(e.target.value)} />
+                <p className="mt-1 text-xs text-slate-400">Daily check-ins are sent to this number.</p>
+              </div>
+            </div>
+            <button onClick={handleSaveChild} disabled={saving} className="mt-6 flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50">
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <>Next <ArrowRight size={16} className="ml-1.5" /></>}
+            </button>
+          </div>
+        )}
+
+        {/* STEP 3: Subject & Exam */}
+        {step === 3 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="mb-5 text-lg font-black text-slate-900">First Subject & Exam</h2>
+            <p className="mb-4 text-xs text-slate-500">You can add more subjects later in Settings.</p>
+            <div className="space-y-4">
+              <div>
+                <label className={labelCls}>Subject</label>
+                <select className={inputCls} value={subjectName} onChange={(e) => setSubjectName(e.target.value)}>
+                  <option value="">Select subject</option>
+                  {SUBJECT_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Exam Type</label>
+                <select className={inputCls} value={examType} onChange={(e) => setExamType(e.target.value as 'normal' | 'major')}>
+                  <option value="normal">Normal Exam</option>
+                  <option value="major">Major Exam (SA/PSLE/O-Level)</option>
+                </select>
+              </div>
+              <div>
+                <label className={labelCls}>Next Exam Date</label>
+                <input className={inputCls} type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
+                {examDate && (
+                  <p className="mt-1 text-xs text-blue-600">📅 Recommended start: <strong>{getRecommendedStartDate(examDate)}</strong></p>
+                )}
+              </div>
+            </div>
+            <button onClick={handleSaveSubject} disabled={saving} className="mt-6 flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-400 disabled:opacity-50">
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <>Start Monitoring <ArrowRight size={16} className="ml-1.5" /></>}
+            </button>
+          </div>
+        )}
+
+        {/* STEP 4: Done */}
+        {step === 4 && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-8 text-center shadow-sm">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+              <CheckCircle2 size={28} className="text-emerald-600" />
+            </div>
+            <h2 className="text-xl font-black text-slate-900">You&apos;re All Set!</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              {childName} will receive daily check-ins on WhatsApp.<br />
+              You&apos;ll get weekly summaries and insights.
+            </p>
+            <button onClick={onComplete} className="mt-6 inline-flex items-center rounded-xl bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800">
+              Go to Dashboard <ArrowRight size={16} className="ml-1.5" />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
