@@ -159,6 +159,7 @@ serve(async (req) => {
         contact_phone: to.replace("whatsapp:", ""),
         direction: "outbound",
         message_text: messageBody,
+        content: messageBody,
         message_type: template_name ? "template" : "manual",
         twilio_sid: result.sid,
       });

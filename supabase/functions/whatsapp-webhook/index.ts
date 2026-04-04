@@ -112,13 +112,18 @@ serve(async (req) => {
     }
 
     // ── LOG INBOUND MESSAGE ──
-    await sb.from("whatsapp_conversations").insert({
+    const { error: logError } = await sb.from("whatsapp_conversations").insert({
       contact_phone: phone,
       direction: "inbound",
       message_text: body,
+      content: body,
       message_type: "reply",
       twilio_sid: messageSid,
     });
+
+    if (logError) {
+      console.error("Failed to log inbound message:", JSON.stringify(logError));
+    }
 
     // ── FIND CHILD BY WHATSAPP NUMBER ──
     const { data: child } = await sb
