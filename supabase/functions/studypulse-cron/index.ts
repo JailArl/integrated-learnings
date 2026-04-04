@@ -141,7 +141,12 @@ serve(async (req) => {
       await sendWeeklyTargetPrompts(sb, today);
     }
 
-    // ── CHECK EXAM PROXIMITY ──
+    // ── WEDNESDAY MID-WEEK PARENT CHECK ──
+    if (dayOfWeek === 3 && isWithinWindow(currentTime, "20:00", 7)) {
+      await sendMidWeekParentNudge(sb, today);
+    }
+
+    // ── CHECK EXAM PROXIMITY + POST-EXAM ──
     await checkExamProximity(sb, today);
 
     // ── WEEKLY SUMMARIES (Sunday 8pm SGT) ──
@@ -250,6 +255,31 @@ async function sendCheckinPrompts(
       }),
     });
 
+    // Get nearest active exam for this child
+    const { data: activeExams } = await sb
+      .from("sq_exam_targets")
+      .select("id, exam_date, exam_type, subject_id")
+      .eq("child_id", child.id)
+      .eq("cycle_status", "active")
+      .gte("exam_date", today)
+      .order("exam_date", { ascending: true })
+      .limit(1);
+
+    let examLine = "";
+    if (activeExams && activeExams.length > 0) {
+      const exam = activeExams[0];
+      const daysLeft = Math.ceil((new Date(exam.exam_date).getTime() - new Date(today).getTime()) / 86400000);
+      // Get subject name
+      let examSubject = exam.exam_type;
+      if (exam.subject_id) {
+        const { data: subj } = await sb.from("sq_monitored_subjects").select("subject_name").eq("id", exam.subject_id).single();
+        if (subj) examSubject = subj.subject_name;
+      }
+      if (daysLeft <= 30) {
+        examLine = `\n⏰ *${examSubject} exam in ${daysLeft} day${daysLeft === 1 ? '' : 's'}!*`;
+      }
+    }
+
     // Send WhatsApp prompt — target-based or generic
     const isPremium = membership?.plan_type !== "free";
     let message: string;
@@ -258,11 +288,11 @@ async function sendCheckinPrompts(
       const targetLine = targets!.map(t =>
         `• ${t.subject_name}: *${t.daily_quantity} ${t.target_unit}s*`
       ).join("\n");
-      message = `Hey ${child.name}! 📚 Today's target:\n${targetLine}\n\nHave you finished? Reply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
+      message = `Hey ${child.name}! 📚 Today's target:\n${targetLine}${examLine}\n\nHave you finished? Reply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
     } else if (isPremium) {
-      message = `Hey ${child.name}! 📚 Time for your study check-in.\n\nReply with:\n✅ *done* — finished all tasks\n⚡ *did extra* — went beyond the plan\n📝 *partially* — did some\n❌ *no* — didn't study today`;
+      message = `Hey ${child.name}! 📚 Time for your study check-in.${examLine}\n\nReply with:\n✅ *done* — finished all tasks\n⚡ *did extra* — went beyond the plan\n📝 *partially* — did some\n❌ *no* — didn't study today`;
     } else {
-      message = `Hey ${child.name}! 📚 Study check-in time!\n\nDid you study today?\nReply: *yes* or *no*`;
+      message = `Hey ${child.name}! 📚 Study check-in time!${examLine}\n\nDid you study today?\nReply: *yes* or *no*`;
     }
 
     await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
@@ -383,7 +413,7 @@ async function checkExamProximity(
 ) {
   const todayDate = new Date(today);
 
-  // Check for exams in 7, 3, or 1 day
+  // ── UPCOMING EXAMS: 7, 3, 1 day warnings ──
   for (const daysOut of [7, 3, 1]) {
     const targetDate = new Date(todayDate);
     targetDate.setDate(targetDate.getDate() + daysOut);
@@ -391,7 +421,7 @@ async function checkExamProximity(
 
     const { data: exams } = await sb
       .from("sq_exam_targets")
-      .select("id, child_id, exam_date, exam_type")
+      .select("id, child_id, exam_date, exam_type, subject_id")
       .eq("exam_date", targetStr)
       .eq("cycle_status", "active");
 
@@ -400,7 +430,7 @@ async function checkExamProximity(
     for (const exam of exams) {
       const { data: child } = await sb
         .from("sq_children")
-        .select("name, parent_id")
+        .select("name, parent_id, whatsapp_number")
         .eq("id", exam.child_id)
         .single();
 
@@ -408,33 +438,104 @@ async function checkExamProximity(
 
       const { data: membership } = await sb
         .from("sq_memberships")
-        .select("parent_phone")
+        .select("parent_phone, plan_type")
         .eq("user_id", child.parent_id)
         .single();
 
       if (!membership?.parent_phone) continue;
 
-      const { data: subject } = await sb
-        .from("sq_monitored_subjects")
-        .select("subject_name")
-        .eq("child_id", exam.child_id)
-        .limit(1)
-        .single();
+      let subjectName = exam.exam_type;
+      if (exam.subject_id) {
+        const { data: subject } = await sb.from("sq_monitored_subjects").select("subject_name").eq("id", exam.subject_id).single();
+        if (subject) subjectName = subject.subject_name;
+      }
 
-      const templateMap: Record<number, string> = {
-        7: "sp_exam_7days",
-        3: "sp_exam_3days",
-        1: "sp_exam_tomorrow",
-      };
+      const examLabel = `${subjectName} ${exam.exam_type === 'major' ? '(Major)' : ''}`;
 
-      await sendWhatsApp(membership.parent_phone, templateMap[daysOut], {
-        child_name: child.name,
-        exam_name: subject?.subject_name
-          ? `${subject.subject_name} ${exam.exam_type}`
-          : exam.exam_type,
-        streak: "0",
-        checkin_count: "0",
-      });
+      // Parent message
+      const parentMsg = daysOut === 1
+        ? `🚨 ${child.name}'s ${examLabel} exam is *TOMORROW*! Make sure revision is done tonight.`
+        : daysOut === 3
+        ? `⚠️ ${child.name}'s ${examLabel} exam in *3 days*. Final stretch — focus on weak areas.`
+        : `📅 ${child.name}'s ${examLabel} exam in *7 days*. Good time to review and consolidate.`;
+
+      await sendWhatsApp(membership.parent_phone, undefined, undefined, parentMsg);
+
+      // Kid message (if has WhatsApp)
+      if (child.whatsapp_number) {
+        const kidMsg = daysOut === 1
+          ? `💪 ${child.name}, your ${subjectName} exam is *TOMORROW*! You've been preparing — trust yourself and rest well tonight!`
+          : daysOut === 3
+          ? `📝 3 days to ${subjectName} exam! Focus on your toughest topics today.`
+          : `📚 1 week to ${subjectName} exam! Stay consistent — you've got this.`;
+
+        await sendWhatsApp(child.whatsapp_number, undefined, undefined, kidMsg);
+      }
+
+      // ── FUNNEL: exam < 30 days → suggest tutor ──
+      if (daysOut <= 7 && membership.plan_type !== 'free') {
+        // Check if they already have a tutor request
+        const { data: existingReq } = await sb.from("sq_tutor_requests")
+          .select("id").eq("user_id", child.parent_id).limit(1);
+        if (!existingReq || existingReq.length === 0) {
+          await sendWhatsApp(membership.parent_phone, undefined, undefined,
+            `💡 With ${child.name}'s exam ${daysOut} day${daysOut === 1 ? '' : 's'} away — need a tutor for focused revision? Reply *tutor* and we'll match one for you.`
+          );
+        }
+      }
+    }
+  }
+
+  // ── POST-EXAM: exams that just passed (yesterday) → prompt for next ──
+  const yesterday = new Date(todayDate);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split("T")[0];
+
+  const { data: pastExams } = await sb
+    .from("sq_exam_targets")
+    .select("id, child_id, exam_type, subject_id")
+    .eq("exam_date", yesterdayStr)
+    .eq("cycle_status", "active");
+
+  if (pastExams) {
+    for (const exam of pastExams) {
+      // Mark exam as ended
+      await sb.from("sq_exam_targets").update({ cycle_status: "ended" }).eq("id", exam.id);
+
+      const { data: child } = await sb.from("sq_children")
+        .select("name, parent_id, whatsapp_number").eq("id", exam.child_id).single();
+      if (!child) continue;
+
+      const { data: membership } = await sb.from("sq_memberships")
+        .select("parent_phone, plan_type").eq("user_id", child.parent_id).single();
+
+      let subjectName = "the";
+      if (exam.subject_id) {
+        const { data: s } = await sb.from("sq_monitored_subjects").select("subject_name").eq("id", exam.subject_id).single();
+        if (s) subjectName = s.subject_name;
+      }
+
+      // Ask parent about next exam
+      if (membership?.parent_phone) {
+        await sendWhatsApp(membership.parent_phone, undefined, undefined,
+          `${child.name}'s ${subjectName} exam is done! 🎉\n\n` +
+          `How did it go? When is the next exam?\n` +
+          `You can update exam dates in the StudyPulse dashboard.`
+        );
+
+        // Funnel: suggest diagnostic after exam
+        await sendWhatsApp(membership.parent_phone, undefined, undefined,
+          `💡 Want to know exactly where ${child.name} stands? A *diagnostic assessment* can pinpoint gaps before the next exam cycle.\n` +
+          `Book one at studypulse.co → Actions → Book Diagnostic`
+        );
+      }
+
+      // Tell kid well done
+      if (child.whatsapp_number) {
+        await sendWhatsApp(child.whatsapp_number, undefined, undefined,
+          `${subjectName} exam done! 🎉 Great job finishing it. Take a well-deserved break today! 😊`
+        );
+      }
     }
   }
 }
@@ -450,7 +551,7 @@ async function sendWeeklySummaries(
   // Get all active children
   const { data: children } = await sb
     .from("sq_children")
-    .select("id, name, parent_id")
+    .select("id, name, parent_id, study_days, whatsapp_number")
     .not("whatsapp_number", "is", null);
 
   if (!children) return;
@@ -466,6 +567,8 @@ async function sendWeeklySummaries(
       .neq("status", "pending");
 
     const count = checkins?.length || 0;
+    const doneCount = checkins?.filter(c => c.status === 'yes' || c.status === 'done' || c.status === 'did_extra').length || 0;
+    const missedCount = checkins?.filter(c => c.status === 'no').length || 0;
 
     const { data: membership } = await sb
       .from("sq_memberships")
@@ -475,31 +578,102 @@ async function sendWeeklySummaries(
 
     if (!membership?.parent_phone) continue;
 
-    const totalDays = membership.plan_type === "free" ? 3 : 7;
+    const studyDays = child.study_days && child.study_days.length > 0 ? child.study_days.length : (membership.plan_type === 'free' ? 3 : 5);
 
-    await sendWhatsApp(membership.parent_phone, "sp_weekly_summary", {
-      child_name: child.name,
-      checkin_count: String(count),
-      total_days: String(totalDays),
-      streak: String(count),
-      top_subject: "—",
-      consistency_msg:
-        count >= totalDays
-          ? "Perfect week! 🎉"
-          : count > 0
-            ? "Good effort — keep building the habit!"
-            : "Let's aim for more check-ins next week 💪",
-    });
+    // Build summary message (raw, not template — more flexible)
+    let summaryMsg = `📊 *Weekly Summary for ${child.name}*\n`;
+    summaryMsg += `Week of ${weekStartStr}\n\n`;
+    summaryMsg += `✅ Completed: ${doneCount}/${studyDays} days\n`;
+    if (missedCount > 0) summaryMsg += `❌ Missed: ${missedCount} days\n`;
+    summaryMsg += `\n`;
+
+    if (doneCount >= studyDays) {
+      summaryMsg += `🎉 Perfect week! ${child.name} checked in every study day.`;
+    } else if (doneCount > 0) {
+      summaryMsg += `Good effort — keep building the habit!`;
+    } else {
+      summaryMsg += `Let's aim for more check-ins next week 💪`;
+    }
+
+    // ── PARENT VERIFICATION ──
+    summaryMsg += `\n\n📋 *Have you seen ${child.name}'s work this week?*\nReply *confirm* if yes, or *adjust* if not accurate.`;
+
+    // ── FUNNEL: 3+ missed days → suggest tutor ──
+    if (missedCount >= 3) {
+      summaryMsg += `\n\n💡 ${child.name} missed ${missedCount} days this week. A tutor can help build a structured routine. Visit studypulse.co → Actions → Find a Tutor.`;
+    }
+
+    await sendWhatsApp(membership.parent_phone, undefined, undefined, summaryMsg);
 
     // Save summary record
     await sb.from("sq_weekly_summaries").insert({
       child_id: child.id,
       week_start: weekStartStr,
-      checkins_completed: count,
-      checkins_total: totalDays,
+      checkins_completed: doneCount,
+      checkins_total: studyDays,
       completion_state:
-        count >= totalDays ? "complete" : count > 0 ? "partial" : "none",
+        doneCount >= studyDays ? "complete" : doneCount > 0 ? "partial" : "none",
     });
+  }
+}
+
+// ── MID-WEEK PARENT NUDGE (Wednesday 8pm) ──
+
+async function sendMidWeekParentNudge(
+  sb: ReturnType<typeof createClient>,
+  today: string,
+) {
+  const weekStart = new Date(today);
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7)); // Monday
+  const weekStartStr = weekStart.toISOString().split("T")[0];
+
+  const { data: children } = await sb
+    .from("sq_children")
+    .select("id, name, parent_id")
+    .not("whatsapp_number", "is", null);
+
+  if (!children) return;
+
+  // Group by parent
+  const parentMap = new Map<string, string[]>();
+  for (const child of children) {
+    const names = parentMap.get(child.parent_id) || [];
+    names.push(child.name);
+    parentMap.set(child.parent_id, names);
+  }
+
+  for (const [parentId, childNames] of parentMap) {
+    const { data: membership } = await sb
+      .from("sq_memberships")
+      .select("parent_phone, plan_type")
+      .eq("user_id", parentId)
+      .single();
+
+    if (!membership?.parent_phone || membership.plan_type === "free") continue;
+
+    // Count check-ins so far this week
+    const { data: kids } = await sb
+      .from("sq_children")
+      .select("id, name")
+      .eq("parent_id", parentId);
+
+    if (!kids) continue;
+
+    let msg = `📋 *Mid-week check* — how's the studying going?\n\n`;
+    for (const kid of kids) {
+      const { count } = await sb
+        .from("sq_checkins")
+        .select("id", { count: "exact", head: true })
+        .eq("child_id", kid.id)
+        .gte("checkin_date", weekStartStr)
+        .lte("checkin_date", today)
+        .in("status", ["yes", "done", "did_extra"]);
+
+      msg += `${kid.name}: ${count || 0} check-ins so far\n`;
+    }
+    msg += `\nHave you checked their work? A quick look keeps things honest! 👀`;
+
+    await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
   }
 }
 

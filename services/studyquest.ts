@@ -211,6 +211,19 @@ export async function addExamTarget(target: { subject_id: string; child_id: stri
   return data;
 }
 
+export function getRecommendedStartDate(examDate: string): string {
+  const exam = new Date(examDate);
+  const start = new Date(exam);
+  start.setDate(start.getDate() - 56); // 8 weeks before
+  const today = new Date();
+  // If recommended start is in the past, use today
+  return start < today ? today.toISOString().split('T')[0] : start.toISOString().split('T')[0];
+}
+
+export function getActiveExamLimit(planType: PlanType): number {
+  return planType === 'free' ? 1 : 3;
+}
+
 // ═══════════════════════════════════════════
 // STUDY SETTINGS
 // ═══════════════════════════════════════════

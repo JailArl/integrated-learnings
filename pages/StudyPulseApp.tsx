@@ -56,6 +56,9 @@ import {
   upgradeMembership,
   isPremium,
   updateStudyDays,
+  addExamTarget,
+  getRecommendedStartDate,
+  getActiveExamLimit,
   PLAN_LIMITS,
   FREE_CHECKIN_DAYS,
 } from '../services/studyquest';
@@ -97,6 +100,9 @@ const StudyPulseApp: React.FC = () => {
   const [tab, setTab] = useState<'today'|'weekly'|'streaks'|'exams'|'reports'|'actions'|'settings'>('today');
   const [examScore, setExamScore] = useState('');
   const [examReason, setExamReason] = useState<ExamReason>('careless_mistakes');
+  const [newExamDate, setNewExamDate] = useState('');
+  const [newExamSubject, setNewExamSubject] = useState('');
+  const [newExamType, setNewExamType] = useState<'normal' | 'major'>('normal');
 
   const premium = isPremium(membership);
   const child = children[activeChild];
@@ -777,6 +783,110 @@ const StudyPulseApp: React.FC = () => {
                 </div>
               );
             })}
+
+            {/* Exam Management */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700">Exam Dates</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Set exam dates — the system will count down daily and adjust study intensity.
+                {!premium && ' Free plan: 1 active exam. Upgrade for up to 3.'}
+              </p>
+
+              {/* Current active exams */}
+              {exams.filter(e => e.cycle_status === 'active').length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {exams.filter(e => e.cycle_status === 'active').map((e) => {
+                    const subj = subjects.find(s => s.id === e.subject_id);
+                    const days = daysUntil(e.exam_date);
+                    return (
+                      <div key={e.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-2.5">
+                        <div>
+                          <span className="text-sm font-semibold text-slate-700">{subj?.subject_name || 'Subject'}</span>
+                          <span className="ml-2 text-xs text-slate-400">{e.exam_date}</span>
+                        </div>
+                        <span className={`text-sm font-black ${days <= 7 ? 'text-red-600' : days <= 14 ? 'text-amber-600' : 'text-emerald-600'}`}>{days}d</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add new exam */}
+              {(() => {
+                const activeCount = exams.filter(e => e.cycle_status === 'active').length;
+                const limit = getActiveExamLimit(membership?.plan_type || 'free');
+                if (activeCount >= limit) {
+                  return (
+                    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs text-amber-800">
+                        {!premium
+                          ? 'Free plan: 1 active exam. Upgrade to Premium for up to 3 exams.'
+                          : `You've reached the ${limit} exam limit. Complete or remove an exam to add more.`}
+                      </p>
+                      {!premium && (
+                        <button onClick={handleUpgrade} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
+                          <Crown size={12} className="mr-1" /> Upgrade
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+                return (
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Add Exam</p>
+                    <div className="grid gap-2 sm:grid-cols-3">
+                      <select
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+                        value={newExamSubject}
+                        onChange={(e) => setNewExamSubject(e.target.value)}
+                      >
+                        <option value="">Subject</option>
+                        {displaySubjects.map(s => (
+                          <option key={s.id} value={s.id}>{s.subject_name}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="date"
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+                        value={newExamDate}
+                        onChange={(e) => setNewExamDate(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                      <select
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+                        value={newExamType}
+                        onChange={(e) => setNewExamType(e.target.value as 'normal' | 'major')}
+                      >
+                        <option value="normal">Normal</option>
+                        <option value="major">Major (SA/PSLE/O-level)</option>
+                      </select>
+                    </div>
+                    {newExamDate && (
+                      <p className="mt-2 text-xs text-blue-600">
+                        📅 Recommended start: <strong>{getRecommendedStartDate(newExamDate)}</strong> (8 weeks before exam)
+                        {daysUntil(newExamDate) < 28 && (
+                          <span className="ml-1 text-amber-600">⚠️ Less than 4 weeks — consider a crash course!</span>
+                        )}
+                      </p>
+                    )}
+                    <button
+                      disabled={!newExamSubject || !newExamDate}
+                      onClick={async () => {
+                        if (!child || !newExamSubject || !newExamDate) return;
+                        await addExamTarget({ subject_id: newExamSubject, child_id: child.id, exam_type: newExamType, exam_date: newExamDate });
+                        const e = await getExamTargets(child.id);
+                        setExams(e);
+                        setNewExamDate('');
+                        setNewExamSubject('');
+                      }}
+                      className="mt-3 rounded-lg bg-slate-900 px-5 py-2.5 text-xs font-bold text-white disabled:opacity-50"
+                    >
+                      Add Exam Date
+                    </button>
+                  </div>
+                );
+              })()}
+            </div>
 
             {/* Plan info */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
