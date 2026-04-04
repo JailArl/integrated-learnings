@@ -55,6 +55,42 @@ function parseTargetReply(body: string): { quantity: number; unit: string } | nu
   return null;
 }
 
+// ── SKIP / REST DAY REASONS ──
+
+const SKIP_REASONS: { keywords: RegExp; reason: string; emoji: string; kidMsg: string }[] = [
+  { keywords: /tired|exhausted|shag|sian|sleepy|drained|no energy|so tired/,
+    reason: "feeling tired", emoji: "😴",
+    kidMsg: "Rest well tonight — a fresh mind learns better. See you tomorrow!" },
+  { keywords: /sick|unwell|fever|headache|stomach|not feeling well|mc|medical|doctor|flu|cold|cough/,
+    reason: "not feeling well", emoji: "🤒",
+    kidMsg: "Health comes first! Get well soon — studying can wait." },
+  { keywords: /late|end late|school late|reach home late|came back late|reached late/,
+    reason: "school ended late", emoji: "🕐",
+    kidMsg: "Long day! Rest up — tomorrow's a new day." },
+  { keywords: /family|event|outing|dinner|gathering|relative|visitor|celebration|wedding|birthday/,
+    reason: "family commitment", emoji: "👨‍👩‍👧‍👦",
+    kidMsg: "Family time is important too! Enjoy — study resumes tomorrow." },
+  { keywords: /busy|occupied|no time|packed|tuition|class|lesson|extra class|cca|training/,
+    reason: "busy schedule", emoji: "📅",
+    kidMsg: "Packed day! It's okay to skip — consistency over intensity." },
+  { keywords: /exam|test tomorrow|revision|preparing|studying for|mugging/,
+    reason: "exam prep (different subject)", emoji: "📝",
+    kidMsg: "Focused on exams — that totally counts! Good luck!" },
+  { keywords: /stressed|cannot|overwhelm|too much|pressure|anxious|anxiety|scared|worried|hate study|hate school|don.t want/,
+    reason: "feeling overwhelmed", emoji: "💛",
+    kidMsg: "It's okay to feel that way. Take a break — you're doing your best. 💛" },
+];
+
+function parseSkipReason(body: string): { reason: string; emoji: string; kidMsg: string } | null {
+  const lower = body.trim().toLowerCase();
+  for (const sr of SKIP_REASONS) {
+    if (sr.keywords.test(lower)) {
+      return { reason: sr.reason, emoji: sr.emoji, kidMsg: sr.kidMsg };
+    }
+  }
+  return null;
+}
+
 function parseCheckinStatus(body: string): { status: string; count?: number } | null {
   const lower = body.trim().toLowerCase();
 
@@ -69,6 +105,11 @@ function parseCheckinStatus(body: string): { status: string; count?: number } | 
   }
   if (lower === "confirm") return { status: "parent_confirm" };
   if (lower === "adjust") return { status: "parent_adjust" };
+
+  // Check for skip reasons (tired, sick, busy, etc.)
+  if (parseSkipReason(body)) {
+    return { status: "rest_day" };
+  }
 
   // Number reply (for partial count: "2", "3")
   const numMatch = lower.match(/^(\d+)$/);
@@ -526,6 +567,22 @@ serve(async (req) => {
         await sendRaw(membership.parent_phone,
           `📋 ${child.name} checked in — didn't study today. Checking in still counts as showing up.`
         );
+      }
+
+    // ── REST DAY (tired / sick / busy / family / stressed) ──
+    } else if (parsed.status === "rest_day") {
+      const skipInfo = parseSkipReason(body)!;
+
+      await sendRaw(phone,
+        `${skipInfo.emoji} ${skipInfo.kidMsg}`
+      );
+
+      if (membership?.parent_phone && membership.parent_phone !== phone) {
+        const isDistress = /overwhelm|stressed|anxious|hate|scared|worried|pressure/.test(body.toLowerCase());
+        const parentMsg = isDistress
+          ? `💛 Heads up — ${child.name} said they're ${skipInfo.reason}. Might be worth a chat tonight.`
+          : `${skipInfo.emoji} ${child.name} is taking a rest day (${skipInfo.reason}). They still checked in!`;
+        await sendRaw(membership.parent_phone, parentMsg);
       }
     }
 

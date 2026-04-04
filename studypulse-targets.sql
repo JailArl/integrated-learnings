@@ -21,9 +21,11 @@ CREATE TABLE IF NOT EXISTS sq_weekly_targets (
 
 ALTER TABLE sq_weekly_targets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "sq_weekly_targets_read" ON sq_weekly_targets;
 CREATE POLICY "sq_weekly_targets_read" ON sq_weekly_targets
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "sq_weekly_targets_service" ON sq_weekly_targets;
 CREATE POLICY "sq_weekly_targets_service" ON sq_weekly_targets
   FOR ALL USING (auth.jwt()->>'role' = 'service_role');
 
