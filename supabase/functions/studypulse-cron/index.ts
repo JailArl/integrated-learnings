@@ -187,7 +187,7 @@ async function sendCheckinPrompts(
   // Get all children in this level group
   const { data: children } = await sb
     .from("sq_children")
-    .select("id, name, level, whatsapp_number, parent_id")
+    .select("id, name, level, whatsapp_number, parent_id, study_days")
     .not("whatsapp_number", "is", null);
 
   if (!children) return 0;
@@ -198,18 +198,22 @@ async function sendCheckinPrompts(
     if (getLevelGroup(child.level) !== levelGroup) continue;
     if (!child.whatsapp_number) continue;
 
-    // Check plan — free users only get Tue/Thu/Sat
+    // Check plan
     const { data: membership } = await sb
       .from("sq_memberships")
       .select("plan_type")
       .eq("user_id", child.parent_id)
       .single();
 
-    if (
-      membership?.plan_type === "free" &&
-      !FREE_DAYS.includes(dayOfWeek)
-    ) {
-      continue; // Skip — not a check-in day for free plan
+    // Check study days: parent-set days take priority, else free=Tue/Thu/Sat, premium=Mon-Fri
+    const childStudyDays: number[] = child.study_days && child.study_days.length > 0
+      ? child.study_days
+      : membership?.plan_type === "free"
+        ? FREE_DAYS
+        : [1, 2, 3, 4, 5]; // Mon-Fri default
+
+    if (!childStudyDays.includes(dayOfWeek)) {
+      continue; // Not a study day for this child
     }
 
     // Check if already prompted today

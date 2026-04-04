@@ -55,6 +55,7 @@ import {
   submitCTARequest,
   upgradeMembership,
   isPremium,
+  updateStudyDays,
   PLAN_LIMITS,
   FREE_CHECKIN_DAYS,
 } from '../services/studyquest';
@@ -93,7 +94,7 @@ const StudyPulseApp: React.FC = () => {
   const [results, setResults] = useState<ExamResult[]>([]);
 
   // UI state
-  const [tab, setTab] = useState<'today'|'weekly'|'streaks'|'exams'|'reports'|'actions'>('today');
+  const [tab, setTab] = useState<'today'|'weekly'|'streaks'|'exams'|'reports'|'actions'|'settings'>('today');
   const [examScore, setExamScore] = useState('');
   const [examReason, setExamReason] = useState<ExamReason>('careless_mistakes');
 
@@ -223,6 +224,7 @@ const StudyPulseApp: React.FC = () => {
     { id: 'exams', label: 'Exams', icon: Target },
     { id: 'reports', label: 'Reports', icon: BarChart3 },
     { id: 'actions', label: 'Actions', icon: Zap },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
@@ -696,6 +698,102 @@ const StudyPulseApp: React.FC = () => {
                 <button onClick={() => handleCTA('sq_holiday_programme_interest', 'manual_request')} className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white">Register Interest</button>
                 <Link to="/enrichment" className="mt-2 inline-block text-xs font-semibold text-emerald-700 underline">Learn more →</Link>
               </article>
+            </div>
+          </div>
+        )}
+
+        {/* ── SETTINGS ── */}
+        {tab === 'settings' && (
+          <div className="space-y-5">
+            {/* Study Days per child */}
+            {displayChildren.map((c, ci) => {
+              const DAY_LABELS = [
+                { value: 0, label: 'Sun' },
+                { value: 1, label: 'Mon' },
+                { value: 2, label: 'Tue' },
+                { value: 3, label: 'Wed' },
+                { value: 4, label: 'Thu' },
+                { value: 5, label: 'Fri' },
+                { value: 6, label: 'Sat' },
+              ];
+              const currentDays: number[] = c.study_days && c.study_days.length > 0
+                ? c.study_days
+                : [1, 2, 3, 4, 5]; // default Mon-Fri
+
+              const toggleDay = async (dayNum: number) => {
+                const updated = currentDays.includes(dayNum)
+                  ? currentDays.filter(d => d !== dayNum)
+                  : [...currentDays, dayNum].sort();
+                if (updated.length === 0) return; // must have at least 1 day
+                const ok = await updateStudyDays(c.id, updated);
+                if (ok) {
+                  setChildren(prev => prev.map((ch, i) =>
+                    ch.id === c.id ? { ...ch, study_days: updated } : ch
+                  ));
+                }
+              };
+
+              return (
+                <div key={c.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <h3 className="text-lg font-black text-slate-900">{c.name}</h3>
+                  <p className="mt-1 text-xs text-slate-500">{c.level} · WhatsApp: {c.whatsapp_number || 'Not set'}</p>
+
+                  <div className="mt-4">
+                    <p className="text-sm font-bold text-slate-700">Study Days</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Pick the days {c.name} studies. Check-ins are sent only on these days.
+                      Weekly targets are divided by the number of study days.
+                    </p>
+                    <div className="mt-3 flex gap-2">
+                      {DAY_LABELS.map((d) => {
+                        const isActive = currentDays.includes(d.value);
+                        return (
+                          <button
+                            key={d.value}
+                            onClick={() => toggleDay(d.value)}
+                            className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition ${
+                              isActive
+                                ? 'bg-slate-900 text-white shadow-sm'
+                                : 'border border-slate-200 bg-white text-slate-400 hover:bg-slate-50'
+                            }`}
+                          >
+                            {d.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">
+                      <strong className="text-slate-700">{currentDays.length} days</strong> selected · Daily target = weekly target ÷ {currentDays.length}
+                    </p>
+                  </div>
+
+                  {!premium && (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                      <p className="text-xs text-amber-800">
+                        <strong>Free plan:</strong> Limited to Tue, Thu, Sat. Upgrade to choose your own days.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Plan info */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700">Your Plan</h3>
+              <div className="mt-3 flex items-center justify-between">
+                <div>
+                  <p className="text-lg font-black text-slate-900">{membership?.plan_type === 'free' ? 'Free' : membership?.plan_type === 'premium' ? 'Premium' : 'Family+'}</p>
+                  <p className="text-xs text-slate-500">
+                    {premium ? 'Daily check-ins · 3 subjects · Up to 3 children' : '3 check-ins/week · 1 subject · 1 child'}
+                  </p>
+                </div>
+                {!premium && (
+                  <button onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950">
+                    <Crown size={12} className="mr-1" /> Upgrade
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -173,7 +173,7 @@ serve(async (req) => {
     // ── FIND CHILD ──
     const { data: child } = await sb
       .from("sq_children")
-      .select("id, name, parent_id, level, conversation_state, conversation_context")
+      .select("id, name, parent_id, level, conversation_state, conversation_context, study_days")
       .eq("whatsapp_number", phone)
       .single();
 
@@ -403,12 +403,17 @@ serve(async (req) => {
       const firstSubject = subjectList[0];
       const rest = subjectList.slice(1);
 
+      // Use parent-set study days, default 5 (Mon-Fri)
+      const studyDaysCount = child.study_days && child.study_days.length > 0
+        ? child.study_days.length
+        : 5;
+
       await sb.from("sq_children").update({
         conversation_state: "setting_target",
         conversation_context: {
           current_subject: firstSubject,
           remaining_subjects: rest,
-          study_days: 5,
+          study_days: studyDaysCount,
         },
       }).eq("id", child.id);
 

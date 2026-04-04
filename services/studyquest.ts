@@ -31,6 +31,7 @@ export interface SQChild {
   name: string;
   level: string;
   whatsapp_number?: string;
+  study_days?: number[]; // 0=Sun,1=Mon,...6=Sat
 }
 
 export interface MonitoredSubject {
@@ -172,6 +173,12 @@ export async function createChild(parentId: string, child: { name: string; level
   if (!supabase) return null;
   const { data } = await supabase.from('sq_children').insert({ parent_id: parentId, ...child }).select().single();
   return data;
+}
+
+export async function updateStudyDays(childId: string, studyDays: number[]): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('sq_children').update({ study_days: studyDays }).eq('id', childId);
+  return !error;
 }
 
 // ═══════════════════════════════════════════

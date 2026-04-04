@@ -44,3 +44,8 @@ ALTER TABLE sq_checkins ADD COLUMN IF NOT EXISTS rollover_quantity INTEGER DEFAU
 
 -- 4. Index for fast lookups
 CREATE INDEX IF NOT EXISTS idx_sq_weekly_targets_child ON sq_weekly_targets(child_id, week_start);
+
+-- 5. Study days per child (parent picks which days the kid studies)
+-- Stored as integer array: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+ALTER TABLE sq_children ADD COLUMN IF NOT EXISTS study_days INTEGER[] DEFAULT '{1,2,3,4,5}';
+-- Default Mon-Fri. Parent can change via dashboard.
