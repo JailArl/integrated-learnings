@@ -156,6 +156,24 @@ serve(async (req) => {
     const today = now.toISOString().split("T")[0];
     const weekStart = getWeekStart();
 
+    // ══════════════════════════════════════
+    // ANTI-SPAM: Daily message cap (5 inbound per phone per day)
+    // ══════════════════════════════════════
+    const todayStart = `${today}T00:00:00.000Z`;
+    const { count: msgCount } = await sb
+      .from("whatsapp_conversations")
+      .select("id", { count: "exact", head: true })
+      .eq("contact_phone", phone)
+      .eq("direction", "inbound")
+      .gte("created_at", todayStart);
+
+    const MAX_DAILY_MESSAGES = 8;
+    if ((msgCount ?? 0) > MAX_DAILY_MESSAGES) {
+      // Silent — don't even reply, save money
+      console.log(`Anti-spam: ${phone} hit daily cap (${msgCount} msgs)`);
+      return ok();
+    }
+
     // Get membership
     const { data: membership } = await sb
       .from("sq_memberships")
@@ -176,6 +194,16 @@ serve(async (req) => {
       const targetParsed = parseTargetReply(body);
 
       if (!targetParsed) {
+        // Anti-spam: limit "didn't understand" in target-setting too
+        const { count: outboundToday } = await sb
+          .from("whatsapp_conversations")
+          .select("id", { count: "exact", head: true })
+          .eq("contact_phone", phone)
+          .eq("direction", "outbound")
+          .gte("created_at", todayStart);
+
+        if ((outboundToday ?? 0) >= 6) return ok(); // silent after too many
+
         await sendRaw(phone,
           `Hmm, I didn't get that. Reply with a number and unit like:\n` +
           `• *20 questions*\n• *3 chapters*\n• *10 pages*\n• *5 worksheets*`
@@ -314,9 +342,49 @@ serve(async (req) => {
     // ══════════════════════════════════════
     // STATE: IDLE (normal check-in)
     // ══════════════════════════════════════
+
+    // ── ALREADY CHECKED IN? Block re-replies ──
+    const { data: existingCheckin } = await sb.from("sq_checkins")
+      .select("id, status, prompt_sent_at")
+      .eq("child_id", child.id)
+      .eq("checkin_date", today)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (existingCheckin && existingCheckin.status !== "pending") {
+      // Already answered today — send ONE reminder then go silent
+      const { count: outboundToday } = await sb
+        .from("whatsapp_conversations")
+        .select("id", { count: "exact", head: true })
+        .eq("contact_phone", phone)
+        .eq("direction", "outbound")
+        .gte("created_at", todayStart);
+
+      // Allow max 3 outbound replies per day (prompt + 1 valid reply + 1 "already done")
+      if ((outboundToday ?? 0) < 4) {
+        await sendRaw(phone, `You've already checked in today, ${child.name}! ✅ See you tomorrow.`);
+      }
+      // Otherwise: silent
+      return ok();
+    }
+
     const parsed = parseCheckinStatus(body);
 
     if (!parsed) {
+      // ── ANTI-SPAM: Only send "didn't understand" ONCE per day ──
+      const { count: outboundToday } = await sb
+        .from("whatsapp_conversations")
+        .select("id", { count: "exact", head: true })
+        .eq("contact_phone", phone)
+        .eq("direction", "outbound")
+        .gte("created_at", todayStart);
+
+      // If we've already replied with a "didn't understand" hint, stay silent
+      if ((outboundToday ?? 0) >= 3) {
+        return ok();
+      }
+
       await sendRaw(phone,
         isPremium
           ? "Hey! Reply with: *done* / *partially* / *no* / *did extra* 😊"
@@ -326,6 +394,15 @@ serve(async (req) => {
     }
 
     if (parsed.status === "number_reply") {
+      // Random number when not in partial_count state — one hint then silence
+      const { count: outboundToday } = await sb
+        .from("whatsapp_conversations")
+        .select("id", { count: "exact", head: true })
+        .eq("contact_phone", phone)
+        .eq("direction", "outbound")
+        .gte("created_at", todayStart);
+
+      if ((outboundToday ?? 0) >= 3) return ok();
       await sendRaw(phone, "Hey! Reply with: *done* / *partially* / *no* 😊");
       return ok();
     }
@@ -340,13 +417,7 @@ serve(async (req) => {
     const todayTarget = hasTargets ? todayTargets[0] : null;
 
     // ── FIND OR CREATE CHECKIN ──
-    const { data: existingCheckin } = await sb.from("sq_checkins")
-      .select("id, prompt_sent_at")
-      .eq("child_id", child.id)
-      .eq("checkin_date", today)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    // existingCheckin already fetched above (for the re-reply guard)
 
     let responseSeconds: number | null = null;
     if (existingCheckin?.prompt_sent_at) {
