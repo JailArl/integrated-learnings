@@ -136,6 +136,11 @@ serve(async (req) => {
       }
     }
 
+    // ── MONDAY TARGET PROMPT (premium kids with no targets this week) ──
+    if (dayOfWeek === 1 && isWithinWindow(currentTime, "16:00", 7)) {
+      await sendWeeklyTargetPrompts(sb, today);
+    }
+
     // ── CHECK EXAM PROXIMITY ──
     await checkExamProximity(sb, today);
 
@@ -491,6 +496,54 @@ async function sendWeeklySummaries(
       completion_state:
         count >= totalDays ? "complete" : count > 0 ? "partial" : "none",
     });
+  }
+}
+
+// ── WEEKLY TARGET PROMPT (Monday 4pm) ──
+
+async function sendWeeklyTargetPrompts(
+  sb: ReturnType<typeof createClient>,
+  today: string,
+) {
+  const weekStart = getWeekStart(today);
+
+  // Get all premium children with WhatsApp
+  const { data: children } = await sb
+    .from("sq_children")
+    .select("id, name, whatsapp_number, parent_id")
+    .not("whatsapp_number", "is", null);
+
+  if (!children) return;
+
+  for (const child of children) {
+    if (!child.whatsapp_number) continue;
+
+    // Check if premium
+    const { data: membership } = await sb
+      .from("sq_memberships")
+      .select("plan_type")
+      .eq("user_id", child.parent_id)
+      .single();
+
+    if (membership?.plan_type === "free") continue;
+
+    // Check if targets already set this week
+    const { data: existing } = await sb
+      .from("sq_weekly_targets")
+      .select("id")
+      .eq("child_id", child.id)
+      .eq("week_start", weekStart)
+      .limit(1);
+
+    if (existing && existing.length > 0) continue; // Already set
+
+    await sendWhatsApp(
+      child.whatsapp_number,
+      undefined,
+      undefined,
+      `Hey ${child.name}! 🎯 New week — time to set your study targets!\n\n` +
+      `Reply *set target* to get started.`,
+    );
   }
 }
 

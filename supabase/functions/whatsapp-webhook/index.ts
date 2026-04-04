@@ -103,6 +103,9 @@ function parseCheckinStatus(body: string): { status: string; count?: number } | 
   if (["no", "nope", "didn't", "didnt", "skip", "skipped"].includes(lower)) {
     return { status: "no" };
   }
+  if (/^(set target|target|set targets|my target|change target|update target|new target)$/.test(lower)) {
+    return { status: "set_target" };
+  }
   if (lower === "confirm") return { status: "parent_confirm" };
   if (lower === "adjust") return { status: "parent_adjust" };
 
@@ -383,6 +386,46 @@ serve(async (req) => {
     // ══════════════════════════════════════
     // STATE: IDLE (normal check-in)
     // ══════════════════════════════════════
+
+    // ── "SET TARGET" — start target-setting flow ──
+    const preCheck = parseCheckinStatus(body);
+    if (preCheck?.status === "set_target" && isPremium) {
+      // Get child's monitored subjects
+      const { data: subjects } = await sb
+        .from("sq_monitored_subjects")
+        .select("subject_name")
+        .eq("child_id", child.id);
+
+      const subjectList = subjects && subjects.length > 0
+        ? subjects.map(s => s.subject_name)
+        : ["Math", "English", "Science"]; // default
+
+      const firstSubject = subjectList[0];
+      const rest = subjectList.slice(1);
+
+      await sb.from("sq_children").update({
+        conversation_state: "setting_target",
+        conversation_context: {
+          current_subject: firstSubject,
+          remaining_subjects: rest,
+          study_days: 5,
+        },
+      }).eq("id", child.id);
+
+      await sendRaw(phone,
+        `Let's set your weekly targets! 🎯\n\n` +
+        `How much *${firstSubject}* do you want to do this week?\n` +
+        `Reply like: *20 questions*, *3 chapters*, *10 pages*`
+      );
+      return ok();
+    }
+
+    if (preCheck?.status === "set_target" && !isPremium) {
+      await sendRaw(phone,
+        `Target-setting is a Premium feature! Ask your parents to upgrade at studypulse.co 😊`
+      );
+      return ok();
+    }
 
     // ── ALREADY CHECKED IN? Block re-replies ──
     const { data: existingCheckin } = await sb.from("sq_checkins")
