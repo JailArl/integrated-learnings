@@ -15,6 +15,7 @@ import {
   Crown,
   FileText,
   Flame,
+  Globe,
   GraduationCap,
   Loader2,
   Microscope,
@@ -67,6 +68,7 @@ import {
   addSubject,
   upsertStudySettings,
   createMembership,
+  updateLanguagePreference,
   getCheckinHistory,
   getDailyTasksHistory,
   PLAN_LIMITS,
@@ -873,6 +875,31 @@ const StudyPulseApp: React.FC = () => {
               })()}
             </div>
 
+            {/* Language preference */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700">WhatsApp Language</h3>
+              <p className="mt-1 text-xs text-slate-500">Your child receives messages in English. Choose your language for parent updates.</p>
+              <div className="mt-3 flex gap-3">
+                {(['en', 'zh'] as const).map((l) => (
+                  <button
+                    key={l}
+                    onClick={async () => {
+                      if (!userId) return;
+                      const ok = await updateLanguagePreference(userId, l);
+                      if (ok) setMembership(prev => prev ? { ...prev, preferred_language: l } : prev);
+                    }}
+                    className={`flex items-center gap-2 rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition ${
+                      (membership?.preferred_language || 'en') === l
+                        ? 'border-slate-900 bg-slate-900 text-white'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Globe size={14} /> {l === 'en' ? 'English' : '中文'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Plan info */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-sm font-bold text-slate-700">Your Plan</h3>
@@ -922,6 +949,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
   // Step 1 — profile
   const [fullName, setFullName] = useState(membership?.parent_name || '');
   const [whatsapp, setWhatsapp] = useState(membership?.parent_phone || '');
+  const [parentLang, setParentLang] = useState<'en' | 'zh'>(membership?.preferred_language || 'en');
 
   // Step 2 — child
   const [childName, setChildName] = useState('');
@@ -944,7 +972,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     if (!whatsapp.trim()) { setError('WhatsApp number is required.'); return; }
     setError('');
     setSaving(true);
-    await createMembership(userId, membership?.plan_type || 'free', { name: fullName, email: membership?.parent_email || '', phone: whatsapp });
+    await createMembership(userId, membership?.plan_type || 'free', { name: fullName, email: membership?.parent_email || '', phone: whatsapp, language: parentLang });
     if (supabase) {
       await supabase.from('parent_profiles').upsert({ id: userId, full_name: fullName, email: membership?.parent_email || '', phone: whatsapp }, { onConflict: 'id' });
     }
@@ -1020,6 +1048,18 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
               <div>
                 <label className={labelCls}>WhatsApp Number</label>
                 <input className={inputCls} type="tel" placeholder="+65 9123 4567" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+              </div>
+              <div>
+                <label className={labelCls}>WhatsApp Language</label>
+                <p className="mb-2 text-xs text-slate-500">Your child&apos;s messages stay in English. Choose your preferred language for parent updates.</p>
+                <div className="flex gap-3">
+                  <button type="button" onClick={() => setParentLang('en')} className={`flex-1 rounded-xl border-2 px-4 py-3 text-sm font-bold transition ${parentLang === 'en' ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
+                    English
+                  </button>
+                  <button type="button" onClick={() => setParentLang('zh')} className={`flex-1 rounded-xl border-2 px-4 py-3 text-sm font-bold transition ${parentLang === 'zh' ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>
+                    中文
+                  </button>
+                </div>
               </div>
             </div>
             <button onClick={handleSaveProfile} disabled={saving} className="mt-6 flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50">

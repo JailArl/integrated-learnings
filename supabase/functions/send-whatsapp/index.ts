@@ -114,7 +114,19 @@ serve(async (req) => {
         .eq("template_name", template_name)
         .single();
 
-      if (error || !tpl) {
+      // Fallback: if _zh template not found, try base template
+      let finalTpl = tpl;
+      if ((error || !tpl) && template_name.endsWith("_zh")) {
+        const baseName = template_name.replace(/_zh$/, "");
+        const { data: baseTpl } = await sb
+          .from("whatsapp_message_templates")
+          .select("message_text")
+          .eq("template_name", baseName)
+          .single();
+        finalTpl = baseTpl;
+      }
+
+      if (!finalTpl) {
         return new Response(
           JSON.stringify({
             success: false,
@@ -128,8 +140,8 @@ serve(async (req) => {
       }
 
       messageBody = variables
-        ? personalise(tpl.message_text, variables)
-        : tpl.message_text;
+        ? personalise(finalTpl.message_text, variables)
+        : finalTpl.message_text;
     } else {
       return new Response(
         JSON.stringify({

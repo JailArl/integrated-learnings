@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS sq_memberships (
   parent_name TEXT,
   parent_email TEXT,
   parent_phone TEXT,
+  preferred_language TEXT NOT NULL DEFAULT 'en' CHECK (preferred_language IN ('en','zh')),
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
   current_period_end TIMESTAMPTZ,

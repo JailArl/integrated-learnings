@@ -20,6 +20,7 @@ export interface Membership {
   parent_name?: string;
   parent_email?: string;
   parent_phone?: string;
+  preferred_language?: 'en' | 'zh';
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
   current_period_end?: string;
@@ -131,7 +132,7 @@ export async function getMembership(userId: string): Promise<Membership | null> 
   return data;
 }
 
-export async function createMembership(userId: string, planType: PlanType = 'free', profile?: { name?: string; email?: string; phone?: string }): Promise<Membership | null> {
+export async function createMembership(userId: string, planType: PlanType = 'free', profile?: { name?: string; email?: string; phone?: string; language?: 'en' | 'zh' }): Promise<Membership | null> {
   if (!supabase) return null;
   const { data } = await supabase.from('sq_memberships').upsert({
     user_id: userId,
@@ -140,6 +141,7 @@ export async function createMembership(userId: string, planType: PlanType = 'fre
     ...(profile?.name && { parent_name: profile.name }),
     ...(profile?.email && { parent_email: profile.email }),
     ...(profile?.phone && { parent_phone: profile.phone }),
+    ...(profile?.language && { preferred_language: profile.language }),
   }, { onConflict: 'user_id' }).select().single();
   return data;
 }
@@ -156,6 +158,15 @@ export async function upgradeMembership(userId: string, planType: PlanType): Pro
 
 export function isPremium(m: Membership | null): boolean {
   return !!m && (m.status === 'premium_active');
+}
+
+export async function updateLanguagePreference(userId: string, language: 'en' | 'zh'): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('sq_memberships').update({
+    preferred_language: language,
+    updated_at: new Date().toISOString(),
+  }).eq('user_id', userId);
+  return !error;
 }
 
 // ═══════════════════════════════════════════

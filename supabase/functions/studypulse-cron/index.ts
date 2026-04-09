@@ -30,6 +30,35 @@ function getSGTime(): Date {
   return new Date(now.getTime() + 8 * 60 * 60 * 1000);
 }
 
+// ── Parent message translations (Chinese) ──
+const ZH_CRON: Record<string, (...args: string[]) => string> = {
+  followup_reminder: (name) => `${name} 今天还没有打卡哦。`,
+  parent_confirm: (name, status) => `📊 ${name} 今天说：${status}。回复 *CONFIRM* 确认或 *ADJUST* 调整。`,
+  exam_7d: (name, exam) => `📅 ${name} 的 ${exam} 考试还有 *7 天*。是时候巩固复习了。`,
+  exam_3d: (name, exam) => `⚠️ ${name} 的 ${exam} 考试还有 *3 天*。冲刺阶段 — 集中攻弱项。`,
+  exam_1d: (name, exam) => `🚨 ${name} 的 ${exam} 考试 *明天*！确保今晚复习完毕。`,
+  exam_tutor: (name, days) => `💡 ${name} 的考试还有 ${days} 天 — 需要补习老师针对性复习吗？回复 *tutor*，我们帮您匹配。`,
+  post_exam: (name, subj) => `${name} 的 ${subj} 考试结束了！🎉\n\n考得怎么样？下一场考试是什么时候？\n您可以在 StudyPulse 仪表板更新考试日期。`,
+  post_exam_diagnostic: (name) => `💡 想了解 ${name} 目前的掌握情况？*诊断评估*可以在下个考试周期前找出薄弱点。\n在 studypulse.co → 操作 → 预约诊断`,
+  weekly_summary_header: (name, weekStart) => `📊 *${name} 的周报*\n${weekStart} 这一周\n\n`,
+  weekly_done: (done, total) => `✅ 完成：${done}/${total} 天\n`,
+  weekly_missed: (missed) => `❌ 缺席：${missed} 天\n`,
+  weekly_perfect: (name) => `🎉 完美的一周！${name} 每个学习日都打卡了。`,
+  weekly_good: () => `不错 — 继续保持！`,
+  weekly_low: () => `下周争取更多打卡 💪`,
+  weekly_verify: (name) => `\n\n📋 *您这周检查过 ${name} 的作业吗？*\n回复 *confirm* 确认，或 *adjust* 调整。`,
+  weekly_tutor_nudge: (name, missed) => `\n\n💡 ${name} 这周缺席了 ${missed} 天。补习老师可以帮助建立规律。访问 studypulse.co → 操作 → 找补习老师。`,
+  midweek_header: () => `📋 *周中检查* — 温习进行得怎样？\n\n`,
+  midweek_child: (name, count) => `${name}：到目前为止 ${count} 次打卡\n`,
+  midweek_footer: () => `\n您检查过他们的作业吗？看一看能保持诚实！👀`,
+};
+
+// Status translations for parent reports
+const STATUS_ZH: Record<string, string> = {
+  yes: "已完成", done: "已完成", did_extra: "做了额外练习",
+  partially: "部分完成", no: "没有温习", pending: "待打卡",
+};
+
 function formatTime(d: Date): string {
   return `${String(d.getUTCHours()).padStart(2, "0")}:${String(d.getUTCMinutes()).padStart(2, "0")}`;
 }
@@ -340,15 +369,20 @@ async function sendFollowupReminders(
     // Also nudge parent
     const { data: membership } = await sb
       .from("sq_memberships")
-      .select("parent_phone, parent_name")
+      .select("parent_phone, parent_name, preferred_language")
       .eq("user_id", child.parent_id)
       .single();
 
     if (membership?.parent_phone) {
-      await sendWhatsApp(membership.parent_phone, "sp_reminder_checkin", {
-        parent_name: membership.parent_name || "Parent",
-        child_name: child.name,
-      });
+      const lang = membership.preferred_language || "en";
+      if (lang === "zh") {
+        await sendWhatsApp(membership.parent_phone, undefined, undefined, ZH_CRON.followup_reminder(child.name));
+      } else {
+        await sendWhatsApp(membership.parent_phone, "sp_reminder_checkin", {
+          parent_name: membership.parent_name || "Parent",
+          child_name: child.name,
+        });
+      }
     }
 
     reminded++;
@@ -392,17 +426,24 @@ async function sendParentReports(
   for (const [parentId, results] of parentMap) {
     const { data: membership } = await sb
       .from("sq_memberships")
-      .select("parent_phone, plan_type")
+      .select("parent_phone, plan_type, preferred_language")
       .eq("user_id", parentId)
       .single();
 
     if (!membership?.parent_phone || membership.plan_type === "free") continue;
 
+    const lang = membership.preferred_language || "en";
     for (const r of results) {
-      await sendWhatsApp(membership.parent_phone, "sp_parent_confirm", {
-        child_name: r.child_name,
-        status: r.status,
-      });
+      if (lang === "zh") {
+        const statusZh = STATUS_ZH[r.status] || r.status;
+        await sendWhatsApp(membership.parent_phone, undefined, undefined,
+          ZH_CRON.parent_confirm(r.child_name, statusZh));
+      } else {
+        await sendWhatsApp(membership.parent_phone, "sp_parent_confirm", {
+          child_name: r.child_name,
+          status: r.status,
+        });
+      }
     }
   }
 }
@@ -438,7 +479,7 @@ async function checkExamProximity(
 
       const { data: membership } = await sb
         .from("sq_memberships")
-        .select("parent_phone, plan_type")
+        .select("parent_phone, plan_type, preferred_language")
         .eq("user_id", child.parent_id)
         .single();
 
@@ -451,13 +492,23 @@ async function checkExamProximity(
       }
 
       const examLabel = `${subjectName} ${exam.exam_type === 'major' ? '(Major)' : ''}`;
+      const lang = membership.preferred_language || "en";
 
       // Parent message
-      const parentMsg = daysOut === 1
-        ? `🚨 ${child.name}'s ${examLabel} exam is *TOMORROW*! Make sure revision is done tonight.`
-        : daysOut === 3
-        ? `⚠️ ${child.name}'s ${examLabel} exam in *3 days*. Final stretch — focus on weak areas.`
-        : `📅 ${child.name}'s ${examLabel} exam in *7 days*. Good time to review and consolidate.`;
+      let parentMsg: string;
+      if (lang === "zh") {
+        parentMsg = daysOut === 1
+          ? ZH_CRON.exam_1d(child.name, examLabel)
+          : daysOut === 3
+          ? ZH_CRON.exam_3d(child.name, examLabel)
+          : ZH_CRON.exam_7d(child.name, examLabel);
+      } else {
+        parentMsg = daysOut === 1
+          ? `🚨 ${child.name}'s ${examLabel} exam is *TOMORROW*! Make sure revision is done tonight.`
+          : daysOut === 3
+          ? `⚠️ ${child.name}'s ${examLabel} exam in *3 days*. Final stretch — focus on weak areas.`
+          : `📅 ${child.name}'s ${examLabel} exam in *7 days*. Good time to review and consolidate.`;
+      }
 
       await sendWhatsApp(membership.parent_phone, undefined, undefined, parentMsg);
 
@@ -478,9 +529,10 @@ async function checkExamProximity(
         const { data: existingReq } = await sb.from("sq_tutor_requests")
           .select("id").eq("user_id", child.parent_id).limit(1);
         if (!existingReq || existingReq.length === 0) {
-          await sendWhatsApp(membership.parent_phone, undefined, undefined,
-            `💡 With ${child.name}'s exam ${daysOut} day${daysOut === 1 ? '' : 's'} away — need a tutor for focused revision? Reply *tutor* and we'll match one for you.`
-          );
+          const tutorMsg = lang === "zh"
+            ? ZH_CRON.exam_tutor(child.name, String(daysOut))
+            : `💡 With ${child.name}'s exam ${daysOut} day${daysOut === 1 ? '' : 's'} away — need a tutor for focused revision? Reply *tutor* and we'll match one for you.`;
+          await sendWhatsApp(membership.parent_phone, undefined, undefined, tutorMsg);
         }
       }
     }
@@ -507,7 +559,7 @@ async function checkExamProximity(
       if (!child) continue;
 
       const { data: membership } = await sb.from("sq_memberships")
-        .select("parent_phone, plan_type").eq("user_id", child.parent_id).single();
+        .select("parent_phone, plan_type, preferred_language").eq("user_id", child.parent_id).single();
 
       let subjectName = "the";
       if (exam.subject_id) {
@@ -515,19 +567,20 @@ async function checkExamProximity(
         if (s) subjectName = s.subject_name;
       }
 
+      const pLang = membership?.preferred_language || "en";
+
       // Ask parent about next exam
       if (membership?.parent_phone) {
-        await sendWhatsApp(membership.parent_phone, undefined, undefined,
-          `${child.name}'s ${subjectName} exam is done! 🎉\n\n` +
-          `How did it go? When is the next exam?\n` +
-          `You can update exam dates in the StudyPulse dashboard.`
-        );
+        const postMsg = pLang === "zh"
+          ? ZH_CRON.post_exam(child.name, subjectName)
+          : `${child.name}'s ${subjectName} exam is done! 🎉\n\nHow did it go? When is the next exam?\nYou can update exam dates in the StudyPulse dashboard.`;
+        await sendWhatsApp(membership.parent_phone, undefined, undefined, postMsg);
 
         // Funnel: suggest diagnostic after exam
-        await sendWhatsApp(membership.parent_phone, undefined, undefined,
-          `💡 Want to know exactly where ${child.name} stands? A *diagnostic assessment* can pinpoint gaps before the next exam cycle.\n` +
-          `Book one at studypulse.co → Actions → Book Diagnostic`
-        );
+        const diagMsg = pLang === "zh"
+          ? ZH_CRON.post_exam_diagnostic(child.name)
+          : `💡 Want to know exactly where ${child.name} stands? A *diagnostic assessment* can pinpoint gaps before the next exam cycle.\nBook one at studypulse.co → Actions → Book Diagnostic`;
+        await sendWhatsApp(membership.parent_phone, undefined, undefined, diagMsg);
       }
 
       // Tell kid well done
@@ -572,35 +625,51 @@ async function sendWeeklySummaries(
 
     const { data: membership } = await sb
       .from("sq_memberships")
-      .select("parent_phone, plan_type")
+      .select("parent_phone, plan_type, preferred_language")
       .eq("user_id", child.parent_id)
       .single();
 
     if (!membership?.parent_phone) continue;
 
     const studyDays = child.study_days && child.study_days.length > 0 ? child.study_days.length : (membership.plan_type === 'free' ? 3 : 5);
+    const lang = membership.preferred_language || "en";
 
-    // Build summary message (raw, not template — more flexible)
-    let summaryMsg = `📊 *Weekly Summary for ${child.name}*\n`;
-    summaryMsg += `Week of ${weekStartStr}\n\n`;
-    summaryMsg += `✅ Completed: ${doneCount}/${studyDays} days\n`;
-    if (missedCount > 0) summaryMsg += `❌ Missed: ${missedCount} days\n`;
-    summaryMsg += `\n`;
-
-    if (doneCount >= studyDays) {
-      summaryMsg += `🎉 Perfect week! ${child.name} checked in every study day.`;
-    } else if (doneCount > 0) {
-      summaryMsg += `Good effort — keep building the habit!`;
+    // Build summary message
+    let summaryMsg: string;
+    if (lang === "zh") {
+      summaryMsg = ZH_CRON.weekly_summary_header(child.name, weekStartStr);
+      summaryMsg += ZH_CRON.weekly_done(String(doneCount), String(studyDays));
+      if (missedCount > 0) summaryMsg += ZH_CRON.weekly_missed(String(missedCount));
+      summaryMsg += `\n`;
+      if (doneCount >= studyDays) {
+        summaryMsg += ZH_CRON.weekly_perfect(child.name);
+      } else if (doneCount > 0) {
+        summaryMsg += ZH_CRON.weekly_good();
+      } else {
+        summaryMsg += ZH_CRON.weekly_low();
+      }
+      summaryMsg += ZH_CRON.weekly_verify(child.name);
     } else {
-      summaryMsg += `Let's aim for more check-ins next week 💪`;
+      summaryMsg = `📊 *Weekly Summary for ${child.name}*\n`;
+      summaryMsg += `Week of ${weekStartStr}\n\n`;
+      summaryMsg += `✅ Completed: ${doneCount}/${studyDays} days\n`;
+      if (missedCount > 0) summaryMsg += `❌ Missed: ${missedCount} days\n`;
+      summaryMsg += `\n`;
+      if (doneCount >= studyDays) {
+        summaryMsg += `🎉 Perfect week! ${child.name} checked in every study day.`;
+      } else if (doneCount > 0) {
+        summaryMsg += `Good effort — keep building the habit!`;
+      } else {
+        summaryMsg += `Let's aim for more check-ins next week 💪`;
+      }
+      summaryMsg += `\n\n📋 *Have you seen ${child.name}'s work this week?*\nReply *confirm* if yes, or *adjust* if not accurate.`;
     }
-
-    // ── PARENT VERIFICATION ──
-    summaryMsg += `\n\n📋 *Have you seen ${child.name}'s work this week?*\nReply *confirm* if yes, or *adjust* if not accurate.`;
 
     // ── FUNNEL: 3+ missed days → suggest tutor ──
     if (missedCount >= 3) {
-      summaryMsg += `\n\n💡 ${child.name} missed ${missedCount} days this week. A tutor can help build a structured routine. Visit studypulse.co → Actions → Find a Tutor.`;
+      summaryMsg += lang === "zh"
+        ? ZH_CRON.weekly_tutor_nudge(child.name, String(missedCount))
+        : `\n\n💡 ${child.name} missed ${missedCount} days this week. A tutor can help build a structured routine. Visit studypulse.co → Actions → Find a Tutor.`;
     }
 
     await sendWhatsApp(membership.parent_phone, undefined, undefined, summaryMsg);
@@ -645,7 +714,7 @@ async function sendMidWeekParentNudge(
   for (const [parentId, childNames] of parentMap) {
     const { data: membership } = await sb
       .from("sq_memberships")
-      .select("parent_phone, plan_type")
+      .select("parent_phone, plan_type, preferred_language")
       .eq("user_id", parentId)
       .single();
 
@@ -659,7 +728,9 @@ async function sendMidWeekParentNudge(
 
     if (!kids) continue;
 
-    let msg = `📋 *Mid-week check* — how's the studying going?\n\n`;
+    const lang = membership.preferred_language || "en";
+    let msg = lang === "zh" ? ZH_CRON.midweek_header() : `📋 *Mid-week check* — how's the studying going?\n\n`;
+
     for (const kid of kids) {
       const { count } = await sb
         .from("sq_checkins")
@@ -669,9 +740,11 @@ async function sendMidWeekParentNudge(
         .lte("checkin_date", today)
         .in("status", ["yes", "done", "did_extra"]);
 
-      msg += `${kid.name}: ${count || 0} check-ins so far\n`;
+      msg += lang === "zh"
+        ? ZH_CRON.midweek_child(kid.name, String(count || 0))
+        : `${kid.name}: ${count || 0} check-ins so far\n`;
     }
-    msg += `\nHave you checked their work? A quick look keeps things honest! 👀`;
+    msg += lang === "zh" ? ZH_CRON.midweek_footer() : `\nHave you checked their work? A quick look keeps things honest! 👀`;
 
     await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
   }

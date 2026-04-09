@@ -14,6 +14,41 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+// ── PARENT MESSAGE TRANSLATIONS (en → zh) ──
+// Kids always get English. Parents get their preferred_language.
+const ZH: Record<string, (...args: string[]) => string> = {
+  checkin_done: (name, subj, qty, unit) => `✅ ${name} 完成了今天的目标：${qty} ${unit} 的 ${subj}！`,
+  checkin_done_generic: (name) => `✅ ${name} 打卡了 — 今天有温习！`,
+  checkin_extra: () => ` ⚡ 做了额外练习！`,
+  checkin_partial: (name, done, total, unit, subj) =>
+    `📝 ${name}：今天完成了 ${done}/${total} ${unit}${subj ? `（${subj}）` : ""}。` +
+    (Number(total) - Number(done) > 0 ? ` 还剩 ${Number(total) - Number(done)} 个，鼓励明天完成。` : " 全部完成了！"),
+  checkin_partial_generic: (name) => `📝 ${name} 打卡了 — 部分完成。鼓励明天完成。`,
+  checkin_no: (name) => `📋 ${name} 打卡了 — 今天没有温习。打卡本身也算有出现。`,
+  rest_normal: (name, reason) => `${name} 今天休息（${reason}）。还是有打卡！`,
+  rest_distress: (name, reason) => `💛 注意 — ${name} 说${reason}。今晚可以聊聊。`,
+  targets_set: (name) => `${name} 已设置本周学习目标！📊 打卡将从下一个预定时间开始。`,
+  parent_confirm_yes: () => `已确认！谢谢 ✅`,
+  parent_confirm_adjust: (names) => `好的 — 已更新 ${names} 的记录。谢谢！`,
+};
+
+// Translate reason keywords to Chinese
+const REASON_ZH: Record<string, string> = {
+  "feeling tired": "感觉累了",
+  "not feeling well": "身体不舒服",
+  "school ended late": "放学晚了",
+  "family commitment": "家庭活动",
+  "busy schedule": "行程太忙",
+  "exam prep (different subject)": "准备其他科目的考试",
+  "feeling overwhelmed": "感到压力大",
+};
+
+// Helper: get parent's language preference
+async function getParentLang(sb: ReturnType<typeof createClient>, userId: string): Promise<string> {
+  const { data } = await sb.from("sq_memberships").select("preferred_language").eq("user_id", userId).single();
+  return data?.preferred_language || "en";
+}
+
 // ── SEND HELPERS ──
 
 async function sendRaw(to: string, message: string) {
@@ -181,14 +216,15 @@ serve(async (req) => {
       // Check if parent (for CONFIRM/ADJUST)
       const { data: membership } = await sb
         .from("sq_memberships")
-        .select("user_id, parent_name")
+        .select("user_id, parent_name, preferred_language")
         .eq("parent_phone", phone)
         .single();
 
       if (membership) {
         const parsed = parseCheckinStatus(body);
         if (parsed?.status === "parent_confirm" || parsed?.status === "parent_adjust") {
-          await handleParentReply(sb, membership, parsed.status, phone);
+          const pLang = membership.preferred_language || "en";
+          await handleParentReply(sb, membership, parsed.status, phone, pLang);
         }
       }
       return ok();
@@ -221,11 +257,12 @@ serve(async (req) => {
     // Get membership
     const { data: membership } = await sb
       .from("sq_memberships")
-      .select("parent_phone, parent_name, plan_type")
+      .select("parent_phone, parent_name, plan_type, preferred_language")
       .eq("user_id", child.parent_id)
       .single();
 
     const isPremium = membership?.plan_type !== "free";
+    const parentLang = membership?.preferred_language || "en";
 
     // ══════════════════════════════════════
     // STATE: SETTING TARGETS
@@ -296,9 +333,10 @@ serve(async (req) => {
         );
 
         if (membership?.parent_phone && membership.parent_phone !== phone) {
-          await sendRaw(membership.parent_phone,
-            `${child.name} has set their weekly targets! 📊 Check-ins start from the next scheduled time.`
-          );
+          const tMsg = parentLang === "zh"
+            ? ZH.targets_set(child.name)
+            : `${child.name} has set their weekly targets! 📊 Check-ins start from the next scheduled time.`;
+          await sendRaw(membership.parent_phone, tMsg);
         }
       }
 
@@ -374,10 +412,11 @@ serve(async (req) => {
       }
 
       if (membership?.parent_phone && membership.parent_phone !== phone) {
-        await sendRaw(membership.parent_phone,
-          `📝 ${child.name}: ${completedCount}/${targetQ} ${targetUnit}s done today${subject ? ` (${subject})` : ""}. ` +
-          (remaining > 0 ? `${remaining} left — encouraged to finish tomorrow.` : `Completed the full target!`)
-        );
+        const pMsg = parentLang === "zh"
+          ? ZH.checkin_partial(child.name, String(completedCount), String(targetQ), targetUnit, subject)
+          : `📝 ${child.name}: ${completedCount}/${targetQ} ${targetUnit}s done today${subject ? ` (${subject})` : ""}. ` +
+            (remaining > 0 ? `${remaining} left — encouraged to finish tomorrow.` : `Completed the full target!`);
+        await sendRaw(membership.parent_phone, pMsg);
       }
 
       return ok();
@@ -573,10 +612,19 @@ serve(async (req) => {
       await sendRaw(phone, doneMsg + extraMsg);
 
       if (membership?.parent_phone && membership.parent_phone !== phone) {
-        const parentMsg = hasTargets
-          ? `✅ ${child.name} completed today's target: ${todayTarget!.daily_quantity} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name}!`
-          : `✅ ${child.name} checked in — studied today!`;
-        await sendRaw(membership.parent_phone, parentMsg + (parsed.status === "did_extra" ? " ⚡ Did extra!" : ""));
+        let parentMsg: string;
+        if (parentLang === "zh") {
+          parentMsg = hasTargets
+            ? ZH.checkin_done(child.name, todayTarget!.subject_name, String(todayTarget!.daily_quantity), todayTarget!.target_unit)
+            : ZH.checkin_done_generic(child.name);
+          if (parsed.status === "did_extra") parentMsg += ZH.checkin_extra();
+        } else {
+          parentMsg = hasTargets
+            ? `✅ ${child.name} completed today's target: ${todayTarget!.daily_quantity} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name}!`
+            : `✅ ${child.name} checked in — studied today!`;
+          if (parsed.status === "did_extra") parentMsg += " ⚡ Did extra!";
+        }
+        await sendRaw(membership.parent_phone, parentMsg);
       }
 
     // ── PARTIALLY ──
@@ -599,9 +647,10 @@ serve(async (req) => {
           `Good effort, ${child.name}! 📝 Try to finish the rest by tomorrow — small steps add up.`
         );
         if (membership?.parent_phone && membership.parent_phone !== phone) {
-          await sendRaw(membership.parent_phone,
-            `📝 ${child.name} checked in — partially done today. Encouraged to finish tomorrow.`
-          );
+          const pMsg = parentLang === "zh"
+            ? ZH.checkin_partial_generic(child.name)
+            : `📝 ${child.name} checked in — partially done today. Encouraged to finish tomorrow.`;
+          await sendRaw(membership.parent_phone, pMsg);
         }
       }
 
@@ -612,9 +661,10 @@ serve(async (req) => {
       );
 
       if (membership?.parent_phone && membership.parent_phone !== phone) {
-        await sendRaw(membership.parent_phone,
-          `📋 ${child.name} checked in — didn't study today. Checking in still counts as showing up.`
-        );
+        const pMsg = parentLang === "zh"
+          ? ZH.checkin_no(child.name)
+          : `📋 ${child.name} checked in — didn't study today. Checking in still counts as showing up.`;
+        await sendRaw(membership.parent_phone, pMsg);
       }
 
     // ── REST DAY (tired / sick / busy / family / stressed) ──
@@ -627,9 +677,17 @@ serve(async (req) => {
 
       if (membership?.parent_phone && membership.parent_phone !== phone) {
         const isDistress = /overwhelm|stressed|anxious|hate|scared|worried|pressure/.test(body.toLowerCase());
-        const parentMsg = isDistress
-          ? `💛 Heads up — ${child.name} said they're ${skipInfo.reason}. Might be worth a chat tonight.`
-          : `${skipInfo.emoji} ${child.name} is taking a rest day (${skipInfo.reason}). They still checked in!`;
+        let parentMsg: string;
+        if (parentLang === "zh") {
+          const reasonZh = REASON_ZH[skipInfo.reason] || skipInfo.reason;
+          parentMsg = isDistress
+            ? ZH.rest_distress(child.name, reasonZh)
+            : `${skipInfo.emoji} ${ZH.rest_normal(child.name, reasonZh)}`;
+        } else {
+          parentMsg = isDistress
+            ? `💛 Heads up — ${child.name} said they're ${skipInfo.reason}. Might be worth a chat tonight.`
+            : `${skipInfo.emoji} ${child.name} is taking a rest day (${skipInfo.reason}). They still checked in!`;
+        }
         await sendRaw(membership.parent_phone, parentMsg);
       }
     }
@@ -681,9 +739,10 @@ async function updateStreak(sb: ReturnType<typeof createClient>, childId: string
       .select("name, parent_id").eq("id", childId).single();
     if (child) {
       const { data: m } = await sb.from("sq_memberships")
-        .select("parent_phone").eq("user_id", child.parent_id).single();
+        .select("parent_phone, preferred_language").eq("user_id", child.parent_id).single();
       if (m?.parent_phone) {
-        await sendTemplate(m.parent_phone, milestones[streak], { child_name: child.name });
+        const tpl = m.preferred_language === "zh" ? `${milestones[streak]}_zh` : milestones[streak];
+        await sendTemplate(m.parent_phone, tpl, { child_name: child.name });
       }
     }
   }
@@ -693,9 +752,10 @@ async function updateStreak(sb: ReturnType<typeof createClient>, childId: string
 
 async function handleParentReply(
   sb: ReturnType<typeof createClient>,
-  membership: { user_id: string; parent_name: string | null },
+  membership: { user_id: string; parent_name: string | null; preferred_language?: string },
   action: string,
   phone: string,
+  lang: string = "en",
 ) {
   const { data: children } = await sb.from("sq_children")
     .select("id, name").eq("parent_id", membership.user_id);
@@ -708,7 +768,8 @@ async function handleParentReply(
       await sb.from("sq_checkins").update({ parent_confirmed: true })
         .eq("child_id", c.id).eq("checkin_date", today);
     }
-    await sendRaw(phone, "Thanks for confirming! ✅");
+    const msg = lang === "zh" ? ZH.parent_confirm_yes() : "Thanks for confirming! ✅";
+    await sendRaw(phone, msg);
   } else if (action === "parent_adjust") {
     for (const c of children) {
       await sb.from("sq_checkins").update({ parent_adjusted: true })
@@ -719,6 +780,10 @@ async function handleParentReply(
         parent_id: membership.user_id,
       });
     }
-    await sendRaw(phone, `Got it — we've updated ${children.map(c => c.name).join(" & ")}'s record. Thanks!`);
+    const names = children.map(c => c.name).join(" & ");
+    const msg = lang === "zh"
+      ? ZH.parent_confirm_adjust(names)
+      : `Got it — we've updated ${names}'s record. Thanks!`;
+    await sendRaw(phone, msg);
   }
 }
