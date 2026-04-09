@@ -2153,11 +2153,13 @@ function confirmStudyYear(){
 function renderGrad(){
   const lastQual=G.quals[G.quals.length-1];
   const f=getField();
+  const hasTerminalDegree=G.quals.some(q=>q==='Degree'||q==='Medical Degree'||q==='Law Degree');
   const unlockedJobs=f?f.ladder.filter(j=>!j.req||G.quals.includes(j.req)||G.certs.includes(j.req)):[];
   const newJobs=unlockedJobs.filter(j=>j.req===lastQual);
 
   // Available upgrades
   const avUpgrades=EDUPATHS.filter(p=>{
+    if(hasTerminalDegree)return false; // no masters track in current game design
     if(!p.upgrade)return false;
     if(f&&!p.availForFields.includes(G.field))return false;
     // Freelancers: allow all upgrade paths
@@ -2250,10 +2252,14 @@ function renderGrad(){
   const hasUpgrade=UI.jc&&UI.jc!=='none';
   // If mid-career grad (was already working), label the button differently
   const wasMidCareer=G.workFirst||(G.yearsWorked>0);
-  h+=abar([
-    {t:'⬆️ Upgrade!',id:'bup',c:'bg',dis:!hasUpgrade},
-    {t:wasMidCareer?'Pick New Job! →':'Start Working! →',id:'bwork',c:'bp'},
-  ]);
+  const gradActions=[];
+  if(avUpgrades.length){
+    gradActions.push({t:'⬆️ Upgrade!',id:'bup',c:'bg',dis:!hasUpgrade});
+  }else{
+    UI.jc=null;
+  }
+  gradActions.push({t:wasMidCareer?'Pick New Job! →':'Start Working! →',id:'bwork',c:'bp'});
+  h+=abar(gradActions);
   mp(h);
 
   el('main').querySelectorAll('[data-up]').forEach(c=>{
@@ -2342,15 +2348,15 @@ function renderNews(){
   h+='</div></div>';
   if(G.jobLevel!==-1&&G.jobSal>0&&G.age>=40){
     h+='<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:10px 14px;margin-bottom:12px">';
-    h+='<p style="font-size:12px;font-weight:700;color:#166534;margin-bottom:5px">⚡ Quick Year Skip</p>';
-    h+='<p style="font-size:11px;color:#15803d;line-height:1.6;margin-bottom:8px">Skip job + allocation screens this year. Salary is processed, mandatory expenses are paid, and remaining cash is auto-saved to bank.</p>';
-    h+='<button class="btn bg bsm" id="bskipyear">⚡ Skip Detailed Allocation</button>';
+    h+='<p style="font-size:12px;font-weight:700;color:#166534;margin-bottom:5px">⚡ Smart Skip</p>';
+    h+='<p style="font-size:11px;color:#15803d;line-height:1.6;margin-bottom:8px">Plan 1/3/5 years at once. Each skipped year still runs salary, tax, loans, mortgage, investments, and lifestyle/treat spending based on your plan.</p>';
+    h+='<button class="btn bg bsm" id="bskipyear">⚡ Plan Skip</button>';
     h+='</div>';
   }
 
   h+=abar([{t:'Continue →',id:'bafternews'}]);
   mp(h);
-  el('bskipyear')?.addEventListener('click',()=>quickSkipYear(news));
+  el('bskipyear')?.addEventListener('click',()=>openSkipPlanModal(news));
   el('bafternews')?.addEventListener('click',()=>{
     if(news.cashBonus>0){G.cash+=news.cashBonus;addLog('🏛️ CDC/GST vouchers +$'+news.cashBonus);}
     // Apply property appreciation from news
@@ -2363,7 +2369,208 @@ function renderNews(){
   });
 }
 
-function quickSkipYear(news){
+function skipProfile(pid){
+  const profiles={
+    debt:{name:'Debt Crusher',investPct:0.20,funPct:0.03,debtPct:0.45,lifestyle:'basic',alloc:{bank:0.75,ssb:0.20,etf:0.05}},
+    balanced:{name:'Balanced',investPct:0.40,funPct:0.10,debtPct:0.15,lifestyle:'comfort',alloc:{bank:0.35,ssb:0.20,etf:0.30,reit:0.10,stock:0.05}},
+    growth:{name:'Growth',investPct:0.55,funPct:0.12,debtPct:0.05,lifestyle:'comfort',alloc:{bank:0.20,ssb:0.10,etf:0.45,reit:0.15,stock:0.10}},
+  };
+  return profiles[pid]||profiles.balanced;
+}
+
+function openSkipPlanModal(news){
+  var m=document.createElement('div');
+  m.className='ov';
+  m.id='skipplanmod';
+  m.innerHTML=''
+    +'<div class="mo">'
+    +'<h3>⚡ Plan Multi-Year Skip</h3>'
+    +'<p style="font-size:12px;color:#6b7280;line-height:1.7;margin-bottom:10px">Each skipped year still processes salary, CPF, taxes, mandatory expenses, loan/mortgage payments, investment returns, and your planned lifestyle spending.</p>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+    +'<div><span class="lbl">Skip Duration</span><select class="inp" id="sk-years"><option value="1">1 year</option><option value="3">3 years</option><option value="5" selected>5 years</option></select></div>'
+    +'<div><span class="lbl">Strategy</span><select class="inp" id="sk-prof"><option value="debt">Debt Crusher</option><option value="balanced" selected>Balanced</option><option value="growth">Growth</option></select></div>'
+    +'</div>'
+    +'<div style="font-size:10px;color:#6b7280;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px;line-height:1.7;margin-bottom:10px">'
+    +'Debt Crusher: aggressive repayment first, low fun spending.<br>'
+    +'Balanced: moderate debt, investing, and lifestyle.<br>'
+    +'Growth: heavier investing, higher market exposure.<br><br>'
+    +'Smart-stop is ON: skip auto-pauses when a milestone triggers, on major market years (Bull/Recession/Crash), or right after you achieve Financial Freedom.'
+    +'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn bg" id="bskiprun">⏩ Run Planned Skip</button>'
+    +'<button class="btn bs" id="bskipcancel">Cancel</button>'
+    +'</div>'
+    +'</div>';
+  document.body.appendChild(m);
+  el('bskipcancel')?.addEventListener('click',()=>m.remove());
+  el('bskiprun')?.addEventListener('click',()=>{
+    var years=parseInt(el('sk-years')?.value)||1;
+    var prof=(el('sk-prof')?.value)||'balanced';
+    m.remove();
+    runPlannedSkipYears(news,years,prof);
+  });
+}
+
+function runPlannedSkipYears(firstNews,years,profileId){
+  var plan=skipProfile(profileId);
+  var done=0;
+  var startAge=G.age;
+  var startNW=nw();
+  var startDebt=loans();
+  var startHI=G.hi;
+  var stopReason='';
+
+  for(var i=0;i<years;i++){
+    if(G.age>=65)break;
+    var yNews=i===0?firstNews:rollNews();
+    addLog('⏩ Planned skip '+(i+1)+'/'+years+' ('+plan.name+')');
+    quickSkipYear(yNews,plan);
+    done++;
+
+    // Smart-stop: do not skip through key strategic moments.
+    if(G.milestonePending){
+      stopReason='Milestone decision ready';
+      break;
+    }
+    if(G.ffAge&&G.ffAge===G.age){
+      stopReason='Financial Freedom achieved';
+      break;
+    }
+    if(yNews&&['crash','recession','bull'].includes(yNews.id)){
+      stopReason='Major market year: '+yNews.name;
+      break;
+    }
+
+    if(i<years-1){
+      G.lastSalary=G.jobSal;
+      G.age++;
+      if(G.age>=65)break;
+    }
+  }
+
+  document.getElementById('skip-plan-inputs')?.remove();
+
+  if(G.age>=65){endGame();return;}
+  UI.phase='summary';
+  UI.jl=null;
+  addLog('📊 Planned skip complete: '+done+' year(s) | Age '+startAge+'→'+G.age+' | NW '+fmt(startNW)+'→'+fmt(nw())+' | Debt '+fmt(startDebt)+'→'+fmt(loans())+' | HI '+startHI+'→'+G.hi);
+  toast('⏩ Planned skip done: '+done+' year(s)'+(stopReason?' · '+stopReason:''),'tg');
+  saveG();
+  render();
+}
+
+function autoPriorityRepay(maxBudget){
+  var budget=Math.min(Math.max(0,maxBudget||0),Math.max(0,G.cash||0));
+  if(budget<=0||loans()<=0)return 0;
+  var paidTotal=0;
+
+  function payField(field,label,bonus){
+    if(budget<=0)return;
+    var bal=G[field]||0;
+    if(bal<=0)return;
+    var pay=Math.min(budget,bal);
+    G[field]=Math.max(0,bal-pay);
+    G.cash-=pay;budget-=pay;paidTotal+=pay;
+    addLog('⚡ '+label+' extra repay -'+fmt(pay)+' | Remaining: '+fmt(G[field]||0));
+    if((G[field]||0)<=0&&bonus){G.hi+=bonus;addLog('🎉 '+label+' cleared! +'+bonus+' HI');}
+  }
+
+  // Highest-interest first
+  payField('emergencyDebt','Emergency debt',150);
+  payField('ccDebt','Credit card debt',150);
+  if((G.ccDebt||0)<=0)G.creditCard=false;
+  payField('weddingLoan','Wedding loan',100);
+
+  // Cert loans (6%)
+  if(G.certLoans&&G.certLoans.length>0&&budget>0){
+    for(var i=0;i<G.certLoans.length&&budget>0;i++){
+      var cl=G.certLoans[i];
+      if(!cl||cl.balance<=0)continue;
+      var cp=Math.min(budget,cl.balance);
+      cl.balance-=cp;G.cash-=cp;budget-=cp;paidTotal+=cp;
+      addLog('⚡ Cert loan ('+cl.name+') extra repay -'+fmt(cp)+' | Remaining: '+fmt(cl.balance));
+      if(cl.balance<=0){cl.balance=0;G.hi+=50;addLog('🎉 Cert loan for '+cl.name+' fully paid off! +50 HI');}
+    }
+    G.certLoans=G.certLoans.filter(function(cl){return (cl.balance||0)>0;});
+  }
+
+  payField('studyLoan','Study loan',50);
+  payField('carLoan','Car loan',50);
+
+  // Mortgages (lowest among debt categories here)
+  if(G.properties&&G.properties.length>0&&budget>0){
+    for(var pi=0;pi<G.properties.length&&budget>0;pi++){
+      var pp=G.properties[pi];
+      var pb=pp.propLoan||0;
+      if(pb<=0)continue;
+      var mp=Math.min(budget,pb);
+      pp.propLoan=Math.max(0,pb-mp);
+      if(pi===0)G.propLoan=pp.propLoan;
+      G.cash-=mp;budget-=mp;paidTotal+=mp;
+      addLog('⚡ '+(pi===0?'Home loan':pp.name+' mortgage')+' extra repay -'+fmt(mp)+' | Remaining: '+fmt(pp.propLoan));
+      if(pp.propLoan<=0){pp.propLoan=0;if(pi===0)G.propLoan=0;G.hi+=50;addLog('🎉 '+(pi===0?'Home loan':pp.name+' mortgage')+' paid off early! +50 HI');}
+    }
+  }else if((G.propLoan||0)>0&&budget>0){
+    var mp2=Math.min(budget,G.propLoan||0);
+    G.propLoan=Math.max(0,(G.propLoan||0)-mp2);
+    G.cash-=mp2;budget-=mp2;paidTotal+=mp2;
+    addLog('⚡ Home loan extra repay -'+fmt(mp2)+' | Remaining: '+fmt(G.propLoan));
+    if(G.propLoan<=0){G.propLoan=0;G.hi+=50;addLog('🎉 Home loan paid off early! +50 HI');}
+  }
+
+  if(loans()===0&&paidTotal>0){G.hi+=200;addLog('🎉 DEBT FREE! +200 HI 🎊 — financial weight lifted!');}
+  return paidTotal;
+}
+
+function autoPickLuxury(funBudget){
+  var budget=Math.max(0,funBudget||0);
+  var picks=[];
+  if(budget<=0)return picks;
+  var famMult=G.hasChildren?2.0:G.married?1.5:1.0;
+  var opts=LUXURIES.map(function(lx){return{id:lx.id,cost:Math.round(lx.cost*famMult)};}).sort(function(a,b){return a.cost-b.cost;});
+  for(var i=0;i<opts.length;i++){
+    if(opts[i].cost<=budget&&Math.random()<0.45){
+      picks.push(opts[i].id);
+      budget-=opts[i].cost;
+    }
+  }
+  return picks;
+}
+
+function prepareSkipInvestInputs(investBudget,alloc){
+  document.getElementById('skip-plan-inputs')?.remove();
+  var wrap=document.createElement('div');
+  wrap.id='skip-plan-inputs';
+  wrap.style.display='none';
+
+  var budget=Math.max(0,Math.min(investBudget||0,G.cash||0));
+  var entries=Object.entries(alloc||{}).filter(function(e){return e[1]>0;});
+  if(entries.length===0)entries=[['bank',1]];
+  var allocated=0;
+  entries.forEach(function(pair,idx){
+    var key=pair[0],share=pair[1];
+    var amt=idx===entries.length-1?(budget-allocated):Math.floor((budget*share)/500)*500;
+    amt=Math.max(0,amt);
+    allocated+=amt;
+    var inp=document.createElement('input');
+    inp.id='inv-'+key;
+    inp.value=String(amt);
+    wrap.appendChild(inp);
+  });
+
+  // Ensure missing investments default to zero when confirmAlloc checks by id.
+  INV.forEach(function(i){
+    if(!wrap.querySelector('#inv-'+i.key)){
+      var z=document.createElement('input');
+      z.id='inv-'+i.key;
+      z.value='0';
+      wrap.appendChild(z);
+    }
+  });
+  document.body.appendChild(wrap);
+}
+
+function quickSkipYear(news,plan){
   if(G.jobLevel===-1||!G.jobSal){toast('Pick a job first before using quick skip.','ty');return;}
   if(news.cashBonus>0){G.cash+=news.cashBonus;addLog('🏛️ CDC/GST vouchers +$'+news.cashBonus);}
   if(news.propBonus>0&&G.prop&&G.propVal>0){
@@ -2406,7 +2613,16 @@ function quickSkipYear(news){
   if(G.cash<0){emergencyBorrow(Math.abs(G.cash),'living costs exceeded salary');}
   addLog('⚡ Quick-skip salary +'+fmt(s-cpfE)+' | CPF +'+fmt(cpfE+cpfEr)+' | Living -'+fmt(livingTotal));
 
-  if(G.cash>0){
+  // Planner mode: set yearly debt/invest/lifestyle intent before yearly settlement.
+  if(plan){
+    var cashNow=Math.max(0,G.cash);
+    var debtBudget=Math.min(cashNow,Math.round(cashNow*(plan.debtPct||0)));
+    if(debtBudget>0)autoPriorityRepay(debtBudget);
+
+    UI.lc=plan.lifestyle||'basic';
+    UI.luxPick=autoPickLuxury(Math.round(Math.max(0,G.cash)*(plan.funPct||0)));
+    prepareSkipInvestInputs(Math.round(Math.max(0,G.cash)*(plan.investPct||0)),plan.alloc||{bank:1});
+  }else if(G.cash>0){
     var autoBank=G.cash;
     G.inv.bank=(G.inv.bank||0)+autoBank;
     G.investedTotal=(G.investedTotal||0)+autoBank;
@@ -2414,8 +2630,9 @@ function quickSkipYear(news){
     addLog('🏦 Quick skip auto-save: '+fmt(autoBank)+' moved to bank savings.');
   }
 
-  UI.ac=null;UI.sideGig=null;UI.luxPick=[];UI.lc=null;UI.ie={};UI.is={};
+  UI.ac=null;UI.sideGig=null;UI.ie={};UI.is={};
   confirmAlloc();
+  document.getElementById('skip-plan-inputs')?.remove();
 }
 
 // ══════════════════════════════════════
@@ -2983,8 +3200,8 @@ function renderAlloc(){
       h+='<div style="margin-top:4px">';
       h+='<p style="font-size:10px;color:#9ca3af;margin-bottom:4px">💡 Pay extra to clear faster — saves 4%/yr interest. Debt-free = +100 HI bonus!</p>';
       h+='<div style="display:flex;align-items:center;gap:8px">';
-      h+='<span style="font-size:10px;color:#6b7280">Extra repayment:</span>';
-      h+='<input type="range" class="sl" id="lsl" min="0" max="'+Math.min(tl,Math.max(0,G.cash))+'" step="500" value="0" style="width:120px">';
+      h+='<span style="font-size:10px;color:#6b7280">Study loan extra:</span>';
+      h+='<input type="range" class="sl" id="lsl" min="0" max="'+Math.min(G.studyLoan,Math.max(0,G.cash))+'" step="500" value="0" style="width:120px">';
       h+='<span style="font-size:13px;font-weight:700;color:#d97706" id="lsv">$0</span>';
       h+='</div></div>';
     }
@@ -3293,6 +3510,7 @@ function renderAlloc(){
     if(canBuyIns)h+='<button class="btn bg bsm" id="bbins" style="margin-right:6px;margin-bottom:6px">🛡️ Buy Insurance ($2,400/yr)</button>';
     else if(!G.insurance&&G.age<21)h+='<div style="display:inline-block;background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;opacity:0.6;font-size:11px;color:#6b7280">🔒 🛡️ Insurance — Need: Age 21+</div>';
     else if(G.insurance)h+='<div style="display:inline-block;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:6px 10px;margin-right:6px;margin-bottom:6px;font-size:11px;color:#16a34a">✅ 🛡️ Insured ($'+G.insurancePremium+'/yr)</div>';
+    if(loans()>0&&G.cash>0)h+='<button class="btn bg bsm" id="bpayprio" style="margin-right:6px;margin-bottom:6px;background:linear-gradient(135deg,#16a34a,#15803d)">⚡ Pay Highest-Interest Debt First</button>';
     if(hasCCDebt)h+='<button class="btn br bsm" id="bpaycc" style="margin-right:6px;margin-bottom:6px">💳 Pay CC Debt ('+fmt(G.ccDebt)+' @ 26%!)</button>';
     if((G.emergencyDebt||0)>0)h+='<button class="btn br bsm" id="bpayemd" style="margin-right:6px;margin-bottom:6px">🚨 Pay Emergency Debt ('+fmt(G.emergencyDebt)+' @ 26%!)</button>';
     if((G.weddingLoan||0)>0)h+='<button class="btn br bsm" id="bpaywl" style="margin-right:6px;margin-bottom:6px">💍 Pay Wedding Loan ('+fmt(G.weddingLoan)+' @ 8%!)</button>';
@@ -3397,8 +3615,18 @@ function renderAlloc(){
     var efWithdraw=parseInt(el('ef-withdraw')?.value)||0;
     committed+=efAdd;
     committed-=efWithdraw;
+      committed+=parseInt(el('lsl')?.value)||0;
+      committed+=parseInt(el('carlsl')?.value)||0;
       committed+=parseInt(el('mortlsl')?.value)||0;
       if(G.properties&&G.properties.length>1){G.properties.slice(1).forEach(function(_,pidx){committed+=parseInt(el('invmort'+pidx)?.value)||0;});}
+    if(UI.luxPick&&UI.luxPick.length>0){
+      UI.luxPick.forEach(function(lid){
+        var lx=LUXURIES.find(l=>l.id===lid);
+        if(!lx)return;
+        var famMult=G.hasChildren?2.0:G.married?1.5:1.0;
+        committed+=Math.round(lx.cost*famMult);
+      });
+    }
     var remaining=G.cash-committed+sellBack;
     var liveEl=el('alloc-cash-live');
     if(liveEl){
@@ -3424,6 +3652,8 @@ function renderAlloc(){
   }
   el('ef-inp')?.addEventListener('input',updateAllocLiveCash);
   el('ef-withdraw')?.addEventListener('input',updateAllocLiveCash);
+  el('lsl')?.addEventListener('input',updateAllocLiveCash);
+  el('carlsl')?.addEventListener('input',updateAllocLiveCash);
   INV.forEach(i=>{
     const inp=el('inv-'+i.key);
     if(inp){
@@ -3452,6 +3682,7 @@ function renderAlloc(){
       });
     }
   });
+  updateAllocLiveCash();
   el('main').querySelectorAll('[data-lc]').forEach(c=>c.addEventListener('click',()=>{UI.lc=c.dataset.lc;render();}));
   // PT enrol toggle
   el('main').querySelectorAll('[data-ptenrol]').forEach(c=>c.addEventListener('click',()=>{
@@ -3651,6 +3882,153 @@ function renderAlloc(){
     addLog('🛡️ Personal insurance purchased! '+fmt(insPremium)+'/yr premium'+(insPremium<2400?' (50% off with Insurance Lic!)':'')+'. Now protected against illness/accidents.');
     render();
   });
+  el('bpayprio')?.addEventListener('click',()=>{
+    if(G.cash<=0){toast('No cash available for repayment.','tr');return;}
+    var startCash=G.cash;
+    var totalPaid=0;
+    var debtLines=[];
+
+    function debtTargets(){
+      var ts=[];
+      if((G.emergencyDebt||0)>0){
+        ts.push({
+          label:'Emergency debt',
+          rate:0.26,
+          getBal:function(){return G.emergencyDebt||0;},
+          pay:function(amt){
+            var paid=Math.min(amt,G.emergencyDebt||0);
+            G.emergencyDebt=(G.emergencyDebt||0)-paid;
+            if((G.emergencyDebt||0)<=0){G.emergencyDebt=0;G.hi+=150;addLog('🎉 Emergency debt cleared! +60 HI');}
+            return paid;
+          }
+        });
+      }
+      if((G.ccDebt||0)>0){
+        ts.push({
+          label:'Credit card debt',
+          rate:0.26,
+          getBal:function(){return G.ccDebt||0;},
+          pay:function(amt){
+            var paid=Math.min(amt,G.ccDebt||0);
+            G.ccDebt=(G.ccDebt||0)-paid;
+            if((G.ccDebt||0)<=0){G.ccDebt=0;G.creditCard=false;G.hi+=150;addLog('🎉 Credit card debt cleared! +60 HI');}
+            return paid;
+          }
+        });
+      }
+      if((G.weddingLoan||0)>0){
+        ts.push({
+          label:'Wedding loan',
+          rate:0.08,
+          getBal:function(){return G.weddingLoan||0;},
+          pay:function(amt){
+            var paid=Math.min(amt,G.weddingLoan||0);
+            G.weddingLoan=(G.weddingLoan||0)-paid;
+            if((G.weddingLoan||0)<=0){G.weddingLoan=0;G.hi+=100;addLog('🎉 Wedding loan cleared! +100 HI');}
+            return paid;
+          }
+        });
+      }
+      if(G.certLoans&&G.certLoans.length>0){
+        G.certLoans.forEach(function(cl,idx){
+          if((cl.balance||0)<=0)return;
+          ts.push({
+            label:'Cert loan ('+cl.name+')',
+            rate:0.06,
+            getBal:function(){return (G.certLoans[idx]&&G.certLoans[idx].balance)||0;},
+            pay:function(amt){
+              if(!G.certLoans[idx])return 0;
+              var paid=Math.min(amt,G.certLoans[idx].balance||0);
+              G.certLoans[idx].balance=(G.certLoans[idx].balance||0)-paid;
+              if((G.certLoans[idx].balance||0)<=0){G.certLoans[idx].balance=0;G.hi+=50;addLog('🎉 Cert loan for '+G.certLoans[idx].name+' fully paid off! +50 HI');}
+              return paid;
+            }
+          });
+        });
+      }
+      if((G.studyLoan||0)>0){
+        ts.push({
+          label:'Study loan',
+          rate:G.studying?0:0.05,
+          getBal:function(){return G.studyLoan||0;},
+          pay:function(amt){
+            var paid=Math.min(amt,G.studyLoan||0);
+            G.studyLoan=(G.studyLoan||0)-paid;
+            if((G.studyLoan||0)<=0){G.studyLoan=0;G.hi+=50;addLog('🎉 Study loan PAID OFF early! +50 HI');}
+            return paid;
+          }
+        });
+      }
+      if((G.carLoan||0)>0){
+        ts.push({
+          label:'Car loan',
+          rate:CAR_LOAN_RATE,
+          getBal:function(){return G.carLoan||0;},
+          pay:function(amt){
+            var paid=Math.min(amt,G.carLoan||0);
+            G.carLoan=(G.carLoan||0)-paid;
+            if((G.carLoan||0)<=0){G.carLoan=0;G.hi+=50;addLog('🚗🎉 Car loan PAID OFF early! +50 HI 🎊');}
+            return paid;
+          }
+        });
+      }
+      if(G.properties&&G.properties.length>0){
+        G.properties.forEach(function(pp,idx){
+          if((pp.propLoan||0)<=0)return;
+          var pRate=(pp.propData&&pp.propData.loanRate)||0.026;
+          ts.push({
+            label:(idx===0?'Home mortgage':pp.name+' mortgage'),
+            rate:pRate,
+            getBal:function(){return (G.properties[idx]&&G.properties[idx].propLoan)||0;},
+            pay:function(amt){
+              if(!G.properties[idx])return 0;
+              var paid=Math.min(amt,G.properties[idx].propLoan||0);
+              G.properties[idx].propLoan=(G.properties[idx].propLoan||0)-paid;
+              if(idx===0)G.propLoan=G.properties[idx].propLoan;
+              if((G.properties[idx].propLoan||0)<=0){
+                G.properties[idx].propLoan=0;
+                if(idx===0)G.propLoan=0;
+                G.hi+=50;
+                addLog('🏠🎉 '+(idx===0?'Home loan':G.properties[idx].name+' mortgage')+' PAID OFF early! +50 HI 🎊');
+              }
+              return paid;
+            }
+          });
+        });
+      }
+      return ts;
+    }
+
+    while(G.cash>0){
+      var targets=debtTargets().filter(function(t){return t.getBal()>0;});
+      if(targets.length===0)break;
+      targets.sort(function(a,b){
+        if(b.rate!==a.rate)return b.rate-a.rate;
+        return b.getBal()-a.getBal();
+      });
+      var top=targets[0];
+      var before=top.getBal();
+      var pay=Math.min(G.cash,before);
+      if(pay<=0)break;
+      G.cash-=pay;
+      var actual=top.pay(pay);
+      if(actual<=0){G.cash+=pay;break;}
+      totalPaid+=actual;
+      debtLines.push('• '+top.label+': -'+fmt(actual)+' | left '+fmt(Math.max(0,before-actual))+' @ '+Math.round(top.rate*1000)/10+'%');
+    }
+
+    if(G.certLoans&&G.certLoans.length>0){
+      G.certLoans=G.certLoans.filter(function(cl){return (cl.balance||0)>0;});
+    }
+
+    if(totalPaid<=0){toast('No eligible debt to repay.','ty');return;}
+    if(loans()===0){G.hi+=200;addLog('🎉 DEBT FREE! +200 HI 🎊 — financial weight lifted!');}
+    addLog('⚡ Debt priority repay used '+fmt(totalPaid)+' from '+fmt(startCash)+' cash.');
+    debtLines.slice(0,6).forEach(function(line){addLog(line);});
+    if(debtLines.length>6)addLog('… and '+(debtLines.length-6)+' more repayment line(s).');
+    toast('⚡ Repaid '+fmt(totalPaid)+' by highest interest first','tg');
+    render();
+  });
   el('bpayemd')?.addEventListener('click',()=>{
     var pay=Math.min(G.emergencyDebt||0,G.cash);
     G.cash-=pay;G.emergencyDebt-=pay;
@@ -3723,8 +4101,30 @@ function renderAlloc(){
     var efAdd=parseInt(el('ef-inp')?.value)||0;
     var loanExtra=parseInt(el('lsl')?.value)||0;
     var carExtra=parseInt(el('carlsl')?.value)||0;
-    var totalCommitted=totalInv+efAdd+loanExtra+carExtra;
-    var remaining=G.cash-totalCommitted;
+    var mortExtra=parseInt(el('mortlsl')?.value)||0;
+    var invMortExtra=0;
+    if(G.properties&&G.properties.length>1){
+      G.properties.slice(1).forEach(function(_,pidx){invMortExtra+=(parseInt(el('invmort'+pidx)?.value)||0);});
+    }
+    var luxuryCommitted=0;
+    if(UI.luxPick&&UI.luxPick.length>0){
+      UI.luxPick.forEach(function(lid){
+        var lx=LUXURIES.find(l=>l.id===lid);
+        if(!lx)return;
+        var famMult=G.hasChildren?2.0:G.married?1.5:1.0;
+        luxuryCommitted+=Math.round(lx.cost*famMult);
+      });
+    }
+    var sellBack=0;
+    INV.forEach(i=>{
+      var sellAmt=UI.is[i.key]||0;
+      if(sellAmt>0){
+        sellBack+=sellAmt;
+        if(i.brokFee)sellBack-=i.brokFee;
+      }
+    });
+    var totalCommitted=totalInv+efAdd+loanExtra+carExtra+mortExtra+invMortExtra+luxuryCommitted;
+    var remaining=G.cash-totalCommitted+sellBack;
     // Check if over-allocated
     if(remaining<0){
       if(!confirm('Over-allocated by '+fmt(Math.abs(remaining))+'! Investments processed in order - later ones skipped when cash runs out. Proceed?'))return;
@@ -3799,11 +4199,11 @@ function confirmAlloc(){
   // Loan repayment
   const lsl=el('lsl');
   if(lsl){
-    const pay=Math.min(parseInt(lsl.value)||0,loans(),G.cash);
+    const pay=Math.min(parseInt(lsl.value)||0,G.studyLoan||0,G.cash);
     if(pay>0){
       G.cash-=pay;
-      let rem=pay;
-      ['studyLoan','propLoan','carLoan'].forEach(k=>{var before=G[k]||0;if(before>0){const p=Math.min(rem,before);G[k]-=p;rem-=p;if(G[k]<=0){G[k]=0;G.hi+=50;addLog('🎉 '+k.replace('Loan','')+' loan PAID OFF early! +50 HI');}}});
+      G.studyLoan=Math.max(0,(G.studyLoan||0)-pay);
+      if(G.studyLoan===0){G.hi+=50;addLog('🎉 Study loan PAID OFF early! +50 HI');}
       if(loans()===0){G.hi+=200;addLog('🎉 DEBT FREE! +200 HI 🎊 — financial weight lifted!');}
       else addLog('📋 Loan repay -'+fmt(pay)+' (remaining: '+fmt(loans())+')');
     }
@@ -5978,17 +6378,70 @@ async function endGame(){
 // ══════════════════════════════════════
 // LEADERBOARD
 // ══════════════════════════════════════
+function ffChampionTieBreakScore(s){
+  // Secondary score when FF age ties: rewards stronger overall financial position.
+  var fs=Number(s.final_score||0);
+  var nw=Number(s.net_worth||0);
+  var hi=Number(s.happiness||0);
+  var cpf=Number(s.cpf||0);
+  return fs+Math.round(nw/1000)+hi*10+Math.round(cpf/1000);
+}
+
 async function loadLb(){
   if(!RD){toast('No active round','ty');return;}
   el('lbrnd').textContent=RD.round_name;
   el('lbc').innerHTML='Loading...';
   el('lbmod').classList.remove('hidden');
-  const rows=await dbJ('game_sessions','*,players(class_id,index_number)',{round_id:RD.id},'final_score.desc',20);
+  const rows=await dbJ('game_sessions','*,players(class_id,index_number)',{round_id:RD.id},'final_score.desc',200);
   if(!rows.length){el('lbc').innerHTML='<p style="text-align:center;padding:16px;color:#9ca3af">No scores yet!</p>';return;}
+
+  // Determine ranking order per round goal.
+  var ranked=rows.slice();
+  if((RD.goal||'combined')==='ff_earliest'){
+    ranked.sort(function(a,b){
+      var aff=(a.ff_age===null||a.ff_age===undefined)?999:Number(a.ff_age);
+      var bff=(b.ff_age===null||b.ff_age===undefined)?999:Number(b.ff_age);
+      if(aff!==bff)return aff-bff; // earlier FF age wins
+
+      // Tie-breaker among same FF age: stronger overall run wins.
+      var atb=ffChampionTieBreakScore(a);
+      var btb=ffChampionTieBreakScore(b);
+      if(atb!==btb)return btb-atb;
+
+      // Final deterministic tie-breakers.
+      var anw=Number(a.net_worth||0),bnw=Number(b.net_worth||0);
+      if(anw!==bnw)return bnw-anw;
+      var ahi=Number(a.happiness||0),bhi=Number(b.happiness||0);
+      if(ahi!==bhi)return bhi-ahi;
+      var acpf=Number(a.cpf||0),bcpf=Number(b.cpf||0);
+      if(acpf!==bcpf)return bcpf-acpf;
+      var at=Date.parse(a.updated_at||0)||0;
+      var bt=Date.parse(b.updated_at||0)||0;
+      return at-bt;
+    });
+  }else{
+    ranked.sort(function(a,b){
+      var af=Number(a.final_score||0),bf=Number(b.final_score||0);
+      if(af!==bf)return bf-af;
+      var anw=Number(a.net_worth||0),bnw=Number(b.net_worth||0);
+      if(anw!==bnw)return bnw-anw;
+      var ahi=Number(a.happiness||0),bhi=Number(b.happiness||0);
+      if(ahi!==bhi)return bhi-ahi;
+      return (Date.parse(a.updated_at||0)||0)-(Date.parse(b.updated_at||0)||0);
+    });
+  }
+
+  ranked=ranked.slice(0,20);
   let h='';
-  rows.forEach((s,i)=>{
+  if((RD.goal||'combined')==='ff_earliest'){
+    h+='<p style="font-size:10px;color:#6b7280;margin-bottom:8px">Ranking: Earliest FF age, then Champion tie-break score (Final Score + Net Worth/1000 + HI×10 + CPF/1000).</p>';
+  }
+  ranked.forEach((s,i)=>{
     const me=s.player_id===P?.id;
-    h+='<div class="lbr'+(me?' me':'')+'"><span style="font-size:13px;font-weight:800;width:24px;text-align:center">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</span><span style="flex:1;font-weight:600;font-size:12px">'+s.players?.class_id+'-'+s.players?.index_number+(me?' <span class="tag tbl" style="font-size:9px">YOU</span>':'')+'</span><span style="font-size:10px;color:#9ca3af;margin-right:6px">Age '+s.age+'</span><span style="font-weight:800;color:#2563eb;font-family:monospace;font-size:12px">'+s.final_score.toLocaleString()+'</span></div>';
+    var ffTxt=(s.ff_age===null||s.ff_age===undefined)?'—':'FF '+s.ff_age;
+    var rightMain=(RD.goal==='ff_earliest')?ffTxt:(Number(s.final_score||0)).toLocaleString();
+    var rightSub=(RD.goal==='ff_earliest')?('TB '+ffChampionTieBreakScore(s).toLocaleString()):ffTxt;
+    h+='<div class="lbr'+(me?' me':'')+'"><span style="font-size:13px;font-weight:800;width:24px;text-align:center">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1))+'</span><span style="flex:1;font-weight:600;font-size:12px">'+s.players?.class_id+'-'+s.players?.index_number+(me?' <span class="tag tbl" style="font-size:9px">YOU</span>':'')+'</span><span style="font-size:10px;color:#9ca3af;margin-right:6px">'+rightSub+'</span><span style="font-weight:800;color:#2563eb;font-family:monospace;font-size:12px">'+rightMain+'</span></div>';
   });
   el('lbc').innerHTML=h;
 }

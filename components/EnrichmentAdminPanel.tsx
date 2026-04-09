@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import { Plus, RefreshCw, Download, Trash2, Play, Square, ChevronLeft, Users, Trophy, GamepadIcon, Clock, FileText, X } from 'lucide-react';
+import { jsPDF } from 'jspdf';
 
 interface Props {
   events: any[];
@@ -27,6 +28,74 @@ const GOAL_LABELS: Record<string, string> = {
   balanced_life: '⚖️ Balanced Life',
   combined: '🥇 Combined',
 };
+
+type ReportMode = 'executive' | 'detailed';
+
+const REPORT_MODE_LABELS: Record<ReportMode, string> = {
+  executive: 'Executive (Teacher)',
+  detailed: 'Detailed (Admin)',
+};
+
+function getSessionFfAge(session: any): number {
+  const fromCol = session?.ff_age;
+  if (fromCol !== null && fromCol !== undefined) return Number(fromCol);
+  const fromState = session?.game_state?.ffAge;
+  if (fromState !== null && fromState !== undefined) return Number(fromState);
+  return 999;
+}
+
+function sessionChampionTieBreak(session: any): number {
+  const fs = Number(session?.final_score || 0);
+  const nw = Number(session?.net_worth || 0);
+  const hi = Number(session?.happiness || 0);
+  const cpf = Number(session?.cpf || 0);
+  return fs + Math.round(nw / 1000) + hi * 10 + Math.round(cpf / 1000);
+}
+
+function rankSessionsByGoal(input: any[], goal: string): any[] {
+  const sessions = [...(input || [])];
+  sessions.sort((a: any, b: any) => {
+    if (goal === 'ff_earliest') {
+      const aFf = getSessionFfAge(a);
+      const bFf = getSessionFfAge(b);
+      if (aFf !== bFf) return aFf - bFf;
+      const aTb = sessionChampionTieBreak(a);
+      const bTb = sessionChampionTieBreak(b);
+      if (aTb !== bTb) return bTb - aTb;
+    } else if (goal === 'highest_nw') {
+      const aNw = Number(a?.net_worth || 0);
+      const bNw = Number(b?.net_worth || 0);
+      if (aNw !== bNw) return bNw - aNw;
+    } else if (goal === 'highest_hi') {
+      const aHi = Number(a?.happiness || 0);
+      const bHi = Number(b?.happiness || 0);
+      if (aHi !== bHi) return bHi - aHi;
+    } else if (goal === 'highest_cpf') {
+      const aCpf = Number(a?.cpf || 0);
+      const bCpf = Number(b?.cpf || 0);
+      if (aCpf !== bCpf) return bCpf - aCpf;
+    } else {
+      const aScore = Number(a?.final_score || 0);
+      const bScore = Number(b?.final_score || 0);
+      if (aScore !== bScore) return bScore - aScore;
+    }
+
+    // Global deterministic tie-break chain.
+    const aTb = sessionChampionTieBreak(a);
+    const bTb = sessionChampionTieBreak(b);
+    if (aTb !== bTb) return bTb - aTb;
+    const aNw = Number(a?.net_worth || 0), bNw = Number(b?.net_worth || 0);
+    if (aNw !== bNw) return bNw - aNw;
+    const aHi = Number(a?.happiness || 0), bHi = Number(b?.happiness || 0);
+    if (aHi !== bHi) return bHi - aHi;
+    const aCpf = Number(a?.cpf || 0), bCpf = Number(b?.cpf || 0);
+    if (aCpf !== bCpf) return bCpf - aCpf;
+    const aTs = Date.parse(a?.updated_at || 0) || 0;
+    const bTs = Date.parse(b?.updated_at || 0) || 0;
+    return aTs - bTs;
+  });
+  return sessions;
+}
 
 type RunLevel = 'class' | 'school';
 
@@ -67,6 +136,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
   const [showDayChampion, setShowDayChampion] = useState(false);
   const [dayChampionData, setDayChampionData] = useState<any>(null);
   const [loadingDayChampion, setLoadingDayChampion] = useState(false);
+  const [reportMode, setReportMode] = useState<ReportMode>('executive');
 
   // Load events on mount
   useEffect(() => { loadEvents(); }, []);
@@ -282,12 +352,148 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
 
   const fmt = (n: number) => n >= 1000 ? `$${(n / 1000).toFixed(0)}K` : `$${n}`;
   const fmtFull = (n: number) => `$${Math.round(n).toLocaleString()}`;
+  const compactMoney = (n: number) => `$${Math.round(n).toLocaleString()}`;
   const timeLeft = (expiresAt: string) => {
     const diff = new Date(expiresAt).getTime() - Date.now();
     if (diff <= 0) return 'EXPIRED';
     const hrs = Math.floor(diff / 3600000);
     const mins = Math.floor((diff % 3600000) / 60000);
     return `${hrs}h ${mins}m left`;
+  };
+
+  const downloadRoundPdf = (round: any, roundSessions: any[], schoolName: string, goalLabel: string, mode: ReportMode) => {
+    const isExecutive = mode === 'executive';
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    let y = 48;
+
+    const safeSchool = schoolName || 'School';
+    const title = `${safeSchool} — Round ${round?.round_number || ''} Report`;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(title, margin, y);
+    y += 20;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Round: ${round?.round_name || '-'} | Goal: ${goalLabel} | Mode: ${REPORT_MODE_LABELS[mode]} | Generated: ${new Date().toLocaleString()}`, margin, y);
+    y += 22;
+
+    const header = ['Rank', 'Student', 'Score', 'FF Age', 'Net Worth', 'HI', 'CPF'];
+    const top = (roundSessions || []).slice(0, isExecutive ? 3 : 20);
+    const rows = top.map((s: any, idx: number) => {
+      const ffAge = (s?.ff_age ?? s?.game_state?.ffAge) ?? '-';
+      return [
+        String(idx + 1),
+        `${s?.players?.class_id || '-'}-${s?.players?.index_number || '-'}`,
+        `${Number(s?.final_score || 0).toLocaleString()}`,
+        String(ffAge),
+        compactMoney(Number(s?.net_worth || 0)),
+        String(Number(s?.happiness || 0)),
+        compactMoney(Number(s?.cpf || 0)),
+      ];
+    });
+
+    const colX = [margin, margin + 38, margin + 168, margin + 248, margin + 302, margin + 392, margin + 438];
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    header.forEach((h, i) => doc.text(h, colX[i], y));
+    y += 10;
+    doc.setDrawColor(220, 220, 220);
+    doc.line(margin, y, pageW - margin, y);
+    y += 12;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    rows.forEach((r) => {
+      if (y > 760) {
+        doc.addPage();
+        y = 48;
+      }
+      r.forEach((cell, i) => doc.text(String(cell), colX[i], y));
+      y += 14;
+    });
+
+    y += 10;
+    if (y > 760) {
+      doc.addPage();
+      y = 48;
+    }
+    const completed = (roundSessions || []).filter((s: any) => s?.is_complete).length;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('Summary', margin, y);
+    y += 14;
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Players in ranking: ${roundSessions.length}`, margin, y); y += 12;
+    doc.text(`Completed: ${completed}`, margin, y); y += 12;
+    doc.text(`Goal rule: ${goalLabel}`, margin, y);
+
+    const top3 = (roundSessions || []).slice(0, 3);
+    if (top3.length > 0) {
+      y += 20;
+      if (y > 730) {
+        doc.addPage();
+        y = 48;
+      }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text(isExecutive ? 'Top 3 Snapshot' : 'Top 3 Detailed Analysis', margin, y);
+      y += 12;
+
+      top3.forEach((s: any, idx: number) => {
+        if (y > 720) {
+          doc.addPage();
+          y = 48;
+        }
+        const gs = s?.game_state || {};
+        const inv = gs?.inv || {};
+        const invTotal = Object.values(inv).reduce((sum: number, v: any) => sum + (Number(v) || 0), 0);
+        const debt = Number(gs?.studyLoan || 0) + Number(gs?.propLoan || 0) + Number(gs?.carLoan || 0) + Number(gs?.emergencyDebt || 0) + Number(gs?.ccDebt || 0);
+        const ffAge = (s?.ff_age ?? gs?.ffAge) ?? null;
+        const student = `${s?.players?.class_id || '-'}-${s?.players?.index_number || '-'}`;
+
+        const strengths: string[] = [];
+        if (ffAge) strengths.push(`Reached FF at age ${ffAge}`);
+        if (debt === 0) strengths.push('Debt-free position');
+        if (invTotal >= 100000) strengths.push('Strong portfolio build-up');
+        if ((gs?.happiness || 0) >= 70) strengths.push('Healthy happiness balance');
+        if (strengths.length === 0) strengths.push('Consistent scorer across key metrics');
+
+        const coaching: string[] = [];
+        if (debt > 50000) coaching.push('Prioritize high-interest debt reduction before aggressive investing');
+        if (invTotal < 30000) coaching.push('Increase yearly investment consistency for compounding');
+        if ((gs?.happiness || 0) < 40) coaching.push('Manage burnout: rebalance lifestyle and stress factors');
+        if (coaching.length === 0) coaching.push('Maintain current discipline and risk management strategy');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text(`${idx + 1}. ${student}  |  Score ${Number(s?.final_score || 0).toLocaleString()}`, margin, y);
+        y += 12;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        doc.text(`NW ${compactMoney(Number(s?.net_worth || 0))} | HI ${Number(s?.happiness || 0)} | CPF ${compactMoney(Number(s?.cpf || 0))} | Debt ${compactMoney(debt)} | Inv ${compactMoney(invTotal)}`, margin, y);
+        y += 11;
+        doc.text(`Strengths: ${strengths.slice(0, 2).join(' · ')}`, margin, y);
+        y += 11;
+        doc.text(`Coaching focus: ${coaching.slice(0, 2).join(' · ')}`, margin, y);
+        y += isExecutive ? 6 : 10;
+      });
+    }
+
+    const fileName = `${safeSchool.replace(/\s+/g, '-')}_round-${round?.round_number || 'x'}_${goalLabel.replace(/[^a-zA-Z0-9]+/g, '-')}_${mode}.pdf`;
+    doc.save(fileName);
+  };
+
+  const downloadRoundReportForRound = async (round: any) => {
+    if (!supabase || !detail || !round) return;
+    const { data } = await supabase
+      .from('game_sessions')
+      .select('*, players(class_id,index_number)')
+      .eq('round_id', round.id);
+    const ranked = rankSessionsByGoal((data || []).filter((s: any) => (s.final_score || 0) > 0), round.goal || 'combined');
+    downloadRoundPdf(round, ranked, detail.school_name, GOAL_LABELS[round.goal] || round.goal || 'Combined', reportMode);
   };
 
   // ── Player Analysis Engine ──
@@ -680,32 +886,8 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     if (ffPlayers.length > 0)
       highlights.push({ icon: '🏁', text: `Achieved Financial Freedom: ${ffPlayers.map((p: any) => `${p.student} (age ${p.ffAge})`).join(', ')}` });
 
-    const handlePrint = () => {
-      const el = document.getElementById('round-report-content');
-      if (!el) return;
-      const win = window.open('', '_blank', 'width=900,height=700');
-      if (!win) return;
-      win.document.write(`<!DOCTYPE html><html><head><title>Round Report - ${detail.school_name}</title>
-        <style>
-          *{margin:0;padding:0;box-sizing:border-box}
-          body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:24px;color:#1e293b;font-size:12px;line-height:1.6}
-          h1{font-size:20px;margin-bottom:4px} h2{font-size:16px;margin:16px 0 8px;color:#334155;border-bottom:2px solid #e2e8f0;padding-bottom:4px}
-          h3{font-size:13px;margin:12px 0 6px;color:#475569}
-          .medal{font-size:18px;margin-right:4px} .score{font-family:monospace;font-weight:700;color:#2563eb}
-          .tie{font-size:10px;color:#d97706;font-style:italic;margin-left:8px}
-          table{width:100%;border-collapse:collapse;margin:8px 0;font-size:11px}
-          th{background:#f1f5f9;text-align:left;padding:6px 8px;font-weight:700;border-bottom:2px solid #cbd5e1}
-          td{padding:5px 8px;border-bottom:1px solid #e2e8f0}
-          tr:nth-child(even){background:#f8fafc}
-          .highlight{background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;margin:4px 0;font-size:11px}
-          .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;margin:1px 2px}
-          .meta{color:#6b7280;font-size:11px}
-          @media print{body{padding:12px} .no-print{display:none!important}}
-        </style></head><body>`);
-      win.document.write(el.innerHTML);
-      win.document.write('</body></html>');
-      win.document.close();
-      setTimeout(() => { win.print(); }, 500);
+    const handleDownloadPdf = () => {
+      downloadRoundPdf(activeRound, ranked, detail.school_name, goalLabel, reportMode);
     };
 
     return (
@@ -715,10 +897,18 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
           <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center rounded-t-xl z-10">
             <div>
               <h3 className="text-lg font-bold text-gray-900">📊 Round Report: {activeRound.round_name}</h3>
-              <p className="text-xs text-gray-400">{detail.school_name} · {goalLabel} · {ranked.length} players · {sessions.filter((s: any) => s.is_complete).length} completed</p>
+              <p className="text-xs text-gray-400">{detail.school_name} · {goalLabel} · {ranked.length} players · {sessions.filter((s: any) => s.is_complete).length} completed · {REPORT_MODE_LABELS[reportMode]}</p>
             </div>
             <div className="flex gap-2">
-              <button onClick={handlePrint} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700 flex items-center gap-1">
+              <select
+                value={reportMode}
+                onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                className="px-2 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-700"
+              >
+                <option value="executive">Executive (Teacher)</option>
+                <option value="detailed">Detailed (Admin)</option>
+              </select>
+              <button onClick={handleDownloadPdf} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700 flex items-center gap-1">
                 📄 Export PDF
               </button>
               <button onClick={() => setShowRoundReport(false)} className="p-2 hover:bg-gray-100 rounded-lg">
@@ -838,7 +1028,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
             })()}
 
             {/* Full Standings Table */}
-            <div>
+            {reportMode === 'detailed' && <div>
               <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '8px' }}>📋 Full Standings</h2>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                 <thead>
@@ -879,10 +1069,10 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                   })}
                 </tbody>
               </table>
-            </div>
+            </div>}
 
             {/* Behavioral Highlights */}
-            {highlights.length > 0 && (
+            {reportMode === 'detailed' && highlights.length > 0 && (
               <div>
                 <h2 style={{ fontSize: '16px', fontWeight: 700, borderBottom: '2px solid #e2e8f0', paddingBottom: '4px', marginBottom: '8px' }}>🔍 Interesting Highlights</h2>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -1001,6 +1191,96 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     setLoadingDayChampion(false);
   };
 
+  const downloadOverallSessionPdf = () => {
+    if (!dayChampionData || !detail) return;
+    const { players: allPlayers, roundResults } = dayChampionData;
+    const isExecutive = reportMode === 'executive';
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const margin = 40;
+    let y = 48;
+
+    const top3 = (allPlayers || []).slice(0, 3);
+    const champion = top3[0];
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text(`${detail.school_name} — Overall Enrichment Session Report`, margin, y);
+    y += 20;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleString()} | Players ranked: ${allPlayers.length} | Rounds: ${(roundResults || []).length} | Mode: ${REPORT_MODE_LABELS[reportMode]}`, margin, y);
+    y += 18;
+
+    if (champion) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text(`Overall Champion: ${champion.student} (${Number(champion.totalScore || 0).toLocaleString()} pts)`, margin, y);
+      y += 14;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`Rounds played: ${champion.roundsPlayed} | Best round: ${Number(champion.bestScore || 0).toLocaleString()}`, margin, y);
+      y += 14;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(isExecutive ? 'Top 3 Overall Snapshot' : 'Top 3 Overall (with detailed analysis)', margin, y);
+    y += 12;
+
+    top3.forEach((p: any, idx: number) => {
+      if (y > 720) {
+        doc.addPage();
+        y = 48;
+      }
+      const rep = p?.lastGs ? analyzePlayer(p.lastGs) : null;
+      const gsTop = p?.lastGs || {};
+      const nwTop = Number(gsTop?.netWorth || 0) || Number(gsTop?.nw || 0) || Number(p?.roundScores?.[0]?.nw || 0);
+      const hiTop = Number(gsTop?.hi || 0) || Number(p?.roundScores?.[0]?.hi || 0);
+      const cpfTop = Number(gsTop?.cpf || 0) || Number(p?.roundScores?.[0]?.cpf || 0);
+      const titleText = (rep?.titles || []).slice(0, 3).map((t: any) => t.name).join(', ') || 'No dominant title';
+      const tips = (rep?.tips || []).slice(0, 2).map((t: any) => t.text).join(' | ') || 'Maintain consistency across rounds.';
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text(`${idx + 1}. ${p.student} | Total ${Number(p.totalScore || 0).toLocaleString()} pts`, margin, y);
+      y += 12;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.text(`Best ${Number(p.bestScore || 0).toLocaleString()} | Rounds ${p.roundsPlayed} | NW ${compactMoney(nwTop)} | HI ${hiTop} | CPF ${compactMoney(cpfTop)}`, margin, y);
+      y += 11;
+      doc.text(`Strength profile: ${titleText}`, margin, y);
+      y += 11;
+      doc.text(`Teacher coaching focus: ${tips}`, margin, y);
+      y += isExecutive ? 6 : 10;
+    });
+
+    y += 8;
+    if (y > 720) {
+      doc.addPage();
+      y = 48;
+    }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('Round Winners Summary', margin, y);
+    y += 12;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    (roundResults || []).forEach((rr: any) => {
+      if (y > 760) {
+        doc.addPage();
+        y = 48;
+      }
+      const line = `R${rr?.round?.round_number || '-'} ${rr?.round?.round_name || '-'} (${GOAL_LABELS[rr?.round?.goal] || rr?.round?.goal || '-'}) -> ${rr?.winner || 'No winner yet'} (${Number(rr?.winnerScore || 0).toLocaleString()} pts)`;
+      doc.text(line, margin, y);
+      y += 12;
+    });
+
+    const fileName = `${(detail.school_name || 'school').replace(/\s+/g, '-')}_overall-session-report_${reportMode}.pdf`;
+    doc.save(fileName);
+  };
+
   const renderDayChampion = () => {
     if (!showDayChampion || !dayChampionData) return null;
     const { players: allPlayers, roundResults, classChamps } = dayChampionData;
@@ -1011,7 +1291,20 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
         <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full my-8">
           <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white rounded-t-xl z-10">
             <h3 className="text-lg font-bold">🏆 Overall Day Champion — {detail?.school_name}</h3>
-            <button onClick={() => setShowDayChampion(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={18} /></button>
+            <div className="flex items-center gap-2">
+              <select
+                value={reportMode}
+                onChange={(e) => setReportMode(e.target.value as ReportMode)}
+                className="px-2 py-1.5 text-xs border border-gray-300 rounded-lg bg-white text-gray-700"
+              >
+                <option value="executive">Executive (Teacher)</option>
+                <option value="detailed">Detailed (Admin)</option>
+              </select>
+              <button onClick={downloadOverallSessionPdf} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs hover:bg-purple-700">
+                📄 Download Overall PDF
+              </button>
+              <button onClick={() => setShowDayChampion(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X size={18} /></button>
+            </div>
           </div>
           <div className="p-6 space-y-6">
             {/* Overall Top 3 */}
@@ -1134,6 +1427,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
     const expired = new Date(detail.expires_at) < new Date();
     const active = detail.is_active && !expired;
     const activeRound = rounds.find((r: any) => r.is_active);
+    const leaderboardSessions = rankSessionsByGoal(sessions, activeRound?.goal || 'combined');
     const completed = sessions.filter((s: any) => s.is_complete);
     const eventRunLevel = getRunLevelFromNotes(detail.notes);
     const byClassMap = players.reduce((acc: Record<string, any[]>, p: any) => {
@@ -1269,23 +1563,21 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
             <div>
               <p className="text-xs text-gray-500 uppercase tracking-wide">Round Control</p>
               <p className="text-sm font-semibold text-gray-700">
-                {detail.session_mode === 'classroom' ? '📚 Classroom — each instructor controls rounds' : '🎯 Cohort — you control all rounds'}
+                📚 Classroom Admin controls rounds per class
               </p>
             </div>
-            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
-              <button
-                onClick={() => updateSessionMode(detail.id, 'cohort')}
-                className={`px-3 py-1.5 text-xs font-semibold ${detail.session_mode !== 'classroom' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
-              >
-                🎯 Cohort
-              </button>
+            {detail.session_mode !== 'classroom' ? (
               <button
                 onClick={() => updateSessionMode(detail.id, 'classroom')}
-                className={`px-3 py-1.5 text-xs font-semibold ${detail.session_mode === 'classroom' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+                className="px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700"
               >
-                📚 Classroom
+                Switch To Classroom-Controlled Rounds
               </button>
-            </div>
+            ) : (
+              <span className="px-3 py-1.5 text-xs font-semibold bg-green-100 text-green-700 rounded-lg">
+                Classroom mode active
+              </span>
+            )}
           </div>
         </div>
 
@@ -1466,7 +1758,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
 
         {/* Rounds */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h4 className="font-bold text-gray-900 mb-3">🔄 Rounds {detail.session_mode === 'classroom' ? <span className="text-xs font-normal text-amber-600 ml-2">📚 Classroom mode — each instructor controls their own class rounds</span> : ''}</h4>
+          <h4 className="font-bold text-gray-900 mb-3">🔄 Rounds <span className="text-xs font-normal text-amber-600 ml-2">📚 Classroom admins control round activation per class</span></h4>
           <div className="space-y-2">
             {rounds.map((r: any) => {
               // In classroom mode, show per-class status instead of global activate button
@@ -1481,14 +1773,12 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                   </span>
                   <span className="flex-1 font-semibold text-sm">Round {r.round_number}: {r.round_name}</span>
                   <span className="text-xs text-gray-400">{GOAL_LABELS[r.goal] || r.goal}</span>
-                  {detail.session_mode !== 'classroom' && !r.is_active && (
-                    <button
-                      onClick={() => activateRound(r.id, detail.id)}
-                      className="px-3 py-1 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      ▶ Activate
-                    </button>
-                  )}
+                  <button
+                    onClick={() => downloadRoundReportForRound(r)}
+                    className="px-3 py-1 text-xs bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                  >
+                    📄 Download PDF
+                  </button>
                   {!r.is_active && (
                     <button
                       onClick={() => deleteRound(r.id)}
@@ -1536,7 +1826,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
         </div>
 
         {/* Leaderboard */}
-        {sessions.length > 0 && (
+        {leaderboardSessions.length > 0 && (
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-center mb-3">
               <h4 className="font-bold text-gray-900">🏆 Leaderboard {activeRound ? `— Round ${activeRound.round_number}` : ''}</h4>
@@ -1553,7 +1843,7 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
               </div>
             </div>
             <div className="space-y-1">
-              {sessions.filter((s: any) => s.final_score > 0).slice(0, 15).map((s: any, i: number) => (
+              {leaderboardSessions.filter((s: any) => (s.final_score || 0) > 0).slice(0, 15).map((s: any, i: number) => (
                 <div key={s.id} className="flex items-center gap-3 py-2 px-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors" onClick={() => setSelectedSession(s)}>
                   <span className="w-6 text-center text-sm">{i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</span>
                   <span className="flex-1 font-semibold text-sm">{s.players?.class_id}-{s.players?.index_number}</span>
@@ -1591,9 +1881,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {sessions.map((s: any) => (
+                  {leaderboardSessions.map((s: any, i: number) => (
                     <tr key={s.id} className="border-b border-gray-50 hover:bg-blue-50 cursor-pointer" onClick={() => setSelectedSession(s)}>
-                      <td className="py-2 font-semibold">{s.players?.class_id}-{s.players?.index_number}</td>
+                      <td className="py-2 font-semibold">{i + 1}. {s.players?.class_id}-{s.players?.index_number}</td>
                       <td className="py-2">{s.age}</td>
                       <td className={`py-2 font-mono ${(s.cash || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>{fmt(s.cash || 0)}</td>
                       <td className="py-2 font-mono text-blue-600">{fmt(s.net_worth || 0)}</td>
@@ -1707,6 +1997,9 @@ const EnrichmentAdminPanel: React.FC<Props> = ({
             <div className="flex justify-between items-start">
               <div>
                 <h4 className="font-bold text-gray-900">🏫 {evt.school_name}</h4>
+            <p className="text-xs text-gray-500 mt-3">
+              Chief admin view is reporting-only for round execution. Classroom admins start/end rounds for their own classes.
+            </p>
                 <p className="text-xs text-gray-400 mt-0.5">Created: {new Date(evt.created_at).toLocaleString()}</p>
                 <p className="text-xs mt-1 text-indigo-600 font-semibold">
                   {runLevel === 'school' ? 'School level cohort mode' : 'Class level cohort mode'}

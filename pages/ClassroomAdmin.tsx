@@ -11,6 +11,66 @@ const GOAL_LABELS: Record<string, string> = {
   combined: '🥇 Combined',
 };
 
+function getSessionFfAge(session: any): number {
+  const fromCol = session?.ff_age;
+  if (fromCol !== null && fromCol !== undefined) return Number(fromCol);
+  const fromState = session?.game_state?.ffAge;
+  if (fromState !== null && fromState !== undefined) return Number(fromState);
+  return 999;
+}
+
+function sessionChampionTieBreak(session: any): number {
+  const fs = Number(session?.final_score || 0);
+  const nw = Number(session?.net_worth || 0);
+  const hi = Number(session?.happiness || 0);
+  const cpf = Number(session?.cpf || 0);
+  return fs + Math.round(nw / 1000) + hi * 10 + Math.round(cpf / 1000);
+}
+
+function rankSessionsByGoal(input: any[], goal: string): any[] {
+  const sessions = [...(input || [])];
+  sessions.sort((a: any, b: any) => {
+    if (goal === 'ff_earliest') {
+      const aFf = getSessionFfAge(a);
+      const bFf = getSessionFfAge(b);
+      if (aFf !== bFf) return aFf - bFf;
+      const aTb = sessionChampionTieBreak(a);
+      const bTb = sessionChampionTieBreak(b);
+      if (aTb !== bTb) return bTb - aTb;
+    } else if (goal === 'highest_nw') {
+      const aNw = Number(a?.net_worth || 0);
+      const bNw = Number(b?.net_worth || 0);
+      if (aNw !== bNw) return bNw - aNw;
+    } else if (goal === 'highest_hi') {
+      const aHi = Number(a?.happiness || 0);
+      const bHi = Number(b?.happiness || 0);
+      if (aHi !== bHi) return bHi - aHi;
+    } else if (goal === 'highest_cpf') {
+      const aCpf = Number(a?.cpf || 0);
+      const bCpf = Number(b?.cpf || 0);
+      if (aCpf !== bCpf) return bCpf - aCpf;
+    } else {
+      const aScore = Number(a?.final_score || 0);
+      const bScore = Number(b?.final_score || 0);
+      if (aScore !== bScore) return bScore - aScore;
+    }
+
+    const aTb = sessionChampionTieBreak(a);
+    const bTb = sessionChampionTieBreak(b);
+    if (aTb !== bTb) return bTb - aTb;
+    const aNw = Number(a?.net_worth || 0), bNw = Number(b?.net_worth || 0);
+    if (aNw !== bNw) return bNw - aNw;
+    const aHi = Number(a?.happiness || 0), bHi = Number(b?.happiness || 0);
+    if (aHi !== bHi) return bHi - aHi;
+    const aCpf = Number(a?.cpf || 0), bCpf = Number(b?.cpf || 0);
+    if (aCpf !== bCpf) return bCpf - aCpf;
+    const aTs = Date.parse(a?.updated_at || 0) || 0;
+    const bTs = Date.parse(b?.updated_at || 0) || 0;
+    return aTs - bTs;
+  });
+  return sessions;
+}
+
 interface ClassroomAuth {
   eventId: string;
   classId: string;
@@ -287,6 +347,7 @@ const ClassroomAdmin: React.FC = () => {
   const activeRound = isClassroomMode
     ? rounds.find((r: any) => r.id === classActiveRound?.round_id)
     : globalActiveRound;
+  const rankedSessions = rankSessionsByGoal(sessions, activeRound?.goal || 'combined');
 
   const completed = sessions.filter((s: any) => s.is_complete);
   const playing = sessions.filter((s: any) => !s.is_complete && Date.now() - new Date(s.updated_at).getTime() < 120000);
@@ -406,13 +467,13 @@ const ClassroomAdmin: React.FC = () => {
               <span className="text-xs text-gray-400">{GOAL_LABELS[activeRound.goal] || activeRound.goal}</span>
             </div>
 
-            {sessions.length === 0 ? (
+            {rankedSessions.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-6">No students playing this round yet.</p>
             ) : (
               <>
                 {/* Top 3 podium */}
                 <div className="flex justify-center gap-4 mb-4">
-                  {sessions.filter((s: any) => s.final_score > 0).slice(0, 3).map((s: any, i: number) => {
+                  {rankedSessions.filter((s: any) => (s.final_score || 0) > 0).slice(0, 3).map((s: any, i: number) => {
                     const medals = ['🥇', '🥈', '🥉'];
                     const sizes = ['text-4xl', 'text-3xl', 'text-3xl'];
                     return (
@@ -443,7 +504,7 @@ const ClassroomAdmin: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {sessions.map((s: any, i: number) => {
+                      {rankedSessions.map((s: any, i: number) => {
                         const st = playerStatus(s);
                         return (
                           <tr key={s.id} className="border-b border-gray-50 hover:bg-blue-50 cursor-pointer" onClick={() => setSelectedSession(s)}>
