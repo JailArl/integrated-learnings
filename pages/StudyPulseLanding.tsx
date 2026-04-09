@@ -51,14 +51,14 @@ const StudyPulseLanding: React.FC = () => {
         <div className="relative z-10 mx-auto max-w-5xl text-center">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
             <BarChart3 size={14} aria-hidden="true" />
-            Daily Study Check-ins
+            For PSLE &middot; O-Level &middot; A-Level Parents
           </div>
           <h1 className="mx-auto max-w-4xl text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">
-            Build study habits that stick — <br className="hidden sm:block" />
-            <span className="text-amber-300">one check-in at a time.</span>
+            Your child&rsquo;s major exam is coming.<br className="hidden sm:block" />
+            <span className="text-amber-300">Are they actually studying?</span>
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
-            Your child checks in via WhatsApp. You see their progress on a dashboard. Streaks build. Consistency grows. No app to install.
+            StudyPulse sends your child a daily WhatsApp check-in. You see their consistency on a dashboard. No app to install &mdash; just real visibility into their study habits before the big exam.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Link to="/studypulse/setup" className="inline-flex items-center justify-center rounded-xl bg-amber-400 px-7 py-3.5 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-amber-300">
@@ -73,7 +73,7 @@ const StudyPulseLanding: React.FC = () => {
           {/* Trust stats */}
           <div className="mt-12 grid grid-cols-3 gap-6 border-t border-white/10 pt-8">
             {[
-              { val: 'P1 – JC2', sub: 'All Levels Covered' },
+              { val: 'PSLE · O · A', sub: 'Major Exam Support' },
               { val: '< 5 min', sub: 'Setup Time' },
               { val: 'WhatsApp', sub: 'No App to Install' },
             ].map((s) => (
@@ -90,15 +90,15 @@ const StudyPulseLanding: React.FC = () => {
       <section className="px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-5xl">
           <div className="mb-10 text-center">
-            <h2 className="text-2xl font-black text-slate-900 sm:text-4xl">You want to help — but you can&rsquo;t be there every day.</h2>
-            <p className="mt-3 text-slate-600">These are real challenges Singapore parents face. StudyPulse gives you a way to stay involved.</p>
+            <h2 className="text-2xl font-black text-slate-900 sm:text-4xl">PSLE, O-Level, A-Level &mdash; the stakes are real.</h2>
+            <p className="mt-3 text-slate-600">These are real challenges parents face in the months before a major exam.</p>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
             {([
-              { icon: Smartphone, color: 'red' as const, title: '\u201CThey say they studied\u201D', desc: "But you\u2019re not sure. A daily check-in gives both of you clarity \u2014 without arguments." },
-              { icon: AlertTriangle, color: 'amber' as const, title: '\u201CI find out too late\u201D', desc: "By exam week, it\u2019s already too late to catch gaps. StudyPulse shows patterns week by week, so you can act early." },
-              { icon: Clock3, color: 'orange' as const, title: '\u201CRevision only happens last minute\u201D', desc: "Consistency beats cramming. When your child checks in daily, revision becomes a habit \u2014 not a panic." },
-              { icon: Target, color: 'slate' as const, title: '\u201CI want to help but I\u2019m busy\u201D', desc: "Work, household, other kids. StudyPulse keeps you in the loop with a 30-second daily glance \u2014 no hovering needed." },
+              { icon: Smartphone, color: 'red' as const, title: '\u201CThey say they studied\u201D', desc: "But you\u2019re not sure. PSLE and O-Level revision needs daily consistency \u2014 a check-in removes the guesswork." },
+              { icon: AlertTriangle, color: 'amber' as const, title: '\u201CI only find out during results\u201D', desc: "By exam day, it\u2019s too late. StudyPulse shows patterns week by week, so you can act months before the paper." },
+              { icon: Clock3, color: 'orange' as const, title: '\u201CRevision only happens last minute\u201D', desc: "National exams can\u2019t be crammed. When your child checks in daily, revision becomes a habit \u2014 not a panic." },
+              { icon: Target, color: 'slate' as const, title: '\u201CI want to help but I\u2019m working\u201D', desc: "Work, household, other kids. StudyPulse keeps you in the loop with a 30-second daily glance \u2014 no hovering needed." },
             ]).map((item) => (
               <div key={item.title} className={`rounded-2xl border p-6 ${item.color === 'red' ? 'border-red-100 bg-gradient-to-br from-red-50 to-white' : item.color === 'amber' ? 'border-amber-100 bg-gradient-to-br from-amber-50 to-white' : item.color === 'orange' ? 'border-orange-100 bg-gradient-to-br from-orange-50 to-white' : 'border-slate-200 bg-gradient-to-br from-slate-50 to-white'}`}>
                 <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl ${item.color === 'red' ? 'bg-red-100 text-red-500' : item.color === 'amber' ? 'bg-amber-100 text-amber-600' : item.color === 'orange' ? 'bg-orange-100 text-orange-500' : 'bg-slate-100 text-slate-500'}`}>
@@ -195,7 +195,7 @@ const StudyPulseLanding: React.FC = () => {
           </div>
           <h2 className="text-2xl font-black text-slate-900 sm:text-4xl">Nothing like this exists yet.</h2>
           <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            There are tuition agencies. There are assessment books. But no one has built a system that tells parents
+            There are tuition agencies. There are assessment books. But no one has built a system that tells PSLE, O-Level, and A-Level parents
             <strong className="text-slate-900"> whether their child actually studied today</strong> &mdash;
             without the parent having to be physically there.
           </p>
@@ -309,7 +309,7 @@ const StudyPulseLanding: React.FC = () => {
       <section className="border-t border-slate-200 bg-slate-900 px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl text-center">
           <p className="text-base font-black text-white sm:text-lg">
-            Your child says they studied. <span className="text-amber-300">Can you verify that?</span>
+            Your child has PSLE, O-Levels, or A-Levels coming. <span className="text-amber-300">Are they revising consistently?</span>
           </p>
           <p className="mt-2 text-sm text-slate-400">
             StudyPulse helps you find out &mdash; in under 30 seconds a day.
@@ -327,11 +327,13 @@ const StudyPulseLanding: React.FC = () => {
           {[
             { q: 'Does my child need to install any app?', a: 'No. Your child interacts via WhatsApp only \u2014 no app download, no login. You manage everything from your parent dashboard.' },
             { q: 'What if my child lies about studying?', a: 'The system tracks patterns over time. If your child says \u201Cdone\u201D but results don\u2019t improve, the data will show it. Weekly reports make gaps visible fast.' },
+            { q: 'Is this only for PSLE / O-Level / A-Level students?', a: 'We designed it for major exam years, but it works for any level. Study habits built in P4\u2013P5 carry into PSLE year. Same for Sec 1\u20133 leading to O-Levels.' },
             { q: 'Can I track multiple children on the free plan?', a: 'Free is limited to 1 child, 1 subject. Upgrade to Premium to track all your children and all their subjects \u2014 no limits.' },
             { q: 'What subjects can I track?', a: 'Any subject your child is studying \u2014 Math, Science, Chinese, English, Malay, Tamil, and more. Premium users can track all subjects.' },
             { q: 'How long does setup take?', a: 'Under 5 minutes. Enter your details, add your child\u2019s subjects, and you\u2019re done. Your child gets a WhatsApp prompt to start checking in.' },
             { q: 'Can I cancel or downgrade anytime?', a: 'Yes. No lock-in, no contract, no auto-renewal. You pay monthly via PayNow and simply stop when you want to.' },
-            { q: 'Is this useful if my child already has tuition?', a: 'Especially then. Tuition covers 1\u20132 hours a week per subject. StudyPulse helps your child build consistent revision habits on the other 5 days \u2014 so tuition time is more effective.' },
+            { q: 'My child already has tuition. Is this useful?', a: 'Especially useful. Tuition covers 1\u20132 hours a week per subject. But PSLE and O-Level results depend on what happens the other 5 days. StudyPulse tracks whether your child is actually revising consistently between sessions.' },
+            { q: 'When should I start using this?', a: 'The earlier the better. Parents who start 6\u201312 months before the exam give their child time to build the daily habit. Starting in the last month before PSLE or O-Levels is too late for habit formation.' },
           ].map((item, i) => (
             <div key={i} className="border-b border-slate-100">
               <button
@@ -352,8 +354,8 @@ const StudyPulseLanding: React.FC = () => {
       {/* ═══════════ BOTTOM CTA ═══════════ */}
       <section className="border-t border-slate-200 bg-gradient-to-b from-slate-900 to-slate-950 px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-2xl font-black text-white sm:text-3xl">Small daily habits. Big exam results.</h2>
-          <p className="mt-3 text-base text-slate-400">Set up in under 5 minutes. Free forever &mdash; upgrade when your family is ready.</p>
+          <h2 className="text-2xl font-black text-white sm:text-3xl">PSLE. O-Level. A-Level.<br />Small daily habits &rarr; big exam results.</h2>
+          <p className="mt-3 text-base text-slate-400">Set up in under 5 minutes. Start free &mdash; upgrade when your child&rsquo;s exam season begins.</p>
           <Link to="/studypulse/setup" className="mt-8 inline-flex items-center justify-center rounded-xl bg-amber-400 px-8 py-4 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-amber-300">
             Start Free <ArrowRight size={16} className="ml-2" />
           </Link>
