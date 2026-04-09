@@ -3,7 +3,7 @@ import { supabase } from './supabase';
 // ═══════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════
-export type PlanType = 'free' | 'premium' | 'family_plus';
+export type PlanType = 'free' | 'premium';
 export type MembershipStatus = 'free' | 'premium_active' | 'premium_past_due' | 'premium_cancelled';
 export type CheckinStatus = 'pending' | 'yes' | 'partially' | 'no';
 export type DailyTaskStatus = 'pending' | 'done' | 'postpone' | 'incomplete' | 'did_extra';
@@ -111,14 +111,12 @@ export interface ExamResult {
 // ═══════════════════════════════════════════
 export const PLAN_LIMITS: Record<PlanType, { maxChildren: number; maxSubjects: number; dailyMode: boolean }> = {
   free: { maxChildren: 1, maxSubjects: 1, dailyMode: false },
-  premium: { maxChildren: 3, maxSubjects: 3, dailyMode: true },
-  family_plus: { maxChildren: 5, maxSubjects: 3, dailyMode: true },
+  premium: { maxChildren: 99, maxSubjects: 99, dailyMode: true },
 };
 
 export const PLAN_PRICES: Record<PlanType, number> = {
   free: 0,
   premium: 9.90,
-  family_plus: 12.90,
 };
 
 export const FREE_CHECKIN_DAYS = ['Tuesday', 'Thursday', 'Saturday'] as const;
@@ -392,5 +390,89 @@ export async function completeSetup(userId: string, payload: SetupPayload): Prom
 export async function adminGetAllRequests(table: string): Promise<unknown[]> {
   if (!supabase) return [];
   const { data } = await supabase.from(table).select('*').order('created_at', { ascending: false });
+  return data || [];
+}
+
+// ═══════════════════════════════════════════
+// ANALYTICS — Parent Dashboard
+// ═══════════════════════════════════════════
+
+/** Get check-in history for a child over the past N weeks */
+export async function getCheckinHistory(childId: string, weeks: number = 8): Promise<Checkin[]> {
+  if (!supabase) return [];
+  const from = new Date();
+  from.setDate(from.getDate() - weeks * 7);
+  const { data } = await supabase
+    .from('sq_checkins')
+    .select('*')
+    .eq('child_id', childId)
+    .gte('checkin_date', from.toISOString().split('T')[0])
+    .order('checkin_date', { ascending: true });
+  return data || [];
+}
+
+/** Get daily tasks history for a child over the past N weeks */
+export async function getDailyTasksHistory(childId: string, weeks: number = 8): Promise<DailyTask[]> {
+  if (!supabase) return [];
+  const from = new Date();
+  from.setDate(from.getDate() - weeks * 7);
+  const { data } = await supabase
+    .from('sq_daily_tasks')
+    .select('*')
+    .eq('child_id', childId)
+    .gte('task_date', from.toISOString().split('T')[0])
+    .order('task_date', { ascending: true });
+  return data || [];
+}
+
+// ═══════════════════════════════════════════
+// ANALYTICS — Admin Monitoring
+// ═══════════════════════════════════════════
+
+/** Get all check-ins across platform for past N days */
+export async function adminGetRecentCheckins(days: number = 14): Promise<Checkin[]> {
+  if (!supabase) return [];
+  const from = new Date();
+  from.setDate(from.getDate() - days);
+  const { data } = await supabase
+    .from('sq_checkins')
+    .select('*')
+    .gte('checkin_date', from.toISOString().split('T')[0])
+    .order('checkin_date', { ascending: false });
+  return data || [];
+}
+
+/** Get all daily tasks across platform for past N days */
+export async function adminGetRecentDailyTasks(days: number = 14): Promise<DailyTask[]> {
+  if (!supabase) return [];
+  const from = new Date();
+  from.setDate(from.getDate() - days);
+  const { data } = await supabase
+    .from('sq_daily_tasks')
+    .select('*')
+    .gte('task_date', from.toISOString().split('T')[0])
+    .order('task_date', { ascending: false });
+  return data || [];
+}
+
+/** Get all weekly summaries across platform */
+export async function adminGetAllWeeklySummaries(limit: number = 100): Promise<WeeklySummary[]> {
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from('sq_weekly_summaries')
+    .select('*')
+    .order('week_start', { ascending: false })
+    .limit(limit);
+  return data || [];
+}
+
+/** Get all exam targets across platform */
+export async function adminGetAllExamTargets(): Promise<ExamTarget[]> {
+  if (!supabase) return [];
+  const { data } = await supabase
+    .from('sq_exam_targets')
+    .select('*')
+    .eq('cycle_status', 'active')
+    .order('exam_date', { ascending: true });
   return data || [];
 }

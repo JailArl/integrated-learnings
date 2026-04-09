@@ -7,7 +7,7 @@
 CREATE TABLE IF NOT EXISTS sq_memberships (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  plan_type TEXT NOT NULL DEFAULT 'free' CHECK (plan_type IN ('free','premium','family_plus')),
+  plan_type TEXT NOT NULL DEFAULT 'free' CHECK (plan_type IN ('free','premium')),
   status TEXT NOT NULL DEFAULT 'free' CHECK (status IN ('free','premium_active','premium_past_due','premium_cancelled')),
   parent_name TEXT,
   parent_email TEXT,

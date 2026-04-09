@@ -67,6 +67,8 @@ import {
   addSubject,
   upsertStudySettings,
   createMembership,
+  getCheckinHistory,
+  getDailyTasksHistory,
   PLAN_LIMITS,
   FREE_CHECKIN_DAYS,
 } from '../services/studyquest';
@@ -383,7 +385,7 @@ const StudyPulseApp: React.FC = () => {
                   <Crown size={18} className="mt-0.5 flex-shrink-0 text-amber-500" />
                   <div>
                     <p className="text-xs font-bold text-slate-900">Free plan: 3 check-ins/week</p>
-                    <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, 3 subjects, and up to 3 children.</p>
+                    <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, all subjects, and unlimited children.</p>
                     <button onClick={handleUpgrade} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
                       Upgrade — $9.90/mo <ArrowRight size={12} className="ml-1" />
                     </button>
@@ -637,53 +639,17 @@ const StudyPulseApp: React.FC = () => {
 
         {/* ── REPORTS ── */}
         {tab === 'reports' && (
-          <div className="space-y-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-black text-slate-900">Weekly Reports</h2>
-              <p className="mt-1 text-xs text-slate-500">Summaries generated each Sunday and sent via WhatsApp.</p>
-              {summaries.length === 0 ? (
-                <p className="mt-4 text-sm text-slate-500">No reports yet. Your first report will arrive after the first full week of check-ins.</p>
-              ) : (
-                <div className="mt-4 space-y-3">
-                  {summaries.map((s) => (
-                    <div key={s.id} className="rounded-xl bg-slate-50 p-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-slate-700">Week of {s.week_start}</span>
-                        <span className="text-xs font-semibold text-slate-500">{s.checkins_completed}/{s.checkins_total} check-ins</span>
-                      </div>
-                      {s.completion_state && <p className="mt-1 text-xs text-slate-500">{s.completion_state}</p>}
-                      {s.days_to_exam != null && <p className="mt-1 text-xs text-amber-600">{s.days_to_exam} days to exam at report time</p>}
-                      <div className="mt-2 h-2 rounded-full bg-slate-200">
-                        <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${s.checkins_total ? (s.checkins_completed / s.checkins_total) * 100 : 0}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Blurred premium insights — free users */}
-            {!premium && (
-              <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm overflow-hidden">
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-[2px]">
-                  <Crown size={24} className="text-amber-500 mb-2" />
-                  <p className="text-sm font-bold text-slate-900">Premium Daily Insights</p>
-                  <p className="text-xs text-slate-500 mt-1 max-w-xs text-center">See daily breakdowns, subject balance, and weekly trend analysis.</p>
-                  <button onClick={handleUpgrade} className="mt-3 inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950">
-                    <Crown size={12} className="mr-1" /> Unlock Insights
-                  </button>
-                </div>
-                <h3 className="text-sm font-bold text-slate-700 select-none">Daily Breakdown</h3>
-                <div className="mt-3 space-y-2 select-none">
-                  {['Monday: Math — done ✓','Tuesday: Science — done ✓','Wednesday: Chinese — partially','Thursday: Math — done ✓','Friday: English — not started'].map((text) => (
-                    <div key={text} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-2.5">
-                      <span className="text-xs text-slate-500">{text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <ReportsPanel
+            child={child}
+            premium={premium}
+            summaries={summaries}
+            checkins={checkins}
+            dailyTasks={dailyTasks}
+            subjects={displaySubjects}
+            exams={exams}
+            streak={streak}
+            onUpgrade={handleUpgrade}
+          />
         )}
 
         {/* ── ACTIONS ── */}
@@ -912,9 +878,9 @@ const StudyPulseApp: React.FC = () => {
               <h3 className="text-sm font-bold text-slate-700">Your Plan</h3>
               <div className="mt-3 flex items-center justify-between">
                 <div>
-                  <p className="text-lg font-black text-slate-900">{membership?.plan_type === 'free' ? 'Free' : membership?.plan_type === 'premium' ? 'Premium' : 'Family+'}</p>
+                  <p className="text-lg font-black text-slate-900">{membership?.plan_type === 'free' ? 'Free' : 'Premium'}</p>
                   <p className="text-xs text-slate-500">
-                    {premium ? 'Daily check-ins · 3 subjects · Up to 3 children' : '3 check-ins/week · 1 subject · 1 child'}
+                    {premium ? 'Daily check-ins · All subjects · Unlimited children' : '3 check-ins/week · 1 subject · 1 child'}
                   </p>
                 </div>
                 {!premium && (
@@ -1141,6 +1107,279 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
           </div>
         )}
       </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   REPORTS PANEL — Rich analysis for parents
+   ═══════════════════════════════════════════════════════════════════ */
+
+interface ReportsPanelProps {
+  child: SQChild;
+  premium: boolean;
+  summaries: WeeklySummary[];
+  checkins: Checkin[];
+  dailyTasks: DailyTask[];
+  subjects: MonitoredSubject[];
+  exams: ExamTarget[];
+  streak: number;
+  onUpgrade: () => void;
+}
+
+const ReportsPanel: React.FC<ReportsPanelProps> = ({ child, premium, summaries, checkins, dailyTasks, subjects, exams, streak, onUpgrade }) => {
+  const [historyCheckins, setHistoryCheckins] = useState<Checkin[]>([]);
+  const [historyTasks, setHistoryTasks] = useState<DailyTask[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!child) return;
+    (async () => {
+      const [hc, ht] = await Promise.all([
+        getCheckinHistory(child.id, 8),
+        getDailyTasksHistory(child.id, 8),
+      ]);
+      setHistoryCheckins(hc);
+      setHistoryTasks(ht);
+      setLoaded(true);
+    })();
+  }, [child]);
+
+  // ── Compute weekly compliance for past 4 weeks ──
+  const weeklyCompliance = (): { weekLabel: string; done: number; total: number; pct: number }[] => {
+    const weeks: { weekLabel: string; done: number; total: number; pct: number }[] = [];
+    for (let w = 3; w >= 0; w--) {
+      const wStart = new Date();
+      wStart.setDate(wStart.getDate() - wStart.getDay() + 1 - w * 7);
+      const wEnd = new Date(wStart);
+      wEnd.setDate(wEnd.getDate() + 6);
+      const wStartStr = wStart.toISOString().split('T')[0];
+      const wEndStr = wEnd.toISOString().split('T')[0];
+      const label = `${wStart.getDate()}/${wStart.getMonth() + 1}`;
+
+      const items = premium
+        ? historyTasks.filter(t => t.task_date >= wStartStr && t.task_date <= wEndStr)
+        : historyCheckins.filter(c => c.checkin_date >= wStartStr && c.checkin_date <= wEndStr);
+      const done = items.filter(i => i.status === 'done' || i.status === 'did_extra' || i.status === 'yes').length;
+      const total = Math.max(items.length, premium ? 7 : 3);
+      weeks.push({ weekLabel: label, done, total, pct: total > 0 ? Math.round((done / total) * 100) : 0 });
+    }
+    return weeks;
+  };
+
+  // ── Subject completion rates ──
+  const subjectRates = (): { name: string; done: number; total: number; pct: number; trend: 'up' | 'down' | 'flat' }[] => {
+    return subjects.map(s => {
+      const allItems = premium
+        ? historyTasks.filter(t => t.subject_id === s.id)
+        : historyCheckins.filter(c => c.subject_id === s.id);
+      const done = allItems.filter(i => i.status === 'done' || i.status === 'did_extra' || i.status === 'yes').length;
+      const total = allItems.length || 1;
+      // Trend: compare last 2 weeks vs previous 2 weeks
+      const twoWeeksAgo = new Date();
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      const fourWeeksAgo = new Date();
+      fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+      const recent = allItems.filter(i => {
+        const d = (i as any).task_date || (i as any).checkin_date;
+        return d >= twoWeeksAgo.toISOString().split('T')[0];
+      });
+      const older = allItems.filter(i => {
+        const d = (i as any).task_date || (i as any).checkin_date;
+        return d >= fourWeeksAgo.toISOString().split('T')[0] && d < twoWeeksAgo.toISOString().split('T')[0];
+      });
+      const recentPct = recent.length ? recent.filter(i => i.status === 'done' || i.status === 'did_extra' || i.status === 'yes').length / recent.length : 0;
+      const olderPct = older.length ? older.filter(i => i.status === 'done' || i.status === 'did_extra' || i.status === 'yes').length / older.length : 0;
+      const trend = recentPct > olderPct + 0.05 ? 'up' : recentPct < olderPct - 0.05 ? 'down' : 'flat';
+      return { name: s.subject_name, done, total, pct: Math.round((done / total) * 100), trend };
+    });
+  };
+
+  // ── Generate flags/alerts ──
+  const generateFlags = (): { icon: string; text: string; severity: 'warning' | 'danger' | 'info' }[] => {
+    const flags: { icon: string; text: string; severity: 'warning' | 'danger' | 'info' }[] = [];
+    const weeks = weeklyCompliance();
+    const thisWeek = weeks[weeks.length - 1];
+    const lastWeek = weeks.length >= 2 ? weeks[weeks.length - 2] : null;
+
+    if (thisWeek && thisWeek.pct < 50) {
+      flags.push({ icon: '⚠️', text: `This week: only ${thisWeek.pct}% completed. Check in with ${child.name}.`, severity: 'danger' });
+    }
+    if (lastWeek && thisWeek && thisWeek.pct < lastWeek.pct - 20) {
+      flags.push({ icon: '📉', text: `Drop from ${lastWeek.pct}% → ${thisWeek.pct}% this week. Consistency declining.`, severity: 'warning' });
+    }
+    if (streak === 0) {
+      flags.push({ icon: '🔴', text: `${child.name} has no active streak. Encourage a check-in today.`, severity: 'danger' });
+    }
+    const activeExams = exams.filter(e => e.cycle_status === 'active');
+    activeExams.forEach(e => {
+      const days = Math.max(0, Math.ceil((new Date(e.exam_date).getTime() - Date.now()) / 86400000));
+      const subj = subjects.find(s => s.id === e.subject_id);
+      if (days <= 7) {
+        flags.push({ icon: '🔥', text: `${subj?.subject_name || 'Exam'} in ${days} days! Final revision push.`, severity: 'danger' });
+      } else if (days <= 14) {
+        flags.push({ icon: '⏰', text: `${subj?.subject_name || 'Exam'} in ${days} days. Ramp up revision.`, severity: 'warning' });
+      }
+    });
+    if (flags.length === 0) {
+      flags.push({ icon: '✅', text: `${child.name} is on track. No concerns this week.`, severity: 'info' });
+    }
+    return flags;
+  };
+
+  // ── Overall compliance rate (all time from loaded history) ──
+  const overallRate = (): number => {
+    const items = premium ? historyTasks : historyCheckins;
+    if (items.length === 0) return 0;
+    const done = items.filter(i => i.status === 'done' || i.status === 'did_extra' || i.status === 'yes').length;
+    return Math.round((done / items.length) * 100);
+  };
+
+  const weeks = loaded ? weeklyCompliance() : [];
+  const sRates = loaded ? subjectRates() : [];
+  const flags = loaded ? generateFlags() : [];
+  const overall = loaded ? overallRate() : 0;
+  const overallColor = overall >= 80 ? 'text-emerald-600' : overall >= 50 ? 'text-amber-600' : 'text-red-600';
+
+  return (
+    <div className="space-y-5">
+      {/* ── Overview Cards ── */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+          <p className={`text-2xl font-black ${overallColor}`}>{overall}%</p>
+          <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400 mt-1">Compliance Rate</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+          <p className="text-2xl font-black text-slate-900">🔥 {streak}</p>
+          <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400 mt-1">Current Streak</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 text-center shadow-sm">
+          <p className="text-2xl font-black text-slate-900">{subjects.length}</p>
+          <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400 mt-1">Subjects Tracked</p>
+        </div>
+      </div>
+
+      {/* ── Flags / Alerts ── */}
+      {flags.length > 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-700 mb-3">🚩 Alerts &amp; Observations</h3>
+          <div className="space-y-2">
+            {flags.map((f, i) => (
+              <div key={i} className={`rounded-xl px-4 py-3 text-sm ${f.severity === 'danger' ? 'bg-red-50 border border-red-200 text-red-800' : f.severity === 'warning' ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-emerald-50 border border-emerald-200 text-emerald-800'}`}>
+                {f.icon} {f.text}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 4-Week Compliance Trend ── */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-bold text-slate-700 mb-1">📊 Weekly Consistency — Last 4 Weeks</h3>
+        <p className="text-xs text-slate-400 mb-4">How consistently {child.name} checked in each week.</p>
+        {!loaded ? (
+          <p className="text-center text-xs text-slate-400 py-6">Loading history…</p>
+        ) : weeks.length === 0 || weeks.every(w => w.total === 0) ? (
+          <p className="text-center text-xs text-slate-500 py-6">Not enough data yet. Check back after the first week.</p>
+        ) : (
+          <div className="space-y-3">
+            {weeks.map((w, i) => {
+              const barColor = w.pct >= 80 ? 'bg-emerald-500' : w.pct >= 50 ? 'bg-amber-500' : 'bg-red-400';
+              const prevPct = i > 0 ? weeks[i - 1].pct : null;
+              const trendIcon = prevPct !== null ? (w.pct > prevPct ? '↑' : w.pct < prevPct ? '↓' : '→') : '';
+              return (
+                <div key={w.weekLabel}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold text-slate-600">Wk {w.weekLabel}</span>
+                    <span className="text-xs text-slate-500">{w.done}/{w.total} · <strong>{w.pct}%</strong> {trendIcon}</span>
+                  </div>
+                  <div className="h-3 rounded-full bg-slate-100">
+                    <div className={`h-3 rounded-full ${barColor} transition-all`} style={{ width: `${w.pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Subject Completion Rates ── */}
+      {sRates.length > 0 && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-slate-700 mb-3">📚 Subject Completion Rates</h3>
+          <div className="space-y-4">
+            {sRates.map(s => (
+              <div key={s.name}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-semibold text-slate-700">{s.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-bold ${s.trend === 'up' ? 'text-emerald-600' : s.trend === 'down' ? 'text-red-500' : 'text-slate-400'}`}>
+                      {s.trend === 'up' ? '📈 Improving' : s.trend === 'down' ? '📉 Declining' : '→ Steady'}
+                    </span>
+                    <span className="text-xs text-slate-500">{s.pct}%</span>
+                  </div>
+                </div>
+                <div className="h-2.5 rounded-full bg-slate-100">
+                  <div className={`h-2.5 rounded-full transition-all ${s.pct >= 80 ? 'bg-emerald-500' : s.pct >= 50 ? 'bg-amber-400' : 'bg-red-400'}`} style={{ width: `${s.pct}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Weekly Summaries (historical) ── */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-bold text-slate-700 mb-1">📋 Weekly Report History</h3>
+        <p className="text-xs text-slate-400 mb-3">Summaries generated each Sunday and sent via WhatsApp.</p>
+        {summaries.length === 0 ? (
+          <p className="text-sm text-slate-500">No reports yet. Your first report will arrive after the first full week.</p>
+        ) : (
+          <div className="space-y-3">
+            {summaries.map((s) => {
+              const pct = s.checkins_total ? Math.round((s.checkins_completed / s.checkins_total) * 100) : 0;
+              return (
+                <div key={s.id} className="rounded-xl bg-slate-50 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-700">Week of {s.week_start}</span>
+                    <span className={`text-xs font-bold ${pct >= 80 ? 'text-emerald-600' : pct >= 50 ? 'text-amber-600' : 'text-red-500'}`}>{pct}%</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-slate-500">{s.checkins_completed}/{s.checkins_total} check-ins</span>
+                    {s.days_to_exam != null && <span className="text-xs text-amber-600">📅 {s.days_to_exam}d to exam</span>}
+                  </div>
+                  {s.completion_state && <p className="mt-1 text-xs text-slate-500">{s.completion_state}</p>}
+                  <div className="mt-2 h-2 rounded-full bg-slate-200">
+                    <div className={`h-2 rounded-full ${pct >= 80 ? 'bg-emerald-500' : pct >= 50 ? 'bg-amber-400' : 'bg-red-400'}`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── Premium daily insights (blurred for free) ── */}
+      {!premium && (
+        <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm overflow-hidden">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/80 backdrop-blur-[2px]">
+            <Crown size={24} className="text-amber-500 mb-2" />
+            <p className="text-sm font-bold text-slate-900">Premium Daily Insights</p>
+            <p className="text-xs text-slate-500 mt-1 max-w-xs text-center">See daily breakdowns, subject balance, and deeper trend analysis.</p>
+            <button onClick={onUpgrade} className="mt-3 inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950">
+              <Crown size={12} className="mr-1" /> Unlock Insights — $9.90/mo
+            </button>
+          </div>
+          <h3 className="text-sm font-bold text-slate-700 select-none">Daily Breakdown</h3>
+          <div className="mt-3 space-y-2 select-none">
+            {['Monday: Math — done ✓','Tuesday: Science — done ✓','Wednesday: Chinese — partially','Thursday: Math — done ✓','Friday: English — not started'].map((text) => (
+              <div key={text} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-2.5">
+                <span className="text-xs text-slate-500">{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -15,25 +15,24 @@ import {
   Smartphone,
   Sparkles,
   Target,
-  Users,
   X,
   Zap,
 } from 'lucide-react';
 
 /* ── Plan feature rows for comparison table ── */
-const COMPARE_ROWS: { label: string; free: string | boolean; premium: string | boolean; family: string | boolean }[] = [
-  { label: 'Children tracked', free: '1', premium: 'Up to 3', family: 'Up to 5' },
-  { label: 'Subjects per child', free: '1', premium: 'Up to 3', family: 'Up to 3' },
-  { label: 'Check-in frequency', free: '3x/week (Tue, Thu, Sat)', premium: 'Daily', family: 'Daily' },
-  { label: 'Weekly parent report', free: true, premium: true, family: true },
-  { label: 'Daily parent summary', free: false, premium: true, family: true },
-  { label: 'Exam countdown & alerts', free: true, premium: true, family: true },
-  { label: 'Auto pause after exam', free: false, premium: true, family: true },
-  { label: 'Auto restart for new term', free: false, premium: true, family: true },
-  { label: 'Exam result follow-up reminders', free: false, premium: true, family: true },
-  { label: 'Smart tutor/diagnostic triggers', free: false, premium: true, family: true },
-  { label: 'Crash course & holiday prompts', free: false, premium: true, family: true },
-  { label: 'Blurred daily insights preview', free: true, premium: false, family: false },
+const COMPARE_ROWS: { label: string; free: string | boolean; premium: string | boolean }[] = [
+  { label: 'Children tracked', free: '1', premium: 'Unlimited' },
+  { label: 'Subjects per child', free: '1', premium: 'All subjects' },
+  { label: 'Check-in frequency', free: '3x/week (Tue, Thu, Sat)', premium: 'Daily' },
+  { label: 'Weekly parent report', free: true, premium: true },
+  { label: 'Daily parent summary', free: false, premium: true },
+  { label: 'Exam countdown & alerts', free: true, premium: true },
+  { label: 'Auto pause after exam', free: false, premium: true },
+  { label: 'Auto restart for new term', free: false, premium: true },
+  { label: 'Exam result follow-up reminders', free: false, premium: true },
+  { label: 'Smart tutor/diagnostic triggers', free: false, premium: true },
+  { label: 'Crash course & holiday prompts', free: false, premium: true },
+  { label: 'Blurred daily insights preview', free: true, premium: false },
 ];
 
 const StudyPulseLanding: React.FC = () => {
@@ -215,7 +214,7 @@ const StudyPulseLanding: React.FC = () => {
         </div>
       </section>
 
-      {/* ═══════════ 3-TIER PRICING ═══════════ */}
+      {/* ═══════════ 2-TIER PRICING ═══════════ */}
       <section id="pricing" className="border-t border-slate-200 bg-[#faf8f4] px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 text-center">
@@ -223,14 +222,14 @@ const StudyPulseLanding: React.FC = () => {
             <p className="mt-3 text-slate-600">Start free. Upgrade when you want daily visibility.</p>
           </div>
 
-          {/* 3 Cards */}
-          <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-3">
+          {/* 2 Cards */}
+          <div className="mx-auto grid max-w-4xl gap-6 lg:grid-cols-2">
             {/* FREE */}
             <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm">
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Free</p>
               <div className="mt-3 flex items-end gap-1">
                 <span className="text-4xl font-black text-slate-900">$0</span>
-                <span className="mb-1 text-sm text-slate-500">/month</span>
+                <span className="mb-1 text-sm text-slate-500">forever</span>
               </div>
               <p className="mt-2 text-sm text-slate-500">Try it with 1 child, 1 subject</p>
               <div className="mt-6 space-y-3">
@@ -249,16 +248,16 @@ const StudyPulseLanding: React.FC = () => {
 
             {/* PREMIUM */}
             <div className="relative rounded-3xl border-2 border-amber-400 bg-white p-7 shadow-xl">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-slate-950">MOST POPULAR</div>
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-amber-400 px-4 py-1 text-xs font-bold text-slate-950">RECOMMENDED</div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-600">Premium</p>
               <div className="mt-3 flex items-end gap-1">
                 <span className="text-4xl font-black text-slate-900">$9.90</span>
                 <span className="mb-1 text-sm text-slate-500">/month</span>
               </div>
-              <p className="mt-2 text-sm text-amber-700 font-semibold">Less than one tuition session</p>
+              <p className="mt-2 text-sm text-amber-700 font-semibold">Less than 2 bubble teas</p>
               <div className="mt-6 space-y-3">
-                <Row label="Up to 3 children" included highlight />
-                <Row label="Up to 3 subjects each" included highlight />
+                <Row label="Unlimited children" included highlight />
+                <Row label="All subjects" included highlight />
                 <Row label="Daily check-ins" included highlight />
                 <Row label="Daily parent summary" included highlight />
                 <Row label="Auto pause / restart" included highlight />
@@ -268,28 +267,7 @@ const StudyPulseLanding: React.FC = () => {
               <Link to="/studypulse/setup?plan=premium" className="mt-7 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 shadow transition hover:bg-amber-400">
                 <Crown size={16} className="mr-2" /> Get Premium
               </Link>
-            </div>
-
-            {/* FAMILY+ */}
-            <div className="rounded-3xl border border-violet-200 bg-white p-7 shadow-sm">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-600">Family+</p>
-              <div className="mt-3 flex items-end gap-1">
-                <span className="text-4xl font-black text-slate-900">$12.90</span>
-                <span className="mb-1 text-sm text-slate-500">/month</span>
-              </div>
-              <p className="mt-2 text-sm text-slate-500">For larger families</p>
-              <div className="mt-6 space-y-3">
-                <Row label="Up to 5 children" included highlight />
-                <Row label="Up to 3 subjects each" included />
-                <Row label="Daily check-ins" included />
-                <Row label="Daily parent summary" included />
-                <Row label="Auto pause / restart" included />
-                <Row label="Exam follow-up reminders" included />
-                <Row label="Smart tutor/diagnostic triggers" included />
-              </div>
-              <Link to="/studypulse/setup?plan=family_plus" className="mt-7 inline-flex w-full items-center justify-center rounded-xl bg-violet-600 px-5 py-3 text-sm font-bold text-white shadow transition hover:bg-violet-700">
-                <Users size={16} className="mr-2" /> Get Family+
-              </Link>
+              <p className="mt-3 text-center text-xs text-slate-400">Pay via PayNow. No auto-renewal. Cancel anytime.</p>
             </div>
           </div>
 
@@ -305,7 +283,6 @@ const StudyPulseLanding: React.FC = () => {
                     <th className="px-4 py-3 font-bold text-slate-500">Feature</th>
                     <th className="px-4 py-3 text-center font-bold text-slate-500">Free</th>
                     <th className="px-4 py-3 text-center font-bold text-amber-600">Premium</th>
-                    <th className="px-4 py-3 text-center font-bold text-violet-600">Family+</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -314,14 +291,12 @@ const StudyPulseLanding: React.FC = () => {
                       <td className="px-4 py-2.5 text-slate-700">{r.label}</td>
                       <td className="px-4 py-2.5 text-center">{renderCell(r.free)}</td>
                       <td className="px-4 py-2.5 text-center">{renderCell(r.premium)}</td>
-                      <td className="px-4 py-2.5 text-center">{renderCell(r.family)}</td>
                     </tr>
                   ))}
                   <tr className="border-b border-slate-50 bg-slate-50 font-bold">
                     <td className="px-4 py-2.5 text-slate-900">Price</td>
                     <td className="px-4 py-2.5 text-center text-slate-900">$0</td>
                     <td className="px-4 py-2.5 text-center text-amber-700">$9.90/mo</td>
-                    <td className="px-4 py-2.5 text-center text-violet-700">$12.90/mo</td>
                   </tr>
                 </tbody>
               </table>
@@ -352,10 +327,10 @@ const StudyPulseLanding: React.FC = () => {
           {[
             { q: 'Does my child need to install any app?', a: 'No. Your child interacts via WhatsApp only \u2014 no app download, no login. You manage everything from your parent dashboard.' },
             { q: 'What if my child lies about studying?', a: 'The system tracks patterns over time. If your child says \u201Cdone\u201D but results don\u2019t improve, the data will show it. Weekly reports make gaps visible fast.' },
-            { q: 'Can I track multiple children on the free plan?', a: 'Free is limited to 1 child, 1 subject. Premium supports up to 3 children with 3 subjects each. Family+ supports up to 5 children.' },
-            { q: 'What subjects can I track?', a: 'Any subject your child is studying \u2014 Math, Science, Chinese, English, Malay, Tamil, and more. Premium users get up to 3 subjects per child.' },
+            { q: 'Can I track multiple children on the free plan?', a: 'Free is limited to 1 child, 1 subject. Upgrade to Premium to track all your children and all their subjects \u2014 no limits.' },
+            { q: 'What subjects can I track?', a: 'Any subject your child is studying \u2014 Math, Science, Chinese, English, Malay, Tamil, and more. Premium users can track all subjects.' },
             { q: 'How long does setup take?', a: 'Under 5 minutes. Enter your details, add your child\u2019s subjects, and you\u2019re done. Your child gets a WhatsApp prompt to start checking in.' },
-            { q: 'Can I cancel or downgrade anytime?', a: 'Yes. No lock-in, no contract. Cancel from your dashboard and you\u2019ll revert to the free plan at the end of your billing cycle.' },
+            { q: 'Can I cancel or downgrade anytime?', a: 'Yes. No lock-in, no contract, no auto-renewal. You pay monthly via PayNow and simply stop when you want to.' },
             { q: 'Is this useful if my child already has tuition?', a: 'Especially then. Tuition covers 1\u20132 hours a week per subject. StudyPulse helps your child build consistent revision habits on the other 5 days \u2014 so tuition time is more effective.' },
           ].map((item, i) => (
             <div key={i} className="border-b border-slate-100">
