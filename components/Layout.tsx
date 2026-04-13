@@ -94,7 +94,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           )}
         </header>
         
-        <main id="main-content" className="flex-grow pt-20" role="main">
+        <main id="main-content" className={`flex-grow pt-20 ${isMainLanding ? 'bg-slate-900' : ''}`} role="main">
           {children}
         </main>
         
@@ -192,7 +192,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </header>
 
       {/* Main Content */}
-      <main id="main-content" className="flex-grow pt-20" role="main">
+      <main id="main-content" className={`flex-grow pt-20 ${isMainLanding ? 'bg-slate-900' : ''}`} role="main">
         {children}
       </main>
 
