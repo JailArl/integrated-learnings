@@ -161,7 +161,7 @@ serve(async (req) => {
 
       // ── SEND PARENT REPORTS ──
       if (isWithinWindow(currentTime, parentReportTime, 7)) {
-        await sendParentReports(sb, schedule.level_group, today);
+        await sendParentReports(sb, schedule.level_group, today, dayOfWeek);
       }
     }
 
@@ -391,10 +391,14 @@ async function sendFollowupReminders(
   return reminded;
 }
 
+// Free plan parents receive reports only on Tue (2), Fri (5), Sat (6)
+const FREE_REPORT_DAYS = [2, 5, 6];
+
 async function sendParentReports(
   sb: ReturnType<typeof createClient>,
   levelGroup: string,
   today: string,
+  dayOfWeek: number,
 ) {
   // Get today's completed check-ins for this level group
   const { data: checkins } = await sb
@@ -625,7 +629,7 @@ async function sendWeeklySummaries(
 
     const { data: membership } = await sb
       .from("sq_memberships")
-      .select("parent_phone, plan_type, preferred_language")
+      .select("parent_phone, plan_type, preferred_language, created_at")
       .eq("user_id", child.parent_id)
       .single();
 
@@ -665,8 +669,12 @@ async function sendWeeklySummaries(
       summaryMsg += `\n\n📋 *Have you seen ${child.name}'s work this week?*\nReply *confirm* if yes, or *adjust* if not accurate.`;
     }
 
-    // ── FUNNEL: 3+ missed days → suggest tutor ──
-    if (missedCount >= 3) {
+    // ── FUNNEL: 3+ missed days AND 2+ weeks enrolled → suggest tutor ──
+    const enrolledAt = membership?.created_at ? new Date(membership.created_at) : null;
+    const weeksEnrolled = enrolledAt
+      ? Math.floor((new Date(today).getTime() - enrolledAt.getTime()) / (7 * 86400000))
+      : 0;
+    if (missedCount >= 3 && weeksEnrolled >= 2) {
       summaryMsg += lang === "zh"
         ? ZH_CRON.weekly_tutor_nudge(child.name, String(missedCount))
         : `\n\n💡 ${child.name} missed ${missedCount} days this week. A tutor can help build a structured routine. Visit studypulse.co → Actions → Find a Tutor.`;
