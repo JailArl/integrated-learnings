@@ -33,6 +33,7 @@ export interface SQChild {
   level: string;
   whatsapp_number?: string;
   study_days?: number[]; // 0=Sun,1=Mon,...6=Sat
+  cca_days?: number[];   // days skipped due to CCA (no check-in sent)
 }
 
 export interface MonitoredSubject {
@@ -203,6 +204,12 @@ export async function createChild(parentId: string, child: { name: string; level
 export async function updateStudyDays(childId: string, studyDays: number[]): Promise<boolean> {
   if (!supabase) return false;
   const { error } = await supabase.from('sq_children').update({ study_days: studyDays }).eq('id', childId);
+  return !error;
+}
+
+export async function updateCCADays(childId: string, ccaDays: number[]): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('sq_children').update({ cca_days: ccaDays }).eq('id', childId);
   return !error;
 }
 

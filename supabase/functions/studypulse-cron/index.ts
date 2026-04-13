@@ -231,7 +231,7 @@ async function sendCheckinPrompts(
   // Get all children in this level group
   const { data: children } = await sb
     .from("sq_children")
-    .select("id, name, level, whatsapp_number, parent_id, study_days")
+    .select("id, name, level, whatsapp_number, parent_id, study_days, cca_days")
     .not("whatsapp_number", "is", null);
 
   if (!children) return 0;
@@ -258,6 +258,12 @@ async function sendCheckinPrompts(
 
     if (!childStudyDays.includes(dayOfWeek)) {
       continue; // Not a study day for this child
+    }
+
+    // Skip CCA days — kid is out late, don't prompt
+    const ccaDays: number[] = child.cca_days && child.cca_days.length > 0 ? child.cca_days : [];
+    if (ccaDays.includes(dayOfWeek)) {
+      continue; // CCA day — system stays silent
     }
 
     // Check if already prompted today
@@ -867,6 +873,16 @@ async function autoCloseStaleCheckins(
       .single();
 
     if (!child || getLevelGroup(child.level) !== levelGroup) continue;
+
+    // Don't auto-close on CCA days
+    const ccaDays: number[] = (child as any).cca_days || [];
+    const sgNow = getSGTime();
+    const todayDow = sgNow.getUTCDay();
+    if (ccaDays.includes(todayDow)) {
+      // Clean up the pending record silently
+      await sb.from("sq_checkins").delete().eq("id", checkin.id);
+      continue;
+    }
 
     // Mark as 'forgot'
     await sb.from("sq_checkins")

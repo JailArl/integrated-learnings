@@ -61,6 +61,7 @@ import {
   upgradeMembership,
   isPremium,
   updateStudyDays,
+  updateCCADays,
   addExamTarget,
   getRecommendedStartDate,
   getActiveExamLimit,
@@ -255,9 +256,11 @@ const StudyPulseApp: React.FC = () => {
       const childStudyDays: number[] = child?.study_days && child.study_days.length > 0
         ? child.study_days
         : premium ? [1,2,3,4,5] : [2,4,6]; // Mon-Fri premium, Tue/Thu/Sat free
+      const ccaDays: number[] = child?.cca_days || [];
       const dayOfWeek = d.getDay(); // 0=Sun
       const isStudyDay = childStudyDays.includes(dayOfWeek);
-      const status = task?.status || checkin?.status || (isPast && isStudyDay ? 'missed' : null);
+      const isCCADay = ccaDays.includes(dayOfWeek);
+      const status = task?.status || checkin?.status || (isCCADay ? 'cca' : (isPast && isStudyDay ? 'missed' : null));
       return { label, dateStr, isPast, isToday, status };
     });
   };
@@ -467,6 +470,8 @@ const StudyPulseApp: React.FC = () => {
                     ? 'bg-amber-100 border-amber-300 text-amber-700'
                     : d.status === 'no' || d.status === 'incomplete' || d.status === 'missed' || d.status === 'forgot'
                     ? 'bg-red-50 border-red-200 text-red-400'
+                    : d.status === 'cca'
+                    ? 'bg-slate-100 border-slate-200 text-slate-400'
                     : d.isToday
                     ? 'bg-blue-50 border-blue-300 text-blue-700'
                     : 'bg-slate-50 border-slate-200 text-slate-400';
@@ -474,7 +479,8 @@ const StudyPulseApp: React.FC = () => {
                     ? '✅' : d.status === 'partially' || d.status === 'postpone'
                     ? '~' : d.status === 'no' || d.status === 'incomplete'
                     ? '✗' : d.status === 'forgot'
-                    ? '😴' : d.status === 'missed'
+                    ? '😴' : d.status === 'cca'
+                    ? '🏃' : d.status === 'missed'
                     ? '—' : d.isToday ? '•' : '';
                   return (
                     <div key={d.label} className={`rounded-xl border p-2.5 text-center ${bg}`}>
@@ -909,6 +915,46 @@ const StudyPulseApp: React.FC = () => {
                     </p>
                   </div>
 
+                  {/* CCA Days */}
+                  {premium && (
+                    <div className="mt-4">
+                      <p className="text-sm font-bold text-slate-700">CCA Days <span className="ml-1 text-xs font-normal text-slate-400">(optional)</span></p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        On CCA days {c.name} won't get a check-in prompt — no message, no missed mark.
+                      </p>
+                      <div className="mt-3 flex gap-2">
+                        {DAY_LABELS.map((d) => {
+                          const currentCCADays: number[] = c.cca_days || [];
+                          const isActive = currentCCADays.includes(d.value);
+                          return (
+                            <button
+                              key={d.value}
+                              onClick={async () => {
+                                const updated = isActive
+                                  ? currentCCADays.filter(x => x !== d.value)
+                                  : [...currentCCADays, d.value].sort();
+                                const ok = await updateCCADays(c.id, updated);
+                                if (ok) setChildren(prev => prev.map(ch => ch.id === c.id ? { ...ch, cca_days: updated } : ch));
+                              }}
+                              className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition ${
+                                isActive
+                                  ? 'bg-amber-500 text-white shadow-sm'
+                                  : 'border border-slate-200 bg-white text-slate-400 hover:bg-slate-50'
+                              }`}
+                            >
+                              {d.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {(c.cca_days && c.cca_days.length > 0) && (
+                        <p className="mt-2 text-xs text-slate-500">
+                          🏃 CCA on: <strong className="text-amber-700">{c.cca_days.map(v => DAY_LABELS.find(d => d.value === v)?.label).join(', ')}</strong>
+                        </p>
+                      )}
+                    </div>
+                  )}
+
                   {!premium && (
                     <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
                       <p className="text-xs text-amber-800">
@@ -1224,6 +1270,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
   const [childName, setChildName] = useState('');
   const [childLevel, setChildLevel] = useState('');
   const [childWhatsapp, setChildWhatsapp] = useState('');
+  const [onboardCCADays, setOnboardCCADays] = useState<number[]>([]);
 
   // Step 3 — subject + exam
   const [subjectName, setSubjectName] = useState('');
@@ -1259,6 +1306,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     const child = await createChild(userId, { name: childName, level: childLevel, whatsapp_number: normaliseSGPhone(childWhatsapp) });
     if (!child) { setError('Child limit reached for your plan. Upgrade to Premium to add more children.'); setSaving(false); return; }
     setCreatedChildId(child.id);
+    if (onboardCCADays.length > 0) {
+      await updateCCADays(child.id, onboardCCADays);
+    }
     // Create default study settings
     await upsertStudySettings(child.id, {
       commence_date: new Date().toISOString().split('T')[0],
@@ -1387,6 +1437,27 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
                     </div>
                   </div>
                 )}
+              </div>
+              {/* Optional CCA Days */}
+              <div>
+                <label className={labelCls}>CCA Days <span className="normal-case font-normal text-slate-400">(optional)</span></label>
+                <p className="mb-2 text-xs text-slate-500">No check-in on days with CCA — nothing logged as missed.</p>
+                <div className="flex gap-2 flex-wrap">
+                  {[{v:0,l:'Sun'},{v:1,l:'Mon'},{v:2,l:'Tue'},{v:3,l:'Wed'},{v:4,l:'Thu'},{v:5,l:'Fri'},{v:6,l:'Sat'}].map(d => (
+                    <button
+                      key={d.v}
+                      type="button"
+                      onClick={() => setOnboardCCADays(prev => prev.includes(d.v) ? prev.filter(x => x !== d.v) : [...prev, d.v].sort())}
+                      className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition ${
+                        onboardCCADays.includes(d.v)
+                          ? 'bg-amber-500 text-white shadow-sm'
+                          : 'border border-slate-200 bg-white text-slate-400 hover:bg-slate-50'
+                      }`}
+                    >
+                      {d.l}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
             <button onClick={handleSaveChild} disabled={saving} className="mt-6 flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50">
