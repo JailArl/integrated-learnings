@@ -76,6 +76,16 @@ import {
 } from '../services/studyquest';
 
 /* ── helpers ── */
+
+// Normalise Singapore phone numbers to E.164 (+65XXXXXXXX)
+function normaliseSGPhone(raw: string): string {
+  const digits = raw.replace(/[\s\-().+]/g, '');
+  if (digits.startsWith('65') && digits.length === 10) return `+${digits}`;
+  if (digits.length === 8) return `+65${digits}`;
+  if (raw.trim().startsWith('+')) return raw.trim();
+  return `+65${digits}`;
+}
+
 function daysUntil(dateStr: string): number {
   const d = new Date(dateStr);
   const now = new Date();
@@ -753,8 +763,9 @@ const StudyPulseApp: React.FC = () => {
                         onClick={async () => {
                           if (!supabase) return;
                           setSavingChildWhatsapp(true);
-                          await supabase.from('sq_children').update({ whatsapp_number: editChildWhatsapp.trim() }).eq('id', c.id);
-                          setChildren(prev => prev.map(ch => ch.id === c.id ? { ...ch, whatsapp_number: editChildWhatsapp.trim() } : ch));
+                          const normChild = normaliseSGPhone(editChildWhatsapp);
+                          await supabase.from('sq_children').update({ whatsapp_number: normChild }).eq('id', c.id);
+                          setChildren(prev => prev.map(ch => ch.id === c.id ? { ...ch, whatsapp_number: normChild } : ch));
                           setEditingChildId(null);
                           setSavingChildWhatsapp(false);
                         }}
@@ -983,9 +994,10 @@ const StudyPulseApp: React.FC = () => {
                       onClick={async () => {
                         if (!supabase || !userId) return;
                         setSavingProfile(true);
-                        await supabase.from('sq_memberships').update({ parent_name: editProfileName.trim(), parent_phone: editProfilePhone.trim() }).eq('user_id', userId);
-                        await supabase.from('parent_profiles').upsert({ id: userId, full_name: editProfileName.trim(), phone: editProfilePhone.trim() }, { onConflict: 'id' });
-                        setMembership(prev => prev ? { ...prev, parent_name: editProfileName.trim(), parent_phone: editProfilePhone.trim() } : prev);
+                        const normPhone = normaliseSGPhone(editProfilePhone);
+                        await supabase.from('sq_memberships').update({ parent_name: editProfileName.trim(), parent_phone: normPhone }).eq('user_id', userId);
+                        await supabase.from('parent_profiles').upsert({ id: userId, full_name: editProfileName.trim(), phone: normPhone }, { onConflict: 'id' });
+                        setMembership(prev => prev ? { ...prev, parent_name: editProfileName.trim(), parent_phone: normPhone } : prev);
                         setEditingProfile(false);
                         setSavingProfile(false);
                       }}
@@ -1097,9 +1109,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     if (!whatsapp.trim()) { setError('WhatsApp number is required.'); return; }
     setError('');
     setSaving(true);
-    await createMembership(userId, membership?.plan_type || 'free', { name: fullName, email: membership?.parent_email || '', phone: whatsapp, language: parentLang });
+    const normWhatsapp = normaliseSGPhone(whatsapp);
+    await createMembership(userId, membership?.plan_type || 'free', { name: fullName, email: membership?.parent_email || '', phone: normWhatsapp, language: parentLang });
     if (supabase) {
-      await supabase.from('parent_profiles').upsert({ id: userId, full_name: fullName, email: membership?.parent_email || '', phone: whatsapp }, { onConflict: 'id' });
+      await supabase.from('parent_profiles').upsert({ id: userId, full_name: fullName, email: membership?.parent_email || '', phone: normWhatsapp }, { onConflict: 'id' });
     }
     setSaving(false);
     setStep(2);
@@ -1111,7 +1124,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     if (!childWhatsapp.trim()) { setError('Child WhatsApp number is required.'); return; }
     setError('');
     setSaving(true);
-    const child = await createChild(userId, { name: childName, level: childLevel, whatsapp_number: childWhatsapp });
+    const child = await createChild(userId, { name: childName, level: childLevel, whatsapp_number: normaliseSGPhone(childWhatsapp) });
     if (!child) { setError('Failed to save child. Try again.'); setSaving(false); return; }
     setCreatedChildId(child.id);
     // Create default study settings
