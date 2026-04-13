@@ -132,8 +132,11 @@ serve(async (req) => {
         ? schedule.weekend_kid_checkin
         : schedule.weekday_kid_checkin;
       const followupTime = isWeekend
-        ? schedule.weekend_kid_checkin // weekend has no separate followup
+        ? addMinutes(schedule.weekend_kid_checkin, 45)
         : schedule.weekday_followup;
+      const autoCloseTime = isWeekend
+        ? addMinutes(schedule.weekend_kid_checkin, 120)
+        : addMinutes(schedule.weekday_kid_checkin, 120);
       const parentReportTime = isWeekend
         ? schedule.weekend_parent_report
         : schedule.weekday_parent_report;
@@ -150,17 +153,20 @@ serve(async (req) => {
         totalSent += sent;
       }
 
-      // ── SEND FOLLOW-UP REMINDERS (no reply after 30-45 min) ──
-      if (
-        !isWeekend &&
-        isWithinWindow(currentTime, followupTime, 7)
-      ) {
+      // ── SEND FOLLOW-UP REMINDERS (no reply after ~45 min) ──
+      // Runs on weekdays AND weekends
+      if (isWithinWindow(currentTime, followupTime, 7)) {
         const reminded = await sendFollowupReminders(
           sb,
           schedule.level_group,
           today,
         );
         totalReminders += reminded;
+      }
+
+      // ── AUTO-CLOSE STALE CHECK-INS (still pending 2h after prompt) ──
+      if (isWithinWindow(currentTime, autoCloseTime, 7)) {
+        await autoCloseStaleCheckins(sb, schedule.level_group, today);
       }
 
       // ── SEND PARENT REPORTS ──
@@ -831,4 +837,65 @@ function isWithinWindow(
   const currentMins = ch * 60 + cm;
   const targetMins = th * 60 + tm;
   return Math.abs(currentMins - targetMins) <= marginMinutes;
+}
+
+function addMinutes(time: string, mins: number): string {
+  const [h, m] = time.split(":").map(Number);
+  const total = h * 60 + m + mins;
+  return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+// ── AUTO-CLOSE: mark check-ins still pending 2h after prompt as 'forgot' ──
+async function autoCloseStaleCheckins(
+  sb: ReturnType<typeof createClient>,
+  levelGroup: string,
+  today: string,
+) {
+  const { data: stale } = await sb
+    .from("sq_checkins")
+    .select("id, child_id")
+    .eq("checkin_date", today)
+    .eq("status", "pending");
+
+  if (!stale) return;
+
+  for (const checkin of stale) {
+    const { data: child } = await sb
+      .from("sq_children")
+      .select("name, level, whatsapp_number, parent_id")
+      .eq("id", checkin.child_id)
+      .single();
+
+    if (!child || getLevelGroup(child.level) !== levelGroup) continue;
+
+    // Mark as 'forgot'
+    await sb.from("sq_checkins")
+      .update({ status: "forgot", reply_received_at: new Date().toISOString() })
+      .eq("id", checkin.id);
+
+    // Soft notify child (no scolding — gentle)
+    if (child.whatsapp_number) {
+      await sendWhatsApp(
+        child.whatsapp_number,
+        undefined,
+        undefined,
+        `No worries, ${child.name}! 😴 Looks like you forgot to check in today — that's okay. Tomorrow is a fresh start! 💪`,
+      );
+    }
+
+    // Notify parent
+    const { data: membership } = await sb
+      .from("sq_memberships")
+      .select("parent_phone, parent_name, preferred_language")
+      .eq("user_id", child.parent_id)
+      .single();
+
+    if (membership?.parent_phone) {
+      const lang = membership.preferred_language || "en";
+      const msg = lang === "zh"
+        ? `📋 ${child.name} 今天没有打卡（已超时）。明天继续加油！`
+        : `📋 ${child.name} didn't check in today — logged as *forgot*. Gentle nudge for tomorrow! 🙂`;
+      await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
+    }
+  }
 }

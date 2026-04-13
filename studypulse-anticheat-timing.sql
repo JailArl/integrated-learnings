@@ -95,11 +95,17 @@ CREATE POLICY "sq_checkin_schedule_admin" ON sq_checkin_schedule
 -- Insert default timing
 INSERT INTO sq_checkin_schedule (level_group, level_range, weekday_kid_checkin, weekday_followup, weekday_parent_report, weekend_kid_checkin, weekend_parent_report)
 VALUES
-  ('primary_lower',        'P1-P3',       '20:00', '20:45', '21:15', '16:00', '20:00'),
-  ('primary_upper',        'P4-P6',       '20:30', '21:15', '21:45', '16:00', '20:00'),
-  ('secondary_lower',      'Sec1-Sec3',   '21:00', '21:45', '22:15', '16:00', '20:30'),
-  ('secondary_upper_jc',   'Sec4-JC2',    '21:30', '22:15', '22:45', '17:00', '20:30')
+  ('primary_lower',        'P1-P3',       '18:30', '19:15', '20:30', '15:00', '17:30'),
+  ('primary_upper',        'P4-P6',       '19:00', '19:45', '21:00', '15:00', '17:30'),
+  ('secondary_lower',      'Sec1-Sec3',   '19:30', '20:15', '21:30', '15:30', '18:00'),
+  ('secondary_upper_jc',   'Sec4-JC2',    '20:00', '20:45', '22:00', '16:00', '18:00')
 ON CONFLICT DO NOTHING;
+
+-- ⚠️ If rows already exist, run this UPDATE instead:
+-- UPDATE sq_checkin_schedule SET weekday_kid_checkin='18:30', weekday_followup='19:15', weekday_parent_report='20:30', weekend_kid_checkin='15:00', weekend_parent_report='17:30' WHERE level_group='primary_lower';
+-- UPDATE sq_checkin_schedule SET weekday_kid_checkin='19:00', weekday_followup='19:45', weekday_parent_report='21:00', weekend_kid_checkin='15:00', weekend_parent_report='17:30' WHERE level_group='primary_upper';
+-- UPDATE sq_checkin_schedule SET weekday_kid_checkin='19:30', weekday_followup='20:15', weekday_parent_report='21:30', weekend_kid_checkin='15:30', weekend_parent_report='18:00' WHERE level_group='secondary_lower';
+-- UPDATE sq_checkin_schedule SET weekday_kid_checkin='20:00', weekday_followup='20:45', weekday_parent_report='22:00', weekend_kid_checkin='16:00', weekend_parent_report='18:00' WHERE level_group='secondary_upper_jc';
 
 
 -- ─── 3. ADD RESPONSE TRACKING COLUMNS TO sq_checkins ───

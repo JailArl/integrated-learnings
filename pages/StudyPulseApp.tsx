@@ -295,10 +295,10 @@ const StudyPulseApp: React.FC = () => {
     const now = new Date();
     const sgDay = new Date(now.getTime() + 8 * 60 * 60 * 1000).getUTCDay();
     const isWeekend = sgDay === 0 || sgDay === 6;
-    if (/^(P[1-3]|PRIMARY [1-3])$/.test(l)) return isWeekend ? '4:00pm' : '8:00pm';
-    if (/^(P[4-6]|PRIMARY [4-6])$/.test(l)) return isWeekend ? '4:00pm' : '8:30pm';
-    if (/^(SEC[1-3]|SECONDARY [1-3])$/.test(l)) return isWeekend ? '4:00pm' : '9:00pm';
-    return isWeekend ? '5:00pm' : '9:30pm'; // Sec4/5, JC
+    if (/^(P[1-3]|PRIMARY [1-3])$/.test(l)) return isWeekend ? '3:00pm' : '6:30pm';
+    if (/^(P[4-6]|PRIMARY [4-6])$/.test(l)) return isWeekend ? '3:00pm' : '7:00pm';
+    if (/^(SEC[1-3]|SECONDARY [1-3])$/.test(l)) return isWeekend ? '3:30pm' : '7:30pm';
+    return isWeekend ? '4:00pm' : '8:00pm'; // Sec4/5, JC
   }
 
   return (
@@ -465,7 +465,7 @@ const StudyPulseApp: React.FC = () => {
                     ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
                     : d.status === 'partially' || d.status === 'postpone'
                     ? 'bg-amber-100 border-amber-300 text-amber-700'
-                    : d.status === 'no' || d.status === 'incomplete' || d.status === 'missed'
+                    : d.status === 'no' || d.status === 'incomplete' || d.status === 'missed' || d.status === 'forgot'
                     ? 'bg-red-50 border-red-200 text-red-400'
                     : d.isToday
                     ? 'bg-blue-50 border-blue-300 text-blue-700'
@@ -473,7 +473,8 @@ const StudyPulseApp: React.FC = () => {
                   const icon = d.status === 'done' || d.status === 'did_extra' || d.status === 'yes'
                     ? '✅' : d.status === 'partially' || d.status === 'postpone'
                     ? '~' : d.status === 'no' || d.status === 'incomplete'
-                    ? '✗' : d.status === 'missed'
+                    ? '✗' : d.status === 'forgot'
+                    ? '😴' : d.status === 'missed'
                     ? '—' : d.isToday ? '•' : '';
                   return (
                     <div key={d.label} className={`rounded-xl border p-2.5 text-center ${bg}`}>
@@ -490,7 +491,7 @@ const StudyPulseApp: React.FC = () => {
                   const week = buildWeekGrid();
                   const done = week.filter(d => d.status === 'done' || d.status === 'did_extra' || d.status === 'yes').length;
                   const partial = week.filter(d => d.status === 'partially' || d.status === 'postpone').length;
-                  const missed = week.filter(d => d.status === 'no' || d.status === 'incomplete' || d.status === 'missed').length;
+                  const missed = week.filter(d => d.status === 'no' || d.status === 'incomplete' || d.status === 'missed' || d.status === 'forgot').length;
                   return (
                     <>
                       <div className="rounded-xl bg-emerald-50 p-3 text-center">
