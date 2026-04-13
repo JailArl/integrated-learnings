@@ -515,8 +515,8 @@ serve(async (req) => {
 
       await sendRaw(phone,
         isPremium
-          ? "Hey! Reply with: *done* / *partially* / *no* / *did extra* 😊"
-          : "Hey! Reply with: *yes* or *no* 😊"
+          ? `Hi ${child.name}! 👋 This is your StudyPulse check-in bot.\n\nWait for your daily check-in prompt, then reply with:\n✅ *done* — completed\n📝 *partially* — did some\n❌ *no* — skipped\n⚡ *did extra* — went beyond target\n\nOr type *target* to set your weekly study goal.`
+          : `Hi ${child.name}! 👋 This is your StudyPulse check-in bot.\n\nWait for your daily check-in prompt tonight, then reply:\n✅ *yes* — studied today\n❌ *no* — skipped\n\nSee you tonight!`
       );
       return ok();
     }
