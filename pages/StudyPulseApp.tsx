@@ -137,6 +137,7 @@ const StudyPulseApp: React.FC = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [copiedChildId, setCopiedChildId] = useState<string | null>(null);
+  const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
 
   const premium = isPremium(membership);
   const child = children[activeChild];
@@ -228,7 +229,7 @@ const StudyPulseApp: React.FC = () => {
   const handleCTA = async (table: 'sq_tutor_requests'|'sq_diagnostic_requests'|'sq_crash_course_interest'|'sq_holiday_programme_interest', reason?: string) => {
     if (!userId || !child) return;
     await submitCTARequest(table, userId, child.id, { trigger_reason: reason });
-    alert('Request submitted!');
+    setSubmittedCTAs(prev => new Set([...prev, table]));
   };
 
   // Build weekly grid data
@@ -277,6 +278,18 @@ const StudyPulseApp: React.FC = () => {
     { id: 'actions', label: 'Actions', icon: Zap },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
+
+  // Returns scheduled check-in time for a child's level (SGT, from sq_checkin_schedule)
+  function getCheckinTimeLabel(level: string): string {
+    const l = level.trim().toUpperCase();
+    const now = new Date();
+    const sgDay = new Date(now.getTime() + 8 * 60 * 60 * 1000).getUTCDay();
+    const isWeekend = sgDay === 0 || sgDay === 6;
+    if (/^(P[1-3]|PRIMARY [1-3])$/.test(l)) return isWeekend ? '4:00pm' : '8:00pm';
+    if (/^(P[4-6]|PRIMARY [4-6])$/.test(l)) return isWeekend ? '4:00pm' : '8:30pm';
+    if (/^(SEC[1-3]|SECONDARY [1-3])$/.test(l)) return isWeekend ? '4:00pm' : '9:00pm';
+    return isWeekend ? '5:00pm' : '9:30pm'; // Sec4/5, JC
+  }
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -362,7 +375,7 @@ const StudyPulseApp: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-bold text-slate-700">Waiting for check-in</p>
-                          <p className="mt-1 text-xs text-slate-500">{c.name} will receive a WhatsApp prompt this evening.</p>
+                          <p className="mt-1 text-xs text-slate-500">{c.name} will receive a WhatsApp prompt at <strong>{getCheckinTimeLabel(c.level)}</strong> tonight.</p>
                         </div>
                         <Clock3 size={24} className="text-slate-300" />
                       </div>
@@ -689,28 +702,44 @@ const StudyPulseApp: React.FC = () => {
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700"><Search size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Request Tutor</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600">Need a tutor for a subject? We&apos;ll match you with a vetted tutor.</p>
-                <button onClick={() => handleCTA('sq_tutor_requests', 'manual_request')} className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-bold text-white">Find a Tutor</button>
+                {submittedCTAs.has('sq_tutor_requests') ? (
+                  <p className="mt-3 rounded-lg bg-blue-50 px-4 py-2.5 text-xs font-bold text-blue-700">✅ Request sent — we&apos;ll WhatsApp you within 24 hours.</p>
+                ) : (
+                  <button onClick={() => handleCTA('sq_tutor_requests', 'manual_request')} className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2.5 text-xs font-bold text-white">Find a Tutor</button>
+                )}
               </article>
 
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-700"><Microscope size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Book Diagnostic</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600">Results not improving despite effort? A diagnostic can identify the issue.</p>
-                <button onClick={() => handleCTA('sq_diagnostic_requests', 'manual_request')} className="mt-3 w-full rounded-lg bg-purple-600 px-4 py-2.5 text-xs font-bold text-white">Book Diagnostic</button>
+                {submittedCTAs.has('sq_diagnostic_requests') ? (
+                  <p className="mt-3 rounded-lg bg-purple-50 px-4 py-2.5 text-xs font-bold text-purple-700">✅ Booking received — we&apos;ll WhatsApp you within 24 hours to confirm.</p>
+                ) : (
+                  <button onClick={() => handleCTA('sq_diagnostic_requests', 'manual_request')} className="mt-3 w-full rounded-lg bg-purple-600 px-4 py-2.5 text-xs font-bold text-white">Book Diagnostic</button>
+                )}
               </article>
 
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-700"><Flame size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Crash Course</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600">Intensive revision before major exams or holiday catch-up sessions.</p>
-                <button onClick={() => handleCTA('sq_crash_course_interest', 'manual_request')} className="mt-3 w-full rounded-lg bg-orange-600 px-4 py-2.5 text-xs font-bold text-white">Express Interest</button>
+                {submittedCTAs.has('sq_crash_course_interest') ? (
+                  <p className="mt-3 rounded-lg bg-orange-50 px-4 py-2.5 text-xs font-bold text-orange-700">✅ Interest registered — we&apos;ll be in touch!</p>
+                ) : (
+                  <button onClick={() => handleCTA('sq_crash_course_interest', 'manual_request')} className="mt-3 w-full rounded-lg bg-orange-600 px-4 py-2.5 text-xs font-bold text-white">Express Interest</button>
+                )}
               </article>
 
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700"><GraduationCap size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Holiday Programme</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600">Financial literacy enrichment for P4–P6 and Sec 1–3 during school holidays.</p>
-                <button onClick={() => handleCTA('sq_holiday_programme_interest', 'manual_request')} className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white">Register Interest</button>
+                {submittedCTAs.has('sq_holiday_programme_interest') ? (
+                  <p className="mt-3 rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700">✅ Interest registered — we&apos;ll be in touch!</p>
+                ) : (
+                  <button onClick={() => handleCTA('sq_holiday_programme_interest', 'manual_request')} className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white">Register Interest</button>
+                )}
                 <Link to="/enrichment" className="mt-2 inline-block text-xs font-semibold text-emerald-700 underline">Learn more →</Link>
               </article>
             </div>

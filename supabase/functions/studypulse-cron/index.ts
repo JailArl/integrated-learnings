@@ -64,10 +64,14 @@ function formatTime(d: Date): string {
 }
 
 function getLevelGroup(level: string): string {
-  const l = level.toUpperCase();
-  if (/^P[1-3]$/.test(l)) return "primary_lower";
-  if (/^P[4-6]$/.test(l)) return "primary_upper";
-  if (/^SEC[1-3]$/i.test(l)) return "secondary_lower";
+  const l = level.trim().toUpperCase();
+  // Short form: P1-P3  | Full form: Primary 1-3
+  if (/^(P[1-3]|PRIMARY [1-3])$/.test(l)) return "primary_lower";
+  // Short form: P4-P6  | Full form: Primary 4-6
+  if (/^(P[4-6]|PRIMARY [4-6])$/.test(l)) return "primary_upper";
+  // Short form: SEC1-3 | Full form: Secondary 1-3
+  if (/^(SEC[1-3]|SECONDARY [1-3])$/.test(l)) return "secondary_lower";
+  // Sec4, Sec5, Secondary 4-5, JC 1, JC 2 — all upper/JC group
   return "secondary_upper_jc";
 }
 
