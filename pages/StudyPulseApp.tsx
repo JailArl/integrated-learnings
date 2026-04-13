@@ -138,6 +138,7 @@ const StudyPulseApp: React.FC = () => {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [copiedChildId, setCopiedChildId] = useState<string | null>(null);
   const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
+  const [upgraded, setUpgraded] = useState(false);
 
   const premium = isPremium(membership);
   const child = children[activeChild];
@@ -214,13 +215,16 @@ const StudyPulseApp: React.FC = () => {
     if (ok) {
       const m = await getMembership(userId);
       setMembership(m);
-      alert('Upgraded to Premium! Refresh to unlock all features.');
+      const kids = await getChildren(userId);
+      setChildren(kids);
+      setUpgraded(true);
     }
   };
 
   const handleExamResult = async (targetId: string) => {
     if (!child || !examScore) return;
-    await submitExamResult({ child_id: child.id, subject_id: displaySubjects[0]?.id, exam_target_id: targetId, score: parseFloat(examScore), reason: examReason });
+    const examTarget = exams.find(e => e.id === targetId);
+    await submitExamResult({ child_id: child.id, subject_id: examTarget?.subject_id || displaySubjects[0]?.id, exam_target_id: targetId, score: parseFloat(examScore), reason: examReason });
     setExamScore('');
     const r = await getExamResults(child.id);
     setResults(r);
@@ -247,7 +251,13 @@ const StudyPulseApp: React.FC = () => {
       // Check for check-in or daily task on this date
       const task = dailyTasks.find(t => t.task_date === dateStr);
       const checkin = checkins.find(c => c.checkin_date === dateStr);
-      const status = task?.status || checkin?.status || (isPast ? 'missed' : null);
+      // Only mark as missed on days that are actually study days for this child
+      const childStudyDays: number[] = child?.study_days && child.study_days.length > 0
+        ? child.study_days
+        : premium ? [1,2,3,4,5] : [2,4,6]; // Mon-Fri premium, Tue/Thu/Sat free
+      const dayOfWeek = d.getDay(); // 0=Sun
+      const isStudyDay = childStudyDays.includes(dayOfWeek);
+      const status = task?.status || checkin?.status || (isPast && isStudyDay ? 'missed' : null);
       return { label, dateStr, isPast, isToday, status };
     });
   };
@@ -375,7 +385,7 @@ const StudyPulseApp: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-bold text-slate-700">Waiting for check-in</p>
-                          <p className="mt-1 text-xs text-slate-500">{c.name} will receive a WhatsApp prompt at <strong>{getCheckinTimeLabel(c.level)}</strong> tonight.</p>
+                          <p className="mt-1 text-xs text-slate-500">{c.name} will receive a WhatsApp prompt at <strong>{getCheckinTimeLabel(c.level)}</strong>{(() => { const sgDay = new Date(new Date().getTime() + 8*60*60*1000).getUTCDay(); return sgDay === 0 || sgDay === 6 ? ' today.' : ' tonight.'; })()}</p>
                         </div>
                         <Clock3 size={24} className="text-slate-300" />
                       </div>
@@ -415,8 +425,16 @@ const StudyPulseApp: React.FC = () => {
               </div>
             )}
 
+            {/* Upgrade success banner */}
+            {upgraded && (
+              <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4">
+                <p className="text-sm font-bold text-emerald-800">🎉 Welcome to Premium!</p>
+                <p className="mt-1 text-xs text-emerald-700">Daily check-ins, all subjects, and unlimited children are now active.</p>
+              </div>
+            )}
+
             {/* Free plan upgrade nudge */}
-            {!premium && (
+            {!premium && !upgraded && (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
                 <div className="flex items-start gap-3">
                   <Crown size={18} className="mt-0.5 flex-shrink-0 text-amber-500" />
