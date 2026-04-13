@@ -17,7 +17,7 @@ const FamilyHome: React.FC = () => {
     <div className="min-h-screen bg-stone-50 text-slate-900">
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative overflow-hidden bg-[linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0b3b2e_100%)] px-4 pb-20 pt-20 text-white sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden bg-[linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0b3b2e_100%)] px-4 pb-20 pt-20h text-white sm:px-6 lg:px-8">
         <div className="absolute inset-0 opacity-50" aria-hidden="true">
           <div className="absolute left-[-10%] top-8 h-64 w-64 rounded-full bg-amber-300/20 blur-3xl" />
           <div className="absolute right-[-6%] top-16 h-72 w-72 rounded-full bg-sky-400/20 blur-3xl" />
@@ -66,31 +66,31 @@ const FamilyHome: React.FC = () => {
                   <div className="space-y-2.5">
                     <div className="max-w-[80%]">
                       <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
-                        <p className="text-sm text-slate-200">Hi Ahmad! \uD83D\uDC4B Time for your daily check-in. Did you study today?</p>
+                        <p className="text-sm text-slate-200">Hi Ahmad! 👋 Time for your daily check-in. Did you study today?</p>
                         <p className="mt-1 text-right text-[10px] text-slate-500">8:30 PM</p>
                       </div>
                     </div>
                     <div className="ml-auto max-w-[70%]">
                       <div className="rounded-lg rounded-tr-none bg-[#005c4b] px-3 py-2">
-                        <p className="text-sm text-white">Yes! Finished Math worksheet \u2713</p>
-                        <p className="mt-1 text-right text-[10px] text-emerald-400/70">8:33 PM \u2713\u2713</p>
+                        <p className="text-sm text-white">Yes! Finished Math worksheet ✓</p>
+                        <p className="mt-1 text-right text-[10px] text-emerald-400/70">8:33 PM ✓✓</p>
                       </div>
                     </div>
                     <div className="max-w-[80%]">
                       <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
-                        <p className="text-sm text-slate-200">Nice work! \uD83D\uDCDA What topic?</p>
+                        <p className="text-sm text-slate-200">Nice work! 📚 What topic?</p>
                         <p className="mt-1 text-right text-[10px] text-slate-500">8:33 PM</p>
                       </div>
                     </div>
                     <div className="ml-auto max-w-[70%]">
                       <div className="rounded-lg rounded-tr-none bg-[#005c4b] px-3 py-2">
                         <p className="text-sm text-white">Fractions — chapter 5</p>
-                        <p className="mt-1 text-right text-[10px] text-emerald-400/70">8:34 PM \u2713\u2713</p>
+                        <p className="mt-1 text-right text-[10px] text-emerald-400/70">8:34 PM ✓✓</p>
                       </div>
                     </div>
                     <div className="max-w-[80%]">
                       <div className="rounded-lg rounded-tl-none bg-[#202c33] px-3 py-2">
-                        <p className="text-sm text-slate-200">\uD83D\uDD25 5-day streak! Keep it going!</p>
+                        <p className="text-sm text-slate-200">🔥 5-day streak! Keep it going!</p>
                         <p className="mt-1 text-right text-[10px] text-slate-500">8:34 PM</p>
                       </div>
                     </div>
@@ -98,7 +98,7 @@ const FamilyHome: React.FC = () => {
                   {/* Parent notification */}
                   <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/10 px-3 py-2.5">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-amber-400">You receive at 9:45 PM</p>
-                    <p className="mt-1 text-xs text-amber-200/80">\u2705 Ahmad checked in — Done! Math (Fractions). \uD83D\uDD25 5-day streak.</p>
+                    <p className="mt-1 text-xs text-amber-200/80">✅ Ahmad checked in — Done! Math (Fractions). 🔥 5-day streak.</p>
                   </div>
                 </div>
               </div>
