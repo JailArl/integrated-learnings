@@ -776,7 +776,7 @@ const StudyPulseApp: React.FC = () => {
                       <button onClick={() => setEditingChildId(null)} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500">Cancel</button>
                     </div>
                   ) : (
-                    <div className="mt-1 flex items-center gap-2">
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
                       <p className="text-xs text-slate-500">{c.level} · WhatsApp: {c.whatsapp_number || 'Not set'}</p>
                       <button
                         onClick={() => { setEditingChildId(c.id); setEditChildWhatsapp(c.whatsapp_number || ''); }}
@@ -784,6 +784,16 @@ const StudyPulseApp: React.FC = () => {
                       >
                         Edit
                       </button>
+                      {c.whatsapp_number && (
+                        <a
+                          href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(c.name)}+and+I'm+ready+for+my+daily+check-ins!`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                        >
+                          📲 Activate WhatsApp
+                        </a>
+                      )}
                     </div>
                   )}
 
@@ -1226,6 +1236,17 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
                 <label className={labelCls}>Child WhatsApp Number</label>
                 <input className={inputCls} type="tel" placeholder="+65 8123 4567" value={childWhatsapp} onChange={(e) => setChildWhatsapp(e.target.value)} />
                 <p className="mt-1 text-xs text-slate-400">Daily check-ins are sent to this number.</p>
+                {childWhatsapp.trim() && (
+                  <a
+                    href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName || 'joining')}+and+I'm+ready+for+my+daily+check-ins!`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
+                  >
+                    <span className="text-base">📲</span> Tap to activate WhatsApp check-ins
+                  </a>
+                )}
+                <p className="mt-1.5 text-xs text-amber-700 font-semibold">⚠️ Your child must tap the button above once to allow messages.</p>
               </div>
             </div>
             <button onClick={handleSaveChild} disabled={saving} className="mt-6 flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50">
@@ -1279,7 +1300,27 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
               {childName} will receive daily check-ins on WhatsApp.<br />
               You&apos;ll get weekly summaries and insights.
             </p>
-            <button onClick={onComplete} className="mt-6 inline-flex items-center rounded-xl bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800">
+            <div className="mt-5 space-y-3 text-left">
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">One last step — activate WhatsApp:</p>
+              <a
+                href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName)}+and+I'm+ready+for+my+daily+check-ins!`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
+              >
+                <span className="text-base">📲</span> {childName} — tap to activate check-ins
+              </a>
+              <a
+                href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+the+parent+and+I'm+ready+for+weekly+updates!`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700 hover:bg-blue-100"
+              >
+                <span className="text-base">📲</span> You (parent) — tap to activate updates
+              </a>
+              <p className="text-xs text-slate-400">Both need to tap once. After that, everything is automatic.</p>
+            </div>
+            <button onClick={onComplete} className="mt-5 inline-flex items-center rounded-xl bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800">
               Go to Dashboard <ArrowRight size={16} className="ml-1.5" />
             </button>
           </div>
