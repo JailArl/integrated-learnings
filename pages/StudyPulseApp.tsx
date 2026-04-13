@@ -136,6 +136,7 @@ const StudyPulseApp: React.FC = () => {
   const [editProfilePhone, setEditProfilePhone] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [copiedChildId, setCopiedChildId] = useState<string | null>(null);
 
   const premium = isPremium(membership);
   const child = children[activeChild];
@@ -723,9 +724,13 @@ const StudyPulseApp: React.FC = () => {
             {/* WhatsApp activation reminder */}
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <p className="text-xs font-bold text-amber-800 mb-1">📲 WhatsApp — One-Time Setup Required</p>
-              <p className="text-xs text-amber-700">
-                WhatsApp won&apos;t let businesses message you first. Both <strong>you</strong> and your <strong>child</strong> need to send one message to <strong>+65 8959 8553</strong> to activate check-ins and parent updates. Use the activation buttons in each card below.
+              <p className="text-xs text-amber-700 mb-1">
+                WhatsApp won&apos;t let businesses message you first — both you and your child must send one message to activate.
               </p>
+              <ul className="text-xs text-amber-700 list-disc list-inside space-y-0.5">
+                <li><strong>You (parent):</strong> tap &ldquo;Activate parent updates&rdquo; in your Account card below.</li>
+                <li><strong>Your child:</strong> copy the link in their card and send it to them via WhatsApp/SMS — they must tap it on <em>their own phone</em>.</li>
+              </ul>
             </div>
 
             {/* Study Days per child */}
@@ -795,14 +800,34 @@ const StudyPulseApp: React.FC = () => {
                         Edit
                       </button>
                       {c.whatsapp_number && (
-                        <a
-                          href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(c.name)}+and+I'm+ready+for+my+daily+check-ins!`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-lg border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-                        >
-                          📲 Activate WhatsApp
-                        </a>
+                        <span className="w-full mt-1">
+                          <span className="block text-xs text-amber-700 font-semibold mb-1">⚠️ {c.name} must tap this link on their own phone:</span>
+                          <span className="flex flex-wrap gap-2">
+                            <a
+                              href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(c.name)}+and+I'm+ready+for+my+daily+check-ins!`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                            >
+                              📲 Open on this device
+                            </a>
+                            <button
+                              onClick={async () => {
+                                const link = `https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(c.name)}+and+I'm+ready+for+my+daily+check-ins!`;
+                                if (navigator.share) {
+                                  await navigator.share({ title: 'Activate StudyPulse', url: link });
+                                } else {
+                                  await navigator.clipboard.writeText(link);
+                                  setCopiedChildId(c.id);
+                                  setTimeout(() => setCopiedChildId(null), 2000);
+                                }
+                              }}
+                              className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                            >
+                              {copiedChildId === c.id ? '✅ Copied!' : '🔗 Copy link to send to ' + c.name}
+                            </button>
+                          </span>
+                        </span>
                       )}
                     </div>
                   )}
@@ -1286,16 +1311,34 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
                 <input className={inputCls} type="tel" placeholder="+65 8123 4567" value={childWhatsapp} onChange={(e) => setChildWhatsapp(e.target.value)} />
                 <p className="mt-1 text-xs text-slate-400">Daily check-ins are sent to this number.</p>
                 {childWhatsapp.trim() && (
-                  <a
-                    href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName || 'joining')}+and+I'm+ready+for+my+daily+check-ins!`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
-                  >
-                    <span className="text-base">📲</span> Tap to activate WhatsApp check-ins
-                  </a>
+                  <div className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                    <p className="text-xs font-bold text-emerald-800 mb-2">⚠️ {childName || 'Your child'} must tap this on <em>their own phone</em></p>
+                    <div className="flex flex-wrap gap-2">
+                      <a
+                        href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName || 'joining')}+and+I'm+ready+for+my+daily+check-ins!`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
+                      >
+                        📲 Open on this device
+                      </a>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const link = `https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName || 'joining')}+and+I'm+ready+for+my+daily+check-ins!`;
+                          if (navigator.share) {
+                            await navigator.share({ title: `Activate ${childName || 'your child'}'s StudyPulse`, url: link });
+                          } else {
+                            await navigator.clipboard.writeText(link);
+                          }
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
+                      >
+                        🔗 Copy link to send to {childName || 'child'}
+                      </button>
+                    </div>
+                  </div>
                 )}
-                <p className="mt-1.5 text-xs text-amber-700 font-semibold">⚠️ Your child must tap the button above once to allow messages.</p>
               </div>
             </div>
             <button onClick={handleSaveChild} disabled={saving} className="mt-6 flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800 disabled:opacity-50">
@@ -1351,23 +1394,48 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
             </p>
             <div className="mt-5 space-y-3 text-left">
               <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">One last step — activate WhatsApp:</p>
-              <a
-                href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName)}+and+I'm+ready+for+my+daily+check-ins!`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
-              >
-                <span className="text-base">📲</span> {childName} — tap to activate check-ins
-              </a>
-              <a
-                href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+the+parent+and+I'm+ready+for+weekly+updates!`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-bold text-blue-700 hover:bg-blue-100"
-              >
-                <span className="text-base">📲</span> You (parent) — tap to activate updates
-              </a>
-              <p className="text-xs text-slate-400">Both need to tap once. After that, everything is automatic.</p>
+              {/* Child activation — parent must SEND this link to child's phone */}
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                <p className="text-xs font-bold text-emerald-800 mb-2">1️⃣ {childName}&apos;s check-ins</p>
+                <p className="text-xs text-emerald-700 mb-2">{childName} must tap this link on <strong>their own phone</strong>. Send it to them via WhatsApp or SMS.</p>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName)}+and+I'm+ready+for+my+daily+check-ins!`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
+                  >
+                    📲 Open on this device
+                  </a>
+                  <button
+                    onClick={async () => {
+                      const link = `https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName)}+and+I'm+ready+for+my+daily+check-ins!`;
+                      if (navigator.share) {
+                        await navigator.share({ title: `Activate ${childName}'s StudyPulse`, url: link });
+                      } else {
+                        await navigator.clipboard.writeText(link);
+                      }
+                    }}
+                    className="flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
+                  >
+                    🔗 Copy link to send to {childName}
+                  </button>
+                </div>
+              </div>
+              {/* Parent activation — parent taps on their own device */}
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
+                <p className="text-xs font-bold text-blue-800 mb-2">2️⃣ Your parent updates</p>
+                <p className="text-xs text-blue-700 mb-2">Tap this yourself — it will open WhatsApp on your phone.</p>
+                <a
+                  href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+the+parent+and+I'm+ready+for+weekly+updates!`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100"
+                >
+                  📲 Tap to activate your updates
+                </a>
+              </div>
+              <p className="text-xs text-slate-400">Both need to send once. After that, everything is automatic.</p>
             </div>
             <button onClick={onComplete} className="mt-5 inline-flex items-center rounded-xl bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-800">
               Go to Dashboard <ArrowRight size={16} className="ml-1.5" />
