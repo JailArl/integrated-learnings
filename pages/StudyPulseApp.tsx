@@ -62,6 +62,7 @@ import {
   isPremium,
   updateStudyDays,
   updateCCADays,
+  upsertExcuse,
   addExamTarget,
   getRecommendedStartDate,
   getActiveExamLimit,
@@ -140,6 +141,11 @@ const StudyPulseApp: React.FC = () => {
   const [copiedChildId, setCopiedChildId] = useState<string | null>(null);
   const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
   const [upgraded, setUpgraded] = useState(false);
+
+  // Excuse modal
+  const [excuseDay, setExcuseDay] = useState<{ dateStr: string; label: string } | null>(null);
+  const [excuseReason, setExcuseReason] = useState('');
+  const [savingExcuse, setSavingExcuse] = useState(false);
 
   const premium = isPremium(membership);
   const child = children[activeChild];
@@ -461,15 +467,66 @@ const StudyPulseApp: React.FC = () => {
               <h2 className="text-lg font-black text-slate-900">This Week</h2>
               <p className="mt-1 text-xs text-slate-500">Week of {weekStart()}</p>
 
+              {/* Excuse modal */}
+              {excuseDay && (
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4" onClick={() => { setExcuseDay(null); setExcuseReason(''); }}>
+                  <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-xl" onClick={e => e.stopPropagation()}>
+                    <h3 className="text-sm font-black text-slate-900">Mark {excuseDay.label} as excused</h3>
+                    <p className="mt-1 text-xs text-slate-500">This day won't count as missed and will show ⭐ on the grid.</p>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {['Sick / unwell', 'School event', 'Family event', 'Overseas / holiday', 'Exam / test day', 'Other'].map(r => (
+                        <button
+                          key={r}
+                          onClick={() => setExcuseReason(r)}
+                          className={`rounded-xl border px-3 py-2 text-xs font-bold text-left transition ${
+                            excuseReason === r
+                              ? 'border-slate-900 bg-slate-900 text-white'
+                              : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >{r}</button>
+                      ))}
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        disabled={!excuseReason || savingExcuse}
+                        onClick={async () => {
+                          if (!child || !excuseReason) return;
+                          setSavingExcuse(true);
+                          const ok = await upsertExcuse(child.id, excuseDay.dateStr, excuseReason);
+                          if (ok) {
+                            setCheckins(prev => {
+                              const filtered = prev.filter(c => c.checkin_date !== excuseDay.dateStr);
+                              return [...filtered, { id: excuseDay.dateStr, child_id: child.id, checkin_date: excuseDay.dateStr, status: 'excused' as any, note: excuseReason }];
+                            });
+                          }
+                          setSavingExcuse(false);
+                          setExcuseDay(null);
+                          setExcuseReason('');
+                        }}
+                        className="flex-1 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white disabled:opacity-40"
+                      >
+                        {savingExcuse ? 'Saving…' : 'Mark as excused'}
+                      </button>
+                      <button onClick={() => { setExcuseDay(null); setExcuseReason(''); }} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-500">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 7-day grid */}
               <div className="mt-4 grid grid-cols-7 gap-2">
                 {buildWeekGrid().map((d) => {
+                  const isExcusable = (d.status === 'no' || d.status === 'incomplete' || d.status === 'missed' || d.status === 'forgot') && d.isPast;
                   const bg = d.status === 'done' || d.status === 'did_extra' || d.status === 'yes'
                     ? 'bg-emerald-100 border-emerald-300 text-emerald-700'
                     : d.status === 'partially' || d.status === 'postpone'
                     ? 'bg-amber-100 border-amber-300 text-amber-700'
                     : d.status === 'no' || d.status === 'incomplete' || d.status === 'missed' || d.status === 'forgot'
                     ? 'bg-red-50 border-red-200 text-red-400'
+                    : d.status === 'excused'
+                    ? 'bg-slate-100 border-slate-300 text-slate-500'
                     : d.status === 'cca'
                     ? 'bg-slate-100 border-slate-200 text-slate-400'
                     : d.isToday
@@ -479,13 +536,19 @@ const StudyPulseApp: React.FC = () => {
                     ? '✅' : d.status === 'partially' || d.status === 'postpone'
                     ? '~' : d.status === 'no' || d.status === 'incomplete'
                     ? '✗' : d.status === 'forgot'
-                    ? '😴' : d.status === 'cca'
+                    ? '😴' : d.status === 'excused'
+                    ? '⭐' : d.status === 'cca'
                     ? '🏃' : d.status === 'missed'
                     ? '—' : d.isToday ? '•' : '';
                   return (
-                    <div key={d.label} className={`rounded-xl border p-2.5 text-center ${bg}`}>
+                    <div
+                      key={d.label}
+                      onClick={() => isExcusable ? setExcuseDay({ dateStr: d.dateStr, label: d.label }) : undefined}
+                      className={`rounded-xl border p-2.5 text-center ${bg} ${isExcusable ? 'cursor-pointer hover:ring-2 hover:ring-slate-400' : ''}`}
+                    >
                       <p className="text-[10px] font-bold uppercase">{d.label}</p>
                       <p className="mt-1 text-lg">{icon}</p>
+                      {isExcusable && <p className="text-[9px] text-slate-400 mt-0.5">tap</p>}
                     </div>
                   );
                 })}

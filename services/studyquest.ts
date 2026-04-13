@@ -5,7 +5,7 @@ import { supabase } from './supabase';
 // ═══════════════════════════════════════════
 export type PlanType = 'free' | 'premium';
 export type MembershipStatus = 'free' | 'premium_active' | 'premium_past_due' | 'premium_cancelled';
-export type CheckinStatus = 'pending' | 'yes' | 'partially' | 'no';
+export type CheckinStatus = 'pending' | 'yes' | 'partially' | 'no' | 'forgot' | 'excused';
 export type DailyTaskStatus = 'pending' | 'done' | 'postpone' | 'incomplete' | 'did_extra';
 export type PlanApproval = 'pending' | 'approved' | 'revision_requested';
 export type ExamType = 'normal' | 'major';
@@ -301,6 +301,17 @@ export async function getCheckins(childId: string, from?: string, to?: string): 
 export async function upsertCheckin(checkin: { child_id: string; subject_id?: string; checkin_date: string; status: CheckinStatus; note?: string }): Promise<void> {
   if (!supabase) return;
   await supabase.from('sq_checkins').insert(checkin);
+}
+
+export async function upsertExcuse(childId: string, date: string, reason: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('sq_checkins')
+    .upsert(
+      { child_id: childId, checkin_date: date, status: 'excused', note: reason },
+      { onConflict: 'child_id,checkin_date' }
+    );
+  return !error;
 }
 
 // ═══════════════════════════════════════════
