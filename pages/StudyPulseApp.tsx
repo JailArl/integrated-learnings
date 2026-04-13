@@ -130,6 +130,7 @@ const StudyPulseApp: React.FC = () => {
   const [editingChildId, setEditingChildId] = useState<string | null>(null);
   const [editChildWhatsapp, setEditChildWhatsapp] = useState('');
   const [savingChildWhatsapp, setSavingChildWhatsapp] = useState(false);
+  const [deletingChildId, setDeletingChildId] = useState<string | null>(null);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editProfileName, setEditProfileName] = useState('');
   const [editProfilePhone, setEditProfilePhone] = useState('');
@@ -832,6 +833,35 @@ const StudyPulseApp: React.FC = () => {
                         <strong>Free plan:</strong> Limited to Tue, Thu, Sat. Upgrade to choose your own days.
                       </p>
                     </div>
+                  )}
+
+                  {/* Delete child */}
+                  {deletingChildId === c.id ? (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3">
+                      <p className="text-xs font-semibold text-red-700">Delete {c.name}? This removes all their check-in history.</p>
+                      <div className="mt-2 flex gap-2">
+                        <button
+                          onClick={async () => {
+                            if (!supabase) return;
+                            await supabase.from('sq_children').delete().eq('id', c.id);
+                            setChildren(prev => prev.filter(ch => ch.id !== c.id));
+                            setActiveChild(0);
+                            setDeletingChildId(null);
+                          }}
+                          className="rounded-lg bg-red-600 px-4 py-1.5 text-xs font-bold text-white"
+                        >
+                          Yes, delete
+                        </button>
+                        <button onClick={() => setDeletingChildId(null)} className="rounded-lg border border-slate-200 px-4 py-1.5 text-xs font-bold text-slate-500">Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setDeletingChildId(c.id)}
+                      className="mt-4 text-xs font-semibold text-red-400 hover:text-red-600"
+                    >
+                      Delete {c.name}
+                    </button>
                   )}
                 </div>
               );
