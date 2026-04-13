@@ -237,7 +237,8 @@ serve(async (req) => {
     const weekStart = getWeekStart();
 
     // ══════════════════════════════════════
-    // ANTI-SPAM: Daily message cap (5 inbound per phone per day)
+    // ANTI-SPAM: Daily message cap (8 inbound per phone per day)
+    // Saves cost — system goes silent after limit, no reply sent.
     // ══════════════════════════════════════
     const todayStart = `${today}T00:00:00.000Z`;
     const { count: msgCount } = await sb
@@ -515,8 +516,8 @@ serve(async (req) => {
 
       await sendRaw(phone,
         isPremium
-          ? `Hi ${child.name}! 👋 This is your StudyPulse check-in bot.\n\nWait for your daily check-in prompt, then reply with:\n✅ *done* — completed\n📝 *partially* — did some\n❌ *no* — skipped\n⚡ *did extra* — went beyond target\n\nOr type *target* to set your weekly study goal.`
-          : `Hi ${child.name}! 👋 This is your StudyPulse check-in bot.\n\nWait for your daily check-in prompt tonight, then reply:\n✅ *yes* — studied today\n❌ *no* — skipped\n\nSee you tonight!`
+          ? `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nYou're all set. Your daily check-in prompt will arrive at your scheduled time each study day.\n\nWhen it arrives, reply with:\n✅ *done* — completed today's tasks\n📝 *partially* — did some\n❌ *no* — skipped today\n⚡ *did extra* — went beyond the plan\n\nOr type *target* anytime to set your weekly study goal. Let's go! 💪`
+          : `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nYou're all set. Your daily check-in prompt will arrive at your scheduled time each study day.\n\nWhen it arrives, just reply:\n✅ *yes* — studied today\n❌ *no* — skipped\n\nSee you then! 📚`
       );
       return ok();
     }

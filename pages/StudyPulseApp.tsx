@@ -719,6 +719,15 @@ const StudyPulseApp: React.FC = () => {
         {/* ── SETTINGS ── */}
         {tab === 'settings' && (
           <div className="space-y-5">
+
+            {/* WhatsApp activation reminder */}
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-xs font-bold text-amber-800 mb-1">📲 WhatsApp — One-Time Setup Required</p>
+              <p className="text-xs text-amber-700">
+                WhatsApp won&apos;t let businesses message you first. Both <strong>you</strong> and your <strong>child</strong> need to send one message to <strong>+65 8959 8553</strong> to activate check-ins and parent updates. Use the activation buttons in each card below.
+              </p>
+            </div>
+
             {/* Study Days per child */}
             {displayChildren.map((c, ci) => {
               const DAY_LABELS = [
@@ -1052,6 +1061,16 @@ const StudyPulseApp: React.FC = () => {
                 <div className="mt-3 space-y-1">
                   <p className="text-sm text-slate-700 font-semibold">{membership?.parent_name || '—'}</p>
                   <p className="text-xs text-slate-500">WhatsApp: {membership?.parent_phone || 'Not set'}</p>
+                  {membership?.parent_phone && (
+                    <a
+                      href="https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+the+parent+and+I'm+ready+for+weekly+updates!"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                      📲 Activate parent updates
+                    </a>
+                  )}
                   <button
                     onClick={() => { setEditingProfile(true); setEditProfileName(membership?.parent_name || ''); setEditProfilePhone(membership?.parent_phone || ''); }}
                     className="mt-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
