@@ -180,6 +180,22 @@ export async function getChildren(parentId: string): Promise<SQChild[]> {
 
 export async function createChild(parentId: string, child: { name: string; level: string; whatsapp_number?: string }): Promise<SQChild | null> {
   if (!supabase) return null;
+
+  // Enforce plan child limit (counts ALL children ever created, including deleted ones via soft-check on active)
+  const membership = await getMembership(parentId);
+  const plan = (membership?.plan_type || 'free') as PlanType;
+  const limit = PLAN_LIMITS[plan].maxChildren;
+
+  const { count } = await supabase
+    .from('sq_children')
+    .select('id', { count: 'exact', head: true })
+    .eq('parent_id', parentId);
+
+  if ((count ?? 0) >= limit) {
+    console.warn(`createChild blocked: plan=${plan} limit=${limit} current=${count}`);
+    return null;
+  }
+
   const { data } = await supabase.from('sq_children').insert({ parent_id: parentId, ...child }).select().single();
   return data;
 }

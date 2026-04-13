@@ -1165,7 +1165,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     setError('');
     setSaving(true);
     const child = await createChild(userId, { name: childName, level: childLevel, whatsapp_number: normaliseSGPhone(childWhatsapp) });
-    if (!child) { setError('Failed to save child. Try again.'); setSaving(false); return; }
+    if (!child) { setError('Child limit reached for your plan. Upgrade to Premium to add more children.'); setSaving(false); return; }
     setCreatedChildId(child.id);
     // Create default study settings
     await upsertStudySettings(child.id, {
