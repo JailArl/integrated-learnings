@@ -157,11 +157,13 @@ const StudyPulseApp: React.FC = () => {
   const [upgraded, setUpgraded] = useState(false);
   const [savingParentLanguage, setSavingParentLanguage] = useState(false);
   const [parentLanguageMessage, setParentLanguageMessage] = useState('');
+  const [metadataExcuses, setMetadataExcuses] = useState<Record<string, Record<string, string>>>({});
 
   // Excuse modal
   const [excuseDay, setExcuseDay] = useState<{ dateStr: string; label: string } | null>(null);
   const [excuseReason, setExcuseReason] = useState('');
   const [savingExcuse, setSavingExcuse] = useState(false);
+  const [excuseSaveMessage, setExcuseSaveMessage] = useState('');
 
   const premium = isPremium(membership);
   const child = children[activeChild];
@@ -172,10 +174,15 @@ const StudyPulseApp: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/studypulse/login'); return; }
       setUserId(user.id);
+      const userMeta = (user.user_metadata || {}) as Record<string, any>;
+      setMetadataExcuses((userMeta.studypulse_excused_days || {}) as Record<string, Record<string, string>>);
       // Ensure membership exists (Google OAuth users may not have one yet)
       let m = await getMembership(user.id);
       if (!m) {
-        m = await createMembership(user.id, 'free', { email: user.email || '' });
+        m = await createMembership(user.id, 'free', { email: user.email || '', language: userMeta.preferred_language === 'zh' ? 'zh' : 'en' });
+      }
+      if (m && (userMeta.preferred_language === 'en' || userMeta.preferred_language === 'zh')) {
+        m = { ...m, preferred_language: userMeta.preferred_language };
       }
       setMembership(m);
       const kids = await getChildren(user.id);
@@ -275,6 +282,7 @@ const StudyPulseApp: React.FC = () => {
       // Check for check-in or daily task on this date
       const task = dailyTasks.find(t => t.task_date === dateStr);
       const checkin = checkins.find(c => c.checkin_date === dateStr);
+      const metadataExcuse = child ? metadataExcuses[child.id]?.[dateStr] : undefined;
       // Only mark as missed on days that are actually study days for this child
       const childStudyDays: number[] = child?.study_days && child.study_days.length > 0
         ? child.study_days
@@ -283,7 +291,7 @@ const StudyPulseApp: React.FC = () => {
       const dayOfWeek = d.getDay(); // 0=Sun
       const isStudyDay = childStudyDays.includes(dayOfWeek);
       const isCCADay = ccaDays.includes(dayOfWeek);
-      const status = checkin?.status === 'excused'
+      const status = metadataExcuse || checkin?.status === 'excused'
         ? 'excused'
         : task?.status || checkin?.status || (isCCADay ? 'cca' : (isPast && isStudyDay ? 'missed' : null));
       return { label, dateStr, isPast, isToday, status };
@@ -488,7 +496,7 @@ const StudyPulseApp: React.FC = () => {
 
               {/* Excuse modal */}
               {excuseDay && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4" onClick={() => { setExcuseDay(null); setExcuseReason(''); }}>
+                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 px-4" onClick={() => { setExcuseDay(null); setExcuseReason(''); setExcuseSaveMessage(''); }}>
                   <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 shadow-xl" onClick={e => e.stopPropagation()}>
                     <h3 className="text-sm font-black text-slate-900">Mark {excuseDay.label} as excused</h3>
                     <p className="mt-1 text-xs text-slate-500">This day won't count as missed and will show ⭐ on the grid.</p>
@@ -496,7 +504,7 @@ const StudyPulseApp: React.FC = () => {
                       {['Sick / unwell', 'School event', 'Family event', 'Overseas / holiday', 'Exam / test day', 'Other'].map(r => (
                         <button
                           key={r}
-                          onClick={() => setExcuseReason(r)}
+                          onClick={() => { setExcuseReason(r); setExcuseSaveMessage(''); }}
                           className={`rounded-xl border px-3 py-2 text-xs font-bold text-left transition ${
                             excuseReason === r
                               ? 'border-slate-900 bg-slate-900 text-white'
@@ -505,28 +513,41 @@ const StudyPulseApp: React.FC = () => {
                         >{r}</button>
                       ))}
                     </div>
+                    {excuseSaveMessage && <p className="mt-3 text-xs text-red-600">{excuseSaveMessage}</p>}
                     <div className="mt-3 flex gap-2">
                       <button
                         disabled={!excuseReason || savingExcuse}
                         onClick={async () => {
                           if (!child || !excuseReason) return;
+                          setExcuseSaveMessage('');
                           setSavingExcuse(true);
                           const ok = await upsertExcuse(child.id, excuseDay.dateStr, excuseReason);
                           if (ok) {
+                            setMetadataExcuses(prev => ({
+                              ...prev,
+                              [child.id]: {
+                                ...(prev[child.id] || {}),
+                                [excuseDay.dateStr]: excuseReason,
+                              },
+                            }));
                             setCheckins(prev => {
                               const filtered = prev.filter(c => c.checkin_date !== excuseDay.dateStr);
                               return [...filtered, { id: excuseDay.dateStr, child_id: child.id, checkin_date: excuseDay.dateStr, status: 'excused' as any, note: excuseReason }];
                             });
+                            setSavingExcuse(false);
+                            setExcuseDay(null);
+                            setExcuseReason('');
+                            setExcuseSaveMessage('');
+                            return;
                           }
                           setSavingExcuse(false);
-                          setExcuseDay(null);
-                          setExcuseReason('');
+                          setExcuseSaveMessage('Could not save the excuse yet. Please try again.');
                         }}
                         className="flex-1 rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white disabled:opacity-40"
                       >
                         {savingExcuse ? 'Saving…' : 'Mark as excused'}
                       </button>
-                      <button onClick={() => { setExcuseDay(null); setExcuseReason(''); }} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-500">
+                      <button onClick={() => { setExcuseDay(null); setExcuseReason(''); setExcuseSaveMessage(''); }} className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-500">
                         Cancel
                       </button>
                     </div>

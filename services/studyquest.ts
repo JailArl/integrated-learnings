@@ -161,9 +161,24 @@ export function isPremium(m: Membership | null): boolean {
   return !!m && (m.status === 'premium_active');
 }
 
+async function updateCurrentUserMetadata(patch: Record<string, unknown>): Promise<boolean> {
+  if (!supabase) return false;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const currentMeta = (user.user_metadata || {}) as Record<string, unknown>;
+  const { error } = await supabase.auth.updateUser({ data: { ...currentMeta, ...patch } });
+  if (error) {
+    console.error('updateCurrentUserMetadata failed:', error);
+    return false;
+  }
+  return true;
+}
+
 export async function updateLanguagePreference(userId: string, language: 'en' | 'zh'): Promise<boolean> {
   if (!supabase) return false;
 
+  let dbOk = false;
   const { data, error } = await supabase
     .from('sq_memberships')
     .update({
@@ -175,13 +190,15 @@ export async function updateLanguagePreference(userId: string, language: 'en' | 
 
   if (error) {
     console.error('updateLanguagePreference failed:', error);
-    return false;
+  } else if ((data || []).length > 0) {
+    dbOk = true;
+  } else {
+    const created = await createMembership(userId, 'free', { language });
+    dbOk = !!created;
   }
 
-  if ((data || []).length > 0) return true;
-
-  const created = await createMembership(userId, 'free', { language });
-  return !!created;
+  const metadataOk = await updateCurrentUserMetadata({ preferred_language: language });
+  return dbOk || metadataOk;
 }
 
 // ═══════════════════════════════════════════
@@ -335,14 +352,33 @@ export async function upsertCheckin(checkin: { child_id: string; subject_id?: st
 
 export async function upsertExcuse(childId: string, date: string, reason: string): Promise<boolean> {
   if (!supabase) return false;
+
+  let dbOk = false;
   const { error } = await supabase
     .from('sq_checkins')
     .upsert(
       { child_id: childId, checkin_date: date, status: 'excused', note: reason },
       { onConflict: 'child_id,checkin_date' }
     );
-  if (error) console.error('upsertExcuse failed:', error);
-  return !error;
+  if (error) {
+    console.error('upsertExcuse failed:', error);
+  } else {
+    dbOk = true;
+  }
+
+  const { data: { user } } = await supabase.auth.getUser();
+  const existingExcuses = ((user?.user_metadata as Record<string, any> | undefined)?.studypulse_excused_days || {}) as Record<string, Record<string, string>>;
+  const metadataOk = await updateCurrentUserMetadata({
+    studypulse_excused_days: {
+      ...existingExcuses,
+      [childId]: {
+        ...(existingExcuses[childId] || {}),
+        [date]: reason,
+      },
+    },
+  });
+
+  return dbOk || metadataOk;
 }
 
 // ═══════════════════════════════════════════
