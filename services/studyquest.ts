@@ -163,13 +163,25 @@ export function isPremium(m: Membership | null): boolean {
 
 export async function updateLanguagePreference(userId: string, language: 'en' | 'zh'): Promise<boolean> {
   if (!supabase) return false;
-  const { error } = await supabase.from('sq_memberships').upsert({
-    user_id: userId,
-    preferred_language: language,
-    updated_at: new Date().toISOString(),
-  }, { onConflict: 'user_id' });
-  if (error) console.error('updateLanguagePreference failed:', error);
-  return !error;
+
+  const { data, error } = await supabase
+    .from('sq_memberships')
+    .update({
+      preferred_language: language,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('user_id', userId)
+    .select('id');
+
+  if (error) {
+    console.error('updateLanguagePreference failed:', error);
+    return false;
+  }
+
+  if ((data || []).length > 0) return true;
+
+  const created = await createMembership(userId, 'free', { language });
+  return !!created;
 }
 
 // ═══════════════════════════════════════════
