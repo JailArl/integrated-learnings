@@ -67,6 +67,8 @@ import {
   updateCCADays,
   upsertExcuse,
   addExamTarget,
+  updateExamTargetDate,
+  updateExamTargetCycleStatus,
   getRecommendedStartDate,
   getActiveExamLimit,
   upsertWeeklyTarget,
@@ -155,6 +157,9 @@ const StudyPulseApp: React.FC = () => {
   const [newExamDate, setNewExamDate] = useState('');
   const [newExamSubject, setNewExamSubject] = useState('');
   const [newExamType, setNewExamType] = useState<'normal' | 'major'>('normal');
+  const [editingExamId, setEditingExamId] = useState<string | null>(null);
+  const [editingExamDate, setEditingExamDate] = useState('');
+  const [savingExamEdit, setSavingExamEdit] = useState(false);
 
   // Settings edit state
   const [editingChildId, setEditingChildId] = useState<string | null>(null);
@@ -1325,6 +1330,9 @@ const StudyPulseApp: React.FC = () => {
                 Set exam dates — the system will count down daily and adjust study intensity.
                 {!premium && ' Free plan: 1 active exam. Upgrade for up to 3.'}
               </p>
+              <p className="mt-1 text-xs text-slate-400">
+                You can correct a wrong exam date here. After an exam is over, mark it completed and add the next real exam instead of repeatedly changing the old one.
+              </p>
 
               {/* Current active exams */}
               {exams.filter(e => e.cycle_status === 'active').length > 0 && (
@@ -1333,12 +1341,77 @@ const StudyPulseApp: React.FC = () => {
                     const subj = subjects.find(s => s.id === e.subject_id);
                     const days = daysUntil(e.exam_date);
                     return (
-                      <div key={e.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-2.5">
-                        <div>
-                          <span className="text-sm font-semibold text-slate-700">{subj?.subject_name || 'Subject'}</span>
-                          <span className="ml-2 text-xs text-slate-400">{e.exam_date}</span>
+                      <div key={e.id} className="rounded-xl bg-slate-50 px-4 py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <span className="text-sm font-semibold text-slate-700">{subj?.subject_name || 'Subject'}</span>
+                            <span className="ml-2 text-xs text-slate-400">{e.exam_date}</span>
+                          </div>
+                          <span className={`text-sm font-black ${days <= 7 ? 'text-red-600' : days <= 14 ? 'text-amber-600' : 'text-emerald-600'}`}>{days}d</span>
                         </div>
-                        <span className={`text-sm font-black ${days <= 7 ? 'text-red-600' : days <= 14 ? 'text-amber-600' : 'text-emerald-600'}`}>{days}d</span>
+
+                        {editingExamId === e.id ? (
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <input
+                              type="date"
+                              min={today()}
+                              value={editingExamDate}
+                              onChange={(evt) => setEditingExamDate(evt.target.value)}
+                              className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                            />
+                            <button
+                              disabled={!editingExamDate || savingExamEdit}
+                              onClick={async () => {
+                                if (!editingExamDate) return;
+                                setSavingExamEdit(true);
+                                const ok = await updateExamTargetDate(e.id, editingExamDate);
+                                if (ok) {
+                                  const refreshed = await getExamTargets(child!.id);
+                                  setExams(refreshed);
+                                  setEditingExamId(null);
+                                  setEditingExamDate('');
+                                  setDashboardNotice({ type: 'success', text: 'Exam date updated.' });
+                                } else {
+                                  setDashboardNotice({ type: 'error', text: 'Could not update the exam date yet. Please try again.' });
+                                }
+                                setSavingExamEdit(false);
+                              }}
+                              className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                            >
+                              {savingExamEdit ? 'Saving...' : 'Save'}
+                            </button>
+                            <button
+                              onClick={() => { setEditingExamId(null); setEditingExamDate(''); }}
+                              className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-500"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="mt-3 flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => { setEditingExamId(e.id); setEditingExamDate(e.exam_date); }}
+                              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+                            >
+                              Edit date
+                            </button>
+                            <button
+                              onClick={async () => {
+                                const ok = await updateExamTargetCycleStatus(e.id, 'ended');
+                                if (ok) {
+                                  const refreshed = await getExamTargets(child!.id);
+                                  setExams(refreshed);
+                                  setDashboardNotice({ type: 'success', text: 'Exam marked as completed.' });
+                                } else {
+                                  setDashboardNotice({ type: 'error', text: 'Could not mark the exam completed yet.' });
+                                }
+                              }}
+                              className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                            >
+                              Mark completed
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

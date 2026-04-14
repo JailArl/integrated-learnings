@@ -269,78 +269,14 @@ serve(async (req) => {
     // STATE: SETTING TARGETS
     // ══════════════════════════════════════
     if (state === "setting_target") {
-      const currentSubject = context.current_subject as string;
-      const remainingSubjects = (context.remaining_subjects as string[]) || [];
-      const studyDays = (context.study_days as number) || 5;
+      await sb.from("sq_children").update({
+        conversation_state: "idle",
+        conversation_context: {},
+      }).eq("id", child.id);
 
-      const targetParsed = parseTargetReply(body);
-
-      if (!targetParsed) {
-        // Anti-spam: limit "didn't understand" in target-setting too
-        const { count: outboundToday } = await sb
-          .from("whatsapp_conversations")
-          .select("id", { count: "exact", head: true })
-          .eq("contact_phone", phone)
-          .eq("direction", "outbound")
-          .gte("created_at", todayStart);
-
-        if ((outboundToday ?? 0) >= 6) return ok(); // silent after too many
-
-        await sendRaw(phone,
-          `Hmm, I didn't get that. Reply with a number and unit like:\n` +
-          `• *20 questions*\n• *3 chapters*\n• *10 pages*\n• *5 worksheets*`
-        );
-        return ok();
-      }
-
-      const daily = Math.max(1, Math.ceil(targetParsed.quantity / studyDays));
-
-      // Save weekly target
-      await sb.from("sq_weekly_targets").upsert({
-        child_id: child.id,
-        subject_name: currentSubject,
-        week_start: weekStart,
-        target_text: body.trim(),
-        target_quantity: targetParsed.quantity,
-        target_unit: targetParsed.unit,
-        daily_quantity: daily,
-        remaining_quantity: targetParsed.quantity,
-      }, { onConflict: "child_id,subject_name,week_start" });
-
-      if (remainingSubjects.length > 0) {
-        const nextSubject = remainingSubjects[0];
-        const rest = remainingSubjects.slice(1);
-
-        await sb.from("sq_children").update({
-          conversation_state: "setting_target",
-          conversation_context: { current_subject: nextSubject, remaining_subjects: rest, study_days: studyDays },
-        }).eq("id", child.id);
-
-        await sendRaw(phone,
-          `Got it! ${currentSubject}: ${targetParsed.quantity} ${targetParsed.unit}s → *${daily}/day* 📊\n\n` +
-          `Now, what's your *${nextSubject}* target this week?\n` +
-          `(e.g. "3 chapters", "10 pages", "5 worksheets")`
-        );
-      } else {
-        // All subjects done
-        await sb.from("sq_children").update({
-          conversation_state: "idle",
-          conversation_context: {},
-        }).eq("id", child.id);
-
-        await sendRaw(phone,
-          `Got it! ${currentSubject}: ${targetParsed.quantity} ${targetParsed.unit}s → *${daily}/day* 📊\n\n` +
-          `All targets set! ✅ You'll get your daily check-in at the usual time. Let's go! 💪`
-        );
-
-        if (membership?.parent_phone && membership.parent_phone !== phone) {
-          const tMsg = parentLang === "zh"
-            ? ZH.targets_set(child.name)
-            : `${child.name} has set their weekly targets! 📊 Check-ins start from the next scheduled time.`;
-          await sendRaw(membership.parent_phone, tMsg);
-        }
-      }
-
+      await sendRaw(phone,
+        `Your parent now manages the weekly study target in the StudyPulse dashboard. You'll still receive your daily target automatically on study days. 📚`
+      );
       return ok();
     }
 
@@ -427,47 +363,30 @@ serve(async (req) => {
     // STATE: IDLE (normal check-in)
     // ══════════════════════════════════════
 
-    // ── "SET TARGET" — start target-setting flow ──
+    // ── "TARGET" — remind the child that the parent controls the weekly target ──
     const preCheck = parseCheckinStatus(body);
     if (preCheck?.status === "set_target" && isPremium) {
-      // Get child's monitored subjects
-      const { data: subjects } = await sb
-        .from("sq_monitored_subjects")
-        .select("subject_name")
-        .eq("child_id", child.id);
+      const { data: targets } = await sb.from("sq_weekly_targets")
+        .select("subject_name, daily_quantity, target_unit")
+        .eq("child_id", child.id)
+        .eq("week_start", weekStart);
 
-      const subjectList = subjects && subjects.length > 0
-        ? subjects.map(s => s.subject_name)
-        : ["Math", "English", "Science"]; // default
-
-      const firstSubject = subjectList[0];
-      const rest = subjectList.slice(1);
-
-      // Use parent-set study days, default 5 (Mon-Fri)
-      const studyDaysCount = child.study_days && child.study_days.length > 0
-        ? child.study_days.length
-        : 5;
-
-      await sb.from("sq_children").update({
-        conversation_state: "setting_target",
-        conversation_context: {
-          current_subject: firstSubject,
-          remaining_subjects: rest,
-          study_days: studyDaysCount,
-        },
-      }).eq("id", child.id);
-
-      await sendRaw(phone,
-        `Let's set your weekly targets! 🎯\n\n` +
-        `How much *${firstSubject}* do you want to do this week?\n` +
-        `Reply like: *20 questions*, *3 chapters*, *10 pages*`
-      );
+      if (targets && targets.length > 0) {
+        const summary = targets.map(t => `• ${t.subject_name}: ${t.daily_quantity} ${t.target_unit}s today`).join("\n");
+        await sendRaw(phone,
+          `Here is your current daily target from your parent:\n${summary}\n\nIf it needs changing, please ask your parent to update it in the StudyPulse dashboard.`
+        );
+      } else {
+        await sendRaw(phone,
+          `Your parent has not set this week's target yet. Please ask them to update it in the StudyPulse dashboard. 📚`
+        );
+      }
       return ok();
     }
 
     if (preCheck?.status === "set_target" && !isPremium) {
       await sendRaw(phone,
-        `Target-setting is a Premium feature! Ask your parents to upgrade at studypulse.co 😊`
+        `Your parent can manage targets from the StudyPulse dashboard. For now, just reply *yes* or *no* on check-in days 😊`
       );
       return ok();
     }
@@ -516,7 +435,7 @@ serve(async (req) => {
 
       await sendRaw(phone,
         isPremium
-          ? `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nYou're all set. Your daily check-in prompt will arrive at your scheduled time each study day.\n\nWhen it arrives, reply with:\n✅ *done* — completed today's tasks\n📝 *partially* — did some\n❌ *no* — skipped today\n⚡ *did extra* — went beyond the plan\n\nOr type *target* anytime to set your weekly study goal. Let's go! 💪`
+          ? `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nYou're all set. Your parent will set your weekly study target in the dashboard, and you'll receive your daily target automatically on each study day.\n\nWhen the prompt arrives, reply with:\n✅ *done* — completed today's tasks\n📝 *partially* — did some\n❌ *no* — skipped today\n⚡ *did extra* — went beyond the plan\n\nLet's go! 💪`
           : `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nYou're all set. Your daily check-in prompt will arrive at your scheduled time each study day.\n\nWhen it arrives, just reply:\n✅ *yes* — studied today\n❌ *no* — skipped\n\nSee you then! 📚`
       );
       return ok();

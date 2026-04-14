@@ -369,6 +369,32 @@ export async function addExamTarget(target: { subject_id: string; child_id: stri
   return data;
 }
 
+export async function updateExamTargetDate(examId: string, examDate: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('sq_exam_targets')
+    .update({ exam_date: examDate })
+    .eq('id', examId);
+  if (error) {
+    console.error('updateExamTargetDate failed:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function updateExamTargetCycleStatus(examId: string, status: CycleStatus): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('sq_exam_targets')
+    .update({ cycle_status: status })
+    .eq('id', examId);
+  if (error) {
+    console.error('updateExamTargetCycleStatus failed:', error);
+    return false;
+  }
+  return true;
+}
+
 function formatLocalDate(date: Date): string {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
