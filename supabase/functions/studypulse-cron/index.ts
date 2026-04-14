@@ -782,21 +782,17 @@ async function sendWeeklyTargetPrompts(
 ) {
   const weekStart = getWeekStart(today);
 
-  // Get all premium children with WhatsApp
+  // Get all children; parent can set the target even before the child activates WhatsApp
   const { data: children } = await sb
     .from("sq_children")
-    .select("id, name, whatsapp_number, parent_id")
-    .not("whatsapp_number", "is", null);
-
+    .select("id, name, whatsapp_number, parent_id");
   if (!children) return;
 
   for (const child of children) {
-    if (!child.whatsapp_number) continue;
-
     // Check if premium
     const { data: membership } = await sb
       .from("sq_memberships")
-      .select("plan_type")
+      .select("plan_type, parent_phone, preferred_language")
       .eq("user_id", child.parent_id)
       .single();
 
@@ -812,13 +808,12 @@ async function sendWeeklyTargetPrompts(
 
     if (existing && existing.length > 0) continue; // Already set
 
-    await sendWhatsApp(
-      child.whatsapp_number,
-      undefined,
-      undefined,
-      `Hey ${child.name}! 🎯 New week — time to set your study targets!\n\n` +
-      `Reply *set target* to get started.`,
-    );
+    if (membership?.parent_phone) {
+      const msg = membership.preferred_language === 'zh'
+        ? `📋 ${child.name} 这周还没有设置学习目标。请打开 StudyPulse 家长面板，设置每周目标，系统会自动拆分成每天的任务。`
+        : `📋 ${child.name} does not have a weekly target yet. Please open the StudyPulse parent dashboard and set this week's target so the system can send the daily goal automatically.`;
+      await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
+    }
   }
 }
 

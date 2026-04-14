@@ -95,7 +95,19 @@ export interface WeeklySummary {
   checkins_completed: number;
   checkins_total: number;
   completion_state?: string;
-  days_to_exam?: number;
+  days_to_exam?: string | number;
+}
+
+export interface WeeklyTarget {
+  id: string;
+  child_id: string;
+  subject_name: string;
+  week_start: string;
+  target_text: string;
+  target_quantity: number;
+  target_unit: string;
+  daily_quantity: number;
+  remaining_quantity: number;
 }
 
 export interface ExamResult {
@@ -413,6 +425,65 @@ export async function updatePlanStatus(planId: string, status: PlanApproval, rea
   await supabase.from('sq_weekly_plans').update(update).eq('id', planId);
 }
 
+export async function getWeeklyTargets(childId: string, forWeek?: string): Promise<WeeklyTarget[]> {
+  if (!supabase) return [];
+  let q = supabase.from('sq_weekly_targets').select('*').eq('child_id', childId).order('subject_name');
+  if (forWeek) q = q.eq('week_start', forWeek);
+  const { data, error } = await q;
+  if (error) {
+    console.error('getWeeklyTargets failed:', error);
+    return [];
+  }
+  return (data || []) as WeeklyTarget[];
+}
+
+export async function upsertWeeklyTarget(target: {
+  child_id: string;
+  subject_name: string;
+  week_start: string;
+  target_quantity: number;
+  target_unit: string;
+  study_days_count: number;
+}): Promise<boolean> {
+  if (!supabase) return false;
+  const quantity = Math.max(0, Math.floor(target.target_quantity));
+  const days = Math.max(1, Math.floor(target.study_days_count || 1));
+  const daily = Math.max(1, Math.ceil(quantity / days));
+
+  const { error } = await supabase.from('sq_weekly_targets').upsert({
+    child_id: target.child_id,
+    subject_name: target.subject_name,
+    week_start: target.week_start,
+    target_text: `${quantity} ${target.target_unit}`,
+    target_quantity: quantity,
+    target_unit: target.target_unit,
+    daily_quantity: daily,
+    remaining_quantity: quantity,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'child_id,subject_name,week_start' });
+
+  if (error) {
+    console.error('upsertWeeklyTarget failed:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function deleteWeeklyTarget(childId: string, subjectName: string, week: string): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase
+    .from('sq_weekly_targets')
+    .delete()
+    .eq('child_id', childId)
+    .eq('subject_name', subjectName)
+    .eq('week_start', week);
+  if (error) {
+    console.error('deleteWeeklyTarget failed:', error);
+    return false;
+  }
+  return true;
+}
+
 // ═══════════════════════════════════════════
 // CHECKINS
 // ═══════════════════════════════════════════
@@ -467,9 +538,16 @@ export async function upsertExcuse(childId: string, date: string, reason: string
 // ═══════════════════════════════════════════
 // DAILY TASKS (premium)
 // ═══════════════════════════════════════════
-export async function getDailyTasks(childId: string, date: string): Promise<DailyTask[]> {
+export async function getDailyTasks(childId: string, from?: string, to?: string): Promise<DailyTask[]> {
   if (!supabase) return [];
-  const { data } = await supabase.from('sq_daily_tasks').select('*').eq('child_id', childId).eq('task_date', date);
+  let q = supabase.from('sq_daily_tasks').select('*').eq('child_id', childId).order('task_date', { ascending: false });
+  if (from) q = q.gte('task_date', from);
+  if (to) q = q.lte('task_date', to);
+  const { data, error } = await q;
+  if (error) {
+    console.error('getDailyTasks failed:', error);
+    return [];
+  }
   return data || [];
 }
 

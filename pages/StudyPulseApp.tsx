@@ -38,6 +38,7 @@ import {
   type MonitoredSubject,
   type ExamTarget,
   type WeeklyPlan,
+  type WeeklyTarget,
   type Checkin,
   type DailyTask,
   type WeeklySummary,
@@ -52,6 +53,7 @@ import {
   getSubjects,
   getExamTargets,
   getWeeklyPlans,
+  getWeeklyTargets,
   getCheckins,
   getDailyTasks,
   getWeeklySummaries,
@@ -67,6 +69,8 @@ import {
   addExamTarget,
   getRecommendedStartDate,
   getActiveExamLimit,
+  upsertWeeklyTarget,
+  deleteWeeklyTarget,
   createChild,
   addSubject,
   upsertStudySettings,
@@ -117,6 +121,12 @@ function weekStart(): string {
 const today = () => formatLocalDate(new Date());
 const dayName = (d: Date) => ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
 const isFreeCheckinDay = () => FREE_CHECKIN_DAYS.includes(dayName(new Date()) as any);
+const DEFAULT_PREMIUM_DAYS = [1, 2, 3, 4, 5];
+const DEFAULT_FREE_DAYS = [2, 4, 6];
+const getEffectiveStudyDays = (child: SQChild | undefined, premiumPlan: boolean): number[] => {
+  if (!premiumPlan) return DEFAULT_FREE_DAYS;
+  return child?.study_days && child.study_days.length > 0 ? child.study_days : DEFAULT_PREMIUM_DAYS;
+};
 
 /* ═══════════════════════════════════════════ */
 const StudyPulseApp: React.FC = () => {
@@ -132,6 +142,7 @@ const StudyPulseApp: React.FC = () => {
   const [subjects, setSubjects] = useState<MonitoredSubject[]>([]);
   const [exams, setExams] = useState<ExamTarget[]>([]);
   const [plans, setPlans] = useState<WeeklyPlan[]>([]);
+  const [weeklyTargets, setWeeklyTargets] = useState<WeeklyTarget[]>([]);
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [dailyTasks, setDailyTasks] = useState<DailyTask[]>([]);
   const [summaries, setSummaries] = useState<WeeklySummary[]>([]);
@@ -162,6 +173,10 @@ const StudyPulseApp: React.FC = () => {
   const [dashboardNotice, setDashboardNotice] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [savingParentLanguage, setSavingParentLanguage] = useState(false);
   const [parentLanguageMessage, setParentLanguageMessage] = useState('');
+  const [targetQuantities, setTargetQuantities] = useState<Record<string, string>>({});
+  const [targetUnits, setTargetUnits] = useState<Record<string, string>>({});
+  const [savingTargets, setSavingTargets] = useState(false);
+  const [targetSaveMessage, setTargetSaveMessage] = useState('');
   const [metadataExcuses, setMetadataExcuses] = useState<Record<string, Record<string, string>>>({});
 
   // Excuse modal
@@ -205,17 +220,30 @@ const StudyPulseApp: React.FC = () => {
   useEffect(() => {
     if (!child) return;
     (async () => {
-      const [s, e, p, c, d, sm, r] = await Promise.all([
+      const currentWeek = weekStart();
+      const [s, e, p, wt, c, d, sm, r] = await Promise.all([
         getSubjects(child.id),
         getExamTargets(child.id),
         getWeeklyPlans(child.id),
+        getWeeklyTargets(child.id, currentWeek),
         getCheckins(child.id),
-        getDailyTasks(child.id, today()),
+        getDailyTasks(child.id, currentWeek, today()),
         getWeeklySummaries(child.id),
         getExamResults(child.id),
       ]);
-      setSubjects(s); setExams(e); setPlans(p); setCheckins(c);
+      setSubjects(s); setExams(e); setPlans(p); setWeeklyTargets(wt); setCheckins(c);
       setDailyTasks(d); setSummaries(sm); setResults(r);
+
+      const nextQuantities: Record<string, string> = {};
+      const nextUnits: Record<string, string> = {};
+      s.forEach((subject) => {
+        const existingTarget = wt.find(t => t.subject_name === subject.subject_name);
+        nextQuantities[subject.id] = existingTarget ? String(existingTarget.target_quantity) : '';
+        nextUnits[subject.id] = existingTarget?.target_unit || 'questions';
+      });
+      setTargetQuantities(nextQuantities);
+      setTargetUnits(nextUnits);
+      setTargetSaveMessage('');
     })();
   }, [child]);
 
@@ -305,6 +333,47 @@ const StudyPulseApp: React.FC = () => {
     setDashboardNotice({ type: 'success', text: 'Your request has been sent successfully.' });
   };
 
+  const handleSaveWeeklyTargets = async () => {
+    if (!child) return;
+    const studyDaysCount = Math.max(1, getEffectiveStudyDays(child, premium).length);
+    const currentWeek = weekStart();
+    setSavingTargets(true);
+    setTargetSaveMessage('');
+
+    const ops = await Promise.all(displaySubjects.map(async (subject) => {
+      const raw = (targetQuantities[subject.id] || '').trim();
+      const unit = targetUnits[subject.id] || 'questions';
+
+      if (!raw || Number(raw) <= 0) {
+        return deleteWeeklyTarget(child.id, subject.subject_name, currentWeek);
+      }
+
+      const quantity = Number(raw);
+      if (!Number.isFinite(quantity)) return false;
+
+      return upsertWeeklyTarget({
+        child_id: child.id,
+        subject_name: subject.subject_name,
+        week_start: currentWeek,
+        target_quantity: quantity,
+        target_unit: unit,
+        study_days_count: studyDaysCount,
+      });
+    }));
+
+    if (ops.every(Boolean)) {
+      const refreshedTargets = await getWeeklyTargets(child.id, currentWeek);
+      setWeeklyTargets(refreshedTargets);
+      setTargetSaveMessage('Weekly targets saved. StudyPulse will use these for daily reminders.');
+      setDashboardNotice({ type: 'success', text: 'Weekly targets updated successfully.' });
+    } else {
+      setTargetSaveMessage('Could not save all weekly targets yet. Please try again.');
+      setDashboardNotice({ type: 'error', text: 'Some weekly targets could not be saved.' });
+    }
+
+    setSavingTargets(false);
+  };
+
   // Build weekly grid data
   const buildWeekGrid = () => {
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -323,9 +392,7 @@ const StudyPulseApp: React.FC = () => {
       const checkin = checkins.find(c => c.checkin_date === dateStr);
       const metadataExcuse = child ? metadataExcuses[child.id]?.[dateStr] : undefined;
       // Only mark as missed on days that are actually study days for this child
-      const childStudyDays: number[] = child?.study_days && child.study_days.length > 0
-        ? child.study_days
-        : premium ? [1,2,3,4,5] : [2,4,6]; // Mon-Fri premium, Tue/Thu/Sat free
+      const childStudyDays: number[] = getEffectiveStudyDays(child, premium);
       const ccaDays: number[] = child?.cca_days || [];
       const dayOfWeek = d.getDay(); // 0=Sun
       const isStudyDay = childStudyDays.includes(dayOfWeek);
@@ -958,11 +1025,13 @@ const StudyPulseApp: React.FC = () => {
                 { value: 5, label: 'Fri' },
                 { value: 6, label: 'Sat' },
               ];
-              const currentDays: number[] = c.study_days && c.study_days.length > 0
-                ? c.study_days
-                : [1, 2, 3, 4, 5]; // default Mon-Fri
+              const currentDays: number[] = getEffectiveStudyDays(c, premium);
 
               const toggleDay = async (dayNum: number) => {
+                if (!premium) {
+                  setDashboardNotice({ type: 'info', text: 'Free plan study days are fixed to Tue, Thu, and Sat.' });
+                  return;
+                }
                 const updated = currentDays.includes(dayNum)
                   ? currentDays.filter(d => d !== dayNum)
                   : [...currentDays, dayNum].sort();
@@ -972,6 +1041,21 @@ const StudyPulseApp: React.FC = () => {
                   setChildren(prev => prev.map((ch, i) =>
                     ch.id === c.id ? { ...ch, study_days: updated } : ch
                   ));
+                  if (child?.id === c.id && weeklyTargets.length > 0) {
+                    const recalc = await Promise.all(weeklyTargets.map((target) => upsertWeeklyTarget({
+                      child_id: c.id,
+                      subject_name: target.subject_name,
+                      week_start: target.week_start,
+                      target_quantity: target.target_quantity,
+                      target_unit: target.target_unit,
+                      study_days_count: updated.length,
+                    })));
+                    if (recalc.every(Boolean)) {
+                      const refreshedTargets = await getWeeklyTargets(c.id, weekStart());
+                      setWeeklyTargets(refreshedTargets);
+                      setTargetSaveMessage('Study days changed, and the daily target split was updated automatically.');
+                    }
+                  }
                 }
               };
 
@@ -1058,8 +1142,9 @@ const StudyPulseApp: React.FC = () => {
                         return (
                           <button
                             key={d.value}
+                            disabled={!premium}
                             onClick={() => toggleDay(d.value)}
-                            className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition ${
+                            className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-80 ${
                               isActive
                                 ? 'bg-slate-900 text-white shadow-sm'
                                 : 'border border-slate-200 bg-white text-slate-400 hover:bg-slate-50'
@@ -1154,6 +1239,84 @@ const StudyPulseApp: React.FC = () => {
                 </div>
               );
             })}
+
+            {/* Weekly Target Management */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700">Weekly Study Targets</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Parents set the weekly target here. StudyPulse will split it across the selected study days and send the child the daily target automatically after WhatsApp activation.
+              </p>
+
+              {child && !child.whatsapp_number && (
+                <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
+                  <p className="text-xs text-blue-700">
+                    Set the weekly target now. Once {child.name} activates WhatsApp, the system will start sending the daily target reminders.
+                  </p>
+                </div>
+              )}
+
+              {displaySubjects.length === 0 ? (
+                <p className="mt-3 text-sm text-slate-500">Add a subject first to create weekly targets.</p>
+              ) : (
+                <div className="mt-4 space-y-3">
+                  {displaySubjects.map((subject) => {
+                    const existing = weeklyTargets.find(t => t.subject_name === subject.subject_name);
+                    const studyDaysCount = Math.max(1, getEffectiveStudyDays(child, premium).length);
+                    const quantity = Number(targetQuantities[subject.id] || 0);
+                    const perDay = quantity > 0 ? Math.ceil(quantity / studyDaysCount) : 0;
+                    return (
+                      <div key={subject.id} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="text-sm font-bold text-slate-800">{subject.subject_name}</p>
+                          {existing && <span className="text-[11px] font-semibold text-emerald-700">{existing.remaining_quantity} left this week</span>}
+                        </div>
+                        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Weekly amount"
+                            value={targetQuantities[subject.id] || ''}
+                            onChange={(e) => setTargetQuantities(prev => ({ ...prev, [subject.id]: e.target.value }))}
+                            className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+                          />
+                          <select
+                            value={targetUnits[subject.id] || 'questions'}
+                            onChange={(e) => setTargetUnits(prev => ({ ...prev, [subject.id]: e.target.value }))}
+                            className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
+                          >
+                            {['questions', 'pages', 'chapters', 'worksheets', 'minutes', 'papers'].map((unit) => (
+                              <option key={unit} value={unit}>{unit}</option>
+                            ))}
+                          </select>
+                          <div className="rounded-xl border border-dashed border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-600">
+                            {perDay > 0 ? `${perDay} / study day` : 'Set amount to preview'}
+                          </div>
+                        </div>
+                        {existing && (
+                          <p className="mt-2 text-xs text-slate-500">
+                            Current plan: {existing.target_quantity} {existing.target_unit} per week · {existing.daily_quantity} per study day.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {targetSaveMessage && (
+                <p className={`mt-3 text-xs ${targetSaveMessage.startsWith('Could not') ? 'text-red-600' : 'text-emerald-600'}`}>
+                  {targetSaveMessage}
+                </p>
+              )}
+
+              <button
+                disabled={savingTargets || displaySubjects.length === 0}
+                onClick={handleSaveWeeklyTargets}
+                className="mt-4 rounded-lg bg-slate-900 px-5 py-2.5 text-xs font-bold text-white disabled:opacity-50"
+              >
+                {savingTargets ? 'Saving targets...' : 'Save Weekly Targets'}
+              </button>
+            </div>
 
             {/* Exam Management */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
