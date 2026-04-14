@@ -62,6 +62,7 @@ import {
   submitCTARequest,
   upgradeMembership,
   startPremiumCheckout,
+  openBillingPortal,
   isPremium,
   updateStudyDays,
   updateCCADays,
@@ -175,6 +176,7 @@ const StudyPulseApp: React.FC = () => {
   const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
   const [upgraded, setUpgraded] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const [openingBilling, setOpeningBilling] = useState(false);
   const [dashboardNotice, setDashboardNotice] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [savingParentLanguage, setSavingParentLanguage] = useState(false);
   const [parentLanguageMessage, setParentLanguageMessage] = useState('');
@@ -306,6 +308,21 @@ const StudyPulseApp: React.FC = () => {
 
     setDashboardNotice({ type: 'error', text: checkout.message || 'Could not start secure checkout yet.' });
     setUpgrading(false);
+  };
+
+  const handleManageBilling = async () => {
+    if (openingBilling) return;
+    setDashboardNotice(null);
+    setOpeningBilling(true);
+
+    const portal = await openBillingPortal();
+    if (portal.ok && portal.url) {
+      window.location.assign(portal.url);
+      return;
+    }
+
+    setDashboardNotice({ type: 'error', text: portal.message || 'Could not open billing settings yet.' });
+    setOpeningBilling(false);
   };
 
   const handleExamResult = async (targetId: string) => {
@@ -1540,18 +1557,34 @@ const StudyPulseApp: React.FC = () => {
             {/* Plan info */}
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-sm font-bold text-slate-700">Your Plan</h3>
-              <div className="mt-3 flex items-center justify-between">
+              <div className="mt-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-lg font-black text-slate-900">{membership?.plan_type === 'free' ? 'Free' : 'Premium'}</p>
                   <p className="text-xs text-slate-500">
                     {premium ? 'Daily check-ins · All subjects · Unlimited children' : '3 check-ins/week · 1 subject · 1 child'}
                   </p>
+                  {membership?.current_period_end && (
+                    <p className="mt-1 text-[11px] text-slate-400">
+                      Billing period ends on {membership.current_period_end.split('T')[0]}
+                    </p>
+                  )}
                 </div>
-                {!premium && (
-                  <button disabled={upgrading} onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 disabled:opacity-50">
-                    <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
-                  </button>
-                )}
+                <div className="flex flex-col gap-2">
+                  {!premium && (
+                    <button disabled={upgrading} onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 disabled:opacity-50">
+                      <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
+                    </button>
+                  )}
+                  {(membership?.stripe_customer_id || membership?.stripe_subscription_id) && (
+                    <button
+                      disabled={openingBilling}
+                      onClick={handleManageBilling}
+                      className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      {openingBilling ? 'Opening billing...' : 'Manage Billing'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1613,6 +1646,15 @@ const StudyPulseApp: React.FC = () => {
               )}
 
               <div className="mt-5 border-t border-slate-100 pt-4 flex flex-col gap-2">
+                {(membership?.stripe_customer_id || membership?.stripe_subscription_id) && (
+                  <button
+                    disabled={openingBilling}
+                    onClick={handleManageBilling}
+                    className="w-full rounded-xl border border-emerald-200 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                  >
+                    {openingBilling ? 'Opening billing...' : 'Manage Billing / Cancel Membership'}
+                  </button>
+                )}
                 <button
                   onClick={async () => { if (supabase) { await supabase.auth.signOut(); navigate('/studypulse'); } }}
                   className="w-full rounded-xl border border-slate-200 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50"

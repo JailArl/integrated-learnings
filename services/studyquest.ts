@@ -209,6 +209,38 @@ export async function startPremiumCheckout(): Promise<{ ok: boolean; url?: strin
   }
 }
 
+export async function openBillingPortal(): Promise<{ ok: boolean; url?: string; message?: string }> {
+  if (!supabase) return { ok: false, message: 'Billing service is not configured yet.' };
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    return { ok: false, message: 'Please sign in again before managing billing.' };
+  }
+
+  try {
+    const response = await fetch('/api/stripe/create-billing-portal-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        origin: typeof window !== 'undefined' ? window.location.origin : '',
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload?.url) {
+      return { ok: false, message: payload?.error || 'Could not open billing settings yet.' };
+    }
+
+    return { ok: true, url: payload.url };
+  } catch (error) {
+    console.error('openBillingPortal failed:', error);
+    return { ok: false, message: 'Could not reach the billing service right now.' };
+  }
+}
+
 export function isPremium(m: Membership | null): boolean {
   return !!m && (m.status === 'premium_active');
 }
