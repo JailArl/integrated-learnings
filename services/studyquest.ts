@@ -163,10 +163,12 @@ export function isPremium(m: Membership | null): boolean {
 
 export async function updateLanguagePreference(userId: string, language: 'en' | 'zh'): Promise<boolean> {
   if (!supabase) return false;
-  const { error } = await supabase.from('sq_memberships').update({
+  const { error } = await supabase.from('sq_memberships').upsert({
+    user_id: userId,
     preferred_language: language,
     updated_at: new Date().toISOString(),
-  }).eq('user_id', userId);
+  }, { onConflict: 'user_id' });
+  if (error) console.error('updateLanguagePreference failed:', error);
   return !error;
 }
 
@@ -243,13 +245,26 @@ export async function addExamTarget(target: { subject_id: string; child_id: stri
   return data;
 }
 
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateOnly(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, (month || 1) - 1, day || 1, 12);
+}
+
 export function getRecommendedStartDate(examDate: string): string {
-  const exam = new Date(examDate);
+  const exam = parseDateOnly(examDate);
   const start = new Date(exam);
   start.setDate(start.getDate() - 56); // 8 weeks before
   const today = new Date();
+  today.setHours(12, 0, 0, 0);
   // If recommended start is in the past, use today
-  return start < today ? today.toISOString().split('T')[0] : start.toISOString().split('T')[0];
+  return start < today ? formatLocalDate(today) : formatLocalDate(start);
 }
 
 export function getActiveExamLimit(planType: PlanType): number {
@@ -300,7 +315,10 @@ export async function getCheckins(childId: string, from?: string, to?: string): 
 
 export async function upsertCheckin(checkin: { child_id: string; subject_id?: string; checkin_date: string; status: CheckinStatus; note?: string }): Promise<void> {
   if (!supabase) return;
-  await supabase.from('sq_checkins').insert(checkin);
+  const { error } = await supabase
+    .from('sq_checkins')
+    .upsert(checkin, { onConflict: 'child_id,checkin_date' });
+  if (error) console.error('upsertCheckin failed:', error);
 }
 
 export async function upsertExcuse(childId: string, date: string, reason: string): Promise<boolean> {
@@ -311,6 +329,7 @@ export async function upsertExcuse(childId: string, date: string, reason: string
       { child_id: childId, checkin_date: date, status: 'excused', note: reason },
       { onConflict: 'child_id,checkin_date' }
     );
+  if (error) console.error('upsertExcuse failed:', error);
   return !error;
 }
 

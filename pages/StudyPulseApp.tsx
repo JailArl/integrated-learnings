@@ -88,17 +88,31 @@ function normaliseSGPhone(raw: string): string {
   return `+65${digits}`;
 }
 
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function parseDateOnly(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, (month || 1) - 1, day || 1, 12);
+}
+
 function daysUntil(dateStr: string): number {
-  const d = new Date(dateStr);
+  const d = parseDateOnly(dateStr);
   const now = new Date();
+  now.setHours(12, 0, 0, 0);
   return Math.max(0, Math.ceil((d.getTime() - now.getTime()) / 86400000));
 }
 function weekStart(): string {
   const d = new Date();
-  d.setDate(d.getDate() - d.getDay() + 1);
-  return d.toISOString().split('T')[0];
+  const offset = (d.getDay() + 6) % 7;
+  d.setDate(d.getDate() - offset);
+  return formatLocalDate(d);
 }
-const today = () => new Date().toISOString().split('T')[0];
+const today = () => formatLocalDate(new Date());
 const dayName = (d: Date) => ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
 const isFreeCheckinDay = () => FREE_CHECKIN_DAYS.includes(dayName(new Date()) as any);
 
@@ -141,6 +155,8 @@ const StudyPulseApp: React.FC = () => {
   const [copiedChildId, setCopiedChildId] = useState<string | null>(null);
   const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
   const [upgraded, setUpgraded] = useState(false);
+  const [savingParentLanguage, setSavingParentLanguage] = useState(false);
+  const [parentLanguageMessage, setParentLanguageMessage] = useState('');
 
   // Excuse modal
   const [excuseDay, setExcuseDay] = useState<{ dateStr: string; label: string } | null>(null);
@@ -252,8 +268,9 @@ const StudyPulseApp: React.FC = () => {
     return days.map((label, i) => {
       const d = new Date(monday);
       d.setDate(monday.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
-      const isPast = d < new Date(today());
+      d.setHours(12, 0, 0, 0);
+      const dateStr = formatLocalDate(d);
+      const isPast = dateStr < today();
       const isToday = dateStr === today();
       // Check for check-in or daily task on this date
       const task = dailyTasks.find(t => t.task_date === dateStr);
@@ -266,7 +283,9 @@ const StudyPulseApp: React.FC = () => {
       const dayOfWeek = d.getDay(); // 0=Sun
       const isStudyDay = childStudyDays.includes(dayOfWeek);
       const isCCADay = ccaDays.includes(dayOfWeek);
-      const status = task?.status || checkin?.status || (isCCADay ? 'cca' : (isPast && isStudyDay ? 'missed' : null));
+      const status = checkin?.status === 'excused'
+        ? 'excused'
+        : task?.status || checkin?.status || (isCCADay ? 'cca' : (isPast && isStudyDay ? 'missed' : null));
       return { label, dateStr, isPast, isToday, status };
     });
   };
@@ -1124,7 +1143,7 @@ const StudyPulseApp: React.FC = () => {
                         className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
                         value={newExamDate}
                         onChange={(e) => setNewExamDate(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]}
+                        min={today()}
                       />
                       <select
                         className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
@@ -1170,12 +1189,24 @@ const StudyPulseApp: React.FC = () => {
                 {(['en', 'zh'] as const).map((l) => (
                   <button
                     key={l}
+                    type="button"
+                    disabled={savingParentLanguage}
                     onClick={async () => {
-                      if (!userId) return;
+                      if (!userId || savingParentLanguage) return;
+                      const previousLanguage = (membership?.preferred_language || 'en') as 'en' | 'zh';
+                      setParentLanguageMessage('');
+                      setSavingParentLanguage(true);
+                      setMembership(prev => prev ? { ...prev, preferred_language: l } : prev);
                       const ok = await updateLanguagePreference(userId, l);
-                      if (ok) setMembership(prev => prev ? { ...prev, preferred_language: l } : prev);
+                      if (!ok) {
+                        setMembership(prev => prev ? { ...prev, preferred_language: previousLanguage } : prev);
+                        setParentLanguageMessage('Could not save your language yet. Please try again.');
+                      } else {
+                        setParentLanguageMessage(l === 'zh' ? 'Parent updates will be sent in Chinese.' : 'Parent updates will be sent in English.');
+                      }
+                      setSavingParentLanguage(false);
                     }}
-                    className={`flex items-center gap-2 rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition ${
+                    className={`flex items-center gap-2 rounded-xl border-2 px-5 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 ${
                       (membership?.preferred_language || 'en') === l
                         ? 'border-slate-900 bg-slate-900 text-white'
                         : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -1185,6 +1216,11 @@ const StudyPulseApp: React.FC = () => {
                   </button>
                 ))}
               </div>
+              {parentLanguageMessage && (
+                <p className={`mt-2 text-xs ${parentLanguageMessage.startsWith('Could not') ? 'text-red-600' : 'text-emerald-600'}`}>
+                  {parentLanguageMessage}
+                </p>
+              )}
             </div>
 
             {/* Plan info */}
@@ -1374,7 +1410,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     }
     // Create default study settings
     await upsertStudySettings(child.id, {
-      commence_date: new Date().toISOString().split('T')[0],
+      commence_date: today(),
       study_days_per_week: 5,
       first_reminder_time: '16:00',
       check_completion_time: '21:00',
@@ -1551,7 +1587,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
               </div>
               <div>
                 <label className={labelCls}>Next Exam Date</label>
-                <input className={inputCls} type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} min={new Date().toISOString().split('T')[0]} />
+                <input className={inputCls} type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} min={today()} />
                 {examDate && (
                   <p className="mt-1 text-xs text-blue-600">📅 Recommended start: <strong>{getRecommendedStartDate(examDate)}</strong></p>
                 )}
@@ -1668,11 +1704,13 @@ const ReportsPanel: React.FC<ReportsPanelProps> = ({ child, premium, summaries, 
     const weeks: { weekLabel: string; done: number; total: number; pct: number }[] = [];
     for (let w = 3; w >= 0; w--) {
       const wStart = new Date();
-      wStart.setDate(wStart.getDate() - wStart.getDay() + 1 - w * 7);
+      wStart.setDate(wStart.getDate() - ((wStart.getDay() + 6) % 7) - w * 7);
+      wStart.setHours(12, 0, 0, 0);
       const wEnd = new Date(wStart);
       wEnd.setDate(wEnd.getDate() + 6);
-      const wStartStr = wStart.toISOString().split('T')[0];
-      const wEndStr = wEnd.toISOString().split('T')[0];
+      wEnd.setHours(12, 0, 0, 0);
+      const wStartStr = formatLocalDate(wStart);
+      const wEndStr = formatLocalDate(wEnd);
       const label = `${wStart.getDate()}/${wStart.getMonth() + 1}`;
 
       const items = premium
@@ -1696,15 +1734,19 @@ const ReportsPanel: React.FC<ReportsPanelProps> = ({ child, premium, summaries, 
       // Trend: compare last 2 weeks vs previous 2 weeks
       const twoWeeksAgo = new Date();
       twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      twoWeeksAgo.setHours(12, 0, 0, 0);
       const fourWeeksAgo = new Date();
       fourWeeksAgo.setDate(fourWeeksAgo.getDate() - 28);
+      fourWeeksAgo.setHours(12, 0, 0, 0);
+      const twoWeeksAgoStr = formatLocalDate(twoWeeksAgo);
+      const fourWeeksAgoStr = formatLocalDate(fourWeeksAgo);
       const recent = allItems.filter(i => {
         const d = (i as any).task_date || (i as any).checkin_date;
-        return d >= twoWeeksAgo.toISOString().split('T')[0];
+        return d >= twoWeeksAgoStr;
       });
       const older = allItems.filter(i => {
         const d = (i as any).task_date || (i as any).checkin_date;
-        return d >= fourWeeksAgo.toISOString().split('T')[0] && d < twoWeeksAgo.toISOString().split('T')[0];
+        return d >= fourWeeksAgoStr && d < twoWeeksAgoStr;
       });
       const recentPct = recent.length ? recent.filter(i => i.status === 'done' || i.status === 'did_extra' || i.status === 'yes').length / recent.length : 0;
       const olderPct = older.length ? older.filter(i => i.status === 'done' || i.status === 'did_extra' || i.status === 'yes').length / older.length : 0;

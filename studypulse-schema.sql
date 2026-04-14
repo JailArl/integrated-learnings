@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS sq_checkins (
   child_id UUID NOT NULL REFERENCES sq_children(id) ON DELETE CASCADE,
   subject_id UUID REFERENCES sq_monitored_subjects(id) ON DELETE SET NULL,
   checkin_date DATE NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','yes','partially','no')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','yes','partially','no','forgot','excused')),
   note TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -210,6 +210,6 @@ CREATE POLICY "sq_holiday_owner" ON sq_holiday_programme_interest FOR ALL USING 
 CREATE INDEX IF NOT EXISTS idx_sq_children_parent ON sq_children(parent_id);
 CREATE INDEX IF NOT EXISTS idx_sq_subjects_child ON sq_monitored_subjects(child_id);
 CREATE INDEX IF NOT EXISTS idx_sq_exams_child ON sq_exam_targets(child_id);
-CREATE INDEX IF NOT EXISTS idx_sq_checkins_child_date ON sq_checkins(child_id, checkin_date);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sq_checkins_child_date ON sq_checkins(child_id, checkin_date);
 CREATE INDEX IF NOT EXISTS idx_sq_daily_child_date ON sq_daily_tasks(child_id, task_date);
 CREATE INDEX IF NOT EXISTS idx_sq_plans_child_week ON sq_weekly_plans(child_id, week_start);
