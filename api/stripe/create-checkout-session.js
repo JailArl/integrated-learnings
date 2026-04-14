@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-const stripePriceId = process.env.STRIPE_PRICE_ID_MONTHLY || 'price_1TM1i9DvClKYQTBR1nsD57hL';
+const stripePriceId = process.env.STRIPE_PRICE_ID_MONTHLY || 'price_1TM2leDko1OhK4VFqEK751aM';
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
