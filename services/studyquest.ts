@@ -183,6 +183,49 @@ async function updateCurrentUserMetadata(patch: Record<string, unknown>): Promis
   return true;
 }
 
+function getLocalDeviceId(): string | null {
+  if (typeof window === 'undefined') return null;
+  const storageKey = 'studypulse_device_id';
+  const existing = window.localStorage.getItem(storageKey);
+  if (existing) return existing;
+
+  const generated = window.crypto?.randomUUID?.() || `device-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.localStorage.setItem(storageKey, generated);
+  return generated;
+}
+
+export async function enforceParentDeviceAccess(maxDevices = 2): Promise<{ ok: boolean; reason?: string }> {
+  if (!supabase) return { ok: false, reason: 'Authentication service is not configured.' };
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { ok: false, reason: 'Please sign in again.' };
+
+  const deviceId = getLocalDeviceId();
+  if (!deviceId) return { ok: true };
+
+  const meta = (user.user_metadata || {}) as Record<string, any>;
+  const knownDevices = Array.isArray(meta.studypulse_devices)
+    ? (meta.studypulse_devices as string[]).filter(Boolean)
+    : [];
+
+  if (knownDevices.includes(deviceId)) return { ok: true };
+
+  if (knownDevices.length >= maxDevices) {
+    return {
+      ok: false,
+      reason: 'This account is already active on the maximum number of devices. Please use your usual device or reset your password first.',
+    };
+  }
+
+  const saved = await updateCurrentUserMetadata({
+    studypulse_devices: [...knownDevices, deviceId].slice(-maxDevices),
+  });
+
+  return saved
+    ? { ok: true }
+    : { ok: false, reason: 'Could not verify this device. Please try again.' };
+}
+
 export async function updateLanguagePreference(userId: string, language: 'en' | 'zh'): Promise<boolean> {
   if (!supabase) return false;
 

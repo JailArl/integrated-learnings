@@ -73,6 +73,7 @@ import {
   updateLanguagePreference,
   getCheckinHistory,
   getDailyTasksHistory,
+  enforceParentDeviceAccess,
   PLAN_LIMITS,
   FREE_CHECKIN_DAYS,
 } from '../services/studyquest';
@@ -175,6 +176,12 @@ const StudyPulseApp: React.FC = () => {
       if (!supabase) { setLoading(false); return; }
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/studypulse/login'); return; }
+      const access = await enforceParentDeviceAccess(2);
+      if (!access.ok) {
+        await supabase.auth.signOut();
+        navigate('/studypulse/login', { replace: true, state: { error: access.reason } });
+        return;
+      }
       setUserId(user.id);
       const userMeta = (user.user_metadata || {}) as Record<string, any>;
       setMetadataExcuses((userMeta.studypulse_excused_days || {}) as Record<string, Record<string, string>>);

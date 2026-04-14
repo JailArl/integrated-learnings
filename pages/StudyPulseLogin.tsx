@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Loader2, Mail, ArrowRight, Lock } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
@@ -10,6 +10,7 @@ import { supabase } from '../services/supabase';
 
 const StudyPulseLogin: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState<'login' | 'forgot' | 'forgot-sent'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,6 +28,11 @@ const StudyPulseLogin: React.FC = () => {
       }
     });
   }, [navigate]);
+
+  useEffect(() => {
+    const routedError = (location.state as { error?: string } | null)?.error;
+    if (routedError) setError(routedError);
+  }, [location.state]);
 
   /* ── Login handler ── */
   const handleLogin = async (e: React.FormEvent) => {
@@ -149,6 +155,7 @@ const StudyPulseLogin: React.FC = () => {
       <h1 className="text-2xl font-black text-slate-900">Parent Login</h1>
       <p className="mt-2 text-sm text-slate-500">Sign in to your StudyPulse dashboard.</p>
       <p className="mt-1 text-xs text-slate-400">Use the email and password you signed up with.</p>
+      <p className="mt-1 text-xs text-slate-400">For account security, parent dashboard access is limited to your usual devices.</p>
 
       {error && <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
 
