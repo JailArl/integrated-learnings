@@ -177,6 +177,7 @@ const StudyPulseApp: React.FC = () => {
   const [upgraded, setUpgraded] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
   const [openingBilling, setOpeningBilling] = useState(false);
+  const [showPayNow, setShowPayNow] = useState(false);
   const [dashboardNotice, setDashboardNotice] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [savingParentLanguage, setSavingParentLanguage] = useState(false);
   const [parentLanguageMessage, setParentLanguageMessage] = useState('');
@@ -294,6 +295,8 @@ const StudyPulseApp: React.FC = () => {
     return streak;
   };
   const streak = computeStreak();
+  const payNowReference = membership?.parent_phone || membership?.parent_email || userId || 'StudyPulse parent';
+  const payNowSupportHref = `https://wa.me/6589598553?text=${encodeURIComponent(`Hi StudyPulse, I have paid for Premium via PayNow. Reference: ${payNowReference}`)}`;
 
   const handleUpgrade = async () => {
     if (!userId || upgrading) return;
@@ -1571,9 +1574,17 @@ const StudyPulseApp: React.FC = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                   {!premium && (
-                    <button disabled={upgrading} onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 disabled:opacity-50">
-                      <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
-                    </button>
+                    <>
+                      <button disabled={upgrading} onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 disabled:opacity-50">
+                        <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Pay by Card'}
+                      </button>
+                      <button
+                        onClick={() => setShowPayNow(v => !v)}
+                        className="inline-flex items-center justify-center rounded-lg border border-emerald-300 px-4 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
+                      >
+                        {showPayNow ? 'Hide PayNow QR' : 'PayNow QR'}
+                      </button>
+                    </>
                   )}
                   {(membership?.stripe_customer_id || membership?.stripe_subscription_id) && (
                     <button
@@ -1586,6 +1597,29 @@ const StudyPulseApp: React.FC = () => {
                   )}
                 </div>
               </div>
+
+              {!premium && showPayNow && (
+                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.15em] text-emerald-700">PayNow QR</p>
+                  <p className="mt-1 text-xs text-slate-600">This is a manual payment option. Premium access will be activated after the incoming payment is matched.</p>
+                  <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
+                    <img src="/images/paynow-qr-cropped.png" alt="PayNow QR code" className="h-40 w-40 rounded-xl border border-white bg-white p-2 shadow-sm" />
+                    <div className="space-y-2 text-xs text-slate-700">
+                      <p><strong>1.</strong> Scan the QR with your banking app.</p>
+                      <p><strong>2.</strong> Use this reference in the payment remark: <strong>{payNowReference}</strong></p>
+                      <p><strong>3.</strong> After paying, notify us so we can verify the transfer quickly.</p>
+                      <a
+                        href={payNowSupportHref}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500"
+                      >
+                        I've paid via PayNow
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Account */}
