@@ -150,9 +150,9 @@ export async function createMembership(userId: string, planType: PlanType = 'fre
 export async function upgradeMembership(userId: string, planType: PlanType): Promise<boolean> {
   if (!supabase) return false;
 
-  // Safety guard: never self-activate premium from the client before Stripe checkout exists.
+  // Premium must be activated by Stripe webhook, never directly from the client.
   if (planType === 'premium') {
-    console.warn('upgradeMembership blocked: secure billing checkout is not connected yet.');
+    console.warn('upgradeMembership blocked: premium activation must come from Stripe webhook confirmation.');
     return false;
   }
 
@@ -163,6 +163,38 @@ export async function upgradeMembership(userId: string, planType: PlanType): Pro
   }).eq('user_id', userId);
   if (error) console.error('upgradeMembership failed:', error);
   return !error;
+}
+
+export async function startPremiumCheckout(): Promise<{ ok: boolean; url?: string; message?: string }> {
+  if (!supabase) return { ok: false, message: 'Billing service is not configured yet.' };
+
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    return { ok: false, message: 'Please sign in again before upgrading.' };
+  }
+
+  try {
+    const response = await fetch('/api/stripe/create-checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        origin: typeof window !== 'undefined' ? window.location.origin : '',
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload?.url) {
+      return { ok: false, message: payload?.error || 'Could not start secure checkout yet.' };
+    }
+
+    return { ok: true, url: payload.url };
+  } catch (error) {
+    console.error('startPremiumCheckout failed:', error);
+    return { ok: false, message: 'Could not reach the billing service right now.' };
+  }
 }
 
 export function isPremium(m: Membership | null): boolean {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
   ArrowRight,
@@ -59,6 +59,7 @@ import {
   submitExamResult,
   submitCTARequest,
   upgradeMembership,
+  startPremiumCheckout,
   isPremium,
   updateStudyDays,
   updateCCADays,
@@ -120,6 +121,7 @@ const isFreeCheckinDay = () => FREE_CHECKIN_DAYS.includes(dayName(new Date()) as
 /* ═══════════════════════════════════════════ */
 const StudyPulseApp: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
@@ -217,6 +219,16 @@ const StudyPulseApp: React.FC = () => {
     })();
   }, [child]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const billing = params.get('billing');
+    if (billing === 'success') {
+      setDashboardNotice({ type: 'success', text: 'Payment received. Premium access will refresh shortly.' });
+    } else if (billing === 'cancel') {
+      setDashboardNotice({ type: 'info', text: 'Checkout was canceled. No charge was made.' });
+    }
+  }, [location.search]);
+
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-100"><div className="text-center"><div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600" /><p className="text-sm text-slate-500">Loading dashboard…</p></div></div>;
 
   // ── Inline onboarding when no children exist yet ──
@@ -252,17 +264,14 @@ const StudyPulseApp: React.FC = () => {
     if (!userId || upgrading) return;
     setDashboardNotice(null);
     setUpgrading(true);
-    const ok = await upgradeMembership(userId, 'premium');
-    if (ok) {
-      const m = await getMembership(userId);
-      setMembership(m);
-      const kids = await getChildren(userId);
-      setChildren(kids);
-      setUpgraded(true);
-      setDashboardNotice({ type: 'success', text: 'Premium activated successfully.' });
-    } else {
-      setDashboardNotice({ type: 'info', text: 'Secure Stripe checkout is not connected yet, so premium activation is temporarily disabled.' });
+
+    const checkout = await startPremiumCheckout();
+    if (checkout.ok && checkout.url) {
+      window.location.assign(checkout.url);
+      return;
     }
+
+    setDashboardNotice({ type: 'error', text: checkout.message || 'Could not start secure checkout yet.' });
     setUpgrading(false);
   };
 
