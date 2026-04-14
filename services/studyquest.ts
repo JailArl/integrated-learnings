@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 // TYPES
 // ═══════════════════════════════════════════
 export type PlanType = 'free' | 'premium';
+export type CheckoutPlan = 'monthly_flex' | 'pass_1m' | 'pack_2m' | 'pack_4m';
 export type MembershipStatus = 'free' | 'premium_active' | 'premium_past_due' | 'premium_cancelled';
 export type CheckinStatus = 'pending' | 'yes' | 'partially' | 'no' | 'forgot' | 'excused';
 export type DailyTaskStatus = 'pending' | 'done' | 'postpone' | 'incomplete' | 'did_extra';
@@ -133,6 +134,18 @@ export const PLAN_PRICES: Record<PlanType, number> = {
   premium: 9.90,
 };
 
+export const CHECKOUT_PLAN_OPTIONS: Array<{
+  code: CheckoutPlan;
+  label: string;
+  priceLabel: string;
+  description: string;
+}> = [
+  { code: 'monthly_flex', label: 'Monthly Flex', priceLabel: '$9.90/mo', description: 'Lowest monthly cost · auto-renews · cancel anytime' },
+  { code: 'pass_1m', label: '1-Month Pass', priceLabel: '$14.90', description: 'One-time payment · no auto-renewal' },
+  { code: 'pack_2m', label: '2-Month Sprint', priceLabel: '$24.90', description: 'One-time payment · short exam push' },
+  { code: 'pack_4m', label: '4-Month Season', priceLabel: '$43.90', description: 'One-time payment · best exam-season coverage' },
+];
+
 export const FREE_CHECKIN_DAYS = ['Tuesday', 'Thursday', 'Saturday'] as const;
 export const PREMIUM_SUBJECTS = ['Math', 'Science', 'Chinese'] as const;
 
@@ -177,7 +190,7 @@ export async function upgradeMembership(userId: string, planType: PlanType): Pro
   return !error;
 }
 
-export async function startPremiumCheckout(): Promise<{ ok: boolean; url?: string; message?: string }> {
+export async function startPremiumCheckout(plan: CheckoutPlan = 'monthly_flex'): Promise<{ ok: boolean; url?: string; message?: string }> {
   if (!supabase) return { ok: false, message: 'Billing service is not configured yet.' };
 
   const { data: { session } } = await supabase.auth.getSession();
@@ -194,6 +207,7 @@ export async function startPremiumCheckout(): Promise<{ ok: boolean; url?: strin
       },
       body: JSON.stringify({
         origin: typeof window !== 'undefined' ? window.location.origin : '',
+        plan,
       }),
     });
 
@@ -242,7 +256,16 @@ export async function openBillingPortal(): Promise<{ ok: boolean; url?: string; 
 }
 
 export function isPremium(m: Membership | null): boolean {
-  return !!m && (m.status === 'premium_active');
+  if (!m || m.status !== 'premium_active') return false;
+
+  if (m.current_period_end) {
+    const endsAt = new Date(m.current_period_end);
+    if (!Number.isNaN(endsAt.getTime()) && endsAt.getTime() < Date.now()) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 async function updateCurrentUserMetadata(patch: Record<string, unknown>): Promise<boolean> {

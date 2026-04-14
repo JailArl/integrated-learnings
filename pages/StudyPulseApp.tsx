@@ -84,6 +84,8 @@ import {
   enforceParentDeviceAccess,
   PLAN_LIMITS,
   FREE_CHECKIN_DAYS,
+  CHECKOUT_PLAN_OPTIONS,
+  type CheckoutPlan,
 } from '../services/studyquest';
 
 /* ── helpers ── */
@@ -294,13 +296,19 @@ const StudyPulseApp: React.FC = () => {
     return streak;
   };
   const streak = computeStreak();
+  const billingDaysLeft = membership?.current_period_end ? daysUntil(membership.current_period_end.split('T')[0]) : null;
+  const billingHelperText = premium && billingDaysLeft !== null
+    ? membership?.stripe_subscription_id
+      ? `Monthly Flex renews automatically in ${billingDaysLeft} day${billingDaysLeft === 1 ? '' : 's'}.`
+      : `Your premium pass ends in ${billingDaysLeft} day${billingDaysLeft === 1 ? '' : 's'}. Renew before it expires to keep daily check-ins active.`
+    : null;
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (plan: CheckoutPlan = 'monthly_flex') => {
     if (!userId || upgrading) return;
     setDashboardNotice(null);
     setUpgrading(true);
 
-    const checkout = await startPremiumCheckout();
+    const checkout = await startPremiumCheckout(plan);
     if (checkout.ok && checkout.url) {
       window.location.assign(checkout.url);
       return;
@@ -476,7 +484,7 @@ const StudyPulseApp: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             {!premium && (
-              <button disabled={upgrading} onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+              <button disabled={upgrading} onClick={() => handleUpgrade()} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
                 <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
               </button>
             )}
@@ -623,7 +631,7 @@ const StudyPulseApp: React.FC = () => {
                   <div>
                     <p className="text-xs font-bold text-slate-900">Free plan: 3 check-ins/week</p>
                     <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, all subjects, and unlimited children.</p>
-                    <button disabled={upgrading} onClick={handleUpgrade} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+                    <button disabled={upgrading} onClick={() => handleUpgrade()} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
                       {upgrading ? 'Please wait...' : 'Upgrade securely soon'} <ArrowRight size={12} className="ml-1" />
                     </button>
                   </div>
@@ -1448,7 +1456,7 @@ const StudyPulseApp: React.FC = () => {
                           : `You've reached the ${limit} exam limit. Complete or remove an exam to add more.`}
                       </p>
                       {!premium && (
-                        <button disabled={upgrading} onClick={handleUpgrade} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+                        <button disabled={upgrading} onClick={() => handleUpgrade()} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
                           <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
                         </button>
                       )}
@@ -1565,27 +1573,45 @@ const StudyPulseApp: React.FC = () => {
                   </p>
                   {membership?.current_period_end && (
                     <p className="mt-1 text-[11px] text-slate-400">
-                      Billing period ends on {membership.current_period_end.split('T')[0]}
+                      {membership?.stripe_subscription_id ? 'Next renewal / period end:' : 'Pass ends on:'} {membership.current_period_end.split('T')[0]}
                     </p>
                   )}
                 </div>
-                <div className="flex flex-col gap-2">
-                  {!premium && (
-                    <button disabled={upgrading} onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 disabled:opacity-50">
-                      <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade with Stripe'}
-                    </button>
-                  )}
-                  {(membership?.stripe_customer_id || membership?.stripe_subscription_id) && (
-                    <button
-                      disabled={openingBilling}
-                      onClick={handleManageBilling}
-                      className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-                    >
-                      {openingBilling ? 'Opening billing...' : 'Manage Billing'}
-                    </button>
-                  )}
-                </div>
+                {(membership?.stripe_customer_id || membership?.stripe_subscription_id) && (
+                  <button
+                    disabled={openingBilling}
+                    onClick={handleManageBilling}
+                    className="inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    {openingBilling ? 'Opening billing...' : 'Manage Billing'}
+                  </button>
+                )}
               </div>
+
+              {!premium && (
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {CHECKOUT_PLAN_OPTIONS.map((plan) => (
+                    <button
+                      key={plan.code}
+                      disabled={upgrading}
+                      onClick={() => handleUpgrade(plan.code)}
+                      className={`rounded-xl border px-3 py-3 text-left transition disabled:opacity-50 ${plan.code === 'monthly_flex' ? 'border-amber-300 bg-amber-50 hover:bg-amber-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-bold text-slate-900">{plan.label}</span>
+                        <span className="text-xs font-black text-slate-900">{plan.priceLabel}</span>
+                      </div>
+                      <p className="mt-1 text-[11px] text-slate-500">{plan.description}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {billingHelperText && (
+                <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  {billingHelperText}
+                </p>
+              )}
             </div>
 
             {/* Account */}

@@ -193,6 +193,11 @@ serve(async (req) => {
       await sendWeeklySummaries(sb, today);
     }
 
+    // ── BILLING REMINDERS (daily 10am SGT) ──
+    if (isWithinWindow(currentTime, "10:00", 7)) {
+      await sendBillingRenewalReminders(sb, today);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -771,6 +776,69 @@ async function sendMidWeekParentNudge(
     msg += lang === "zh" ? ZH_CRON.midweek_footer() : `\nHave you checked their work? A quick look keeps things honest! 👀`;
 
     await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
+  }
+}
+
+// ── BILLING / RENEWAL REMINDERS ──
+
+async function sendBillingRenewalReminders(
+  sb: ReturnType<typeof createClient>,
+  today: string,
+) {
+  const todayDate = new Date(`${today}T00:00:00Z`);
+
+  const { data: memberships } = await sb
+    .from("sq_memberships")
+    .select("user_id, parent_name, parent_phone, preferred_language, plan_type, status, stripe_subscription_id, current_period_end")
+    .eq("plan_type", "premium")
+    .not("parent_phone", "is", null)
+    .not("current_period_end", "is", null);
+
+  if (!memberships) return;
+
+  for (const membership of memberships) {
+    if (!membership.parent_phone || !membership.current_period_end) continue;
+
+    const endDate = new Date(membership.current_period_end);
+    if (Number.isNaN(endDate.getTime())) continue;
+
+    const endDay = new Date(endDate.toISOString().split("T")[0] + "T00:00:00Z");
+    const daysLeft = Math.round((endDay.getTime() - todayDate.getTime()) / 86400000);
+    const isRecurring = !!membership.stripe_subscription_id;
+    const lang = membership.preferred_language || "en";
+    const name = membership.parent_name || "Parent";
+
+    if (!isRecurring && daysLeft < 0 && membership.status === "premium_active") {
+      await sb.from("sq_memberships").update({
+        plan_type: "free",
+        status: "premium_cancelled",
+        updated_at: new Date().toISOString(),
+      }).eq("user_id", membership.user_id);
+
+      const expiredMsg = lang === "zh"
+        ? `📌 您的 StudyPulse Premium 通行证已经结束。如需继续每日打卡和家长摘要，请重新续费。`
+        : `📌 Your StudyPulse Premium pass has ended. Renew anytime to continue daily check-ins and parent summaries.`;
+      await sendWhatsApp(membership.parent_phone, undefined, undefined, expiredMsg);
+      continue;
+    }
+
+    let reminderMsg: string | null = null;
+
+    if (isRecurring && [3, 1].includes(daysLeft)) {
+      reminderMsg = lang === "zh"
+        ? `🔔 您的 StudyPulse Premium 将在 ${daysLeft} 天后自动续费。您可随时在账户里管理账单。`
+        : `🔔 Your StudyPulse Premium will renew automatically in ${daysLeft} day${daysLeft === 1 ? "" : "s"}. You can manage billing anytime from your account.`;
+    }
+
+    if (!isRecurring && [7, 3, 1].includes(daysLeft)) {
+      reminderMsg = lang === "zh"
+        ? `⏳ 您的 StudyPulse Premium 通行证将在 ${daysLeft} 天后结束。若要继续每日跟进，请及时续费。`
+        : `⏳ Your StudyPulse Premium pass ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}. Renew before it ends to keep daily follow-ups active.`;
+    }
+
+    if (reminderMsg) {
+      await sendWhatsApp(membership.parent_phone, undefined, undefined, reminderMsg);
+    }
   }
 }
 

@@ -24,6 +24,13 @@ function toIso(seconds) {
   return seconds ? new Date(seconds * 1000).toISOString() : null;
 }
 
+function addDaysIso(days) {
+  if (!days) return null;
+  const next = new Date();
+  next.setDate(next.getDate() + Number(days));
+  return next.toISOString();
+}
+
 async function findUserIdByStripeIds(customerId, subscriptionId) {
   if (!admin) return null;
 
@@ -67,6 +74,9 @@ async function handleCheckoutCompleted(session) {
   if (subscriptionId && stripe) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     currentPeriodEnd = toIso(subscription.current_period_end);
+  } else {
+    const durationDays = Number(session.metadata?.duration_days || 0);
+    currentPeriodEnd = addDaysIso(durationDays || 30);
   }
 
   await upsertMembership(userId, {
