@@ -149,11 +149,19 @@ export async function createMembership(userId: string, planType: PlanType = 'fre
 
 export async function upgradeMembership(userId: string, planType: PlanType): Promise<boolean> {
   if (!supabase) return false;
+
+  // Safety guard: never self-activate premium from the client before Stripe checkout exists.
+  if (planType === 'premium') {
+    console.warn('upgradeMembership blocked: secure billing checkout is not connected yet.');
+    return false;
+  }
+
   const { error } = await supabase.from('sq_memberships').update({
     plan_type: planType,
-    status: 'premium_active',
+    status: 'free',
     updated_at: new Date().toISOString(),
   }).eq('user_id', userId);
+  if (error) console.error('upgradeMembership failed:', error);
   return !error;
 }
 
@@ -390,9 +398,43 @@ export async function getDailyTasks(childId: string, date: string): Promise<Dail
   return data || [];
 }
 
-export async function upsertDailyTask(task: { child_id: string; subject_id?: string; task_date: string; status: DailyTaskStatus; note?: string }): Promise<void> {
-  if (!supabase) return;
-  await supabase.from('sq_daily_tasks').insert(task);
+export async function upsertDailyTask(task: { child_id: string; subject_id?: string; task_date: string; status: DailyTaskStatus; note?: string }): Promise<boolean> {
+  if (!supabase) return false;
+
+  let query = supabase
+    .from('sq_daily_tasks')
+    .select('id')
+    .eq('child_id', task.child_id)
+    .eq('task_date', task.task_date);
+
+  query = task.subject_id
+    ? query.eq('subject_id', task.subject_id)
+    : query.is('subject_id', null);
+
+  const { data: existing, error: findError } = await query.limit(1);
+  if (findError) {
+    console.error('upsertDailyTask lookup failed:', findError);
+    return false;
+  }
+
+  if (existing && existing.length > 0) {
+    const { error: updateError } = await supabase
+      .from('sq_daily_tasks')
+      .update({ status: task.status, note: task.note ?? null })
+      .eq('id', existing[0].id);
+    if (updateError) {
+      console.error('upsertDailyTask update failed:', updateError);
+      return false;
+    }
+    return true;
+  }
+
+  const { error: insertError } = await supabase.from('sq_daily_tasks').insert(task);
+  if (insertError) {
+    console.error('upsertDailyTask insert failed:', insertError);
+    return false;
+  }
+  return true;
 }
 
 // ═══════════════════════════════════════════
@@ -413,9 +455,14 @@ export async function getExamResults(childId: string): Promise<ExamResult[]> {
   return data || [];
 }
 
-export async function submitExamResult(result: { child_id: string; subject_id?: string; exam_target_id?: string; score?: number; reason?: ExamReason }): Promise<void> {
-  if (!supabase) return;
-  await supabase.from('sq_exam_results').insert(result);
+export async function submitExamResult(result: { child_id: string; subject_id?: string; exam_target_id?: string; score?: number; reason?: ExamReason }): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from('sq_exam_results').insert(result);
+  if (error) {
+    console.error('submitExamResult failed:', error);
+    return false;
+  }
+  return true;
 }
 
 // ═══════════════════════════════════════════
@@ -426,9 +473,14 @@ export async function submitCTARequest(
   parentId: string,
   childId: string,
   extra?: Record<string, unknown>
-): Promise<void> {
-  if (!supabase) return;
-  await supabase.from(table).insert({ parent_id: parentId, child_id: childId, ...extra });
+): Promise<boolean> {
+  if (!supabase) return false;
+  const { error } = await supabase.from(table).insert({ parent_id: parentId, child_id: childId, ...extra });
+  if (error) {
+    console.error('submitCTARequest failed:', error);
+    return false;
+  }
+  return true;
 }
 
 // ═══════════════════════════════════════════

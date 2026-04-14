@@ -155,6 +155,8 @@ const StudyPulseApp: React.FC = () => {
   const [copiedChildId, setCopiedChildId] = useState<string | null>(null);
   const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
   const [upgraded, setUpgraded] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
+  const [dashboardNotice, setDashboardNotice] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [savingParentLanguage, setSavingParentLanguage] = useState(false);
   const [parentLanguageMessage, setParentLanguageMessage] = useState('');
   const [metadataExcuses, setMetadataExcuses] = useState<Record<string, Record<string, string>>>({});
@@ -240,7 +242,9 @@ const StudyPulseApp: React.FC = () => {
   const streak = computeStreak();
 
   const handleUpgrade = async () => {
-    if (!userId) return;
+    if (!userId || upgrading) return;
+    setDashboardNotice(null);
+    setUpgrading(true);
     const ok = await upgradeMembership(userId, 'premium');
     if (ok) {
       const m = await getMembership(userId);
@@ -248,13 +252,27 @@ const StudyPulseApp: React.FC = () => {
       const kids = await getChildren(userId);
       setChildren(kids);
       setUpgraded(true);
+      setDashboardNotice({ type: 'success', text: 'Premium activated successfully.' });
+    } else {
+      setDashboardNotice({ type: 'info', text: 'Secure Stripe checkout is not connected yet, so premium activation is temporarily disabled.' });
     }
+    setUpgrading(false);
   };
 
   const handleExamResult = async (targetId: string) => {
     if (!child || !examScore) return;
+    const parsedScore = parseFloat(examScore);
+    if (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > 100) {
+      setDashboardNotice({ type: 'error', text: 'Please enter a valid exam score between 0 and 100.' });
+      return;
+    }
     const examTarget = exams.find(e => e.id === targetId);
-    await submitExamResult({ child_id: child.id, subject_id: examTarget?.subject_id || displaySubjects[0]?.id, exam_target_id: targetId, score: parseFloat(examScore), reason: examReason });
+    const ok = await submitExamResult({ child_id: child.id, subject_id: examTarget?.subject_id || displaySubjects[0]?.id, exam_target_id: targetId, score: parsedScore, reason: examReason });
+    if (!ok) {
+      setDashboardNotice({ type: 'error', text: 'Could not save the exam result yet. Please try again.' });
+      return;
+    }
+    setDashboardNotice({ type: 'success', text: 'Exam result saved.' });
     setExamScore('');
     const r = await getExamResults(child.id);
     setResults(r);
@@ -262,8 +280,13 @@ const StudyPulseApp: React.FC = () => {
 
   const handleCTA = async (table: 'sq_tutor_requests'|'sq_diagnostic_requests'|'sq_crash_course_interest'|'sq_holiday_programme_interest', reason?: string) => {
     if (!userId || !child) return;
-    await submitCTARequest(table, userId, child.id, { trigger_reason: reason });
+    const ok = await submitCTARequest(table, userId, child.id, { trigger_reason: reason });
+    if (!ok) {
+      setDashboardNotice({ type: 'error', text: 'Could not send your request yet. Please try again.' });
+      return;
+    }
     setSubmittedCTAs(prev => new Set([...prev, table]));
+    setDashboardNotice({ type: 'success', text: 'Your request has been sent successfully.' });
   };
 
   // Build weekly grid data
@@ -348,8 +371,8 @@ const StudyPulseApp: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             {!premium && (
-              <button onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
-                <Crown size={12} className="mr-1" /> Upgrade
+              <button disabled={upgrading} onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+                <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
               </button>
             )}
             <Link to="/studypulse" className="text-xs text-slate-400 hover:text-white">Overview</Link>
@@ -461,6 +484,24 @@ const StudyPulseApp: React.FC = () => {
               </div>
             )}
 
+            {dashboardNotice && (
+              <div className={`rounded-2xl border p-4 ${
+                dashboardNotice.type === 'error'
+                  ? 'border-red-200 bg-red-50'
+                  : dashboardNotice.type === 'success'
+                  ? 'border-emerald-200 bg-emerald-50'
+                  : 'border-amber-200 bg-amber-50'
+              }`}>
+                <p className={`text-sm font-semibold ${
+                  dashboardNotice.type === 'error'
+                    ? 'text-red-700'
+                    : dashboardNotice.type === 'success'
+                    ? 'text-emerald-700'
+                    : 'text-amber-800'
+                }`}>{dashboardNotice.text}</p>
+              </div>
+            )}
+
             {/* Upgrade success banner */}
             {upgraded && (
               <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4">
@@ -477,8 +518,8 @@ const StudyPulseApp: React.FC = () => {
                   <div>
                     <p className="text-xs font-bold text-slate-900">Free plan: 3 check-ins/week</p>
                     <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, all subjects, and unlimited children.</p>
-                    <button onClick={handleUpgrade} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
-                      Upgrade — $9.90/mo <ArrowRight size={12} className="ml-1" />
+                    <button disabled={upgrading} onClick={handleUpgrade} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+                      {upgrading ? 'Please wait...' : 'Upgrade securely soon'} <ArrowRight size={12} className="ml-1" />
                     </button>
                   </div>
                 </div>
@@ -1138,8 +1179,8 @@ const StudyPulseApp: React.FC = () => {
                           : `You've reached the ${limit} exam limit. Complete or remove an exam to add more.`}
                       </p>
                       {!premium && (
-                        <button onClick={handleUpgrade} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
-                          <Crown size={12} className="mr-1" /> Upgrade
+                        <button disabled={upgrading} onClick={handleUpgrade} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+                          <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
                         </button>
                       )}
                     </div>
@@ -1255,8 +1296,8 @@ const StudyPulseApp: React.FC = () => {
                   </p>
                 </div>
                 {!premium && (
-                  <button onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950">
-                    <Crown size={12} className="mr-1" /> Upgrade
+                  <button disabled={upgrading} onClick={handleUpgrade} className="inline-flex items-center rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-slate-950 disabled:opacity-50">
+                    <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
                   </button>
                 )}
               </div>
@@ -1328,15 +1369,17 @@ const StudyPulseApp: React.FC = () => {
                 </button>
                 {!deletingAccount ? (
                   <button onClick={() => setDeletingAccount(true)} className="w-full rounded-xl border border-red-200 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50">
-                    Delete Account
+                    Delete StudyPulse Data
                   </button>
                 ) : (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-                    <p className="text-xs font-semibold text-red-700">This will delete all your data. Are you sure?</p>
+                    <p className="text-xs font-semibold text-red-700">This will remove your StudyPulse dashboard data and sign you out. Are you sure?</p>
+                    <p className="mt-1 text-[11px] text-red-600">This does not guarantee deletion of your authentication login from Supabase.</p>
                     <div className="mt-3 flex gap-2">
                       <button
                         onClick={async () => {
                           if (!supabase || !userId) return;
+                          await supabase.from('sq_children').delete().eq('parent_id', userId);
                           await supabase.from('sq_memberships').delete().eq('user_id', userId);
                           await supabase.from('parent_profiles').delete().eq('id', userId);
                           await supabase.auth.signOut();
@@ -1344,7 +1387,7 @@ const StudyPulseApp: React.FC = () => {
                         }}
                         className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white"
                       >
-                        Yes, delete everything
+                        Yes, remove my StudyPulse data
                       </button>
                       <button onClick={() => setDeletingAccount(false)} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
                     </div>
