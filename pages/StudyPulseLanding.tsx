@@ -437,13 +437,6 @@ const StudyPulseLanding: React.FC = () => {
               <Link to="/studypulse/setup?plan=premium" className="mt-7 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 shadow transition hover:bg-amber-400">
                 <Crown size={16} className="mr-2" /> {t('priceGetPrem')}
               </Link>
-              <details className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                <summary className="cursor-pointer text-center text-xs font-bold text-emerald-700">Prefer PayNow? Scan the QR</summary>
-                <div className="mt-3 flex flex-col items-center">
-                  <img src="/images/paynow-qr-cropped.png" alt="PayNow QR code" className="h-40 w-40 rounded-xl border border-white bg-white p-2 shadow-sm" />
-                  <p className="mt-2 text-center text-[11px] leading-5 text-slate-600">Use your phone number as the payment remark, then message us after payment so we can verify and activate Premium.</p>
-                </div>
-              </details>
               <p className="mt-3 text-center text-xs text-slate-400">{t('pricePaynow')}</p>
             </div>
           </div>
