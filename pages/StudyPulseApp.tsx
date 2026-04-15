@@ -527,6 +527,46 @@ const StudyPulseApp: React.FC = () => {
         {/* ── TODAY ── */}
         {tab === 'today' && (
           <div className="space-y-5">
+
+            {/* Setup guide for new parents */}
+            {children.length > 0 && children.some(c => !c.whatsapp_number || checkins.length === 0) && (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 shadow-sm">
+                <h3 className="text-sm font-bold text-blue-900 flex items-center gap-2">
+                  <BookOpen size={16} /> Quick Setup Guide
+                </h3>
+                <div className="mt-3 space-y-3 text-xs text-blue-800">
+                  <div className="flex gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 text-xs font-bold text-blue-900">1</span>
+                    <div>
+                      <p className="font-bold">Choose study days &amp; set weekly target</p>
+                      <p className="text-blue-700">Go to <strong>Settings</strong> tab → pick which days your child studies. Then in <strong>Targets</strong> tab, set the weekly goal (e.g. 20 questions of Math).</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 text-xs font-bold text-blue-900">2</span>
+                    <div>
+                      <p className="font-bold">Activate your WhatsApp</p>
+                      <p className="text-blue-700">In <strong>Settings</strong> → scroll to your Account card → tap <strong>&ldquo;Activate parent updates&rdquo;</strong>. This lets you receive reports.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 text-xs font-bold text-blue-900">3</span>
+                    <div>
+                      <p className="font-bold">Send the activation link to your child</p>
+                      <p className="text-blue-700">In <strong>Settings</strong> → find your child&apos;s card → tap <strong>&ldquo;🔗 Copy link to send to [name]&rdquo;</strong> and send it to them via WhatsApp or SMS. They must tap it on <em>their own phone</em>.</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 text-xs font-bold text-blue-900">4</span>
+                    <div>
+                      <p className="font-bold">Done! Check-ins will start automatically</p>
+                      <p className="text-blue-700">{premium ? 'Your child will get a WhatsApp prompt every study day evening.' : 'Your child will get bundled check-ins every Tue, Thu & Sun evening.'} You&apos;ll receive reports automatically.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Today's status per child */}
             {displayChildren.map((c, ci) => {
               const todayTask = dailyTasks.find(t => t.task_date === today() && (t.subject_id ? true : true));
