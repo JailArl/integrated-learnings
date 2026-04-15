@@ -136,6 +136,17 @@ interface DashboardStats {
   pendingApprovals: number;
   activeMatches: number;
   verifiedTutors: number;
+  studyPulseSignups?: number;
+}
+
+interface StudyPulseSignup {
+  user_id: string;
+  parent_name?: string;
+  parent_email?: string;
+  parent_phone?: string;
+  plan_type?: string;
+  status?: string;
+  created_at?: string;
 }
 
 export default function AdminDashboard() {
@@ -154,6 +165,7 @@ export default function AdminDashboard() {
   const [newSchool, setNewSchool] = useState('');
   const [newHours, setNewHours] = useState(48);
   const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
+  const [studyPulseSignups, setStudyPulseSignups] = useState<StudyPulseSignup[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -199,6 +211,7 @@ export default function AdminDashboard() {
       if (isSupabaseConfigured && supabase) {
         const parentsRes = await supabase.from('parent_submissions').select('*');
         const tutorsRes = await supabase.from('tutor_profiles').select('*');
+        const studyPulseRes = await supabase.from('sq_memberships').select('user_id,parent_name,parent_email,parent_phone,plan_type,status,created_at').order('created_at', { ascending: false });
         const parents = (parentsRes.data || []).map((p: any) => ({
           id: p.id,
           type: 'parent' as const,
@@ -216,6 +229,7 @@ export default function AdminDashboard() {
         const verifiedCount = (tutorsRes.data || []).filter((t: any) => t.verification_status === 'verified' || t.verification_status === 'approved').length;
         const combined = [...parents, ...tutors];
         setSubmissions(combined);
+        setStudyPulseSignups(studyPulseRes.data || []);
         setStats({
           totalSubmissions: combined.length,
           parentRequests: parents.length,
@@ -223,6 +237,7 @@ export default function AdminDashboard() {
           pendingApprovals: combined.filter(s => s.status === 'new' || s.status === 'pending' || s.status === 'pending_review').length,
           activeMatches: combined.filter(s => s.status === 'matching' || s.status === 'matched' || s.status === 'converted').length,
           verifiedTutors: verifiedCount,
+          studyPulseSignups: (studyPulseRes.data || []).length,
         });
         setLastUpdated(new Date().toISOString());
       } else {
@@ -239,7 +254,8 @@ export default function AdminDashboard() {
           headers: { 'Authorization': `Bearer ${adminToken}` },
         });
         if (statsRes.ok) {
-          setStats(await statsRes.json());
+          const apiStats = await statsRes.json();
+          setStats({ ...apiStats, studyPulseSignups: 0 });
         }
         setLastUpdated(new Date().toISOString());
       }
@@ -373,6 +389,7 @@ export default function AdminDashboard() {
 
   const parentSubmissions = submissions.filter(s => s.type === 'parent');
   const tutorSubmissions = submissions.filter(s => s.type === 'tutor');
+  const recentStudyPulseSignups = studyPulseSignups.slice(0, 12);
 
   // Login screen
   if (!isAuthenticated) {
@@ -541,6 +558,12 @@ export default function AdminDashboard() {
               Review submissions
             </button>
             <button
+              onClick={() => navigate('/studypulse/admin')}
+              className="px-3 py-2 text-sm bg-amber-500 text-slate-950 rounded-lg hover:bg-amber-400 transition"
+            >
+              Open StudyPulse Admin
+            </button>
+            <button
               onClick={handleExport}
               className="px-3 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
@@ -574,6 +597,10 @@ export default function AdminDashboard() {
             <div onClick={() => handleStatClick('verified')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-red-300 transition">
               <p className="text-gray-600 text-sm">Verified Tutors</p>
               <p className="text-3xl font-bold text-red-600">{stats.verifiedTutors}</p>
+            </div>
+            <div onClick={() => navigate('/studypulse/admin')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-amber-300 transition">
+              <p className="text-gray-600 text-sm">StudyPulse Signups</p>
+              <p className="text-3xl font-bold text-amber-600">{stats.studyPulseSignups || 0}</p>
             </div>
           </div>
         )}
@@ -631,6 +658,32 @@ export default function AdminDashboard() {
                 <li>✓ Update Dashboards.tsx wizards to call submitParentForm/submitTutorForm</li>
                 <li>✓ Add Resend API key to backend .env for email confirmations</li>
               </ul>
+            </div>
+
+            <div className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-bold text-amber-900">StudyPulse parent signups</h3>
+                  <p className="text-sm text-amber-800">These signups come from the StudyPulse flow, not the tuition form.</p>
+                </div>
+                <button
+                  onClick={() => navigate('/studypulse/admin')}
+                  className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400"
+                >
+                  View full StudyPulse admin
+                </button>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {recentStudyPulseSignups.length === 0 ? (
+                  <p className="text-sm text-amber-800">No StudyPulse signups yet.</p>
+                ) : recentStudyPulseSignups.map((signup) => (
+                  <div key={signup.user_id} className="rounded-lg border border-amber-200 bg-white p-3">
+                    <p className="font-semibold text-slate-900">{signup.parent_name || 'StudyPulse Parent'}</p>
+                    <p className="text-xs text-slate-600">{signup.parent_email || signup.parent_phone || 'No contact yet'}</p>
+                    <p className="mt-1 text-xs text-slate-500">Plan: {signup.plan_type || 'free'} · Status: {signup.status || 'free'}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -814,6 +867,48 @@ export default function AdminDashboard() {
 
         {activeTab === 'parents' && (
           <div className="space-y-4">
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div>
+                  <h3 className="text-base font-semibold text-gray-900">StudyPulse parent signups</h3>
+                  <p className="text-sm text-gray-500">These are separate from tuition inquiry form submissions.</p>
+                </div>
+                <button
+                  onClick={() => navigate('/studypulse/admin')}
+                  className="px-3 py-2 text-sm bg-amber-500 text-slate-950 rounded-lg hover:bg-amber-400 transition"
+                >
+                  Open StudyPulse Admin
+                </button>
+              </div>
+              {recentStudyPulseSignups.length === 0 ? (
+                <p className="text-sm text-gray-500">No StudyPulse signups found yet.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Parent</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Contact</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Plan</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Signed up</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recentStudyPulseSignups.map((signup) => (
+                        <tr key={signup.user_id} className="border-b border-gray-200 hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900">{signup.parent_name || 'StudyPulse Parent'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{signup.parent_email || signup.parent_phone || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{signup.plan_type || 'free'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700">{signup.status || 'free'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{signup.created_at ? new Date(signup.created_at).toLocaleDateString() : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
             {/* Parent Status Filter */}
             <div className="bg-white rounded-lg shadow p-4 flex flex-wrap gap-2">
               {['all', 'new', 'contacted', 'diagnostic_booked', 'matching', 'converted', 'follow_up', 'lost'].map(status => (
