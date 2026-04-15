@@ -254,6 +254,16 @@ async function sendCheckinPrompts(
       .eq("user_id", child.parent_id)
       .single();
 
+    const { data: settings } = await sb
+      .from("sq_study_settings")
+      .select("commence_date")
+      .eq("child_id", child.id)
+      .single();
+
+    if (settings?.commence_date && today < settings.commence_date) {
+      continue; // Programme hasn't started yet for this child
+    }
+
     // Check study days: parent-set days take priority, else free=Tue/Thu/Sat, premium=Mon-Fri
     const childStudyDays: number[] = child.study_days && child.study_days.length > 0
       ? child.study_days
@@ -629,7 +639,7 @@ async function sendWeeklySummaries(
   // Get all active children
   const { data: children } = await sb
     .from("sq_children")
-    .select("id, name, parent_id, study_days, whatsapp_number")
+    .select("id, name, parent_id, study_days, cca_days, whatsapp_number")
     .not("whatsapp_number", "is", null);
 
   if (!children) return;
@@ -656,7 +666,19 @@ async function sendWeeklySummaries(
 
     if (!membership?.parent_phone) continue;
 
-    const studyDays = child.study_days && child.study_days.length > 0 ? child.study_days.length : (membership.plan_type === 'free' ? 3 : 5);
+    const { data: settings } = await sb
+      .from("sq_study_settings")
+      .select("commence_date")
+      .eq("child_id", child.id)
+      .single();
+
+    const rawStudyDays: number[] = child.study_days && child.study_days.length > 0
+      ? child.study_days
+      : (membership.plan_type === 'free' ? FREE_DAYS : [1, 2, 3, 4, 5]);
+    const effectiveStudyDays = rawStudyDays.filter((d) => !(child.cca_days || []).includes(d));
+    const summaryStart = settings?.commence_date && settings.commence_date > weekStartStr ? settings.commence_date : weekStartStr;
+    const studyDays = countScheduledDaysInRange(summaryStart, today, effectiveStudyDays);
+    if (studyDays <= 0) continue;
     const lang = membership.preferred_language || "en";
 
     // Build summary message
@@ -894,6 +916,20 @@ function getWeekStart(todayStr: string): string {
   const monday = new Date(d);
   monday.setDate(diff);
   return monday.toISOString().split("T")[0];
+}
+
+function countScheduledDaysInRange(startStr: string, endStr: string, allowedDays: number[]): number {
+  const start = new Date(`${startStr}T12:00:00Z`);
+  const end = new Date(`${endStr}T12:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || start > end) return 0;
+
+  let count = 0;
+  const cursor = new Date(start);
+  while (cursor <= end) {
+    if (allowedDays.includes(cursor.getUTCDay())) count++;
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+  return count;
 }
 
 function isWithinWindow(

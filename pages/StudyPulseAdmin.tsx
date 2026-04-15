@@ -41,6 +41,7 @@ interface MembershipRow {
   parent_name: string;
   parent_email: string;
   parent_phone: string;
+  preferred_language?: 'en' | 'zh';
   created_at: string;
 }
 interface ChildRow {
@@ -49,6 +50,8 @@ interface ChildRow {
   name: string;
   level: string;
   whatsapp_number: string;
+  study_days?: number[];
+  cca_days?: number[];
 }
 interface SubjectRow {
   id: string;
@@ -98,10 +101,12 @@ const StudyPulseAdmin: React.FC = () => {
   const [weeklySummaries, setWeeklySummaries] = useState<WeeklySummary[]>([]);
   const [examTargets, setExamTargets] = useState<ExamTarget[]>([]);
 
-  const [adminTab, setAdminTab] = useState<'monitoring'|'members'|'requests'>('monitoring');
+  const [adminTab, setAdminTab] = useState<'monitoring'|'members'|'requests'|'preview'>('monitoring');
   const [filter, setFilter] = useState<'all'|'free'|'premium'>('all');
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [previewParentId, setPreviewParentId] = useState<string>('');
+  const [previewChildId, setPreviewChildId] = useState<string>('');
 
   useEffect(() => {
     (async () => {
@@ -118,6 +123,7 @@ const StudyPulseAdmin: React.FC = () => {
       setMemberships(mRes.data || []);
       setChildren(cRes.data || []);
       setSubjects(sRes.data || []);
+      if ((mRes.data || []).length > 0) setPreviewParentId((mRes.data || [])[0].user_id);
       setTutorReqs(trRes.data || []);
       setDiagReqs(drRes.data || []);
       setCrashReqs(crRes.data || []);
@@ -136,6 +142,14 @@ const StudyPulseAdmin: React.FC = () => {
       setLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!previewParentId) return;
+    const firstChild = children.find(c => c.parent_id === previewParentId);
+    if (firstChild && !children.some(c => c.id === previewChildId && c.parent_id === previewParentId)) {
+      setPreviewChildId(firstChild.id);
+    }
+  }, [previewParentId, previewChildId, children]);
 
   const filtered = memberships
     .filter(m => filter === 'all' || m.plan_type === filter)
@@ -201,6 +215,52 @@ const StudyPulseAdmin: React.FC = () => {
   };
   const findChild = (childId: string) => children.find(c => c.id === childId);
 
+  const previewParent = memberships.find(m => m.user_id === previewParentId) || null;
+  const previewChildren = previewParent ? children.filter(c => c.parent_id === previewParent.user_id) : [];
+  const previewChild = previewChildren.find(c => c.id === previewChildId) || previewChildren[0] || null;
+  const previewWeekStart = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 6);
+    return d.toISOString().split('T')[0];
+  })();
+  const previewStatuses = previewChild
+    ? [
+        ...recentCheckins.filter(c => c.child_id === previewChild.id && c.checkin_date >= previewWeekStart).map(c => c.status),
+        ...recentTasks.filter(t => t.child_id === previewChild.id && t.task_date >= previewWeekStart).map(t => t.status),
+      ]
+    : [];
+  const previewDoneCount = previewStatuses.filter(s => s === 'yes' || s === 'done' || s === 'did_extra').length;
+  const previewMissedCount = previewStatuses.filter(s => s === 'no' || s === 'incomplete').length;
+  const previewStudyDays = previewChild?.study_days?.length || (previewParent?.plan_type === 'free' ? 3 : 5);
+  const previewLang = previewParent?.preferred_language || 'en';
+  const previewMidweek = previewChildren.map((kid) => {
+    const kidCount = [...recentCheckins.filter(c => c.child_id === kid.id && c.checkin_date >= previewWeekStart).map(c => c.status), ...recentTasks.filter(t => t.child_id === kid.id && t.task_date >= previewWeekStart).map(t => t.status)]
+      .filter(s => s === 'yes' || s === 'done' || s === 'did_extra').length;
+    return `${kid.name}: ${kidCount} check-ins so far`;
+  }).join('\n');
+  const previewExam = previewChild ? examTargets.filter(e => e.child_id === previewChild.id && e.cycle_status === 'active').sort((a, b) => a.exam_date.localeCompare(b.exam_date))[0] : null;
+  const previewSubject = previewExam ? (subjects.find(s => s.id === previewExam.subject_id)?.subject_name || previewExam.exam_type) : null;
+  const previewDaysToExam = previewExam ? Math.max(0, Math.ceil((new Date(previewExam.exam_date).getTime() - Date.now()) / 86400000)) : null;
+  const weeklyPreviewText = !previewChild || !previewParent
+    ? 'Select a StudyPulse parent to preview the outbound message.'
+    : previewLang === 'zh'
+      ? `📊 *${previewChild.name} 的周报*\n${previewWeekStart} 这一周\n\n✅ 完成：${previewDoneCount}/${previewStudyDays} 天\n${previewMissedCount > 0 ? `❌ 缺席：${previewMissedCount} 天\n` : ''}\n${previewDoneCount >= previewStudyDays ? `🎉 完美的一周！${previewChild.name} 每个学习日都打卡了。` : previewDoneCount > 0 ? '不错 — 继续保持！' : '下周争取更多打卡 💪'}\n\n📋 *您这周检查过 ${previewChild.name} 的作业吗？*\n回复 *CONFIRM* 确认，或 *ADJUST* 调整。`
+      : `📊 *Weekly Summary for ${previewChild.name}*\nWeek of ${previewWeekStart}\n\n✅ Completed: ${previewDoneCount}/${previewStudyDays} days\n${previewMissedCount > 0 ? `❌ Missed: ${previewMissedCount} days\n` : ''}\n${previewDoneCount >= previewStudyDays ? `🎉 Perfect week! ${previewChild.name} checked in every study day.` : previewDoneCount > 0 ? 'Good effort — keep building the habit!' : `Let's aim for more check-ins next week 💪`}\n\n📋 *Have you seen ${previewChild.name}'s work this week?*\nReply *confirm* if yes, or *adjust* if not accurate.`;
+  const midweekPreviewText = !previewParent
+    ? 'Select a StudyPulse parent to preview the mid-week nudge.'
+    : previewLang === 'zh'
+      ? `📋 *周中检查* — 温习进行得怎样？\n\n${previewChildren.map(kid => `${kid.name}：到目前为止 ${[...recentCheckins.filter(c => c.child_id === kid.id && c.checkin_date >= previewWeekStart).map(c => c.status), ...recentTasks.filter(t => t.child_id === kid.id && t.task_date >= previewWeekStart).map(t => t.status)].filter(s => s === 'yes' || s === 'done' || s === 'did_extra').length} 次打卡`).join('\n')}\n\n您检查过他们的作业吗？看一看能保持诚实！👀`
+      : `📋 *Mid-week check* — how's the studying going?\n\n${previewMidweek || 'No child activity yet'}\n\nHave you checked their work? A quick look keeps things honest! 👀`;
+  const examPreviewText = !previewParent || !previewChild
+    ? 'Select a StudyPulse parent to preview the exam reminder.'
+    : previewExam && previewDaysToExam !== null
+      ? previewLang === 'zh'
+        ? `📅 ${previewChild.name} 的 ${previewSubject} 考试还有 *${previewDaysToExam} 天*。是时候巩固复习了。`
+        : `📅 ${previewChild.name}'s ${previewSubject} exam is in *${previewDaysToExam} days*. Good time to review and consolidate.`
+      : previewLang === 'zh'
+        ? `目前没有即将发送的考试提醒。`
+        : `There is no urgent exam reminder to send right now.`;
+
   const inputCls = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500';
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-100"><div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600" /></div>;
@@ -245,6 +305,7 @@ const StudyPulseAdmin: React.FC = () => {
             { id: 'monitoring' as const, label: 'Monitoring', icon: Shield },
             { id: 'members' as const, label: 'Members', icon: Users },
             { id: 'requests' as const, label: 'Requests', icon: Zap },
+            { id: 'preview' as const, label: 'Message Preview', icon: FileText },
           ]).map((t) => (
             <button key={t.id} onClick={() => setAdminTab(t.id)} className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition ${adminTab === t.id ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
               <t.icon size={14} /> {t.label}
@@ -471,6 +532,52 @@ const StudyPulseAdmin: React.FC = () => {
                       })}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════ PREVIEW TAB ═══════════ */}
+        {adminTab === 'preview' && (
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700">Admin-only WhatsApp preview</h3>
+              <p className="mt-1 text-xs text-slate-500">This shows the final outbound message in the parent's preferred language before the cron sends it.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600">Parent</label>
+                  <select className={inputCls + ' mt-1'} value={previewParentId} onChange={(e) => setPreviewParentId(e.target.value)}>
+                    {memberships.map((m) => (
+                      <option key={m.user_id} value={m.user_id}>{m.parent_name || m.parent_email || m.user_id.slice(0, 8)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600">Child</label>
+                  <select className={inputCls + ' mt-1'} value={previewChild?.id || ''} onChange={(e) => setPreviewChildId(e.target.value)}>
+                    {previewChildren.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.level})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {previewParent && (
+                <p className="mt-3 text-xs text-slate-500">Language selected by parent: <strong>{previewLang === 'zh' ? 'Chinese' : 'English'}</strong></p>
+              )}
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-3">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4 className="text-sm font-bold text-slate-700">Weekly Summary Preview</h4>
+                <pre className="mt-3 whitespace-pre-wrap text-xs leading-6 text-slate-700">{weeklyPreviewText}</pre>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4 className="text-sm font-bold text-slate-700">Mid-week Nudge Preview</h4>
+                <pre className="mt-3 whitespace-pre-wrap text-xs leading-6 text-slate-700">{midweekPreviewText}</pre>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h4 className="text-sm font-bold text-slate-700">Exam Reminder Preview</h4>
+                <pre className="mt-3 whitespace-pre-wrap text-xs leading-6 text-slate-700">{examPreviewText}</pre>
               </div>
             </div>
           </div>
