@@ -99,25 +99,25 @@ function parseTargetReply(body: string): { quantity: number; unit: string } | nu
 const SKIP_REASONS: { keywords: RegExp; reason: string; emoji: string; kidMsg: string }[] = [
   { keywords: /tired|exhausted|shag|sian|sleepy|drained|no energy|so tired/,
     reason: "feeling tired", emoji: "😴",
-    kidMsg: "Rest well tonight — a fresh mind learns better. See you tomorrow!" },
+    kidMsg: "Noted — rest well." },
   { keywords: /sick|unwell|fever|headache|stomach|not feeling well|mc|medical|doctor|flu|cold|cough/,
     reason: "not feeling well", emoji: "🤒",
-    kidMsg: "Health comes first! Get well soon — studying can wait." },
+    kidMsg: "Noted — get well soon." },
   { keywords: /late|end late|school late|reach home late|came back late|reached late/,
     reason: "school ended late", emoji: "🕐",
-    kidMsg: "Long day! Rest up — tomorrow's a new day." },
+    kidMsg: "Noted — rest well." },
   { keywords: /family|event|outing|dinner|gathering|relative|visitor|celebration|wedding|birthday/,
     reason: "family commitment", emoji: "👨‍👩‍👧‍👦",
-    kidMsg: "Family time is important too! Enjoy — study resumes tomorrow." },
+    kidMsg: "Noted — see you tomorrow." },
   { keywords: /busy|occupied|no time|packed|tuition|class|lesson|extra class|cca|training/,
     reason: "busy schedule", emoji: "📅",
-    kidMsg: "Packed day! It's okay to skip — consistency over intensity." },
+    kidMsg: "Noted — see you tomorrow." },
   { keywords: /exam|test tomorrow|revision|preparing|studying for|mugging/,
     reason: "exam prep (different subject)", emoji: "📝",
-    kidMsg: "Focused on exams — that totally counts! Good luck!" },
+    kidMsg: "Noted — good luck." },
   { keywords: /stressed|cannot|overwhelm|too much|pressure|anxious|anxiety|scared|worried|hate study|hate school|don.t want/,
     reason: "feeling overwhelmed", emoji: "💛",
-    kidMsg: "It's okay to feel that way. Take a break — you're doing your best. 💛" },
+    kidMsg: "Noted 💛 Rest well." },
 ];
 
 function parseSkipReason(body: string): { reason: string; emoji: string; kidMsg: string } | null {
@@ -397,7 +397,7 @@ serve(async (req) => {
 
     // ── ALREADY CHECKED IN? Block re-replies ──
     const { data: existingCheckin } = await sb.from("sq_checkins")
-      .select("id, status, prompt_sent_at")
+      .select("id, status, prompt_sent_at, note")
       .eq("child_id", child.id)
       .eq("checkin_date", today)
       .order("created_at", { ascending: false })
@@ -406,6 +406,10 @@ serve(async (req) => {
 
     if (existingCheckin && existingCheckin.status !== "pending") {
       if (existingCheckin.status === "no" && preCheck?.status === "rest_day") {
+        if (existingCheckin.note) {
+          return ok();
+        }
+
         const skipInfo = parseSkipReason(body)!;
         await sb.from("sq_checkins")
           .update({ note: skipInfo.reason, reply_received_at: now.toISOString() })
