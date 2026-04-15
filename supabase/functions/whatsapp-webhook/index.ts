@@ -9,6 +9,10 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
  *   idle              → normal check-in mode
  *   setting_target    → kid is setting weekly targets per subject
  *   partial_count     → kid said "partially", asking how many they did
+ *
+ * Notes:
+ *   after a child replies "no", they can still send a follow-up reason
+ *   like "tired" or "sick" and the system will record it.
  */
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -401,6 +405,33 @@ serve(async (req) => {
       .single();
 
     if (existingCheckin && existingCheckin.status !== "pending") {
+      if (existingCheckin.status === "no" && preCheck?.status === "rest_day") {
+        const skipInfo = parseSkipReason(body)!;
+        await sb.from("sq_checkins")
+          .update({ note: skipInfo.reason, reply_received_at: now.toISOString() })
+          .eq("id", existingCheckin.id);
+
+        await sendRaw(phone, `${skipInfo.emoji} ${skipInfo.kidMsg}`);
+
+        if (membership?.parent_phone && membership.parent_phone !== phone) {
+          const isDistress = /overwhelm|stressed|anxious|hate|scared|worried|pressure/.test(body.toLowerCase());
+          let parentMsg: string;
+          if (parentLang === "zh") {
+            const reasonZh = REASON_ZH[skipInfo.reason] || skipInfo.reason;
+            parentMsg = isDistress
+              ? ZH.rest_distress(child.name, reasonZh)
+              : `${skipInfo.emoji} ${ZH.rest_normal(child.name, reasonZh)}`;
+          } else {
+            parentMsg = isDistress
+              ? `💛 Heads up — ${child.name} said they're ${skipInfo.reason}. Might be worth a chat tonight.`
+              : `${skipInfo.emoji} ${child.name} is taking a rest day (${skipInfo.reason}). They still checked in!`;
+          }
+          await sendRaw(membership.parent_phone, parentMsg);
+        }
+
+        return ok();
+      }
+
       // Already answered today — send ONE reminder then go silent
       const { count: outboundToday } = await sb
         .from("whatsapp_conversations")
@@ -577,7 +608,7 @@ serve(async (req) => {
     // ── NO ──
     } else if (parsed.status === "no") {
       await sendRaw(phone,
-        `Thanks for being honest, ${child.name}. Not every day is a study day — checking in still counts. 💪\n\nTomorrow is a fresh start!`
+        `Thanks for being honest, ${child.name}. Not every day is a study day — checking in still counts. 💪\n\nIf there was a reason, you can still reply with something like *tired*, *sick*, or *busy* and I'll note it down.`
       );
 
       if (membership?.parent_phone && membership.parent_phone !== phone) {
