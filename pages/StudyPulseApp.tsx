@@ -1058,16 +1058,22 @@ const StudyPulseApp: React.FC = () => {
                 { value: 5, label: 'Fri' },
                 { value: 6, label: 'Sat' },
               ];
-              const currentDays: number[] = getEffectiveStudyDays(c, premium);
+              const savedDays: number[] = Array.isArray(c.study_days)
+                ? c.study_days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+                : [];
+              const currentDays: number[] = savedDays.length > 0 ? savedDays : getEffectiveStudyDays(c, premium);
 
               const toggleDay = async (dayNum: number) => {
                 if (!premium) {
                   setDashboardNotice({ type: 'info', text: 'Free plan study days are fixed to Tue, Thu, and Sat.' });
                   return;
                 }
-                const updated = currentDays.includes(dayNum)
-                  ? currentDays.filter(d => d !== dayNum)
-                  : [...currentDays, dayNum].sort();
+                // If there is no custom schedule saved yet, treat the first tap as choosing exact days,
+                // instead of toggling against the Mon-Fri default.
+                const baseDays = savedDays.length > 0 ? currentDays : [];
+                const updated = baseDays.includes(dayNum)
+                  ? baseDays.filter(d => d !== dayNum)
+                  : [...baseDays, dayNum].sort();
                 if (updated.length === 0) return; // must have at least 1 day
                 const ok = await updateStudyDays(c.id, updated);
                 if (ok) {

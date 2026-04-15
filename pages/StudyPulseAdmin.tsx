@@ -124,7 +124,6 @@ const StudyPulseAdmin: React.FC = () => {
       setMemberships(mRes.data || []);
       setChildren(cRes.data || []);
       setSubjects(sRes.data || []);
-      if ((mRes.data || []).length > 0) setPreviewParentId((mRes.data || [])[0].user_id);
       setTutorReqs(trRes.data || []);
       setDiagReqs(drRes.data || []);
       setCrashReqs(crRes.data || []);
@@ -548,6 +547,7 @@ const StudyPulseAdmin: React.FC = () => {
                 <div>
                   <label className="text-xs font-semibold text-slate-600">Parent</label>
                   <select className={inputCls + ' mt-1'} value={previewParentId} onChange={(e) => setPreviewParentId(e.target.value)}>
+                    <option value="">Select a parent...</option>
                     {memberships.map((m) => (
                       <option key={m.user_id} value={m.user_id}>{m.parent_name || m.parent_email || m.user_id.slice(0, 8)}</option>
                     ))}
@@ -555,7 +555,8 @@ const StudyPulseAdmin: React.FC = () => {
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-slate-600">Child</label>
-                  <select className={inputCls + ' mt-1'} value={previewChild?.id || ''} onChange={(e) => setPreviewChildId(e.target.value)}>
+                  <select className={inputCls + ' mt-1'} value={previewChild?.id || ''} onChange={(e) => setPreviewChildId(e.target.value)} disabled={!previewParent}>
+                    <option value="">{previewParent ? 'Select a child...' : 'Select a parent first'}</option>
                     {previewChildren.map((c) => (
                       <option key={c.id} value={c.id}>{c.name} ({c.level})</option>
                     ))}
@@ -571,7 +572,7 @@ const StudyPulseAdmin: React.FC = () => {
                 </div>
               </div>
               {previewParent && (
-                <p className="mt-3 text-xs text-slate-500">Saved parent language: <strong>{previewParent.preferred_language === 'zh' ? 'Chinese' : 'English / default'}</strong> · Preview currently showing: <strong>{previewLang === 'zh' ? 'Chinese' : 'English'}</strong></p>
+                <p className="mt-3 text-xs text-slate-500">Saved parent language: <strong>{previewParent.preferred_language === 'zh' ? 'Chinese' : previewParent.preferred_language === 'en' ? 'English' : 'Not set'}</strong> · Preview currently showing: <strong>{previewLang === 'zh' ? 'Chinese' : 'English'}</strong></p>
               )}
             </div>
 
