@@ -851,7 +851,7 @@ async function sendMidWeekParentNudge(
       .eq("user_id", parentId)
       .single();
 
-    if (!membership?.parent_phone || membership.plan_type === "free") continue;
+    if (!membership?.parent_phone) continue;
 
     // Count check-ins so far this week
     const { data: kids } = await sb

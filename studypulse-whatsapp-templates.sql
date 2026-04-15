@@ -76,7 +76,7 @@ VALUES
     'sp_reminder_no_checkin_day',
     'studypulse_reminder',
     'active',
-    'Hi {parent_name}, today isn''t a check-in day for {child_name} (Free plan: 3x/week). Next check-in: {next_day}.',
+    'Hi {parent_name}, today isn''t a check-in day for {child_name} (Free plan: Tue/Thu/Sun). Next check-in: {next_day}.',
     true,
     'parent_name, child_name, next_day'
   )
@@ -237,7 +237,7 @@ VALUES
     'sp_upgrade_streak',
     'studypulse_upgrade',
     'active',
-    '{child_name} has been consistent on 3x/week check-ins! Daily check-ins could build even stronger habits. Upgrade for $9.90/mo: {upgrade_link}',
+    '{child_name} has been consistent on bundled Tue/Thu/Sun check-ins! Daily check-ins could build even stronger habits. Upgrade for $9.90/mo: {upgrade_link}',
     true,
     'child_name, upgrade_link'
   )

@@ -1603,7 +1603,7 @@ const StudyPulseApp: React.FC = () => {
                 <div>
                   <p className="text-lg font-black text-slate-900">{membership?.plan_type === 'free' ? 'Free' : 'Premium'}</p>
                   <p className="text-xs text-slate-500">
-                    {premium ? 'Daily check-ins · All subjects · Unlimited children' : '3 check-ins/week · 1 subject · 1 child'}
+                    {premium ? 'Daily check-ins · All subjects · Unlimited children' : 'Tue/Thu/Sun bundled check-ins · 1 subject · 1 child'}
                   </p>
                   {membership?.current_period_end && (
                     <p className="mt-1 text-[11px] text-slate-400">

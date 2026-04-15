@@ -73,16 +73,16 @@ const T = {
   freeDontGet: { en: 'You don\u2019t get', zh: '不包含' },
   freeDiff: { en: 'The difference', zh: '区别在哪里' },
   freeGet: {
-    en: ['Track 1 child, 1 subject', 'Check-ins 3x/week (Tue, Thu, Sat)', 'Sunday weekly report', 'Exam countdown visible', 'Request tutor / diagnostic anytime'],
-    zh: ['跟踪 1 个孩子、1 个科目', '每周打卡 3 次（二、四、六）', '周日周报', '考试倒计时可见', '随时申请补习/评估'],
+    en: ['Track 1 child, 1 subject', 'Bundled check-ins 3x/week (Tue, Thu, Sun)', 'Sunday weekly report', 'Exam countdown visible', 'Request tutor / diagnostic anytime'],
+    zh: ['跟踪 1 个孩子、1 个科目', '每周打卡 3 次（二、四、日）', '周日周报', '考试倒计时可见', '随时申请补习/评估'],
   },
   freeMiss: {
-    en: ['Monday, Wednesday, Friday, Sunday \u2014 no check-ins', 'No daily summary to parent', 'No auto pause / restart after exams', 'No exam follow-up reminders', 'No smart tutor triggers'],
-    zh: ['周一、三、五、日 \u2014 无打卡', '无每日家长摘要', '考后无自动暂停/重启', '无考试跟进提醒', '无智能补习推荐'],
+    en: ['No daily check-ins (bundled into Tue, Thu, Sun)', 'No daily summary to parent', 'No auto pause / restart after exams', 'No exam follow-up reminders', 'No smart tutor triggers'],
+    zh: ['无每日打卡（合并为二、四、日）', '无每日家长摘要', '考后无自动暂停/重启', '无考试跟进提醒', '无智能补习推荐'],
   },
   freeDiffP1: {
-    en: 'Free check-ins happen 3 times a week. That\u2019s enough to start building the habit. But daily check-ins build stronger streaks and catch missed days before they become patterns.',
-    zh: '免费版每周打卡3次，足以开始养成习惯。但每天打卡能建立更强的连续记录，更及时发现遗漏。',
+    en: 'Free check-ins happen 3 times a week, bundled to cover every study day. But daily check-ins are harder to fake and build stronger habits.',
+    zh: '免费版每周打卡3次，合并覆盖所有学习日。但每天打卡更难造假，习惯也更牢固。',
   },
   freeDiffP2: {
     en: 'On Premium, your child checks in every day. You see full weekly summaries with insights \u2014 not just snapshots.',
@@ -122,7 +122,7 @@ const T = {
   recommended: { en: 'RECOMMENDED', zh: '推荐' },
   r1child: { en: '1 child', zh: '1 个孩子' },
   r1subj: { en: '1 subject', zh: '1 个科目' },
-  r3wk: { en: '3 check-ins/week', zh: '每周 3 次打卡' },
+  r3wk: { en: 'Bundled check-ins (Tue/Thu/Sun)', zh: '合并打卡（二/四/日）' },
   rWeekly: { en: 'Weekly report', zh: '周报' },
   rDaily: { en: 'Daily summary', zh: '每日摘要' },
   rPause: { en: 'Auto pause / restart', zh: '自动暂停/重启' },
@@ -179,7 +179,7 @@ const T = {
     en: [
       { label: 'Children tracked', free: '1', premium: 'Unlimited' },
       { label: 'Subjects per child', free: '1', premium: 'All subjects' },
-      { label: 'Check-in frequency', free: '3x/week (Tue, Thu, Sat)', premium: 'Daily' },
+      { label: 'Check-in frequency', free: 'Bundled 3x/week (Tue, Thu, Sun)', premium: 'Daily' },
       { label: 'Weekly parent report', free: true as string | boolean, premium: true as string | boolean },
       { label: 'Daily parent summary', free: false as string | boolean, premium: true as string | boolean },
       { label: 'Exam countdown & alerts', free: true as string | boolean, premium: true as string | boolean },
@@ -193,7 +193,7 @@ const T = {
     zh: [
       { label: '跟踪孩子数量', free: '1', premium: '不限' },
       { label: '每个孩子的科目', free: '1', premium: '所有科目' },
-      { label: '打卡频率', free: '每周3次（二、四、六）', premium: '每天' },
+      { label: '打卡频率', free: '每周3次合并打卡（二、四、日）', premium: '每天' },
       { label: '每周家长报告', free: true as string | boolean, premium: true as string | boolean },
       { label: '每日家长摘要', free: false as string | boolean, premium: true as string | boolean },
       { label: '考试倒计时和提醒', free: true as string | boolean, premium: true as string | boolean },
