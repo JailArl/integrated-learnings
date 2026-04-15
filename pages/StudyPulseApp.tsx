@@ -182,6 +182,7 @@ const StudyPulseApp: React.FC = () => {
   const [upgraded, setUpgraded] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
   const [openingBilling, setOpeningBilling] = useState(false);
+  const [editingStudyDaysId, setEditingStudyDaysId] = useState<string | null>(null);
   const [dashboardNotice, setDashboardNotice] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [savingParentLanguage, setSavingParentLanguage] = useState(false);
   const [parentLanguageMessage, setParentLanguageMessage] = useState('');
@@ -1065,6 +1066,7 @@ const StudyPulseApp: React.FC = () => {
                 ? c.study_days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
                 : [];
               const currentDays: number[] = savedDays.length > 0 ? savedDays : getEffectiveStudyDays(c, premium);
+              const isEditingStudyDays = editingStudyDaysId === c.id;
 
               const toggleDay = async (dayNum: number) => {
                 // If there is no custom schedule saved yet, treat the first tap as choosing exact days,
@@ -1091,7 +1093,7 @@ const StudyPulseApp: React.FC = () => {
                     .join(', ');
                   setDashboardNotice({
                     type: 'success',
-                    text: `${c.name}'s study days updated: ${selectedLabels}. You can change this anytime.`,
+                    text: `${c.name}'s study days updated: ${selectedLabels}. Future reminders will follow this schedule.`,
                   });
                   if (child?.id === c.id && weeklyTargets.length > 0) {
                     const recalc = await Promise.all(weeklyTargets.map((target) => upsertWeeklyTarget({
@@ -1185,19 +1187,32 @@ const StudyPulseApp: React.FC = () => {
                   )}
 
                   <div className="mt-4">
-                    <p className="text-sm font-bold text-slate-700">Study Days</p>
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold text-slate-700">Study Days</p>
+                      <button
+                        onClick={() => setEditingStudyDaysId(isEditingStudyDays ? null : c.id)}
+                        className={`rounded-lg px-3 py-1 text-xs font-bold ${isEditingStudyDays ? 'bg-slate-900 text-white' : 'border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                      >
+                        {isEditingStudyDays ? 'Done' : 'Edit Study Days'}
+                      </button>
+                    </div>
                     <p className="mt-1 text-xs text-slate-500">
-                      Tap the day buttons to edit {c.name}'s study schedule anytime. Check-ins are sent only on the selected days,
-                      and weekly targets are divided by the number of study days.
+                      Parents can change {c.name}'s study schedule anytime. The system will update automatically and remind {c.name} only on the selected days.
                     </p>
+                    {isEditingStudyDays ? (
+                      <p className="mt-2 text-xs font-semibold text-emerald-700">Editing is on — tap the days below to update the schedule.</p>
+                    ) : (
+                      <p className="mt-2 text-xs text-slate-400">Need to change the plan? Tap Edit Study Days.</p>
+                    )}
                     <div className="mt-3 flex gap-2">
                       {DAY_LABELS.map((d) => {
                         const isActive = currentDays.includes(d.value);
                         return (
                           <button
                             key={d.value}
+                            disabled={!isEditingStudyDays}
                             onClick={() => toggleDay(d.value)}
-                            className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition ${
+                            className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${
                               isActive
                                 ? 'bg-slate-900 text-white shadow-sm'
                                 : 'border border-slate-200 bg-white text-slate-400 hover:bg-slate-50'
