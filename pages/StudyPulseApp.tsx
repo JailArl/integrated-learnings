@@ -1085,6 +1085,14 @@ const StudyPulseApp: React.FC = () => {
                   setChildren(prev => prev.map((ch, i) =>
                     ch.id === c.id ? { ...ch, study_days: updated } : ch
                   ));
+                  const selectedLabels = DAY_LABELS
+                    .filter((d) => updated.includes(d.value))
+                    .map((d) => d.label)
+                    .join(', ');
+                  setDashboardNotice({
+                    type: 'success',
+                    text: `${c.name}'s study days updated: ${selectedLabels}. You can change this anytime.`,
+                  });
                   if (child?.id === c.id && weeklyTargets.length > 0) {
                     const recalc = await Promise.all(weeklyTargets.map((target) => upsertWeeklyTarget({
                       child_id: c.id,
@@ -1100,6 +1108,8 @@ const StudyPulseApp: React.FC = () => {
                       setTargetSaveMessage('Study days changed, and the daily target split was updated automatically.');
                     }
                   }
+                } else {
+                  setDashboardNotice({ type: 'error', text: 'Could not update the study days yet. Please try again.' });
                 }
               };
 
@@ -1177,8 +1187,8 @@ const StudyPulseApp: React.FC = () => {
                   <div className="mt-4">
                     <p className="text-sm font-bold text-slate-700">Study Days</p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Pick the days {c.name} studies. Check-ins are sent only on these days.
-                      Weekly targets are divided by the number of study days.
+                      Tap the day buttons to edit {c.name}'s study schedule anytime. Check-ins are sent only on the selected days,
+                      and weekly targets are divided by the number of study days.
                     </p>
                     <div className="mt-3 flex gap-2">
                       {DAY_LABELS.map((d) => {
