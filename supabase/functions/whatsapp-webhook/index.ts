@@ -612,7 +612,7 @@ serve(async (req) => {
     // ── NO ──
     } else if (parsed.status === "no") {
       await sendRaw(phone,
-        `Thanks for being honest, ${child.name}. Not every day is a study day — checking in still counts. 💪\n\nIf there was a reason, you can still reply with something like *tired*, *sick*, or *busy* and I'll note it down.`
+        `Thanks for being honest, ${child.name}. Not every day is a study day. 💪\n\nIf you'd like, can you tell me the reason? You can just reply *tired*, *sick*, or *busy*.`
       );
 
       if (membership?.parent_phone && membership.parent_phone !== phone) {
