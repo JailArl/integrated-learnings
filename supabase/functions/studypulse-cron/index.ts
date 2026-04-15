@@ -346,13 +346,13 @@ async function sendCheckinPrompts(
 
     if (hasTargets && isPremium) {
       const targetLine = targets!.map(t =>
-        `• ${t.subject_name}: *${t.daily_quantity} ${t.target_unit}s*`
+        `• ${t.subject_name}: *${t.daily_quantity} ${t.target_unit}${t.daily_quantity > 1 ? "s" : ""}*`
       ).join("\n");
-      message = `Hey ${child.name}! 📚 Today's target:\n${targetLine}${examLine}\n\nHave you finished? Reply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
+      message = `Good evening, ${child.name} 🌙\n\nHave you finished today's target?\n${targetLine}${examLine}\n\nReply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
     } else if (isPremium) {
-      message = `Hey ${child.name}! 📚 Time for your study check-in.${examLine}\n\nReply with:\n✅ *done* — finished all tasks\n⚡ *did extra* — went beyond the plan\n📝 *partially* — did some\n❌ *no* — didn't study today`;
+      message = `Good evening, ${child.name} 🌙\n\nHave you finished today's study target?${examLine}\n\nReply with:\n✅ *done*\n⚡ *did extra*\n📝 *partially*\n❌ *no*`;
     } else {
-      message = `Hey ${child.name}! 📚 Study check-in time!${examLine}\n\nDid you study today?\nReply: *yes* or *no*`;
+      message = `Good evening, ${child.name} 🌙\n\nDid you study today?${examLine}\n\nReply: *yes* or *no*`;
     }
 
     await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);

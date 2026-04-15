@@ -452,6 +452,15 @@ serve(async (req) => {
       return ok();
     }
 
+    // ── GET TODAY'S TARGET ──
+    const { data: todayTargets } = await sb.from("sq_weekly_targets")
+      .select("subject_name, daily_quantity, target_unit, remaining_quantity")
+      .eq("child_id", child.id)
+      .eq("week_start", weekStart);
+
+    const hasTargets = todayTargets && todayTargets.length > 0;
+    const todayTarget = hasTargets ? todayTargets[0] : null;
+
     const parsed = parseCheckinStatus(body);
 
     if (!parsed) {
@@ -468,10 +477,21 @@ serve(async (req) => {
         return ok();
       }
 
+      const isGreeting = /^(hi|hello|hey|yo|hii+)$/i.test(body.trim());
+      const welcomeTargetLine = hasTargets
+        ? todayTargets!.map(t => `• ${t.subject_name}: ${t.daily_quantity} ${t.target_unit}${t.daily_quantity > 1 ? "s" : ""}`).join("\n")
+        : null;
+
       await sendRaw(phone,
         isPremium
-          ? `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nYou're all set. Your parent will set your weekly study target in the dashboard, and you'll receive your daily target automatically on each study day.\n\nWhen the prompt arrives, reply with:\n✅ *done* — completed today's tasks\n📝 *partially* — did some\n❌ *no* — skipped today\n⚡ *did extra* — went beyond the plan\n\nLet's go! 💪`
-          : `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nYou're all set. Your daily check-in prompt will arrive at your scheduled time each study day.\n\nWhen it arrives, just reply:\n✅ *yes* — studied today\n❌ *no* — skipped\n\nSee you then! 📚`
+          ? isGreeting
+            ? welcomeTargetLine
+              ? `Hi ${child.name}! 👋 Welcome to StudyPulse.\n\nYour target for today is:\n${welcomeTargetLine}\n\nWhen you're done tonight, just reply *done*, *partially*, or *no*.`
+              : `Hi ${child.name}! 👋 Welcome to StudyPulse.\n\nYour parent will set your study target in the dashboard, and I'll check in with you each study day.`
+            : `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nWhen the prompt arrives, reply with:\n✅ *done* — completed today's tasks\n📝 *partially* — did some\n❌ *no* — skipped today\n⚡ *did extra* — went beyond the plan`
+          : isGreeting
+            ? `Hi ${child.name}! 👋 Welcome to StudyPulse.\n\nI'll check in with you on your study days. When I do, just reply *yes* or *no*.`
+            : `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nWhen it arrives, just reply:\n✅ *yes* — studied today\n❌ *no* — skipped`
       );
       return ok();
     }
@@ -489,15 +509,6 @@ serve(async (req) => {
       await sendRaw(phone, "Hey! Reply with: *done* / *partially* / *no* 😊");
       return ok();
     }
-
-    // ── GET TODAY'S TARGET ──
-    const { data: todayTargets } = await sb.from("sq_weekly_targets")
-      .select("subject_name, daily_quantity, target_unit, remaining_quantity")
-      .eq("child_id", child.id)
-      .eq("week_start", weekStart);
-
-    const hasTargets = todayTargets && todayTargets.length > 0;
-    const todayTarget = hasTargets ? todayTargets[0] : null;
 
     // ── FIND OR CREATE CHECKIN ──
     // existingCheckin already fetched above (for the re-reply guard)
