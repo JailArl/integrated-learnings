@@ -126,14 +126,13 @@ function weekStart(): string {
 const today = () => formatLocalDate(new Date());
 const dayName = (d: Date) => ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][d.getDay()];
 const isFreeCheckinDay = () => FREE_CHECKIN_DAYS.includes(dayName(new Date()) as any);
-const DEFAULT_PREMIUM_DAYS = [1, 2, 3, 4, 5];
-const DEFAULT_FREE_DAYS = [2, 4, 6];
-const getEffectiveStudyDays = (child: SQChild | undefined, premiumPlan: boolean): number[] => {
+const DEFAULT_STUDY_DAYS = [1, 2, 3, 4, 5]; // Mon-Fri for both plans
+const getEffectiveStudyDays = (child: SQChild | undefined): number[] => {
   const savedDays = Array.isArray(child?.study_days)
     ? child!.study_days!.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
     : [];
   if (savedDays.length > 0) return savedDays;
-  return premiumPlan ? DEFAULT_PREMIUM_DAYS : DEFAULT_FREE_DAYS;
+  return DEFAULT_STUDY_DAYS;
 };
 
 /* ═══════════════════════════════════════════ */
@@ -372,7 +371,7 @@ const StudyPulseApp: React.FC = () => {
 
   const handleSaveWeeklyTargets = async () => {
     if (!child) return;
-    const studyDaysCount = Math.max(1, getEffectiveStudyDays(child, premium).length);
+    const studyDaysCount = Math.max(1, getEffectiveStudyDays(child).length);
     const currentWeek = weekStart();
     setSavingTargets(true);
     setTargetSaveMessage('');
@@ -429,7 +428,7 @@ const StudyPulseApp: React.FC = () => {
       const checkin = checkins.find(c => c.checkin_date === dateStr);
       const metadataExcuse = child ? metadataExcuses[child.id]?.[dateStr] : undefined;
       // Only mark as missed on days that are actually study days for this child
-      const childStudyDays: number[] = getEffectiveStudyDays(child, premium);
+      const childStudyDays: number[] = getEffectiveStudyDays(child);
       const ccaDays: number[] = child?.cca_days || [];
       const dayOfWeek = d.getDay(); // 0=Sun
       const isStudyDay = childStudyDays.includes(dayOfWeek);
@@ -636,7 +635,7 @@ const StudyPulseApp: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Crown size={18} className="mt-0.5 flex-shrink-0 text-amber-500" />
                   <div>
-                    <p className="text-xs font-bold text-slate-900">Free plan: 3 check-ins/week</p>
+                    <p className="text-xs font-bold text-slate-900">Free plan: Tue, Thu, Sun check-ins</p>
                     <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, all subjects, and unlimited children.</p>
                     <button disabled={upgrading} onClick={() => handleUpgrade()} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
                       {upgrading ? 'Please wait...' : 'Upgrade securely soon'} <ArrowRight size={12} className="ml-1" />
@@ -784,7 +783,7 @@ const StudyPulseApp: React.FC = () => {
               {/* Free plan day indicator */}
               {!premium && (
                 <p className="mt-4 text-xs text-slate-500">
-                  Free plan check-in days: <strong className="text-emerald-600">Tue, Thu, Sat</strong>. Upgrade for daily check-ins.
+                  Free plan check-ins: <strong className="text-emerald-600">Tue, Thu, Sun</strong> (bundled — covers all your study days). Upgrade for daily check-ins.
                 </p>
               )}
             </div>
@@ -1065,7 +1064,7 @@ const StudyPulseApp: React.FC = () => {
               const savedDays: number[] = Array.isArray(c.study_days)
                 ? c.study_days.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
                 : [];
-              const currentDays: number[] = savedDays.length > 0 ? savedDays : getEffectiveStudyDays(c, premium);
+              const currentDays: number[] = savedDays.length > 0 ? savedDays : getEffectiveStudyDays(c);
               const isEditingStudyDays = editingStudyDaysId === c.id;
 
               const toggleDay = async (dayNum: number) => {
@@ -1073,10 +1072,7 @@ const StudyPulseApp: React.FC = () => {
                 // instead of toggling against the default schedule.
                 const baseDays = savedDays.length > 0 ? currentDays : [];
 
-                if (!premium && !baseDays.includes(dayNum) && baseDays.length >= 3) {
-                  setDashboardNotice({ type: 'info', text: 'Free plan allows up to 3 study days each week.' });
-                  return;
-                }
+                // Both plans allow unlimited study days
 
                 const updated = baseDays.includes(dayNum)
                   ? baseDays.filter(d => d !== dayNum)
@@ -1269,9 +1265,9 @@ const StudyPulseApp: React.FC = () => {
                   )}
 
                   {!premium && (
-                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
-                      <p className="text-xs text-amber-800">
-                        <strong>Free plan:</strong> Limited to Tue, Thu, Sat. Upgrade to choose your own days.
+                    <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-3">
+                      <p className="text-xs text-blue-800">
+                        <strong>Free plan:</strong> Check-ins every Tue, Thu &amp; Sun — covering all your study days in bundles. Upgrade for daily check-ins.
                       </p>
                     </div>
                   )}
@@ -1329,7 +1325,7 @@ const StudyPulseApp: React.FC = () => {
                 <div className="mt-4 space-y-3">
                   {displaySubjects.map((subject) => {
                     const existing = weeklyTargets.find(t => t.subject_name === subject.subject_name);
-                    const studyDaysCount = Math.max(1, getEffectiveStudyDays(child, premium).length);
+                    const studyDaysCount = Math.max(1, getEffectiveStudyDays(child).length);
                     const quantity = Number(targetQuantities[subject.id] || 0);
                     const perDay = quantity > 0 ? Math.ceil(quantity / studyDaysCount) : 0;
                     return (

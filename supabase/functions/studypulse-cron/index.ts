@@ -75,8 +75,21 @@ function getLevelGroup(level: string): string {
   return "secondary_upper_jc";
 }
 
-// FREE plan: only check-in on Tue/Thu/Sat
-const FREE_DAYS = [2, 4, 6]; // 0=Sun, 1=Mon, ... 6=Sat
+// FREE plan: check-in on Tue/Thu/Sun (bundled — covers neighbouring study days)
+const FREE_CHECKIN_DAYS = [0, 2, 4]; // 0=Sun, 2=Tue, 4=Thu
+const FREE_CHECKIN_WINDOWS: Record<number, number[]> = {
+  2: [1, 2],      // Tue covers Mon + Tue
+  4: [3, 4],      // Thu covers Wed + Thu
+  0: [5, 6, 0],   // Sun covers Fri + Sat (+ Sun if study day)
+};
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// Premium parent report days (Tue + Thu mini-reports; Sunday = weekly summary)
+const PREMIUM_PARENT_REPORT_DAYS = [2, 4];
+const PREMIUM_REPORT_WINDOWS: Record<number, number[]> = {
+  2: [1, 2],  // Tue report covers Mon + Tue
+  4: [3, 4],  // Thu report covers Wed + Thu
+};
 
 async function sendWhatsApp(
   to: string,
@@ -264,39 +277,19 @@ async function sendCheckinPrompts(
       continue; // Programme hasn't started yet for this child
     }
 
-    // Check study days: parent-set days take priority.
+    // Study days: parent-set days take priority, default Mon-Fri
     const savedStudyDays: number[] = Array.isArray(child.study_days)
       ? child.study_days
           .map((d) => Number(d))
           .filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
       : [];
     const isFreePlan = !membership || membership.plan_type === "free";
-    const defaultStudyDays = isFreePlan
-      ? FREE_DAYS
-      : [1, 2, 3, 4, 5]; // Mon-Fri default for premium only
     const childStudyDays: number[] = savedStudyDays.length > 0
       ? savedStudyDays
-      : defaultStudyDays;
+      : [1, 2, 3, 4, 5]; // Mon-Fri default for both plans
 
-    if (!childStudyDays.includes(dayOfWeek)) {
-      continue; // Not a study day for this child
-    }
-
-    // Skip CCA days — kid is out late, don't prompt
+    // Skip CCA days
     const ccaDays: number[] = child.cca_days && child.cca_days.length > 0 ? child.cca_days : [];
-    if (ccaDays.includes(dayOfWeek)) {
-      continue; // CCA day — system stays silent
-    }
-
-    // Check if already prompted today
-    const { data: existing } = await sb
-      .from("sq_checkins")
-      .select("id")
-      .eq("child_id", child.id)
-      .eq("checkin_date", today)
-      .limit(1);
-
-    if (existing && existing.length > 0) continue; // Already sent
 
     // Get today's target (if any)
     const weekStart = getWeekStart(today);
@@ -308,19 +301,6 @@ async function sendCheckinPrompts(
 
     const hasTargets = targets && targets.length > 0;
     const todayTarget = hasTargets ? targets[0] : null;
-
-    // Create pending checkin record
-    await sb.from("sq_checkins").insert({
-      child_id: child.id,
-      checkin_date: today,
-      status: "pending",
-      prompt_sent_at: new Date().toISOString(),
-      ...(todayTarget && {
-        target_quantity: todayTarget.daily_quantity,
-        target_unit: todayTarget.target_unit,
-        subject_reported: todayTarget.subject_name,
-      }),
-    });
 
     // Get nearest active exam for this child
     const { data: activeExams } = await sb
@@ -336,7 +316,6 @@ async function sendCheckinPrompts(
     if (activeExams && activeExams.length > 0) {
       const exam = activeExams[0];
       const daysLeft = Math.ceil((new Date(exam.exam_date).getTime() - new Date(today).getTime()) / 86400000);
-      // Get subject name
       let examSubject = exam.exam_type;
       if (exam.subject_id) {
         const { data: subj } = await sb.from("sq_monitored_subjects").select("subject_name").eq("id", exam.subject_id).single();
@@ -347,23 +326,85 @@ async function sendCheckinPrompts(
       }
     }
 
-    // Send WhatsApp prompt — target-based or generic
-    const isPremium = membership?.plan_type !== "free";
-    let message: string;
+    if (isFreePlan) {
+      // ═══ FREE TIER: bundled check-in on Tue/Thu/Sun ═══
+      if (!FREE_CHECKIN_DAYS.includes(dayOfWeek)) continue;
 
-    if (hasTargets && isPremium) {
-      const targetLine = targets!.map(t =>
-        `• ${t.subject_name}: *${t.daily_quantity} ${t.target_unit}${t.daily_quantity > 1 ? "s" : ""}*`
-      ).join("\n");
-      message = `Good evening, ${child.name} 🌙\n\nHave you finished today's target?\n${targetLine}${examLine}\n\nReply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
-    } else if (isPremium) {
-      message = `Good evening, ${child.name} 🌙\n\nHave you finished today's study target?${examLine}\n\nReply with:\n✅ *done*\n⚡ *did extra*\n📝 *partially*\n❌ *no*`;
+      const windowDays = FREE_CHECKIN_WINDOWS[dayOfWeek] || [];
+      // Only study days in this window (excluding CCA days)
+      const coveredStudyDays = windowDays.filter(d => childStudyDays.includes(d) && !ccaDays.includes(d));
+      if (coveredStudyDays.length === 0) continue;
+
+      // Check if already prompted today
+      const { data: existing } = await sb
+        .from("sq_checkins").select("id").eq("child_id", child.id).eq("checkin_date", today).limit(1);
+      if (existing && existing.length > 0) continue;
+
+      const coveredDayNames = coveredStudyDays.map(d => DAY_NAMES[d]).join(' & ');
+
+      // Bundled target = daily × covered days
+      const bundledQty = todayTarget ? todayTarget.daily_quantity * coveredStudyDays.length : 0;
+
+      await sb.from("sq_checkins").insert({
+        child_id: child.id,
+        checkin_date: today,
+        status: "pending",
+        prompt_sent_at: new Date().toISOString(),
+        ...(todayTarget && {
+          target_quantity: bundledQty,
+          target_unit: todayTarget.target_unit,
+          subject_reported: todayTarget.subject_name,
+        }),
+      });
+
+      let message: string;
+      if (hasTargets) {
+        const targetLine = targets!.map(t => {
+          const qty = t.daily_quantity * coveredStudyDays.length;
+          return `• ${t.subject_name}: *${qty} ${t.target_unit}${qty > 1 ? "s" : ""}*`;
+        }).join("\n");
+        message = `Good evening, ${child.name} 🌙\n\nHave you finished your target for ${coveredDayNames}?\n${targetLine}${examLine}\n\nReply: *done* / *partially* / *no*`;
+      } else {
+        message = `Good evening, ${child.name} 🌙\n\nDid you study on ${coveredDayNames}?${examLine}\n\nReply: *yes* or *no*`;
+      }
+
+      await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
+      sent++;
     } else {
-      message = `Good evening, ${child.name} 🌙\n\nDid you study today?${examLine}\n\nReply: *yes* or *no*`;
-    }
+      // ═══ PREMIUM TIER: daily check-in on each study day ═══
+      if (!childStudyDays.includes(dayOfWeek)) continue;
+      if (ccaDays.includes(dayOfWeek)) continue;
 
-    await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
-    sent++;
+      // Check if already prompted today
+      const { data: existing } = await sb
+        .from("sq_checkins").select("id").eq("child_id", child.id).eq("checkin_date", today).limit(1);
+      if (existing && existing.length > 0) continue;
+
+      await sb.from("sq_checkins").insert({
+        child_id: child.id,
+        checkin_date: today,
+        status: "pending",
+        prompt_sent_at: new Date().toISOString(),
+        ...(todayTarget && {
+          target_quantity: todayTarget.daily_quantity,
+          target_unit: todayTarget.target_unit,
+          subject_reported: todayTarget.subject_name,
+        }),
+      });
+
+      let message: string;
+      if (hasTargets) {
+        const targetLine = targets!.map(t =>
+          `• ${t.subject_name}: *${t.daily_quantity} ${t.target_unit}${t.daily_quantity > 1 ? "s" : ""}*`
+        ).join("\n");
+        message = `Good evening, ${child.name} 🌙\n\nHave you finished today's target?\n${targetLine}${examLine}\n\nReply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
+      } else {
+        message = `Good evening, ${child.name} 🌙\n\nHave you finished today's study target?${examLine}\n\nReply with:\n✅ *done*\n⚡ *did extra*\n📝 *partially*\n❌ *no*`;
+      }
+
+      await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
+      sent++;
+    }
   }
 
   return sent;
@@ -430,7 +471,8 @@ async function sendFollowupReminders(
 }
 
 // Free plan parents receive reports only on Tue (2), Fri (5), Sat (6)
-const FREE_REPORT_DAYS = [2, 5, 6];
+// (Now: premium parents get mini-reports on Tue/Thu; free parents get Sunday weekly only)
+const FREE_REPORT_DAYS: number[] = []; // Free parents: weekly report on Sunday only
 
 async function sendParentReports(
   sb: ReturnType<typeof createClient>,
@@ -438,17 +480,30 @@ async function sendParentReports(
   today: string,
   dayOfWeek: number,
 ) {
-  // Get today's completed check-ins for this level group
+  // Premium parents get aggregated reports on Tue and Thu only
+  if (!PREMIUM_PARENT_REPORT_DAYS.includes(dayOfWeek)) return;
+
+  const windowDays = PREMIUM_REPORT_WINDOWS[dayOfWeek] || [];
+  // Build date range from window days
+  const dates: string[] = [];
+  for (const wd of windowDays) {
+    const diff = dayOfWeek - wd; // how many days ago
+    const d = new Date(`${today}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - (diff >= 0 ? diff : diff + 7));
+    dates.push(d.toISOString().split("T")[0]);
+  }
+
+  // Get check-ins for the window
   const { data: checkins } = await sb
     .from("sq_checkins")
-    .select("child_id, status, subject_reported")
-    .eq("checkin_date", today)
+    .select("child_id, status, subject_reported, checkin_date")
+    .in("checkin_date", dates)
     .neq("status", "pending");
 
-  if (!checkins) return;
+  if (!checkins || checkins.length === 0) return;
 
   // Group by parent
-  const parentMap = new Map<string, { child_name: string; status: string }[]>();
+  const parentMap = new Map<string, { child_name: string; status: string; date: string }[]>();
 
   for (const ci of checkins) {
     const { data: child } = await sb
@@ -460,11 +515,12 @@ async function sendParentReports(
     if (!child || getLevelGroup(child.level) !== levelGroup) continue;
 
     const existing = parentMap.get(child.parent_id) || [];
-    existing.push({ child_name: child.name, status: ci.status });
+    existing.push({ child_name: child.name, status: ci.status, date: ci.checkin_date });
     parentMap.set(child.parent_id, existing);
   }
 
-  // Send parent confirmation messages (for premium parents)
+  const windowLabel = windowDays.map(d => DAY_NAMES[d]).join(' & ');
+
   for (const [parentId, results] of parentMap) {
     const { data: membership } = await sb
       .from("sq_memberships")
@@ -475,18 +531,37 @@ async function sendParentReports(
     if (!membership?.parent_phone || membership.plan_type === "free") continue;
 
     const lang = membership.preferred_language || "en";
+
+    // Group results by child
+    const byChild = new Map<string, { status: string; date: string }[]>();
     for (const r of results) {
-      if (lang === "zh") {
-        const statusZh = STATUS_ZH[r.status] || r.status;
-        await sendWhatsApp(membership.parent_phone, undefined, undefined,
-          ZH_CRON.parent_confirm(r.child_name, statusZh));
-      } else {
-        await sendWhatsApp(membership.parent_phone, "sp_parent_confirm", {
-          child_name: r.child_name,
-          status: r.status,
-        });
-      }
+      const list = byChild.get(r.child_name) || [];
+      list.push({ status: r.status, date: r.date });
+      byChild.set(r.child_name, list);
     }
+
+    let msg: string;
+    if (lang === "zh") {
+      msg = `📊 *${windowLabel} 学习汇报*\n\n`;
+      for (const [name, entries] of byChild) {
+        for (const e of entries) {
+          const statusZh = STATUS_ZH[e.status] || e.status;
+          msg += `${name}（${DAY_NAMES[new Date(e.date + "T12:00:00Z").getUTCDay()]}）：${statusZh}\n`;
+        }
+      }
+      msg += `\n回复 *confirm* 确认，或 *adjust* 调整。`;
+    } else {
+      msg = `📊 *${windowLabel} check-in report*\n\n`;
+      for (const [name, entries] of byChild) {
+        for (const e of entries) {
+          const dayLabel = DAY_NAMES[new Date(e.date + "T12:00:00Z").getUTCDay()];
+          msg += `${name} (${dayLabel}): ${e.status}\n`;
+        }
+      }
+      msg += `\nReply *confirm* if accurate, or *adjust* if not.`;
+    }
+
+    await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
   }
 }
 
@@ -681,9 +756,7 @@ async function sendWeeklySummaries(
 
     const rawStudyDays: number[] = child.study_days && child.study_days.length > 0
       ? child.study_days
-      : membership.plan_type === 'free'
-        ? FREE_DAYS
-        : [1, 2, 3, 4, 5];
+      : [1, 2, 3, 4, 5]; // Mon-Fri default for both plans
     const effectiveStudyDays = rawStudyDays.filter((d) => !(child.cca_days || []).includes(d));
     const summaryStart = settings?.commence_date && settings.commence_date > weekStartStr ? settings.commence_date : weekStartStr;
     const studyDays = countScheduledDaysInRange(summaryStart, today, effectiveStudyDays);

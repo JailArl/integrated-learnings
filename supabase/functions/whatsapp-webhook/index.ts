@@ -397,7 +397,7 @@ serve(async (req) => {
 
     // ── ALREADY CHECKED IN? Block re-replies ──
     const { data: existingCheckin } = await sb.from("sq_checkins")
-      .select("id, status, prompt_sent_at, note")
+      .select("id, status, prompt_sent_at, note, target_quantity")
       .eq("child_id", child.id)
       .eq("checkin_date", today)
       .order("created_at", { ascending: false })
@@ -490,8 +490,8 @@ serve(async (req) => {
               : `Hi ${child.name}! 👋 Welcome to StudyPulse.\n\nYour parent will set your study target in the dashboard, and I'll check in with you each study day.`
             : `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nWhen the prompt arrives, reply with:\n✅ *done* — completed today's tasks\n📝 *partially* — did some\n❌ *no* — skipped today\n⚡ *did extra* — went beyond the plan`
           : isGreeting
-            ? `Hi ${child.name}! 👋 Welcome to StudyPulse.\n\nI'll check in with you on your study days. When I do, just reply *yes* or *no*.`
-            : `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nWhen it arrives, just reply:\n✅ *yes* — studied today\n❌ *no* — skipped`
+            ? `Hi ${child.name}! 👋 Welcome to StudyPulse.\n\nI'll check in with you every Tue, Thu, and Sun covering all your study days. When I do, just reply *done*, *partially*, or *no*.`
+            : `Hi ${child.name}! 👋 Welcome to StudyPulse check-ins!\n\nI'll message you every Tue, Thu, and Sun. Just reply:\n✅ *done* — finished the target\n📝 *partially* — did some\n❌ *no* — skipped`
       );
       return ok();
     }
@@ -548,6 +548,9 @@ serve(async (req) => {
 
     // ── DONE / DID EXTRA ──
     if (parsed.status === "done" || parsed.status === "did_extra") {
+      // Use bundled target_quantity from checkin (set by cron for free bundled check-ins)
+      const checkinTargetQty = existingCheckin?.target_quantity || todayTarget?.daily_quantity || 0;
+
       if (todayTarget) {
         // Update remaining
         const { data: wt } = await sb.from("sq_weekly_targets")
@@ -559,18 +562,18 @@ serve(async (req) => {
 
         if (wt) {
           await sb.from("sq_weekly_targets")
-            .update({ remaining_quantity: Math.max(0, wt.remaining_quantity - todayTarget.daily_quantity) })
+            .update({ remaining_quantity: Math.max(0, wt.remaining_quantity - checkinTargetQty) })
             .eq("child_id", child.id)
             .eq("subject_name", todayTarget.subject_name)
             .eq("week_start", weekStart);
         }
 
-        await sb.from("sq_checkins").update({ completed_quantity: todayTarget.daily_quantity })
+        await sb.from("sq_checkins").update({ completed_quantity: checkinTargetQty })
           .eq("child_id", child.id).eq("checkin_date", today);
       }
 
       const doneMsg = hasTargets
-        ? `✅ ${todayTarget!.daily_quantity} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name} — done! Great work, ${child.name}! 💪`
+        ? `✅ ${checkinTargetQty} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name} — done! Great work, ${child.name}! 💪`
         : `✅ Nice work, ${child.name}! Keep it up 💪`;
 
       const extraMsg = parsed.status === "did_extra" ? `\n⚡ Extra effort today — respect!` : "";
@@ -581,13 +584,13 @@ serve(async (req) => {
         let parentMsg: string;
         if (parentLang === "zh") {
           parentMsg = hasTargets
-            ? ZH.checkin_done(child.name, todayTarget!.subject_name, String(todayTarget!.daily_quantity), todayTarget!.target_unit)
+            ? ZH.checkin_done(child.name, todayTarget!.subject_name, String(checkinTargetQty), todayTarget!.target_unit)
             : ZH.checkin_done_generic(child.name);
           if (parsed.status === "did_extra") parentMsg += ZH.checkin_extra();
         } else {
           parentMsg = hasTargets
-            ? `✅ ${child.name} completed today's target: ${todayTarget!.daily_quantity} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name}!`
-            : `✅ ${child.name} checked in — studied today!`;
+            ? `✅ ${child.name} completed the target: ${checkinTargetQty} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name}!`
+            : `✅ ${child.name} checked in — studied!`;
           if (parsed.status === "did_extra") parentMsg += " ⚡ Did extra!";
         }
         await sendRaw(membership.parent_phone, parentMsg);
@@ -596,17 +599,19 @@ serve(async (req) => {
     // ── PARTIALLY ──
     } else if (parsed.status === "partially") {
       if (hasTargets) {
+        const targetQ = existingCheckin?.target_quantity || todayTarget!.daily_quantity;
+
         await sb.from("sq_children").update({
           conversation_state: "partial_count",
           conversation_context: {
-            target_quantity: todayTarget!.daily_quantity,
+            target_quantity: targetQ,
             target_unit: todayTarget!.target_unit,
             subject: todayTarget!.subject_name,
           },
         }).eq("id", child.id);
 
         await sendRaw(phone,
-          `No problem! How many ${todayTarget!.target_unit}s did you finish out of ${todayTarget!.daily_quantity}?`
+          `No problem! How many ${todayTarget!.target_unit}s did you finish out of ${targetQ}?`
         );
       } else {
         await sendRaw(phone,
@@ -615,7 +620,7 @@ serve(async (req) => {
         if (membership?.parent_phone && membership.parent_phone !== phone) {
           const pMsg = parentLang === "zh"
             ? ZH.checkin_partial_generic(child.name)
-            : `📝 ${child.name} checked in — partially done today. Encouraged to finish tomorrow.`;
+            : `📝 ${child.name} checked in — partially done. Encouraged to finish the rest.`;
           await sendRaw(membership.parent_phone, pMsg);
         }
       }

@@ -146,7 +146,7 @@ export const CHECKOUT_PLAN_OPTIONS: Array<{
   { code: 'pack_4m', label: '4-Month Season', priceLabel: '$43.90', description: 'One-time payment · best exam-season coverage' },
 ];
 
-export const FREE_CHECKIN_DAYS = ['Tuesday', 'Thursday', 'Saturday'] as const;
+export const FREE_CHECKIN_DAYS = ['Tuesday', 'Thursday', 'Sunday'] as const;
 export const PREMIUM_SUBJECTS = ['Math', 'Science', 'Chinese'] as const;
 
 // ═══════════════════════════════════════════
