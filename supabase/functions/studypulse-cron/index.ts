@@ -265,7 +265,6 @@ async function sendCheckinPrompts(
     }
 
     // Check study days: parent-set days take priority.
-    // If membership is missing or incomplete, fall back conservatively to the free schedule.
     const savedStudyDays: number[] = Array.isArray(child.study_days)
       ? child.study_days
           .map((d) => Number(d))
@@ -275,9 +274,9 @@ async function sendCheckinPrompts(
     const defaultStudyDays = isFreePlan
       ? FREE_DAYS
       : [1, 2, 3, 4, 5]; // Mon-Fri default for premium only
-    const childStudyDays: number[] = isFreePlan
-      ? FREE_DAYS
-      : (savedStudyDays.length > 0 ? savedStudyDays : defaultStudyDays);
+    const childStudyDays: number[] = savedStudyDays.length > 0
+      ? savedStudyDays
+      : defaultStudyDays;
 
     if (!childStudyDays.includes(dayOfWeek)) {
       continue; // Not a study day for this child
@@ -680,10 +679,10 @@ async function sendWeeklySummaries(
       .eq("child_id", child.id)
       .single();
 
-    const rawStudyDays: number[] = membership.plan_type === 'free'
-      ? FREE_DAYS
-      : child.study_days && child.study_days.length > 0
-        ? child.study_days
+    const rawStudyDays: number[] = child.study_days && child.study_days.length > 0
+      ? child.study_days
+      : membership.plan_type === 'free'
+        ? FREE_DAYS
         : [1, 2, 3, 4, 5];
     const effectiveStudyDays = rawStudyDays.filter((d) => !(child.cca_days || []).includes(d));
     const summaryStart = settings?.commence_date && settings.commence_date > weekStartStr ? settings.commence_date : weekStartStr;

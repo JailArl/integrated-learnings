@@ -129,8 +129,11 @@ const isFreeCheckinDay = () => FREE_CHECKIN_DAYS.includes(dayName(new Date()) as
 const DEFAULT_PREMIUM_DAYS = [1, 2, 3, 4, 5];
 const DEFAULT_FREE_DAYS = [2, 4, 6];
 const getEffectiveStudyDays = (child: SQChild | undefined, premiumPlan: boolean): number[] => {
-  if (!premiumPlan) return DEFAULT_FREE_DAYS;
-  return child?.study_days && child.study_days.length > 0 ? child.study_days : DEFAULT_PREMIUM_DAYS;
+  const savedDays = Array.isArray(child?.study_days)
+    ? child!.study_days!.filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+    : [];
+  if (savedDays.length > 0) return savedDays;
+  return premiumPlan ? DEFAULT_PREMIUM_DAYS : DEFAULT_FREE_DAYS;
 };
 
 /* ═══════════════════════════════════════════ */
@@ -1064,13 +1067,15 @@ const StudyPulseApp: React.FC = () => {
               const currentDays: number[] = savedDays.length > 0 ? savedDays : getEffectiveStudyDays(c, premium);
 
               const toggleDay = async (dayNum: number) => {
-                if (!premium) {
-                  setDashboardNotice({ type: 'info', text: 'Free plan study days are fixed to Tue, Thu, and Sat.' });
+                // If there is no custom schedule saved yet, treat the first tap as choosing exact days,
+                // instead of toggling against the default schedule.
+                const baseDays = savedDays.length > 0 ? currentDays : [];
+
+                if (!premium && !baseDays.includes(dayNum) && baseDays.length >= 3) {
+                  setDashboardNotice({ type: 'info', text: 'Free plan allows up to 3 study days each week.' });
                   return;
                 }
-                // If there is no custom schedule saved yet, treat the first tap as choosing exact days,
-                // instead of toggling against the Mon-Fri default.
-                const baseDays = savedDays.length > 0 ? currentDays : [];
+
                 const updated = baseDays.includes(dayNum)
                   ? baseDays.filter(d => d !== dayNum)
                   : [...baseDays, dayNum].sort();
@@ -1181,9 +1186,8 @@ const StudyPulseApp: React.FC = () => {
                         return (
                           <button
                             key={d.value}
-                            disabled={!premium}
                             onClick={() => toggleDay(d.value)}
-                            className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition disabled:cursor-not-allowed disabled:opacity-80 ${
+                            className={`flex h-11 w-11 items-center justify-center rounded-xl text-xs font-bold transition ${
                               isActive
                                 ? 'bg-slate-900 text-white shadow-sm'
                                 : 'border border-slate-200 bg-white text-slate-400 hover:bg-slate-50'
