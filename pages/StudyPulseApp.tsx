@@ -217,6 +217,9 @@ const StudyPulseApp: React.FC = () => {
         m = await createMembership(user.id, 'free', { email: user.email || '', language: userMeta.preferred_language === 'zh' ? 'zh' : 'en' });
       }
       if (m && (userMeta.preferred_language === 'en' || userMeta.preferred_language === 'zh')) {
+        if (m.preferred_language !== userMeta.preferred_language) {
+          await updateLanguagePreference(user.id, userMeta.preferred_language);
+        }
         m = { ...m, preferred_language: userMeta.preferred_language };
       }
       setMembership(m);

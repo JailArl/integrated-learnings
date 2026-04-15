@@ -329,22 +329,26 @@ export async function updateLanguagePreference(userId: string, language: 'en' | 
   if (!supabase) return false;
 
   let dbOk = false;
-  const { data, error } = await supabase
+  const existing = await getMembership(userId);
+  const { error } = await supabase
     .from('sq_memberships')
-    .update({
+    .upsert({
+      user_id: userId,
+      plan_type: existing?.plan_type || 'free',
+      status: existing?.status || 'free',
+      parent_name: existing?.parent_name || null,
+      parent_email: existing?.parent_email || null,
+      parent_phone: existing?.parent_phone || null,
       preferred_language: language,
       updated_at: new Date().toISOString(),
-    })
-    .eq('user_id', userId)
-    .select('id');
+    }, { onConflict: 'user_id' })
+    .select('id')
+    .single();
 
   if (error) {
     console.error('updateLanguagePreference failed:', error);
-  } else if ((data || []).length > 0) {
-    dbOk = true;
   } else {
-    const created = await createMembership(userId, 'free', { language });
-    dbOk = !!created;
+    dbOk = true;
   }
 
   const metadataOk = await updateCurrentUserMetadata({ preferred_language: language });

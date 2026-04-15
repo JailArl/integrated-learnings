@@ -107,6 +107,7 @@ const StudyPulseAdmin: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [previewParentId, setPreviewParentId] = useState<string>('');
   const [previewChildId, setPreviewChildId] = useState<string>('');
+  const [previewLangMode, setPreviewLangMode] = useState<'auto' | 'en' | 'zh'>('auto');
 
   useEffect(() => {
     (async () => {
@@ -232,7 +233,7 @@ const StudyPulseAdmin: React.FC = () => {
   const previewDoneCount = previewStatuses.filter(s => s === 'yes' || s === 'done' || s === 'did_extra').length;
   const previewMissedCount = previewStatuses.filter(s => s === 'no' || s === 'incomplete').length;
   const previewStudyDays = previewChild?.study_days?.length || (previewParent?.plan_type === 'free' ? 3 : 5);
-  const previewLang = previewParent?.preferred_language || 'en';
+  const previewLang = previewLangMode === 'auto' ? (previewParent?.preferred_language || 'en') : previewLangMode;
   const previewMidweek = previewChildren.map((kid) => {
     const kidCount = [...recentCheckins.filter(c => c.child_id === kid.id && c.checkin_date >= previewWeekStart).map(c => c.status), ...recentTasks.filter(t => t.child_id === kid.id && t.task_date >= previewWeekStart).map(t => t.status)]
       .filter(s => s === 'yes' || s === 'done' || s === 'did_extra').length;
@@ -543,7 +544,7 @@ const StudyPulseAdmin: React.FC = () => {
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-sm font-bold text-slate-700">Admin-only WhatsApp preview</h3>
               <p className="mt-1 text-xs text-slate-500">This shows the final outbound message in the parent's preferred language before the cron sends it.</p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-600">Parent</label>
                   <select className={inputCls + ' mt-1'} value={previewParentId} onChange={(e) => setPreviewParentId(e.target.value)}>
@@ -560,9 +561,17 @@ const StudyPulseAdmin: React.FC = () => {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600">Preview language</label>
+                  <select className={inputCls + ' mt-1'} value={previewLangMode} onChange={(e) => setPreviewLangMode(e.target.value as 'auto' | 'en' | 'zh')}>
+                    <option value="auto">Auto (saved setting)</option>
+                    <option value="en">Force English</option>
+                    <option value="zh">Force Chinese</option>
+                  </select>
+                </div>
               </div>
               {previewParent && (
-                <p className="mt-3 text-xs text-slate-500">Language selected by parent: <strong>{previewLang === 'zh' ? 'Chinese' : 'English'}</strong></p>
+                <p className="mt-3 text-xs text-slate-500">Saved parent language: <strong>{previewParent.preferred_language === 'zh' ? 'Chinese' : 'English / default'}</strong> · Preview currently showing: <strong>{previewLang === 'zh' ? 'Chinese' : 'English'}</strong></p>
               )}
             </div>
 
