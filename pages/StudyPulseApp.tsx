@@ -1069,8 +1069,8 @@ const StudyPulseApp: React.FC = () => {
               <article className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm">
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-700"><Flame size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Crash Course</h3>
-                <p className="mt-1 text-[11px] font-semibold text-orange-600">📅 June Holidays · 15–26 Jun 2026</p>
-                <p className="mt-2 text-xs leading-5 text-slate-600">Intensive holiday revision for PSLE (Math & Science, 4 days) and O-Level (Physics, Chem, A/E Math — 2 days per subject). Morning concept + afternoon exam practice. All materials provided. Max 6 per class.</p>
+                <p className="mt-1 text-[11px] font-semibold text-orange-600">📅 June Holidays · 16-25 Jun 2026</p>
+                <p className="mt-2 text-xs leading-5 text-slate-600">Half-day model: PSLE morning track (10am-1pm, Math/Science alternating daily) + O-Level afternoon track (2pm-5pm, Physics/Chem/A Math/E Math sprints). All materials provided. Max 6 per class.</p>
                 {submittedCTAs.has('sq_crash_course_interest') ? (
                   <p className="mt-3 rounded-lg bg-orange-50 px-4 py-2.5 text-xs font-bold text-orange-700">✅ Interest registered — we'll WhatsApp you with details!</p>
                 ) : (

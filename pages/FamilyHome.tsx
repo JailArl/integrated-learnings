@@ -209,16 +209,16 @@ const FamilyHome: React.FC = () => {
               </p>
               <div className="mt-4 space-y-2">
                 <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5">
-                  <p className="text-xs font-bold text-sky-700">PSLE (P6) · 15–18 Jun</p>
-                  <p className="mt-0.5 text-xs text-slate-600">4 days · Math & Science · Morning + Afternoon sessions</p>
+                  <p className="text-xs font-bold text-sky-700">PSLE (P6) · 16-25 Jun</p>
+                  <p className="mt-0.5 text-xs text-slate-600">Morning track 10am-1pm · Math/Science alternating daily</p>
                 </div>
                 <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5">
-                  <p className="text-xs font-bold text-emerald-700">O-Level (Sec 4/5) · 15–26 Jun</p>
-                  <p className="mt-0.5 text-xs text-slate-600">2 days per subject · Physics, Chem, A/E Math · Pick your weak topics</p>
+                  <p className="text-xs font-bold text-emerald-700">O-Level (Sec 4/5) · 16-25 Jun</p>
+                  <p className="mt-0.5 text-xs text-slate-600">Afternoon track 2pm-5pm · topic-based subject sprints + clinic</p>
                 </div>
               </div>
               <ul className="mt-4 space-y-2">
-                {['All materials provided — zero prep for parents', 'Max 6 students per class', 'Early bird: from $280/subject before 20 May'].map((f) => (
+                {['All materials provided — zero prep for parents', 'Max 6 students per class', 'PSLE: $320/subject (5 half-days) · O-Level: $280/subject (2 half-days)'].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
                     <CheckCircle size={15} className="mt-0.5 shrink-0 text-orange-500" />
                     {f}

@@ -16,8 +16,8 @@ const StudyPulseCrashCourses: React.FC = () => {
           </p>
           <h1 className="mt-5 text-3xl font-black leading-tight sm:text-5xl">PSLE & O-Level Holiday Crash Courses</h1>
           <p className="mx-auto mt-4 max-w-3xl text-sm leading-7 text-slate-200 sm:text-base">
-            Built for the last 2 weeks of June holidays. Intensive morning + afternoon sessions so students return to school sharper,
-            faster, and exam-ready.
+            Built for the last 2 weeks of June holidays. Half-day format: PSLE in the morning and O-Level in the afternoon,
+            so both groups get focused attention without schedule clashes.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <a
@@ -42,20 +42,20 @@ const StudyPulseCrashCourses: React.FC = () => {
         <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-2">
           <article className="rounded-3xl border border-sky-200 bg-white p-7 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-sky-600">PSLE · P6</p>
-            <h2 className="mt-2 text-2xl font-black text-slate-900">4-Day PSLE Crash Course</h2>
-            <p className="mt-2 text-sm text-slate-600">Math + Science only. Two full days per subject for focused recovery.</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-900">10-Session PSLE Morning Track</h2>
+            <p className="mt-2 text-sm text-slate-600">Math + Science only. 5 half-day sessions per subject across the final 2 holiday weeks.</p>
 
             <div className="mt-5 space-y-2">
-              <p className="flex items-start gap-2 text-sm text-slate-700"><CalendarCheck size={15} className="mt-0.5 text-sky-600" /> 15 - 18 June 2026 (last 2 holiday weeks)</p>
-              <p className="flex items-start gap-2 text-sm text-slate-700"><BookOpen size={15} className="mt-0.5 text-sky-600" /> Day 1-2: Mathematics · Day 3-4: Science</p>
-              <p className="flex items-start gap-2 text-sm text-slate-700"><Clock3 size={15} className="mt-0.5 text-sky-600" /> Morning 9am-12pm · Afternoon 2pm-5pm</p>
+              <p className="flex items-start gap-2 text-sm text-slate-700"><CalendarCheck size={15} className="mt-0.5 text-sky-600" /> 16 - 25 June 2026 (last 2 holiday weeks)</p>
+              <p className="flex items-start gap-2 text-sm text-slate-700"><BookOpen size={15} className="mt-0.5 text-sky-600" /> Math: 16,18,20,22,24 · Science: 17,19,21,23,25</p>
+              <p className="flex items-start gap-2 text-sm text-slate-700"><Clock3 size={15} className="mt-0.5 text-sky-600" /> Morning 10am-1pm (PSLE track)</p>
             </div>
 
             <ul className="mt-5 space-y-2">
               {[
                 'All materials provided (worksheets + past-year papers + summary notes)',
                 'Max 6 students per class',
-                'Exam-technique drills every afternoon',
+                'Exam-technique drills built into every morning block',
                 'Post-course parent recap with next-step focus areas',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
@@ -67,19 +67,19 @@ const StudyPulseCrashCourses: React.FC = () => {
             <div className="mt-6 rounded-2xl border border-sky-200 bg-sky-50 p-4">
               <p className="text-xs font-bold uppercase tracking-widest text-sky-700">Pricing</p>
               <p className="mt-1 text-xl font-black text-slate-900">$320 / subject <span className="text-sm font-medium text-slate-500 line-through ml-2">$380</span></p>
-              <p className="mt-1 text-xs text-slate-600">Early bird before 20 May. Materials included.</p>
+              <p className="mt-1 text-xs text-slate-600">Early bird before 20 May. 5 half-days (15 hours) per subject. Materials included.</p>
             </div>
           </article>
 
           <article className="rounded-3xl border border-emerald-200 bg-white p-7 shadow-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">O-Level · Sec 4/5</p>
-            <h2 className="mt-2 text-2xl font-black text-slate-900">2-Day Per Subject O-Level Sprint</h2>
-            <p className="mt-2 text-sm text-slate-600">Choose weak-topic subjects. We prepare tailored material packs before class.</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-900">O-Level Afternoon Track</h2>
+            <p className="mt-2 text-sm text-slate-600">2 half-days per subject. Choose weak-topic subjects and we prepare tailored material packs before class.</p>
 
             <div className="mt-5 space-y-2">
-              <p className="flex items-start gap-2 text-sm text-slate-700"><CalendarCheck size={15} className="mt-0.5 text-emerald-600" /> 15 - 26 June 2026 (last 2 holiday weeks)</p>
-              <p className="flex items-start gap-2 text-sm text-slate-700"><Star size={15} className="mt-0.5 text-emerald-600" /> Physics (2d) · Chemistry (2d) · A Math (2d) · E Math (2d)</p>
-              <p className="flex items-start gap-2 text-sm text-slate-700"><Clock3 size={15} className="mt-0.5 text-emerald-600" /> Morning 9am-12pm · Afternoon 2pm-5pm</p>
+              <p className="flex items-start gap-2 text-sm text-slate-700"><CalendarCheck size={15} className="mt-0.5 text-emerald-600" /> 16 - 25 June 2026 (last 2 holiday weeks)</p>
+              <p className="flex items-start gap-2 text-sm text-slate-700"><Star size={15} className="mt-0.5 text-emerald-600" /> Physics (16-17) · Chemistry (18-19) · A Math (20-21) · E Math (22-23) · Clinic/Mock (24-25)</p>
+              <p className="flex items-start gap-2 text-sm text-slate-700"><Clock3 size={15} className="mt-0.5 text-emerald-600" /> Afternoon 2pm-5pm (O-Level track)</p>
             </div>
 
             <ul className="mt-5 space-y-2">
@@ -98,9 +98,47 @@ const StudyPulseCrashCourses: React.FC = () => {
             <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
               <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">Pricing</p>
               <p className="mt-1 text-xl font-black text-slate-900">$280 / subject <span className="text-sm font-medium text-slate-500 line-through ml-2">$340</span></p>
-              <p className="mt-1 text-xs text-slate-600">Early bird before 20 May. Materials included.</p>
+              <p className="mt-1 text-xs text-slate-600">Early bird before 20 May. 2 half-days (6 hours) per subject. Materials included.</p>
             </div>
           </article>
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200 bg-white px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <h3 className="text-center text-xl font-black text-slate-900 sm:text-2xl">Daily Operating Model (16 - 25 June)</h3>
+          <p className="mt-2 text-center text-sm text-slate-600">Morning slot for PSLE, afternoon slot for O-Level. One classroom can run both tracks efficiently.</p>
+          <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200">
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <thead className="bg-slate-50 text-slate-700">
+                <tr>
+                  <th className="px-4 py-3 font-bold">Date</th>
+                  <th className="px-4 py-3 font-bold">10:00am - 1:00pm (PSLE)</th>
+                  <th className="px-4 py-3 font-bold">2:00pm - 5:00pm (O-Level)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['16 Jun', 'Math', 'Physics'],
+                  ['17 Jun', 'Science', 'Physics'],
+                  ['18 Jun', 'Math', 'Chemistry'],
+                  ['19 Jun', 'Science', 'Chemistry'],
+                  ['20 Jun', 'Math', 'A Math'],
+                  ['21 Jun', 'Science', 'A Math'],
+                  ['22 Jun', 'Math', 'E Math'],
+                  ['23 Jun', 'Science', 'E Math'],
+                  ['24 Jun', 'Math', 'Weak-topic clinic'],
+                  ['25 Jun', 'Science', 'Mock + correction clinic'],
+                ].map((row) => (
+                  <tr key={row[0]} className="border-t border-slate-100">
+                    <td className="px-4 py-2.5 font-semibold text-slate-700">{row[0]}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{row[1]}</td>
+                    <td className="px-4 py-2.5 text-slate-600">{row[2]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
