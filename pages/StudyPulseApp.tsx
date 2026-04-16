@@ -307,6 +307,8 @@ const StudyPulseApp: React.FC = () => {
       setDashboardNotice({ type: 'success', text: 'Payment received. Premium access will refresh shortly.' });
     } else if (billing === 'cancel') {
       setDashboardNotice({ type: 'info', text: 'Checkout was canceled. No charge was made.' });
+    } else if (billing === 'setup_error') {
+      setDashboardNotice({ type: 'error', text: 'Your account was created, but checkout did not start. Please use Billing below to retry.' });
     }
   }, [location.search]);
 

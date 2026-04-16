@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '../services/supabase';
-import { createMembership } from '../services/studyquest';
+import { createMembership, CHECKOUT_PLAN_OPTIONS, startPremiumCheckout, type CheckoutPlan } from '../services/studyquest';
 
 /* ═══════════════════════════════════════════
    StudyPulse — Minimal Signup
@@ -11,6 +11,7 @@ import { createMembership } from '../services/studyquest';
 
 const StudyPulseSetup: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +19,14 @@ const StudyPulseSetup: React.FC = () => {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState<'free' | CheckoutPlan>('free');
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const plan = params.get('plan');
+    const isCheckoutPlan = CHECKOUT_PLAN_OPTIONS.some((option) => option.code === plan);
+    setSelectedPlan(isCheckoutPlan ? (plan as CheckoutPlan) : 'free');
+  }, [location.search]);
 
   // If already signed in as parent, go to app
   useEffect(() => {
@@ -64,7 +73,18 @@ const StudyPulseSetup: React.FC = () => {
       // Create a free membership so the dashboard detects them
       await createMembership(userId, 'free', { email, name: fullName.trim() });
 
-      navigate('/studypulse/app');
+      if (selectedPlan === 'free') {
+        navigate('/studypulse/app');
+        return;
+      }
+
+      const checkout = await startPremiumCheckout(selectedPlan);
+      if (checkout.ok && checkout.url) {
+        window.location.assign(checkout.url);
+        return;
+      }
+
+      navigate('/studypulse/app?billing=setup_error', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Unknown error');
     }
@@ -85,6 +105,38 @@ const StudyPulseSetup: React.FC = () => {
           <p className="mt-2 text-sm text-slate-500">Sign up in seconds. You&apos;ll set up your child&apos;s details next.</p>
 
           {error && <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">{error}</div>}
+
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-stone-50 p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Choose your start</p>
+            <div className="mt-3 grid gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedPlan('free')}
+                className={`rounded-xl border px-4 py-3 text-left transition ${selectedPlan === 'free' ? 'border-slate-900 bg-white shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-bold text-slate-900">Free</span>
+                  <span className="text-sm font-black text-slate-900">$0</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Create your account first. Upgrade later from Billing anytime.</p>
+              </button>
+
+              {CHECKOUT_PLAN_OPTIONS.map((plan) => (
+                <button
+                  key={plan.code}
+                  type="button"
+                  onClick={() => setSelectedPlan(plan.code)}
+                  className={`rounded-xl border px-4 py-3 text-left transition ${selectedPlan === plan.code ? 'border-amber-400 bg-amber-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-bold text-slate-900">{plan.label}</span>
+                    <span className="text-sm font-black text-slate-900">{plan.priceLabel}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">{plan.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
 
           <form onSubmit={handleSignup} className="mt-6 space-y-4">
             <div>
@@ -138,7 +190,7 @@ const StudyPulseSetup: React.FC = () => {
               disabled={loading}
               className="flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-400 disabled:opacity-50"
             >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <>Create Account <ArrowRight size={16} className="ml-1.5" /></>}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <>{selectedPlan === 'free' ? 'Create Account' : 'Create Account & Continue to Payment'} <ArrowRight size={16} className="ml-1.5" /></>}
             </button>
           </form>
 

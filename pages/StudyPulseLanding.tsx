@@ -572,7 +572,23 @@ const StudyPulseLanding: React.FC = () => {
                 <div className="mt-1 flex items-center justify-between"><span>Exam Sprint (60 Days, One-Time)</span><span>S$24.90</span></div>
                 <div className="mt-1 flex items-center justify-between"><span>Exam Season (120 Days, One-Time)</span><span>S$43.90</span></div>
               </div>
-              <Link to="/studypulse/setup?plan=premium" className="mt-7 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 shadow transition hover:bg-amber-400">
+              <div className="mt-5 grid gap-2">
+                <Link to="/studypulse/setup?plan=monthly_flex" className="inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 shadow transition hover:bg-amber-400">
+                  <Crown size={16} className="mr-2" /> Start Core Monthly
+                </Link>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <Link to="/studypulse/setup?plan=pass_1m" className="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-900 transition hover:bg-amber-50">
+                    Exam Pass
+                  </Link>
+                  <Link to="/studypulse/setup?plan=pack_2m" className="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-900 transition hover:bg-amber-50">
+                    Exam Sprint
+                  </Link>
+                  <Link to="/studypulse/setup?plan=pack_4m" className="inline-flex items-center justify-center rounded-xl border border-amber-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-900 transition hover:bg-amber-50">
+                    Exam Season
+                  </Link>
+                </div>
+              </div>
+              <Link to="/studypulse/setup" className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-slate-50">
                 <Crown size={16} className="mr-2" /> {t('priceGetPrem')}
               </Link>
               <p className="mt-3 text-center text-xs text-slate-400">{t('pricePaynow')}</p>
