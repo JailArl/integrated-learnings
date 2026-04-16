@@ -156,16 +156,16 @@ serve(async (req) => {
         : schedule.weekday_parent_report;
 
       // ── SEND CHECK-IN PROMPTS ──
-      // Check if current time matches this schedule's check-in window (±7 min)
-      if (isWithinWindow(currentTime, checkinTime, 7)) {
-        const sent = await sendCheckinPrompts(
-          sb,
-          schedule.level_group,
-          today,
-          dayOfWeek,
-        );
-        totalSent += sent;
-      }
+      // Always evaluate each run; sendCheckinPrompts enforces per-child timing window.
+      const sent = await sendCheckinPrompts(
+        sb,
+        schedule.level_group,
+        today,
+        dayOfWeek,
+        currentTime,
+        checkinTime,
+      );
+      totalSent += sent;
 
       // ── SEND FOLLOW-UP REMINDERS (no reply after ~45 min) ──
       // Runs on weekdays AND weekends
@@ -246,6 +246,8 @@ async function sendCheckinPrompts(
   levelGroup: string,
   today: string,
   dayOfWeek: number,
+  currentTime: string,
+  levelDefaultCheckinTime: string,
 ): Promise<number> {
   // Get all children in this level group
   const { data: children } = await sb
@@ -270,13 +272,17 @@ async function sendCheckinPrompts(
 
     const { data: settings } = await sb
       .from("sq_study_settings")
-      .select("commence_date")
+      .select("commence_date, check_completion_time")
       .eq("child_id", child.id)
       .single();
 
     if (settings?.commence_date && today < settings.commence_date) {
       continue; // Programme hasn't started yet for this child
     }
+
+    // Parent-set check-in time takes priority. Fallback to level default timing.
+    const preferredCheckinTime = settings?.check_completion_time || levelDefaultCheckinTime;
+    if (!isWithinWindow(currentTime, preferredCheckinTime, 7)) continue;
 
     // Study days: parent-set days take priority, default Mon-Fri
     const savedStudyDays: number[] = Array.isArray(child.study_days)
