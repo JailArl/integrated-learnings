@@ -713,7 +713,37 @@ export async function submitCTARequest(
   extra?: Record<string, unknown>
 ): Promise<boolean> {
   if (!supabase) return false;
-  const { error } = await supabase.from(table).insert({ parent_id: parentId, child_id: childId, ...extra });
+  const triggerReason = typeof extra?.trigger_reason === 'string' ? extra.trigger_reason : null;
+  const readableSummary = [
+    typeof extra?.parent_name === 'string' && extra.parent_name ? `Parent: ${extra.parent_name}` : '',
+    typeof extra?.parent_phone === 'string' && extra.parent_phone ? `Phone: ${extra.parent_phone}` : '',
+    typeof extra?.parent_email === 'string' && extra.parent_email ? `Email: ${extra.parent_email}` : '',
+    typeof extra?.child_name === 'string' && extra.child_name ? `Child: ${extra.child_name}` : '',
+    typeof extra?.child_level === 'string' && extra.child_level ? `Level: ${extra.child_level}` : '',
+    triggerReason ? `Reason: ${triggerReason}` : '',
+  ].filter(Boolean).join(' | ');
+
+  const payload = table === 'sq_crash_course_interest'
+    ? {
+        parent_id: parentId,
+        child_id: childId,
+        course_type: triggerReason || 'manual_request',
+        notes: readableSummary || null,
+      }
+    : table === 'sq_holiday_programme_interest'
+    ? {
+        parent_id: parentId,
+        child_id: childId,
+        availability_dates: null,
+        notes: readableSummary || null,
+      }
+    : {
+        parent_id: parentId,
+        child_id: childId,
+        trigger_reason: triggerReason || 'manual_request',
+      };
+
+  const { error } = await supabase.from(table).insert(payload);
   if (error) {
     console.error('submitCTARequest failed:', error);
     return false;

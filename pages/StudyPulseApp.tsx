@@ -649,6 +649,12 @@ const StudyPulseApp: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={async () => { if (supabase) { await supabase.auth.signOut(); navigate('/studypulse'); } }}
+              className="inline-flex items-center rounded-lg border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
+            >
+              Sign Out
+            </button>
             {!premium && (
               <button onClick={() => setShowPlanModal(true)} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
                 <Crown size={12} className="mr-1" /> Upgrade

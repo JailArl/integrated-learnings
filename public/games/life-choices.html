@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
 <title>Life Choices — SG Financial Literacy Game</title>
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow, noarchive">
+<meta name="bingbot" content="noindex, nofollow, noarchive">
+<meta name="ai" content="noai, noimageai">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f8;color:#1a1d2e;min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;overscroll-behavior-y:contain}
@@ -1118,7 +1122,33 @@ async function saveG(done){
       localStorage.setItem(lk,JSON.stringify({game_state:G,sid:SID,ts:G.lastActive}));
     }
   }catch(_e){}
-  await dbU('game_sessions',{age:G.age,cash:G.cash,cpf:G.cpf,happiness:G.hi,net_worth:nw(),final_score:calcScore(),ff_age:G.ffAge||null,game_state:G,is_complete:!!done,updated_at:new Date().toISOString()},SID);
+  return queueSessionSave(!!done);
+}
+
+let _saveTimer=null,_saveInFlight=false,_pendingSavePayload=null;
+function buildSessionPayload(done){
+  return {age:G.age,cash:G.cash,cpf:G.cpf,happiness:G.hi,net_worth:nw(),final_score:calcScore(),ff_age:G.ffAge||null,game_state:G,is_complete:!!done,updated_at:new Date().toISOString()};
+}
+async function flushSessionSave(waitForTurn){
+  if(waitForTurn){
+    while(_saveInFlight){await new Promise(r=>setTimeout(r,50));}
+  }
+  if(_saveInFlight||!_pendingSavePayload||!SID)return;
+  _saveInFlight=true;
+  var payload=_pendingSavePayload;
+  _pendingSavePayload=null;
+  try{await dbU('game_sessions',payload,SID);}catch(_e){}
+  _saveInFlight=false;
+  if(_pendingSavePayload){await flushSessionSave(false);}
+}
+function queueSessionSave(done){
+  _pendingSavePayload=buildSessionPayload(done||!!(_pendingSavePayload&&_pendingSavePayload.is_complete));
+  if(done){
+    if(_saveTimer){clearTimeout(_saveTimer);_saveTimer=null;}
+    return flushSessionSave(true);
+  }
+  if(_saveTimer)clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(function(){_saveTimer=null;flushSessionSave(false);},1500);
 }
 
 // ══════════════════════════════════════

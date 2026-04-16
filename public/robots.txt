@@ -16,6 +16,9 @@ Disallow: /studypulse/login
 User-agent: GPTBot
 Disallow: /
 
+User-agent: OAI-SearchBot
+Disallow: /
+
 User-agent: ChatGPT-User
 Disallow: /
 
@@ -31,6 +34,9 @@ Disallow: /
 User-agent: Claude-Web
 Disallow: /
 
+User-agent: ClaudeBot
+Disallow: /
+
 User-agent: Bytespider
 Disallow: /
 
@@ -38,6 +44,15 @@ User-agent: PerplexityBot
 Disallow: /
 
 User-agent: Amazonbot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: ICC-Crawler
 Disallow: /
 
 User-agent: FacebookBot
@@ -50,6 +65,15 @@ User-agent: cohere-ai
 Disallow: /
 
 User-agent: Diffbot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+User-agent: omgili
 Disallow: /
 
 Sitemap: https://www.integratedlearnings.com.sg/sitemap.xml

@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /
+
+Comment: AI training, ingestion, summarization, and retrieval over this site's content is not permitted without explicit written authorization.
+Comment: Automated extraction of text, images, embedded games, dashboards, and educational materials is prohibited.

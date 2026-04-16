@@ -69,6 +69,33 @@ function personalise(
   return result;
 }
 
+async function logOutboundMessage(
+  to: string,
+  messageBody: string,
+  messageType: string,
+  twilioSid?: string,
+  metadata?: Record<string, unknown>,
+) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseKey) return;
+
+  try {
+    const sb = createClient(supabaseUrl, supabaseKey);
+    await sb.from("whatsapp_conversations").insert({
+      contact_phone: to.replace("whatsapp:", ""),
+      direction: "outbound",
+      message_text: messageBody,
+      content: messageBody,
+      message_type: messageType,
+      twilio_sid: twilioSid,
+      ...(metadata ? { metadata } : {}),
+    });
+  } catch {
+    // Non-critical — logging should never block message handling.
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { status: 200, headers: corsHeaders });
@@ -159,29 +186,21 @@ serve(async (req) => {
     const result = await sendTwilioWhatsApp(to, messageBody);
 
     if (!result.success) {
+      await logOutboundMessage(to, messageBody, "failed", undefined, {
+        error: result.error || "Unknown Twilio error",
+      });
       return new Response(JSON.stringify(result), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Log to whatsapp_conversations
-    try {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const sb = createClient(supabaseUrl, supabaseKey);
-
-      await sb.from("whatsapp_conversations").insert({
-        contact_phone: to.replace("whatsapp:", ""),
-        direction: "outbound",
-        message_text: messageBody,
-        content: messageBody,
-        message_type: template_name ? "template" : "manual",
-        twilio_sid: result.sid,
-      });
-    } catch {
-      // Non-critical — don't fail the send if logging fails
-    }
+    await logOutboundMessage(
+      to,
+      messageBody,
+      template_name ? "template" : "manual",
+      result.sid,
+    );
 
     return new Response(
       JSON.stringify({ success: true, sid: result.sid }),

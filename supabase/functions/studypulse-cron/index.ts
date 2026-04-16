@@ -113,21 +113,43 @@ const PREMIUM_REPORT_WINDOWS = {
 };
 async function sendWhatsApp(to, templateName, variables, rawMessage) {
   const url = `${supabaseUrl}/functions/v1/send-whatsapp`;
-  await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${supabaseKey}`
-    },
-    body: JSON.stringify(rawMessage ? {
-      to,
-      raw_message: rawMessage
-    } : {
-      to,
-      template_name: templateName,
-      variables
-    })
-  });
+  const payload = rawMessage ? {
+    to,
+    raw_message: rawMessage
+  } : {
+    to,
+    template_name: templateName,
+    variables
+  };
+  let lastError = "Unknown WhatsApp send failure";
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${supabaseKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (response.ok) return;
+      let errorText = `HTTP ${response.status}`;
+      try {
+        const errorJson = await response.json();
+        errorText = errorJson?.error || errorJson?.message || errorText;
+      } catch {
+        const rawError = await response.text();
+        if (rawError) errorText = rawError;
+      }
+      lastError = errorText;
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+    }
+    if (attempt < 3) {
+      await new Promise((resolve) => setTimeout(resolve, attempt * 500));
+    }
+  }
+  throw new Error(`WhatsApp send failed for ${to}: ${lastError}`);
 }
 serve(async (req)=>{
   if (req.method === "OPTIONS") {
