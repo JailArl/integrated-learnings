@@ -375,9 +375,9 @@ async function sendCheckinPrompts(
         const singular = firstTarget.target_unit;
         const plural = `${firstTarget.target_unit}s`;
         const unitLabel = firstQty === 1 ? singular : plural;
-        message = `Good evening, ${child.name} 🌙\n\nHave you finished your target for ${coveredDayNames}: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\n${targetLine}\n\nReply: *done* / *partially* / *no*`;
+        message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your target for ${coveredDayNames}: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\n${targetLine}\n\nReply: *yes* / *partial* / *no*`;
       } else {
-        message = `Good evening, ${child.name} 🌙\n\nDid you study on ${coveredDayNames}?${examLine}\n\nReply: *yes* or *no*`;
+        message = `Hey ${child.name}! 📚 Study check-in time!\n\nDid you study on ${coveredDayNames}?${examLine}\n\nReply: *yes* / *partial* / *no*`;
       }
 
       await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
@@ -416,10 +416,10 @@ async function sendCheckinPrompts(
         const unitLabel = firstQty === 1 ? singular : plural;
 
         message = targets!.length === 1
-          ? `Good evening, ${child.name} 🌙\n\nHave you finished today's target: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\nReply:\n✅ *done* / 📝 *partially* / ❌ *no*`
-          : `Good evening, ${child.name} 🌙\n\nHave you finished today's targets?${examLine}\n${targetLine}\n\nReply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
+          ? `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your target for today: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\nReply: *yes* / *partial* / *no*`
+          : `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished today's targets?${examLine}\n${targetLine}\n\nReply: *yes* / *partial* / *no*`;
       } else {
-        message = `Good evening, ${child.name} 🌙\n\nHave you finished today's study target?${examLine}\n\nReply with:\n✅ *done*\n⚡ *did extra*\n📝 *partially*\n❌ *no*`;
+        message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished today's study target?${examLine}\n\nReply: *yes* / *partial* / *no*`;
       }
 
       await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);

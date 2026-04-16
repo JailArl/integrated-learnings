@@ -99,7 +99,7 @@ function parseTargetReply(body: string): { quantity: number; unit: string } | nu
 const SKIP_REASONS: { keywords: RegExp; reason: string; emoji: string; kidMsg: string }[] = [
   { keywords: /tired|exhausted|shag|sian|sleepy|drained|no energy|so tired/,
     reason: "feeling tired", emoji: "😴",
-    kidMsg: "Noted — rest well." },
+    kidMsg: "Get some rest tonight and push on tomorrow 💪" },
   { keywords: /sick|unwell|fever|headache|stomach|not feeling well|mc|medical|doctor|flu|cold|cough/,
     reason: "not feeling well", emoji: "🤒",
     kidMsg: "Noted — get well soon." },
@@ -115,7 +115,7 @@ const SKIP_REASONS: { keywords: RegExp; reason: string; emoji: string; kidMsg: s
   { keywords: /exam|test tomorrow|revision|preparing|studying for|mugging/,
     reason: "exam prep (different subject)", emoji: "📝",
     kidMsg: "Noted — good luck." },
-  { keywords: /stressed|cannot|overwhelm|too much|pressure|anxious|anxiety|scared|worried|hate study|hate school|don.t want/,
+  { keywords: /stressed|cannot|overwhelm|too much|pressure|anxious|anxiety|scared|worried|hate study|hate school/,
     reason: "feeling overwhelmed", emoji: "💛",
     kidMsg: "Noted 💛 Rest well." },
 ];
@@ -136,7 +136,7 @@ function parseCheckinStatus(body: string): { status: string; count?: number } | 
   if (["yes", "done", "finished", "completed", "did extra", "extra"].includes(lower)) {
     return { status: lower === "did extra" || lower === "extra" ? "did_extra" : "done" };
   }
-  if (["partially", "half", "a bit", "some", "not yet", "not done"].includes(lower)) {
+  if (["partially", "partial", "half", "a bit", "some", "not yet", "not done"].includes(lower)) {
     return { status: "partially" };
   }
   if (["no", "nope", "didn't", "didnt", "skip", "skipped"].includes(lower)) {
@@ -445,32 +445,40 @@ serve(async (req) => {
       .single();
 
     if (existingCheckin && existingCheckin.status !== "pending") {
-      if (existingCheckin.status === "no" && preCheck?.status === "rest_day") {
-        if (existingCheckin.note) {
-          return ok();
-        }
+      if (existingCheckin.status === "no") {
+        if (existingCheckin.note) return ok();
 
-        const skipInfo = parseSkipReason(body)!;
+        const trimmed = body.trim();
+        if (!trimmed) return ok();
+
+        const skipInfo = parseSkipReason(body);
+        const noteToStore = skipInfo ? skipInfo.reason : trimmed.slice(0, 160);
+
         await sb.from("sq_checkins")
-          .update({ note: skipInfo.reason, reply_received_at: now.toISOString() })
+          .update({ note: noteToStore, reply_received_at: now.toISOString() })
           .eq("id", existingCheckin.id);
 
-        await sendRaw(phone, `${skipInfo.emoji} ${skipInfo.kidMsg}`);
+        if (skipInfo) {
+          await sendRaw(phone, `${skipInfo.emoji} ${skipInfo.kidMsg}`);
 
-        if (membership?.parent_phone && membership.parent_phone !== phone) {
-          const isDistress = /overwhelm|stressed|anxious|hate|scared|worried|pressure/.test(body.toLowerCase());
-          let parentMsg: string;
-          if (parentLang === "zh") {
-            const reasonZh = REASON_ZH[skipInfo.reason] || skipInfo.reason;
-            parentMsg = isDistress
-              ? ZH.rest_distress(child.name, reasonZh)
-              : `${skipInfo.emoji} ${ZH.rest_normal(child.name, reasonZh)}`;
-          } else {
-            parentMsg = isDistress
-              ? `💛 Heads up — ${child.name} said they're ${skipInfo.reason}. Might be worth a chat tonight.`
-              : `${skipInfo.emoji} ${child.name} is taking a rest day (${skipInfo.reason}). They still checked in!`;
+          if (membership?.parent_phone && membership.parent_phone !== phone) {
+            const isDistress = /overwhelm|stressed|anxious|hate|scared|worried|pressure/.test(body.toLowerCase());
+            let parentMsg: string;
+            if (parentLang === "zh") {
+              const reasonZh = REASON_ZH[skipInfo.reason] || skipInfo.reason;
+              parentMsg = isDistress
+                ? ZH.rest_distress(child.name, reasonZh)
+                : `${skipInfo.emoji} ${ZH.rest_normal(child.name, reasonZh)}`;
+            } else {
+              parentMsg = isDistress
+                ? `💛 Heads up — ${child.name} said they're ${skipInfo.reason}. Might be worth a chat tonight.`
+                : `${skipInfo.emoji} ${child.name} is taking a rest day (${skipInfo.reason}). They still checked in!`;
+            }
+            await sendRaw(membership.parent_phone, parentMsg);
           }
-          await sendRaw(membership.parent_phone, parentMsg);
+        } else {
+          // Keep as not done with a non-excused reason
+          await sendRaw(phone, `Noted. Let's reset and try again tomorrow.`);
         }
 
         return ok();
@@ -650,9 +658,13 @@ serve(async (req) => {
           },
         }).eq("id", child.id);
 
-        await sendRaw(phone,
-          `No problem! How many ${todayTarget!.target_unit}s did you finish out of ${targetQ}?`
-        );
+        await sendRaw(phone, `Better than nothing — if you can, just do extra tomorrow. 💪`);
+        if (membership?.parent_phone && membership.parent_phone !== phone) {
+          const pMsg = parentLang === "zh"
+            ? ZH.checkin_partial_generic(child.name)
+            : `📝 ${child.name} checked in — partially done. Encouraged to finish the rest tomorrow.`;
+          await sendRaw(membership.parent_phone, pMsg);
+        }
       } else {
         await sendRaw(phone,
           `Good effort, ${child.name}! 📝 Try to finish the rest by tomorrow — small steps add up.`
@@ -668,7 +680,7 @@ serve(async (req) => {
     // ── NO ──
     } else if (parsed.status === "no") {
       await sendRaw(phone,
-        `Thanks for being honest, ${child.name}. Not every day is a study day. 💪\n\nIf you'd like, can you tell me the reason? You can just reply *tired*, *sick*, or *busy*.`
+        `Thanks for being honest, ${child.name}. May I know what happened?\n\nYou can reply with *sick*, *tired*, or tell me in your own words.`
       );
 
       if (membership?.parent_phone && membership.parent_phone !== phone) {
