@@ -251,6 +251,7 @@ const StudyPulseApp: React.FC = () => {
   const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
   const [upgraded, setUpgraded] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
+  const [showPlanModal, setShowPlanModal] = useState(false);
   const [openingBilling, setOpeningBilling] = useState(false);
   const [editingStudyDaysId, setEditingStudyDaysId] = useState<string | null>(null);
   const [dashboardNotice, setDashboardNotice] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
@@ -649,7 +650,7 @@ const StudyPulseApp: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             {!premium && (
-              <button onClick={() => setTab('settings')} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
+              <button onClick={() => setShowPlanModal(true)} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
                 <Crown size={12} className="mr-1" /> Upgrade
               </button>
             )}
@@ -838,7 +839,7 @@ const StudyPulseApp: React.FC = () => {
                   <div>
                     <p className="text-xs font-bold text-slate-900">Free plan: Tue, Thu, Sun check-ins</p>
                     <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, all subjects, and unlimited children.</p>
-                    <button onClick={() => setTab('settings')} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
+                    <button onClick={() => setShowPlanModal(true)} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
                       Choose a plan <ArrowRight size={12} className="ml-1" />
                     </button>
                   </div>
@@ -1174,7 +1175,7 @@ const StudyPulseApp: React.FC = () => {
             subjects={displaySubjects}
             exams={exams}
             streak={streak}
-            onUpgrade={() => setTab('settings')}
+            onUpgrade={() => setShowPlanModal(true)}
           />
         )}
 
@@ -1752,7 +1753,7 @@ const StudyPulseApp: React.FC = () => {
                           : `You've reached the ${limit} exam limit. Complete or remove an exam to add more.`}
                       </p>
                       {!premium && (
-                        <button onClick={() => setTab('settings')} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
+                        <button onClick={() => setShowPlanModal(true)} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
                           <Crown size={12} className="mr-1" /> Choose a plan
                         </button>
                       )}
@@ -2065,6 +2066,64 @@ const StudyPulseApp: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* ── UPGRADE PLAN MODAL ── */}
+      {showPlanModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 px-4" onClick={() => !upgrading && setShowPlanModal(false)}>
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Crown size={20} className="text-amber-500" /> Choose Your Plan
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">All plans include daily check-ins, all subjects, and unlimited children.</p>
+
+            {upgrading && (
+              <p className="mt-3 text-xs font-bold text-amber-700">Opening secure checkout — please wait...</p>
+            )}
+
+            <div className="mt-4 grid gap-3">
+              {CHECKOUT_PLAN_OPTIONS.map((plan) => (
+                <button
+                  key={plan.code}
+                  disabled={upgrading}
+                  onClick={async () => {
+                    if (!userId || upgrading) return;
+                    setDashboardNotice(null);
+                    setUpgrading(true);
+                    try {
+                      const checkout = await startPremiumCheckout(plan.code);
+                      if (checkout.ok && checkout.url) {
+                        window.location.assign(checkout.url);
+                        return;
+                      }
+                      setDashboardNotice({ type: 'error', text: checkout.message || 'Could not start checkout. Please try again.' });
+                    } catch (err: any) {
+                      setDashboardNotice({ type: 'error', text: err?.message || 'Something went wrong. Please try again.' });
+                    } finally {
+                      setUpgrading(false);
+                    }
+                    setShowPlanModal(false);
+                  }}
+                  className={`rounded-xl border px-4 py-4 text-left transition disabled:opacity-50 ${plan.code === 'monthly_flex' ? 'border-amber-300 bg-amber-50 hover:bg-amber-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-slate-900">{plan.label}</span>
+                    <span className="text-sm font-black text-slate-900">{plan.priceLabel}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">{plan.description}</p>
+                </button>
+              ))}
+            </div>
+
+            <button
+              disabled={upgrading}
+              onClick={() => setShowPlanModal(false)}
+              className="mt-4 w-full rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-500 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
