@@ -105,18 +105,26 @@ async function persistParentProfile(userId: string, fullName: string, phone: str
   const parentName = fullName.trim();
   const parentPhone = normaliseSGPhone(phone);
 
-  const { error: membershipError } = await supabase
+  // Update sq_memberships and verify update took effect
+  const { data: updated, error: membershipError } = await supabase
     .from('sq_memberships')
     .update({ parent_name: parentName, parent_phone: parentPhone, ...(email ? { parent_email: email } : {}) })
-    .eq('user_id', userId);
+    .eq('user_id', userId)
+    .select('id')
+    .maybeSingle();
 
   if (membershipError) {
     return { ok: false, message: `Could not save profile to membership: ${membershipError.message}` };
   }
+  if (!updated) {
+    return { ok: false, message: 'Membership row not found — please refresh and try again.' };
+  }
 
+  // Upsert parent_profiles (always include email to avoid NOT NULL violation)
+  const profileEmail = email || '';
   const { error: profileError } = await supabase
     .from('parent_profiles')
-    .upsert({ id: userId, full_name: parentName, ...(email ? { email } : {}), phone: parentPhone }, { onConflict: 'id' });
+    .upsert({ id: userId, full_name: parentName, email: profileEmail, phone: parentPhone }, { onConflict: 'id' });
 
   if (profileError) {
     return { ok: false, message: `Could not save parent profile: ${profileError.message}` };
@@ -218,6 +226,7 @@ const StudyPulseApp: React.FC = () => {
   const [editProfileName, setEditProfileName] = useState('');
   const [editProfilePhone, setEditProfilePhone] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSaveMsg, setProfileSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [copiedChildId, setCopiedChildId] = useState<string | null>(null);
   const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
@@ -616,8 +625,8 @@ const StudyPulseApp: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             {!premium && (
-              <button disabled={upgrading} onClick={() => handleUpgrade('monthly_flex')} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
-                <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
+              <button onClick={() => setTab('settings')} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
+                <Crown size={12} className="mr-1" /> Upgrade
               </button>
             )}
             <Link to="/studypulse" className="text-xs text-slate-400 hover:text-white">Overview</Link>
@@ -803,8 +812,8 @@ const StudyPulseApp: React.FC = () => {
                   <div>
                     <p className="text-xs font-bold text-slate-900">Free plan: Tue, Thu, Sun check-ins</p>
                     <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, all subjects, and unlimited children.</p>
-                    <button disabled={upgrading} onClick={() => handleUpgrade('monthly_flex')} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
-                      {upgrading ? 'Please wait...' : 'Upgrade securely soon'} <ArrowRight size={12} className="ml-1" />
+                    <button onClick={() => setTab('settings')} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
+                      Choose a plan <ArrowRight size={12} className="ml-1" />
                     </button>
                   </div>
                 </div>
@@ -1139,7 +1148,7 @@ const StudyPulseApp: React.FC = () => {
             subjects={displaySubjects}
             exams={exams}
             streak={streak}
-            onUpgrade={() => handleUpgrade('monthly_flex')}
+            onUpgrade={() => setTab('settings')}
           />
         )}
 
@@ -1717,8 +1726,8 @@ const StudyPulseApp: React.FC = () => {
                           : `You've reached the ${limit} exam limit. Complete or remove an exam to add more.`}
                       </p>
                       {!premium && (
-                        <button disabled={upgrading} onClick={() => handleUpgrade('monthly_flex')} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
-                          <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
+                        <button onClick={() => setTab('settings')} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
+                          <Crown size={12} className="mr-1" /> Choose a plan
                         </button>
                       )}
                     </div>
@@ -1885,7 +1894,7 @@ const StudyPulseApp: React.FC = () => {
                     <p className="text-xs font-bold text-red-700">Your name is not set</p>
                     <p className="text-[11px] text-red-600 mt-0.5">Without a name, our team cannot identify you when you send a tutor/diagnostic request. Please update it now.</p>
                     <button
-                      onClick={() => { setEditingProfile(true); setEditProfileName(membership?.parent_name || ''); setEditProfilePhone(membership?.parent_phone || ''); }}
+                      onClick={() => { setProfileSaveMsg(null); setEditingProfile(true); setEditProfileName(membership?.parent_name || ''); setEditProfilePhone(membership?.parent_phone || ''); }}
                       className="mt-2 rounded-lg bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white"
                     >
                       Set my name now →
@@ -1904,17 +1913,23 @@ const StudyPulseApp: React.FC = () => {
                     <label className="text-xs font-semibold text-slate-600">Your WhatsApp Number</label>
                     <input type="tel" className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" placeholder="+65 9123 4567" value={editProfilePhone} onChange={e => setEditProfilePhone(e.target.value)} />
                   </div>
+                  {profileSaveMsg && (
+                    <div className={`rounded-xl border px-3 py-2 text-xs font-semibold ${profileSaveMsg.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                      {profileSaveMsg.text}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     <button
                       disabled={savingProfile}
                       onClick={async () => {
                         if (!supabase || !userId) return;
+                        setProfileSaveMsg(null);
                         if (!editProfileName.trim()) {
-                          setDashboardNotice({ type: 'error', text: 'Please enter your name before saving.' });
+                          setProfileSaveMsg({ type: 'error', text: 'Please enter your name before saving.' });
                           return;
                         }
                         if (!editProfilePhone.trim()) {
-                          setDashboardNotice({ type: 'error', text: 'Please enter your WhatsApp number before saving.' });
+                          setProfileSaveMsg({ type: 'error', text: 'Please enter your WhatsApp number before saving.' });
                           return;
                         }
 
@@ -1922,7 +1937,7 @@ const StudyPulseApp: React.FC = () => {
                         const result = await persistParentProfile(userId, editProfileName, editProfilePhone, membership?.parent_email || undefined);
                         if (!result.ok) {
                           setSavingProfile(false);
-                          setDashboardNotice({ type: 'error', text: result.message || 'Could not save your profile yet. Please try again.' });
+                          setProfileSaveMsg({ type: 'error', text: result.message || 'Could not save your profile yet. Please try again.' });
                           return;
                         }
 
@@ -1930,6 +1945,7 @@ const StudyPulseApp: React.FC = () => {
                         setMembership(prev => prev ? { ...prev, parent_name: editProfileName.trim(), parent_phone: normPhone } : prev);
                         setEditingProfile(false);
                         setSavingProfile(false);
+                        setProfileSaveMsg(null);
                         setDashboardNotice({ type: 'success', text: 'Profile updated successfully.' });
                       }}
                       className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
@@ -1955,7 +1971,7 @@ const StudyPulseApp: React.FC = () => {
                     </a>
                   )}
                   <button
-                    onClick={() => { setEditingProfile(true); setEditProfileName(membership?.parent_name || ''); setEditProfilePhone(membership?.parent_phone || ''); }}
+                    onClick={() => { setProfileSaveMsg(null); setEditingProfile(true); setEditProfileName(membership?.parent_name || ''); setEditProfilePhone(membership?.parent_phone || ''); }}
                     className="mt-2 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
                   >
                     Edit Profile
