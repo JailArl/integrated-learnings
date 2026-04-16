@@ -349,7 +349,13 @@ const StudyPulseApp: React.FC = () => {
       : `Your premium pass ends in ${billingDaysLeft} day${billingDaysLeft === 1 ? '' : 's'}. Renew before it expires to keep daily check-ins active.`
     : null;
 
-  const handleUpgrade = async (plan: CheckoutPlan = 'monthly_flex') => {
+  const handleUpgrade = async (plan?: CheckoutPlan) => {
+    if (!plan) {
+      setTab('settings');
+      setDashboardNotice({ type: 'info', text: 'Choose a plan below: Core Monthly or one-time Exam Pass / Sprint / Season.' });
+      return;
+    }
+
     if (!userId || upgrading) return;
     setDashboardNotice(null);
     setUpgrading(true);
