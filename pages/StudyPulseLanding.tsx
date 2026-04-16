@@ -240,6 +240,7 @@ const T = {
   olevRegularPrice: { en: '$340 / subject', zh: '每科 $340' },
 
   // Bottom CTA
+  bottomH2a: { en: 'PSLE. O-Level. A-Level.', zh: 'PSLE。O水准。A水准。' },
   bottomH2b: { en: 'Small daily habits \u2192 big exam results.', zh: '每天一点小习惯 \u2192 考试大突破。' },
   bottomSub: { en: 'Set up in under 5 minutes. Start free \u2014 upgrade when your child\u2019s exam season begins.', zh: '5分钟内完成设置。免费开始 \u2014 孩子考季来临时再升级。' },
   bottomBtn: { en: 'Start Free', zh: '免费开始' },
