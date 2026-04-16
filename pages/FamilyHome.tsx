@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -8,13 +8,45 @@ import {
   ClipboardCheck,
   Flame,
   Search,
+  Timer,
   UserPlus,
 } from 'lucide-react';
 import ParentInquiryForm from '../components/ParentInquiryForm';
 
+const EARLY_BIRD_DEADLINE = new Date('2026-05-20T23:59:59+08:00').getTime();
+
 const FamilyHome: React.FC = () => {
+  const [timeLeft, setTimeLeft] = useState(() => Math.max(0, EARLY_BIRD_DEADLINE - Date.now()));
+  useEffect(() => {
+    const id = setInterval(() => setTimeLeft(Math.max(0, EARLY_BIRD_DEADLINE - Date.now())), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const days = Math.floor(timeLeft / 86400000);
+  const hours = Math.floor((timeLeft % 86400000) / 3600000);
+  const mins = Math.floor((timeLeft % 3600000) / 60000);
+  const secs = Math.floor((timeLeft % 60000) / 1000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+
   return (
     <div className="min-h-screen bg-stone-50 text-slate-900">
+
+      {/* ═══════════ URGENCY BANNER ═══════════ */}
+      <div className="sticky top-0 z-50 flex items-center justify-center gap-3 bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 px-4 py-2.5 text-white shadow-lg sm:gap-6">
+        <Timer size={15} className="shrink-0" />
+        <p className="text-xs font-bold sm:text-sm">
+          🔥 June Holiday Crash Course — Early Bird closes in&nbsp;
+          <span className="font-black tabular-nums">
+            {pad(days)}d {pad(hours)}h {pad(mins)}m {pad(secs)}s
+          </span>
+        </p>
+        <a
+          href="https://wa.me/6500000000?text=Hi%2C%20I%27d%20like%20to%20find%20out%20more%20about%20the%20June%20Holiday%20Crash%20Course"
+          target="_blank" rel="noopener noreferrer"
+          className="shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-black text-orange-600 shadow transition hover:bg-orange-50"
+        >
+          Reserve Now →
+        </a>
+      </div>
 
       {/* ═══════════ HERO ═══════════ */}
       <section className="relative overflow-hidden bg-[linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0b3b2e_100%)] px-4 pb-20 pt-20h text-white sm:px-6 lg:px-8">
@@ -162,29 +194,47 @@ const FamilyHome: React.FC = () => {
             </article>
 
             {/* Card 2 — Crash Courses */}
-            <article className="group rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm transition hover:shadow-md lg:p-8">
+            <article className="group relative rounded-3xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 to-white p-6 shadow-md transition hover:shadow-lg lg:p-8">
+              {/* Hot badge */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-red-500 px-4 py-1 text-[11px] font-black text-white shadow">
+                🔥 June Holidays — Spots Filling Fast
+              </div>
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-orange-700">
                 <Flame size={24} />
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest text-orange-600">Exam Prep</p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900">Crash Courses</h3>
+              <p className="text-xs font-bold uppercase tracking-widest text-orange-600">Exam Prep · June 2026</p>
+              <h3 className="mt-2 text-2xl font-black text-slate-900">Holiday Crash Courses</h3>
               <p className="mt-3 text-sm leading-6 text-slate-600">
-                Intensive revision before mid-year, end-of-year, or major exams. Small group or 1-to-1 sessions focused on weak topics and exam techniques.
+                Intensive last-2-weeks-of-holidays revision — timed perfectly so students return to school sharp and exam-ready.
               </p>
+              <div className="mt-4 space-y-2">
+                <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5">
+                  <p className="text-xs font-bold text-sky-700">PSLE (P6) · 15–18 Jun</p>
+                  <p className="mt-0.5 text-xs text-slate-600">4 days · Math & Science · Morning + Afternoon sessions</p>
+                </div>
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5">
+                  <p className="text-xs font-bold text-emerald-700">O-Level (Sec 4/5) · 15–26 Jun</p>
+                  <p className="mt-0.5 text-xs text-slate-600">2 days per subject · Physics, Chem, A/E Math · Pick your weak topics</p>
+                </div>
+              </div>
               <ul className="mt-4 space-y-2">
-                {['Exam-focused intensive revision', 'Holiday & pre-exam schedules', 'P4–JC2, all core subjects'].map((f) => (
+                {['All materials provided — zero prep for parents', 'Max 6 students per class', 'Early bird: from $280/subject before 20 May'].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
-                    <CheckCircle size={15} className="mt-0.5 shrink-0 text-orange-600" />
+                    <CheckCircle size={15} className="mt-0.5 shrink-0 text-orange-500" />
                     {f}
                   </li>
                 ))}
               </ul>
               <a
-                href="#parent-inquiry"
-                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-orange-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-orange-700"
+                href="https://wa.me/6500000000?text=Hi%2C%20I%27d%20like%20to%20find%20out%20more%20about%20the%20June%20Holiday%20Crash%20Course"
+                target="_blank" rel="noopener noreferrer"
+                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow transition hover:bg-orange-400"
               >
-                Register Interest
+                Reserve a Spot via WhatsApp <ArrowRight size={15} className="ml-2" />
               </a>
+              <Link to="/studypulse#crash-courses" className="mt-2 inline-block w-full text-center text-xs font-semibold text-orange-600 underline">
+                See full programme details →
+              </Link>
             </article>
 
             {/* Card 3 — Become a Tutor */}
