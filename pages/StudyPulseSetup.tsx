@@ -12,6 +12,7 @@ import { createMembership } from '../services/studyquest';
 const StudyPulseSetup: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
@@ -34,6 +35,7 @@ const StudyPulseSetup: React.FC = () => {
     setError('');
 
     if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) { setError('Enter a valid email address.'); return; }
+    if (!fullName.trim()) { setError('Please enter your full name.'); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     if (password !== confirmPassword) { setError('Passwords do not match.'); return; }
     if (!supabase) { setError('Authentication service is not configured.'); return; }
@@ -43,7 +45,7 @@ const StudyPulseSetup: React.FC = () => {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { role: 'parent' } },
+        options: { data: { role: 'parent', full_name: fullName.trim() } },
       });
 
       if (signUpError) {
@@ -60,7 +62,7 @@ const StudyPulseSetup: React.FC = () => {
       if (!userId) { setError('Signup failed. Please try again.'); setLoading(false); return; }
 
       // Create a free membership so the dashboard detects them
-      await createMembership(userId, 'free', { email });
+      await createMembership(userId, 'free', { email, name: fullName.trim() });
 
       navigate('/studypulse/app');
     } catch (err: any) {
@@ -85,6 +87,16 @@ const StudyPulseSetup: React.FC = () => {
           {error && <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">{error}</div>}
 
           <form onSubmit={handleSignup} className="mt-6 space-y-4">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Your Full Name</label>
+              <input
+                type="text"
+                className={inputCls}
+                placeholder="e.g. Sarah Tan"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+            </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">Email</label>
               <input
