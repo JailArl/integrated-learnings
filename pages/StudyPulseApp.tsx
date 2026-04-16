@@ -421,6 +421,15 @@ const StudyPulseApp: React.FC = () => {
     window.open(`https://wa.me/6598882675?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
+  const getParentActivationLink = (childNameOverride?: string) => {
+    const parentName = membership?.parent_name?.trim() || 'the parent';
+    const childName = childNameOverride || child?.name || 'my child';
+    const msg = encodeURIComponent(
+      `Hi StudyPulse, I'm ${parentName}, parent of ${childName}. Please activate my weekly parent updates.`
+    );
+    return `https://wa.me/6589598553?text=${msg}`;
+  };
+
   const handleSaveWeeklyTargets = async () => {
     if (!child) return;
     const studyDaysCount = Math.max(1, getEffectiveStudyDays(child).length);
@@ -1884,7 +1893,7 @@ const StudyPulseApp: React.FC = () => {
                   <p className="text-xs text-slate-500">WhatsApp: {membership?.parent_phone || 'Not set'}</p>
                   {membership?.parent_phone && (
                     <a
-                      href="https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+the+parent+and+I'm+ready+for+weekly+updates!"
+                      href={getParentActivationLink()}
                       target="_blank"
                       rel="noreferrer"
                       className="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
@@ -2049,6 +2058,15 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
   };
 
   const stepLabels = ['Your Details', 'Add Child', 'Subject & Exam', 'Ready!'];
+
+  const onboardingParentActivationLink = (childNameOverride?: string) => {
+    const parentName = fullName.trim() || 'the parent';
+    const childRef = childNameOverride || childName || 'my child';
+    const msg = encodeURIComponent(
+      `Hi StudyPulse, I'm ${parentName}, parent of ${childRef}. Please activate my weekly parent updates.`
+    );
+    return `https://wa.me/6589598553?text=${msg}`;
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-stone-50 px-4 py-8">
@@ -2259,7 +2277,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
                 <p className="text-xs font-bold text-blue-800 mb-2">2️⃣ Your parent updates</p>
                 <p className="text-xs text-blue-700 mb-2">Tap this yourself — it will open WhatsApp on your phone.</p>
                 <a
-                  href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+the+parent+and+I'm+ready+for+weekly+updates!`}
+                  href={onboardingParentActivationLink(childName)}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100"

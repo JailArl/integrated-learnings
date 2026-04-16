@@ -755,6 +755,7 @@ const StudyPulseAdmin: React.FC = () => {
                     const parentName = r.parent_name || parent?.parent_name || r.parent_email || parent?.parent_email || '(No name set)';
                     const parentPhone = r.parent_phone || parent?.parent_phone || 'Not provided';
                     const parentEmail = r.parent_email || parent?.parent_email || 'Not provided';
+                    const parentPhoneDigits = (r.parent_phone || parent?.parent_phone || '').replace(/[^0-9]/g, '');
                     const childName = r.child_name || child?.name || '(Unknown child)';
                     const childLevel = r.child_level || child?.level || '';
                     const refNo = `#${String(idx + 1).padStart(3, '0')}`;
@@ -804,9 +805,9 @@ const StudyPulseAdmin: React.FC = () => {
                               >
                                 Set Pending
                               </button>
-                              {parent?.parent_phone && (
+                              {parentPhoneDigits && (
                                 <a
-                                  href={`https://wa.me/${parent.parent_phone.replace(/[^0-9]/g, '')}`}
+                                  href={`https://wa.me/${parentPhoneDigits}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700"
