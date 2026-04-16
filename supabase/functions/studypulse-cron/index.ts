@@ -773,6 +773,20 @@ async function autoCloseStaleCheckins(sb, levelGroup, today) {
   const { data: stale } = await sb.from("sq_checkins").select("id, child_id").eq("checkin_date", today).eq("status", "pending");
   if (!stale) return;
   for (const checkin of stale){
+    // If the child already has any non-pending check-in today, this pending row is stale.
+    // Clean it up silently and never send a false "forgot" message.
+    const { data: answered } = await sb
+      .from("sq_checkins")
+      .select("id")
+      .eq("child_id", checkin.child_id)
+      .eq("checkin_date", today)
+      .neq("status", "pending")
+      .limit(1);
+    if (answered && answered.length > 0) {
+      await sb.from("sq_checkins").delete().eq("id", checkin.id);
+      continue;
+    }
+
     const { data: child } = await sb.from("sq_children").select("name, level, whatsapp_number, parent_id").eq("id", checkin.child_id).single();
     if (!child || getLevelGroup(child.level) !== levelGroup) continue;
     // Don't auto-close on CCA days
