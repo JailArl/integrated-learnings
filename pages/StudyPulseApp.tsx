@@ -1307,14 +1307,6 @@ const StudyPulseApp: React.FC = () => {
                         <span className="w-full mt-1">
                           <span className="block text-xs text-amber-700 font-semibold mb-1">⚠️ {c.name} must tap this link on their own phone:</span>
                           <span className="flex flex-wrap gap-2">
-                            <a
-                              href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(c.name)}+and+I'm+ready+for+my+daily+check-ins!`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-                            >
-                              📲 Open on this device
-                            </a>
                             <button
                               onClick={async () => {
                                 const link = `https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(c.name)}+and+I'm+ready+for+my+daily+check-ins!`;
@@ -1328,7 +1320,7 @@ const StudyPulseApp: React.FC = () => {
                               }}
                               className="rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100"
                             >
-                              {copiedChildId === c.id ? '✅ Copied!' : '🔗 Copy link to send to ' + c.name}
+                              {copiedChildId === c.id ? '✅ Copied!' : '🔗 Share / Copy link to send to ' + c.name}
                             </button>
                           </span>
                         </span>
