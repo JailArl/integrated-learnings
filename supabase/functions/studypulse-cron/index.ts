@@ -312,7 +312,7 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
         const firstTarget = targets[0];
         const firstQty = firstTarget.daily_quantity * coveredStudyDays.length;
         const unitLabel = formatUnitLabel(firstQty, firstTarget.target_unit);
-        message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your target for ${coveredDayNames}: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\n${targetLine}\n\nReply: *yes* / *partial* / *no*`;
+        message = `Hey ${child.name}! 📚 Study check-in time!\n\nYour target for ${coveredDayNames}:\n${targetLine}${examLine}\n\nHave you finished it?\n\nReply: *yes* / *partial* / *no*`;
       } else {
         message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your study target for ${coveredDayNames}?${examLine}\n\nReply: *yes* / *partial* / *no*`;
       }
@@ -342,7 +342,7 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
         const firstTarget = targets[0];
         const firstQty = firstTarget.daily_quantity;
         const unitLabel = formatUnitLabel(firstQty, firstTarget.target_unit);
-        message = targets.length === 1 ? `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your target for today: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\nReply: *yes* / *partial* / *no*` : `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished today's targets?${examLine}\n${targetLine}\n\nReply: *yes* / *partial* / *no*`;
+        message = targets.length === 1 ? `Hey ${child.name}! 📚 Study check-in time!\n\nToday's target:\n• ${firstTarget.subject_name}: *${firstQty} ${unitLabel}*${examLine}\n\nHave you finished it?\n\nReply: *yes* / *partial* / *no*` : `Hey ${child.name}! 📚 Study check-in time!\n\nToday's targets:${examLine}\n${targetLine}\n\nHave you finished them?\n\nReply: *yes* / *partial* / *no*`;
       } else {
         message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your study target for today?${examLine}\n\nReply: *yes* / *partial* / *no*`;
       }
@@ -365,7 +365,7 @@ async function sendFollowupReminders(sb, levelGroup, today) {
     const qty = Number(checkin.target_quantity || 0);
     const unit = checkin.target_unit || "";
     const subject = checkin.subject_reported || "";
-    const reminderMsg = qty > 0 && unit && subject ? `Hey ${child.name}, quick reminder 😊\n\nHave you finished your target: *${qty} ${formatUnitLabel(qty, unit)} of ${subject}*?\n\nReply: *yes* / *partial* / *no*.` : `Hey ${child.name}, just a friendly reminder! 😊 Quick check-in — reply *yes*, *partial*, or *no*.`;
+    const reminderMsg = qty > 0 && unit && subject ? `Hey ${child.name}, quick reminder 😊\n\nYour target:\n• ${subject}: *${qty} ${formatUnitLabel(qty, unit)}*\n\nHave you finished it?\n\nReply: *yes* / *partial* / *no*.` : `Hey ${child.name}, just a friendly reminder! 😊\n\nHave you finished your study target for today?\n\nReply: *yes* / *partial* / *no*.`;
     await sendWhatsApp(child.whatsapp_number, undefined, undefined, reminderMsg);
     // Also nudge parent
     const { data: membership } = await sb.from("sq_memberships").select("parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
