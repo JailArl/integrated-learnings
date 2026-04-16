@@ -105,7 +105,13 @@ async function persistParentProfile(userId: string, fullName: string, phone: str
   const parentName = fullName.trim();
   const parentPhone = normaliseSGPhone(phone);
 
-  // Update sq_memberships and verify update took effect
+  // Step 1: clear the phone so the unique index won't conflict with our own row
+  await supabase
+    .from('sq_memberships')
+    .update({ parent_phone: null })
+    .eq('user_id', userId);
+
+  // Step 2: set all fields including re-set phone
   const { data: updated, error: membershipError } = await supabase
     .from('sq_memberships')
     .update({ parent_name: parentName, parent_phone: parentPhone, ...(email ? { parent_email: email } : {}) })
@@ -114,7 +120,10 @@ async function persistParentProfile(userId: string, fullName: string, phone: str
     .maybeSingle();
 
   if (membershipError) {
-    return { ok: false, message: `Could not save profile to membership: ${membershipError.message}` };
+    if (membershipError.message.includes('uq_sq_memberships_parent_phone')) {
+      return { ok: false, message: 'This WhatsApp number is already linked to another account. Please use a different number.' };
+    }
+    return { ok: false, message: `Could not save profile: ${membershipError.message}` };
   }
   if (!updated) {
     return { ok: false, message: 'Membership row not found — please refresh and try again.' };
@@ -659,6 +668,26 @@ const StudyPulseApp: React.FC = () => {
       </nav>
 
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+
+        {/* Global notice banner — visible on every tab */}
+        {dashboardNotice && (
+          <div className={`mb-5 rounded-2xl border p-4 ${
+            dashboardNotice.type === 'error'
+              ? 'border-red-200 bg-red-50'
+              : dashboardNotice.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50'
+              : 'border-amber-200 bg-amber-50'
+          }`}>
+            <p className={`text-sm font-semibold ${
+              dashboardNotice.type === 'error'
+                ? 'text-red-700'
+                : dashboardNotice.type === 'success'
+                ? 'text-emerald-700'
+                : 'text-amber-800'
+            }`}>{dashboardNotice.text}</p>
+          </div>
+        )}
+
         {/* ── TODAY ── */}
         {tab === 'today' && (
           <div className="space-y-5">
@@ -775,24 +804,6 @@ const StudyPulseApp: React.FC = () => {
                     </p>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {dashboardNotice && (
-              <div className={`rounded-2xl border p-4 ${
-                dashboardNotice.type === 'error'
-                  ? 'border-red-200 bg-red-50'
-                  : dashboardNotice.type === 'success'
-                  ? 'border-emerald-200 bg-emerald-50'
-                  : 'border-amber-200 bg-amber-50'
-              }`}>
-                <p className={`text-sm font-semibold ${
-                  dashboardNotice.type === 'error'
-                    ? 'text-red-700'
-                    : dashboardNotice.type === 'success'
-                    ? 'text-emerald-700'
-                    : 'text-amber-800'
-                }`}>{dashboardNotice.text}</p>
               </div>
             )}
 
