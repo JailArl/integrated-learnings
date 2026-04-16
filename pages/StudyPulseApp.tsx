@@ -547,14 +547,24 @@ const StudyPulseApp: React.FC = () => {
 
   // Returns check-in time label. Parent-set time takes priority, then level default fallback.
   function getCheckinTimeLabel(childRow: SQChild): string {
-    if (childCheckTimes[childRow.id]) {
-      return to12h(childCheckTimes[childRow.id]);
-    }
-
     const now = new Date();
     const sgDay = new Date(now.getTime() + 8 * 60 * 60 * 1000).getUTCDay();
     const isWeekend = sgDay === 0 || sgDay === 6;
-    return to12h(getLevelDefaultCheckTime(childRow.level, isWeekend));
+    return to12h(getEffectiveCheckinTimeValue(childRow, isWeekend));
+  }
+
+  function getEffectiveCheckinTimeValue(childRow: SQChild, isWeekend: boolean): string {
+    const raw = childCheckTimes[childRow.id];
+    if (!raw) return getLevelDefaultCheckTime(childRow.level, isWeekend);
+
+    const timeHHMM = raw.slice(0, 5);
+    const lvl = childRow.level.trim().toUpperCase();
+    const isSecLower = /^(SEC[1-3]|SEC [1-3]|SECONDARY [1-3])$/.test(lvl);
+
+    // Legacy compatibility: some Sec1-3 rows were incorrectly saved as 21:00.
+    // Runtime schedule is 20:00, so normalize UI to avoid showing wrong timing.
+    if (!isWeekend && isSecLower && timeHHMM === '21:00') return '20:00';
+    return timeHHMM;
   }
 
   const CHECK_TIME_OPTIONS = [
@@ -1387,25 +1397,19 @@ const StudyPulseApp: React.FC = () => {
                       If you do not save a custom time, StudyPulse uses the level-based default timing automatically.
                     </p>
                     <div className="mt-2 flex items-center gap-2">
-                      {(() => {
-                        const levelDefault = getLevelDefaultCheckTime(c.level, false);
-                        const selected = childCheckTimes[c.id] || levelDefault;
-                        return (
                       <select
                         className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                        value={selected}
+                        value={getEffectiveCheckinTimeValue(c, false)}
                         onChange={(e) => setChildCheckTimes((prev) => ({ ...prev, [c.id]: e.target.value }))}
                       >
                         {CHECK_TIME_OPTIONS.map((t) => (
                           <option key={t} value={t}>{t}</option>
                         ))}
                       </select>
-                        );
-                      })()}
                       <button
                         disabled={savingCheckTimeId === c.id}
                         onClick={async () => {
-                          const selected = childCheckTimes[c.id] || getLevelDefaultCheckTime(c.level, false);
+                          const selected = getEffectiveCheckinTimeValue(c, false);
                           setSavingCheckTimeId(c.id);
                           await upsertStudySettings(c.id, { check_completion_time: selected });
                           setSavingCheckTimeId(null);
