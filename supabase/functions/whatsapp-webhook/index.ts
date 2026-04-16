@@ -176,6 +176,11 @@ function parseSkipReason(body) {
 }
 function parseCheckinStatus(body) {
   const lower = body.trim().toLowerCase();
+  const normalized = lower
+    .replace(/[\u2019']/g, "'")
+    .replace(/[^a-z0-9\s']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   if ([
     "yes",
     "done",
@@ -183,9 +188,9 @@ function parseCheckinStatus(body) {
     "completed",
     "did extra",
     "extra"
-  ].includes(lower)) {
+  ].includes(normalized) || /^(yes|yep|yeah|ya|done|finished|completed)\b/.test(normalized)) {
     return {
-      status: lower === "did extra" || lower === "extra" ? "did_extra" : "done"
+      status: normalized === "did extra" || normalized === "extra" ? "did_extra" : "done"
     };
   }
   if ([
@@ -196,7 +201,7 @@ function parseCheckinStatus(body) {
     "some",
     "not yet",
     "not done"
-  ].includes(lower)) {
+  ].includes(normalized) || /^(partial|partially|half|some|a bit)\b/.test(normalized)) {
     return {
       status: "partially"
     };
@@ -208,20 +213,20 @@ function parseCheckinStatus(body) {
     "didnt",
     "skip",
     "skipped"
-  ].includes(lower)) {
+  ].includes(normalized) || /^(no|nope|nah|skip|skipped)\b/.test(normalized)) {
     return {
       status: "no"
     };
   }
-  if (/^(set target|target|set targets|my target|change target|update target|new target)$/.test(lower)) {
+  if (/^(set target|target|set targets|my target|change target|update target|new target)$/.test(normalized)) {
     return {
       status: "set_target"
     };
   }
-  if (lower === "confirm") return {
+  if (normalized === "confirm") return {
     status: "parent_confirm"
   };
-  if (lower === "adjust") return {
+  if (normalized === "adjust") return {
     status: "parent_adjust"
   };
   // Check for skip reasons (tired, sick, busy, etc.)
@@ -231,7 +236,7 @@ function parseCheckinStatus(body) {
     };
   }
   // Number reply (for partial count: "2", "3")
-  const numMatch = lower.match(/^(\d+)$/);
+  const numMatch = normalized.match(/^(\d+)$/);
   if (numMatch) {
     return {
       status: "number_reply",
