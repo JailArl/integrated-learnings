@@ -67,6 +67,12 @@ interface RequestRow {
   trigger_reason: string;
   created_at: string;
   status: string;
+  // embedded at insert time — reliable without a join
+  parent_name?: string;
+  parent_phone?: string;
+  parent_email?: string;
+  child_name?: string;
+  child_level?: string;
 }
 
 /* ── helpers ── */
@@ -108,6 +114,8 @@ const StudyPulseAdmin: React.FC = () => {
   const [previewParentId, setPreviewParentId] = useState<string>('');
   const [previewChildId, setPreviewChildId] = useState<string>('');
   const [previewLangMode, setPreviewLangMode] = useState<'auto' | 'en' | 'zh'>('auto');
+  const [expandedRequestKey, setExpandedRequestKey] = useState<string | null>(null);
+  const [updatingRequestKey, setUpdatingRequestKey] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -215,6 +223,25 @@ const StudyPulseAdmin: React.FC = () => {
   };
   const findChild = (childId: string) => children.find(c => c.id === childId);
 
+  const markRequestStatus = async (
+    table: 'sq_tutor_requests' | 'sq_diagnostic_requests' | 'sq_crash_course_interest' | 'sq_holiday_programme_interest',
+    id: string,
+    status: string
+  ) => {
+    if (!supabase) return;
+    const key = `${table}:${id}`;
+    setUpdatingRequestKey(key);
+    const { error } = await supabase.from(table).update({ status }).eq('id', id);
+    setUpdatingRequestKey(null);
+    if (error) return;
+
+    const applyStatus = (rows: RequestRow[]) => rows.map((row) => (row.id === id ? { ...row, status } : row));
+    if (table === 'sq_tutor_requests') setTutorReqs((prev) => applyStatus(prev));
+    if (table === 'sq_diagnostic_requests') setDiagReqs((prev) => applyStatus(prev));
+    if (table === 'sq_crash_course_interest') setCrashReqs((prev) => applyStatus(prev));
+    if (table === 'sq_holiday_programme_interest') setHolidayReqs((prev) => applyStatus(prev));
+  };
+
   const previewParent = memberships.find(m => m.user_id === previewParentId) || null;
   const previewChildren = previewParent ? children.filter(c => c.parent_id === previewParent.user_id) : [];
   const previewChild = previewChildren.find(c => c.id === previewChildId) || previewChildren[0] || null;
@@ -287,15 +314,25 @@ const StudyPulseAdmin: React.FC = () => {
             { label: 'Total Parents', value: memberships.length, icon: Users, color: 'bg-blue-100 text-blue-700' },
             { label: 'Free / Premium', value: `${freeCt} / ${premCt}`, icon: Crown, color: 'bg-amber-100 text-amber-700' },
             { label: 'Children', value: totalChildren, icon: BookOpen, color: 'bg-emerald-100 text-emerald-700' },
-            { label: 'CTA Requests', value: totalReqs, icon: Zap, color: 'bg-purple-100 text-purple-700' },
+            { label: 'CTA Requests', value: totalReqs, icon: Zap, color: 'bg-purple-100 text-purple-700', clickable: true },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <button
+              key={s.label}
+              type="button"
+              onClick={() => {
+                if ((s as any).clickable) setAdminTab('requests');
+              }}
+              className={`rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm ${
+                (s as any).clickable ? 'transition hover:border-purple-300 hover:bg-purple-50/30' : ''
+              }`}
+            >
               <div className={`mb-2 inline-flex h-9 w-9 items-center justify-center rounded-lg ${s.color}`}>
                 <s.icon size={18} />
               </div>
               <p className="text-[10px] uppercase tracking-[0.1em] text-slate-400">{s.label}</p>
               <p className="mt-1 text-xl font-black text-slate-900">{s.value}</p>
-            </div>
+              {(s as any).clickable && <p className="mt-1 text-[10px] font-semibold text-purple-600">Click to open Requests</p>}
+            </button>
           ))}
         </div>
 
@@ -686,12 +723,18 @@ const StudyPulseAdmin: React.FC = () => {
 
         {/* ═══════════ REQUESTS TAB ═══════════ */}
         {adminTab === 'requests' && (
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
+            <p className="text-xs font-bold text-blue-800">How this queue works</p>
+            <p className="mt-1 text-xs text-blue-700">When a parent taps an action button in StudyPulse, the request is stored here in this admin queue. Open a row to see parent and child details, then mark it as contacted after outreach.</p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2">
           {[
-            { title: 'Tutor Requests', data: tutorReqs, icon: UserPlus, color: 'text-blue-700' },
-            { title: 'Diagnostic Requests', data: diagReqs, icon: Target, color: 'text-purple-700' },
-            { title: 'Crash Course Interest', data: crashReqs, icon: Zap, color: 'text-orange-700' },
-            { title: 'Holiday Programme Interest', data: holidayReqs, icon: CalendarDays, color: 'text-emerald-700' },
+            { title: 'Tutor Requests', data: tutorReqs, icon: UserPlus, color: 'text-blue-700', table: 'sq_tutor_requests' as const },
+            { title: 'Diagnostic Requests', data: diagReqs, icon: Target, color: 'text-purple-700', table: 'sq_diagnostic_requests' as const },
+            { title: 'Crash Course Interest', data: crashReqs, icon: Zap, color: 'text-orange-700', table: 'sq_crash_course_interest' as const },
+            { title: 'Holiday Programme Interest', data: holidayReqs, icon: CalendarDays, color: 'text-emerald-700', table: 'sq_holiday_programme_interest' as const },
           ].map((section) => (
             <div key={section.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
@@ -702,16 +745,78 @@ const StudyPulseAdmin: React.FC = () => {
               {section.data.length === 0 ? (
                 <p className="text-xs text-slate-400">None yet.</p>
               ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {section.data.slice(0, 10).map((r) => {
+                <div className="space-y-2 max-h-[480px] overflow-y-auto">
+                  {section.data.slice(0, 50).map((r, idx) => {
                     const parent = memberships.find(m => m.user_id === r.parent_id);
+                    const child = findChild(r.child_id);
+                    const key = `${section.table}:${r.id}`;
+                    const isExpanded = expandedRequestKey === key;
+                    // Use embedded fields first (new requests), fall back to join (old requests)
+                    const parentName = r.parent_name || parent?.parent_name || r.parent_email || parent?.parent_email || '(No name set)';
+                    const parentPhone = r.parent_phone || parent?.parent_phone || 'Not provided';
+                    const parentEmail = r.parent_email || parent?.parent_email || 'Not provided';
+                    const childName = r.child_name || child?.name || '(Unknown child)';
+                    const childLevel = r.child_level || child?.level || '';
+                    const refNo = `#${String(idx + 1).padStart(3, '0')}`;
                     return (
-                      <div key={r.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-700">{parent?.parent_name || r.parent_id.slice(0, 8)}</p>
-                          <p className="text-[10px] text-slate-400">{r.trigger_reason} · {r.created_at?.split('T')[0]}</p>
-                        </div>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badge(r.status || 'pending')}`}>{r.status || 'pending'}</span>
+                      <div key={r.id} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedRequestKey(isExpanded ? null : key)}
+                          className="flex w-full items-center justify-between gap-3 text-left"
+                        >
+                          <div>
+                            <p className="text-xs font-semibold text-slate-700">
+                              <span className="mr-1.5 rounded bg-slate-200 px-1.5 py-0.5 text-[9px] font-black text-slate-500">{refNo}</span>
+                              {parentName}
+                            </p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">{childName}{childLevel ? ` · ${childLevel}` : ''}</p>
+                            <p className="text-[10px] text-slate-400">{r.trigger_reason || 'manual_request'} · {r.created_at?.split('T')[0]}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${badge(r.status || 'pending')}`}>{r.status || 'pending'}</span>
+                            {isExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
+                          </div>
+                        </button>
+
+                        {isExpanded && (
+                          <div className="mt-3 space-y-2 rounded-lg bg-white p-3">
+                            <p className="text-[11px] text-slate-600"><strong className="text-slate-700">Parent:</strong> {parentName}</p>
+                            <p className="text-[11px] text-slate-600"><strong className="text-slate-700">WhatsApp:</strong> {parentPhone}</p>
+                            <p className="text-[11px] text-slate-600"><strong className="text-slate-700">Email:</strong> {parentEmail}</p>
+                            <p className="text-[11px] text-slate-600"><strong className="text-slate-700">Child:</strong> {childName}{childLevel ? ` (${childLevel})` : ''}</p>
+                            <p className="text-[11px] text-slate-600"><strong className="text-slate-700">Request Type:</strong> {r.trigger_reason || 'manual_request'}</p>
+                            <p className="text-[11px] text-slate-600"><strong className="text-slate-700">Submitted:</strong> {r.created_at ? new Date(r.created_at).toLocaleString('en-SG', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</p>
+                            <div className="flex flex-wrap gap-2 pt-1">
+                              <button
+                                type="button"
+                                disabled={updatingRequestKey === key}
+                                onClick={() => markRequestStatus(section.table, r.id, 'contacted')}
+                                className="rounded-lg bg-blue-600 px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-50"
+                              >
+                                {updatingRequestKey === key ? 'Saving...' : 'Mark Contacted'}
+                              </button>
+                              <button
+                                type="button"
+                                disabled={updatingRequestKey === key}
+                                onClick={() => markRequestStatus(section.table, r.id, 'pending')}
+                                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 disabled:opacity-50"
+                              >
+                                Set Pending
+                              </button>
+                              {parent?.parent_phone && (
+                                <a
+                                  href={`https://wa.me/${parent.parent_phone.replace(/[^0-9]/g, '')}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700"
+                                >
+                                  Open WhatsApp
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -719,6 +824,7 @@ const StudyPulseAdmin: React.FC = () => {
               )}
             </div>
           ))}
+        </div>
         </div>
         )}
       </main>

@@ -190,6 +190,8 @@ const StudyPulseApp: React.FC = () => {
   const [savingTargets, setSavingTargets] = useState(false);
   const [targetSaveMessage, setTargetSaveMessage] = useState('');
   const [metadataExcuses, setMetadataExcuses] = useState<Record<string, Record<string, string>>>({});
+  const [childCheckTimes, setChildCheckTimes] = useState<Record<string, string>>({});
+  const [savingCheckTimeId, setSavingCheckTimeId] = useState<string | null>(null);
 
   // Excuse modal
   const [excuseDay, setExcuseDay] = useState<{ dateStr: string; label: string } | null>(null);
@@ -261,6 +263,25 @@ const StudyPulseApp: React.FC = () => {
       setTargetSaveMessage('');
     })();
   }, [child]);
+
+  useEffect(() => {
+    if (!supabase || children.length === 0) return;
+    (async () => {
+      const childIds = children.map((c) => c.id);
+      const { data } = await supabase
+        .from('sq_study_settings')
+        .select('child_id, check_completion_time')
+        .in('child_id', childIds);
+
+      const next: Record<string, string> = {};
+      (data || []).forEach((row: any) => {
+        if (row?.child_id && row?.check_completion_time) {
+          next[row.child_id] = row.check_completion_time;
+        }
+      });
+      setChildCheckTimes(next);
+    })();
+  }, [children]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -360,13 +381,26 @@ const StudyPulseApp: React.FC = () => {
 
   const handleCTA = async (table: 'sq_tutor_requests'|'sq_diagnostic_requests'|'sq_crash_course_interest'|'sq_holiday_programme_interest', reason?: string) => {
     if (!userId || !child) return;
-    // Best-effort DB insert — don't block the user if table doesn't exist yet
-    const ok = await submitCTARequest(table, userId, child.id, { trigger_reason: reason }).catch(() => false);
+    // Best-effort DB insert — embed readable info so admin queue never shows raw UUIDs
+    const ok = await submitCTARequest(table, userId, child.id, {
+      trigger_reason: reason,
+      parent_name: membership?.parent_name || '',
+      parent_phone: membership?.parent_phone || '',
+      parent_email: membership?.parent_email || '',
+      child_name: child.name,
+      child_level: child.level,
+    }).catch(() => false);
     setSubmittedCTAs(prev => new Set([...prev, table]));
+    const requestLabel = {
+      sq_tutor_requests: 'Tutor Request',
+      sq_diagnostic_requests: 'Diagnostic Booking',
+      sq_crash_course_interest: 'Crash Course Interest',
+      sq_holiday_programme_interest: 'Holiday Programme Interest',
+    }[table];
     if (ok) {
-      setDashboardNotice({ type: 'success', text: 'Your request has been sent successfully.' });
+      setDashboardNotice({ type: 'success', text: `✅ ${requestLabel} submitted for ${child.name}. Our team will WhatsApp you within 24 hours.` });
     } else {
-      setDashboardNotice({ type: 'success', text: 'Request noted — we\'ll be in touch via WhatsApp shortly.' });
+      setDashboardNotice({ type: 'success', text: `${requestLabel} for ${child.name} noted — we'll be in touch via WhatsApp shortly.` });
     }
   };
 
@@ -376,7 +410,7 @@ const StudyPulseApp: React.FC = () => {
     const msg = encodeURIComponent(
       `Hi, I'd like to find out more about the June Holiday Crash Course for ${name}${level ? ` (${level})` : ''}. Please send me more details. Thank you!`
     );
-    window.open(`https://wa.me/6500000000?text=${msg}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/6598882675?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
   const openHolidayProgrammeWhatsApp = () => {
@@ -384,7 +418,7 @@ const StudyPulseApp: React.FC = () => {
     const msg = encodeURIComponent(
       `Hi, I'd like to find out more about the Holiday Programme for ${name}. Please send me more details. Thank you!`
     );
-    window.open(`https://wa.me/6500000000?text=${msg}`, '_blank', 'noopener,noreferrer');
+    window.open(`https://wa.me/6598882675?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleSaveWeeklyTargets = async () => {
@@ -485,17 +519,30 @@ const StudyPulseApp: React.FC = () => {
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
-  // Returns scheduled check-in time for a child's level (SGT, from sq_checkin_schedule)
-  function getCheckinTimeLabel(level: string): string {
-    const l = level.trim().toUpperCase();
+  // Returns check-in time label. Parent-set time takes priority, then level default fallback.
+  function getCheckinTimeLabel(childRow: SQChild): string {
+    if (childCheckTimes[childRow.id]) {
+      const [hStr, mStr] = childCheckTimes[childRow.id].split(':');
+      const h = Number(hStr);
+      const m = Number(mStr);
+      const suffix = h >= 12 ? 'pm' : 'am';
+      const h12 = h % 12 === 0 ? 12 : h % 12;
+      return `${h12}:${String(m).padStart(2, '0')}${suffix}`;
+    }
+
+    const l = childRow.level.trim().toUpperCase();
     const now = new Date();
     const sgDay = new Date(now.getTime() + 8 * 60 * 60 * 1000).getUTCDay();
     const isWeekend = sgDay === 0 || sgDay === 6;
     if (/^(P[1-3]|PRIMARY [1-3])$/.test(l)) return isWeekend ? '3:00pm' : '6:30pm';
     if (/^(P[4-6]|PRIMARY [4-6])$/.test(l)) return isWeekend ? '3:00pm' : '7:00pm';
-    if (/^(SEC[1-3]|SECONDARY [1-3])$/.test(l)) return isWeekend ? '3:30pm' : '7:30pm';
+    if (/^(SEC[1-3]|SECONDARY [1-3])$/.test(l)) return isWeekend ? '3:30pm' : '8:00pm';
     return isWeekend ? '4:00pm' : '8:00pm'; // Sec4/5, JC
   }
+
+  const CHECK_TIME_OPTIONS = [
+    '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00',
+  ];
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -504,7 +551,13 @@ const StudyPulseApp: React.FC = () => {
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.15em] text-amber-300">StudyPulse</p>
-            <p className="text-sm font-semibold">{membership?.plan_type === 'free' ? 'Free Plan' : 'Premium'}</p>
+            <p className="text-sm font-semibold">
+              {membership?.parent_name
+                ? `Hi, ${membership.parent_name.split(' ')[0]}`
+                : membership?.parent_email
+                ? membership.parent_email
+                : membership?.plan_type === 'free' ? 'Free Plan' : 'Premium'}
+            </p>
           </div>
           <div className="flex items-center gap-3">
             {!premium && (
@@ -621,7 +674,7 @@ const StudyPulseApp: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm font-bold text-slate-700">Waiting for check-in</p>
-                          <p className="mt-1 text-xs text-slate-500">{c.name} will receive a WhatsApp prompt at <strong>{getCheckinTimeLabel(c.level)}</strong>{(() => { const sgDay = new Date(new Date().getTime() + 8*60*60*1000).getUTCDay(); return sgDay === 0 || sgDay === 6 ? ' today.' : ' tonight.'; })()}</p>
+                          <p className="mt-1 text-xs text-slate-500">{c.name} will receive a WhatsApp prompt at <strong>{getCheckinTimeLabel(c)}</strong>{(() => { const sgDay = new Date(new Date().getTime() + 8*60*60*1000).getUTCDay(); return sgDay === 0 || sgDay === 6 ? ' today.' : ' tonight.'; })()}</p>
                         </div>
                         <Clock3 size={24} className="text-slate-300" />
                       </div>
@@ -1041,6 +1094,9 @@ const StudyPulseApp: React.FC = () => {
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="text-lg font-black text-slate-900">Actions &amp; Support</h2>
               <p className="mt-1 text-xs text-slate-500">Extra help when your child needs it.</p>
+              <p className="mt-2 text-xs text-slate-600">
+                Every button here sends a request into our internal StudyPulse admin queue, and our team follows up via WhatsApp.
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -1048,6 +1104,7 @@ const StudyPulseApp: React.FC = () => {
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700"><Search size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Request Tutor</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600">Need a tutor for a subject? We&apos;ll match you with a vetted tutor.</p>
+                <p className="mt-1 text-[11px] text-slate-400">This submits directly to the StudyPulse Admin Requests queue.</p>
                 {submittedCTAs.has('sq_tutor_requests') ? (
                   <p className="mt-3 rounded-lg bg-blue-50 px-4 py-2.5 text-xs font-bold text-blue-700">✅ Request sent — we&apos;ll WhatsApp you within 24 hours.</p>
                 ) : (
@@ -1059,6 +1116,7 @@ const StudyPulseApp: React.FC = () => {
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 text-purple-700"><Microscope size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Book Diagnostic</h3>
                 <p className="mt-2 text-xs leading-5 text-slate-600">Results not improving despite effort? A diagnostic can identify the issue.</p>
+                <p className="mt-1 text-[11px] text-slate-400">This submits directly to the StudyPulse Admin Requests queue.</p>
                 {submittedCTAs.has('sq_diagnostic_requests') ? (
                   <p className="mt-3 rounded-lg bg-purple-50 px-4 py-2.5 text-xs font-bold text-purple-700">✅ Booking received — we&apos;ll WhatsApp you within 24 hours to confirm.</p>
                 ) : (
@@ -1109,6 +1167,16 @@ const StudyPulseApp: React.FC = () => {
         {tab === 'settings' && (
           <div className="space-y-5">
 
+            <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4">
+              <p className="text-xs font-bold text-sky-800">Parent Quick Guide (Start Here)</p>
+              <ol className="mt-2 list-decimal space-y-1 pl-4 text-xs text-sky-700">
+                <li>Activate WhatsApp for both parent and child (one-time setup).</li>
+                <li>Set Study Days and Check-In Time for each child.</li>
+                <li>Set Weekly Targets to control daily workload.</li>
+                <li>Use Actions tab for tutor/diagnostic/crash-course requests.</li>
+              </ol>
+            </div>
+
             {/* WhatsApp activation reminder */}
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
               <p className="text-xs font-bold text-amber-800 mb-1">📲 WhatsApp — One-Time Setup Required</p>
@@ -1119,6 +1187,12 @@ const StudyPulseApp: React.FC = () => {
                 <li><strong>You (parent):</strong> tap &ldquo;Activate parent updates&rdquo; in your Account card below.</li>
                 <li><strong>Your child:</strong> copy the link in their card and send it to them via WhatsApp/SMS — they must tap it on <em>their own phone</em>.</li>
               </ul>
+              <div className="mt-3 rounded-xl border border-amber-300 bg-white/70 p-3">
+                <p className="text-xs font-bold text-amber-900">⏰ Check-In Time Defaults (if parents do not set a custom time)</p>
+                <p className="mt-1 text-xs text-amber-800">StudyPulse will still auto-send check-ins using level defaults:</p>
+                <p className="mt-1 text-xs text-amber-800">P1-3: 6:30pm weekday / 3:00pm weekend · P4-6: 7:00pm weekday / 3:00pm weekend</p>
+                <p className="mt-1 text-xs text-amber-800">Sec1-3: 8:00pm weekday / 3:30pm weekend · Sec4/5/JC: 8:00pm weekday / 4:00pm weekend</p>
+              </div>
             </div>
 
             {/* Study Days per child */}
@@ -1293,6 +1367,41 @@ const StudyPulseApp: React.FC = () => {
                     <p className="mt-2 text-xs text-slate-500">
                       <strong className="text-slate-700">{currentDays.length} days</strong> selected · Daily target = weekly target ÷ {currentDays.length}
                     </p>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="text-sm font-bold text-slate-700">Check-In Time</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Set what time {c.name} receives the WhatsApp check-in prompt.
+                    </p>
+                    <p className="mt-1 text-[11px] text-slate-400">
+                      If you do not save a custom time, StudyPulse uses the level-based default timing automatically.
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <select
+                        className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                        value={childCheckTimes[c.id] || '20:00'}
+                        onChange={(e) => setChildCheckTimes((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                      >
+                        {CHECK_TIME_OPTIONS.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                      <button
+                        disabled={savingCheckTimeId === c.id}
+                        onClick={async () => {
+                          const selected = childCheckTimes[c.id] || '20:00';
+                          setSavingCheckTimeId(c.id);
+                          await upsertStudySettings(c.id, { check_completion_time: selected });
+                          setSavingCheckTimeId(null);
+                          setDashboardNotice({ type: 'success', text: `${c.name}'s check-in time updated to ${selected}.` });
+                        }}
+                        className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                      >
+                        {savingCheckTimeId === c.id ? 'Saving...' : 'Save Time'}
+                      </button>
+                    </div>
+                    <p className="mt-1 text-[11px] text-slate-400">Used for both weekdays and weekends unless changed again.</p>
                   </div>
 
                   {/* CCA Days */}
@@ -1720,8 +1829,23 @@ const StudyPulseApp: React.FC = () => {
             </div>
 
             {/* Account */}
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className={`rounded-2xl border p-5 shadow-sm ${!membership?.parent_name ? 'border-red-300 bg-red-50' : 'border-slate-200 bg-white'}`}>
               <h3 className="text-sm font-bold text-slate-700">Account</h3>
+              {!membership?.parent_name && !editingProfile && (
+                <div className="mt-2 flex items-start gap-2 rounded-xl border border-red-200 bg-white p-3">
+                  <span className="text-base">⚠️</span>
+                  <div>
+                    <p className="text-xs font-bold text-red-700">Your name is not set</p>
+                    <p className="text-[11px] text-red-600 mt-0.5">Without a name, our team cannot identify you when you send a tutor/diagnostic request. Please update it now.</p>
+                    <button
+                      onClick={() => { setEditingProfile(true); setEditProfileName(membership?.parent_name || ''); setEditProfilePhone(membership?.parent_phone || ''); }}
+                      className="mt-2 rounded-lg bg-red-600 px-3 py-1.5 text-[11px] font-bold text-white"
+                    >
+                      Set my name now →
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {editingProfile ? (
                 <div className="mt-3 space-y-3">
@@ -1755,7 +1879,8 @@ const StudyPulseApp: React.FC = () => {
                 </div>
               ) : (
                 <div className="mt-3 space-y-1">
-                  <p className="text-sm text-slate-700 font-semibold">{membership?.parent_name || '—'}</p>
+                  <p className="text-sm text-slate-700 font-semibold">{membership?.parent_name || <span className="text-red-400 italic">No name set</span>}</p>
+                  <p className="text-xs text-slate-500">Email: {membership?.parent_email || 'Not set'}</p>
                   <p className="text-xs text-slate-500">WhatsApp: {membership?.parent_phone || 'Not set'}</p>
                   {membership?.parent_phone && (
                     <a

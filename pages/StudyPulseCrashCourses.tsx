@@ -21,7 +21,7 @@ const StudyPulseCrashCourses: React.FC = () => {
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <a
-              href="https://wa.me/6500000000?text=Hi%2C%20I%27d%20like%20to%20reserve%20a%20spot%20for%20the%20June%20Holiday%20Crash%20Course"
+              href="https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20to%20reserve%20a%20spot%20for%20the%20June%20Holiday%20Crash%20Course"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center rounded-xl bg-amber-400 px-7 py-3.5 text-sm font-bold text-slate-950 shadow-lg transition hover:bg-amber-300"
@@ -149,7 +149,7 @@ const StudyPulseCrashCourses: React.FC = () => {
             <p className="mt-1 text-sm text-slate-700">Only 6 students per class. First come, first served.</p>
           </div>
           <a
-            href="https://wa.me/6500000000?text=Hi%2C%20I%27d%20like%20to%20reserve%20for%20PSLE%20or%20O-Level%20June%20Crash%20Course"
+            href="https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20to%20reserve%20for%20PSLE%20or%20O-Level%20June%20Crash%20Course"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-400"

@@ -744,7 +744,7 @@ const StudyPulseLanding: React.FC = () => {
               {/* CTAs */}
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                 <a
-                  href="https://wa.me/6500000000?text=Hi%2C%20I%27d%20like%20to%20reserve%20a%20spot%20for%20the%20PSLE%20June%20Holiday%20Crash%20Course"
+                  href="https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20to%20reserve%20a%20spot%20for%20the%20PSLE%20June%20Holiday%20Crash%20Course"
                   target="_blank" rel="noopener noreferrer"
                   className="inline-flex flex-1 items-center justify-center rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow transition hover:bg-sky-400"
                 >
@@ -884,7 +884,7 @@ const StudyPulseLanding: React.FC = () => {
               <div className="mt-5 flex flex-col gap-2">
                 {totalSelected > 0 ? (
                   <a
-                    href={`https://wa.me/6500000000?text=${buildWaMessage()}`}
+                    href={`https://wa.me/6598882675?text=${buildWaMessage()}`}
                     target="_blank" rel="noopener noreferrer"
                     className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-5 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-400"
                   >
