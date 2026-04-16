@@ -368,13 +368,11 @@ async function sendCheckinPrompts(
       if (hasTargets) {
         const targetLine = targets!.map(t => {
           const qty = t.daily_quantity * coveredStudyDays.length;
-          return `• ${t.subject_name}: *${qty} ${t.target_unit}${qty > 1 ? "s" : ""}*`;
+          return `• ${t.subject_name}: *${qty} ${formatUnitLabel(qty, t.target_unit)}*`;
         }).join("\n");
         const firstTarget = targets![0];
         const firstQty = firstTarget.daily_quantity * coveredStudyDays.length;
-        const singular = firstTarget.target_unit;
-        const plural = `${firstTarget.target_unit}s`;
-        const unitLabel = firstQty === 1 ? singular : plural;
+        const unitLabel = formatUnitLabel(firstQty, firstTarget.target_unit);
         message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your target for ${coveredDayNames}: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\n${targetLine}\n\nReply: *yes* / *partial* / *no*`;
       } else {
         message = `Hey ${child.name}! 📚 Study check-in time!\n\nDid you study on ${coveredDayNames}?${examLine}\n\nReply: *yes* / *partial* / *no*`;
@@ -407,13 +405,11 @@ async function sendCheckinPrompts(
       let message: string;
       if (hasTargets) {
         const targetLine = targets!.map(t =>
-          `• ${t.subject_name}: *${t.daily_quantity} ${t.target_unit}${t.daily_quantity > 1 ? "s" : ""}*`
+          `• ${t.subject_name}: *${t.daily_quantity} ${formatUnitLabel(t.daily_quantity, t.target_unit)}*`
         ).join("\n");
         const firstTarget = targets![0];
         const firstQty = firstTarget.daily_quantity;
-        const singular = firstTarget.target_unit;
-        const plural = `${firstTarget.target_unit}s`;
-        const unitLabel = firstQty === 1 ? singular : plural;
+        const unitLabel = formatUnitLabel(firstQty, firstTarget.target_unit);
 
         message = targets!.length === 1
           ? `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your target for today: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\nReply: *yes* / *partial* / *no*`
@@ -462,7 +458,7 @@ async function sendFollowupReminders(
       child.whatsapp_number,
       undefined,
       undefined,
-      `Hey ${child.name}, just a friendly reminder! 😊 Quick check-in — did you study today?`,
+      `Hey ${child.name}, just a friendly reminder! 😊 Quick check-in — reply *yes*, *partial*, or *no*.`,
     );
 
     // Also nudge parent
@@ -1051,6 +1047,32 @@ function addMinutes(time: string, mins: number): string {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + mins;
   return `${String(Math.floor(total / 60) % 24).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+function formatUnitLabel(quantity: number, rawUnit: string): string {
+  const unit = (rawUnit || "task").trim().toLowerCase();
+  const singularMap: Record<string, string> = {
+    questions: "question",
+    chapters: "chapter",
+    pages: "page",
+    worksheets: "worksheet",
+    minutes: "minute",
+    papers: "paper",
+    topics: "topic",
+    exercises: "exercise",
+    sums: "sum",
+    passages: "passage",
+    compositions: "composition",
+    practices: "practice",
+  };
+
+  if (quantity === 1) {
+    if (singularMap[unit]) return singularMap[unit];
+    return unit.endsWith("s") ? unit.slice(0, -1) : unit;
+  }
+
+  if (singularMap[unit]) return unit;
+  return unit.endsWith("s") ? unit : `${unit}s`;
 }
 
 // ── AUTO-CLOSE: mark check-ins still pending 2h after prompt as 'forgot' ──

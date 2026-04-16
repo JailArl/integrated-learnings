@@ -94,6 +94,32 @@ function parseTargetReply(body: string): { quantity: number; unit: string } | nu
   return null;
 }
 
+function formatUnitLabel(quantity: number, rawUnit: string): string {
+  const unit = (rawUnit || "task").trim().toLowerCase();
+  const singularMap: Record<string, string> = {
+    questions: "question",
+    chapters: "chapter",
+    pages: "page",
+    worksheets: "worksheet",
+    minutes: "minute",
+    papers: "paper",
+    topics: "topic",
+    exercises: "exercise",
+    sums: "sum",
+    passages: "passage",
+    compositions: "composition",
+    practices: "practice",
+  };
+
+  if (quantity === 1) {
+    if (singularMap[unit]) return singularMap[unit];
+    return unit.endsWith("s") ? unit.slice(0, -1) : unit;
+  }
+
+  if (singularMap[unit]) return unit;
+  return unit.endsWith("s") ? unit : `${unit}s`;
+}
+
 // ── SKIP / REST DAY REASONS ──
 
 const SKIP_REASONS: { keywords: RegExp; reason: string; emoji: string; kidMsg: string }[] = [
@@ -395,7 +421,7 @@ serve(async (req) => {
       if (membership?.parent_phone && membership.parent_phone !== phone) {
         const pMsg = parentLang === "zh"
           ? ZH.checkin_partial(child.name, String(completedCount), String(targetQ), targetUnit, subject)
-          : `📝 ${child.name}: ${completedCount}/${targetQ} ${targetUnit}s done today${subject ? ` (${subject})` : ""}. ` +
+          : `📝 ${child.name}: ${completedCount}/${targetQ} ${formatUnitLabel(targetQ, targetUnit)} done today${subject ? ` (${subject})` : ""}. ` +
             (remaining > 0 ? `${remaining} left — encouraged to finish tomorrow.` : `Completed the full target!`);
         await sendRaw(membership.parent_phone, pMsg);
       }
@@ -416,7 +442,7 @@ serve(async (req) => {
         .eq("week_start", weekStart);
 
       if (targets && targets.length > 0) {
-        const summary = targets.map(t => `• ${t.subject_name}: ${t.daily_quantity} ${t.target_unit}s today`).join("\n");
+        const summary = targets.map(t => `• ${t.subject_name}: ${t.daily_quantity} ${formatUnitLabel(t.daily_quantity, t.target_unit)} today`).join("\n");
         await sendRaw(phone,
           `Here is your current daily target from your parent:\n${summary}\n\nIf it needs changing, please ask your parent to update it in the StudyPulse dashboard.`
         );
@@ -621,7 +647,7 @@ serve(async (req) => {
       }
 
       const doneMsg = hasTargets
-        ? `✅ ${checkinTargetQty} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name} — done! Great work, ${child.name}! 💪`
+        ? `✅ ${checkinTargetQty} ${formatUnitLabel(checkinTargetQty, todayTarget!.target_unit)} of ${todayTarget!.subject_name} — done! Great work, ${child.name}! 💪`
         : `✅ Nice work, ${child.name}! Keep it up 💪`;
 
       const extraMsg = parsed.status === "did_extra" ? `\n⚡ Extra effort today — respect!` : "";
@@ -637,7 +663,7 @@ serve(async (req) => {
           if (parsed.status === "did_extra") parentMsg += ZH.checkin_extra();
         } else {
           parentMsg = hasTargets
-            ? `✅ ${child.name} completed the target: ${checkinTargetQty} ${todayTarget!.target_unit}s of ${todayTarget!.subject_name}!`
+            ? `✅ ${child.name} completed the target: ${checkinTargetQty} ${formatUnitLabel(checkinTargetQty, todayTarget!.target_unit)} of ${todayTarget!.subject_name}!`
             : `✅ ${child.name} checked in — studied!`;
           if (parsed.status === "did_extra") parentMsg += " ⚡ Did extra!";
         }
