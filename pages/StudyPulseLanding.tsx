@@ -556,6 +556,7 @@ const StudyPulseLanding: React.FC = () => {
                 <span className="text-4xl font-black text-slate-900">$9.90</span>
                 <span className="mb-1 text-sm text-slate-500">{t('priceMonth')}</span>
               </div>
+              <p className="mt-1 text-xs font-semibold text-slate-600">Or one-time passes: S$14.90 / S$24.90 / S$43.90</p>
               <p className="mt-2 text-sm text-amber-700 font-semibold">{t('priceBubble')}</p>
               <div className="mt-6 space-y-3">
                 <Row label={t('rUnlimKids')} included highlight />
@@ -620,7 +621,7 @@ const StudyPulseLanding: React.FC = () => {
                   <tr className="border-b border-slate-50 bg-slate-50 font-bold">
                     <td className="px-4 py-2.5 text-slate-900">{t('priceLabel')}</td>
                     <td className="px-4 py-2.5 text-center text-slate-900">$0</td>
-                    <td className="px-4 py-2.5 text-center text-amber-700">$9.90/{lang === 'en' ? 'mo' : '月'}</td>
+                    <td className="px-4 py-2.5 text-center text-amber-700">$9.90/{lang === 'en' ? 'mo' : '月'} · One-time: $14.90 / $24.90 / $43.90</td>
                   </tr>
                 </tbody>
               </table>
