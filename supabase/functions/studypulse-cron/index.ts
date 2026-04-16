@@ -84,8 +84,9 @@ const FREE_CHECKIN_WINDOWS: Record<number, number[]> = {
 };
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-// Premium parent report days (Tue + Thu mini-reports; Sunday = weekly summary)
-const PREMIUM_PARENT_REPORT_DAYS = [2, 4];
+// Premium parent report days (cost-saving mode): no Tue/Thu mini-reports.
+// Parents still receive immediate daily updates from webhook and Sunday weekly summary.
+const PREMIUM_PARENT_REPORT_DAYS: number[] = [];
 const PREMIUM_REPORT_WINDOWS: Record<number, number[]> = {
   2: [1, 2],  // Tue report covers Mon + Tue
   4: [3, 4],  // Thu report covers Wed + Thu
@@ -363,7 +364,12 @@ async function sendCheckinPrompts(
           const qty = t.daily_quantity * coveredStudyDays.length;
           return `• ${t.subject_name}: *${qty} ${t.target_unit}${qty > 1 ? "s" : ""}*`;
         }).join("\n");
-        message = `Good evening, ${child.name} 🌙\n\nHave you finished your target for ${coveredDayNames}?\n${targetLine}${examLine}\n\nReply: *done* / *partially* / *no*`;
+        const firstTarget = targets![0];
+        const firstQty = firstTarget.daily_quantity * coveredStudyDays.length;
+        const singular = firstTarget.target_unit;
+        const plural = `${firstTarget.target_unit}s`;
+        const unitLabel = firstQty === 1 ? singular : plural;
+        message = `Good evening, ${child.name} 🌙\n\nHave you finished your target for ${coveredDayNames}: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\n${targetLine}\n\nReply: *done* / *partially* / *no*`;
       } else {
         message = `Good evening, ${child.name} 🌙\n\nDid you study on ${coveredDayNames}?${examLine}\n\nReply: *yes* or *no*`;
       }
@@ -397,7 +403,15 @@ async function sendCheckinPrompts(
         const targetLine = targets!.map(t =>
           `• ${t.subject_name}: *${t.daily_quantity} ${t.target_unit}${t.daily_quantity > 1 ? "s" : ""}*`
         ).join("\n");
-        message = `Good evening, ${child.name} 🌙\n\nHave you finished today's target?\n${targetLine}${examLine}\n\nReply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
+        const firstTarget = targets![0];
+        const firstQty = firstTarget.daily_quantity;
+        const singular = firstTarget.target_unit;
+        const plural = `${firstTarget.target_unit}s`;
+        const unitLabel = firstQty === 1 ? singular : plural;
+
+        message = targets!.length === 1
+          ? `Good evening, ${child.name} 🌙\n\nHave you finished today's target: *${firstQty} ${unitLabel} of ${firstTarget.subject_name}*?${examLine}\n\nReply:\n✅ *done* / 📝 *partially* / ❌ *no*`
+          : `Good evening, ${child.name} 🌙\n\nHave you finished today's targets?${examLine}\n${targetLine}\n\nReply:\n✅ *done* / 📝 *partially* / ❌ *no*`;
       } else {
         message = `Good evening, ${child.name} 🌙\n\nHave you finished today's study target?${examLine}\n\nReply with:\n✅ *done*\n⚡ *did extra*\n📝 *partially*\n❌ *no*`;
       }
@@ -480,7 +494,8 @@ async function sendParentReports(
   today: string,
   dayOfWeek: number,
 ) {
-  // Premium parents get aggregated reports on Tue and Thu only
+  // Premium parents get no Tue/Thu mini-reports in cost-saving mode.
+  // They still receive immediate daily updates via webhook + Sunday weekly summary.
   if (!PREMIUM_PARENT_REPORT_DAYS.includes(dayOfWeek)) return;
 
   const windowDays = PREMIUM_REPORT_WINDOWS[dayOfWeek] || [];
