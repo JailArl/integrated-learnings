@@ -99,47 +99,57 @@ function normaliseSGPhone(raw: string): string {
   return `+65${digits}`;
 }
 
-async function persistParentProfile(userId: string, fullName: string, phone: string, email?: string): Promise<{ ok: boolean; message?: string }> {
+async function persistParentProfile(userId: string, fullName: string, phone: string, email?: string): Promise<{ ok: boolean; message?: string; nameOk?: boolean; phoneOk?: boolean }> {
   if (!supabase) return { ok: false, message: 'Authentication service is not configured.' };
 
   const parentName = fullName.trim();
   const parentPhone = normaliseSGPhone(phone);
+  let nameOk = false;
+  let phoneOk = false;
 
-  // Step 1: clear the phone so the unique index won't conflict with our own row
-  await supabase
+  // Step 1: Always save name (and email) — this never conflicts
+  const { data: nameUpdated, error: nameError } = await supabase
     .from('sq_memberships')
-    .update({ parent_phone: null })
-    .eq('user_id', userId);
-
-  // Step 2: set all fields including re-set phone
-  const { data: updated, error: membershipError } = await supabase
-    .from('sq_memberships')
-    .update({ parent_name: parentName, parent_phone: parentPhone, ...(email ? { parent_email: email } : {}) })
+    .update({ parent_name: parentName, ...(email ? { parent_email: email } : {}) })
     .eq('user_id', userId)
-    .select('id')
+    .select('id, parent_phone')
     .maybeSingle();
 
-  if (membershipError) {
-    if (membershipError.message.includes('uq_sq_memberships_parent_phone')) {
-      return { ok: false, message: 'This WhatsApp number is already linked to another account. Please use a different number.' };
-    }
-    return { ok: false, message: `Could not save profile: ${membershipError.message}` };
+  if (nameError) {
+    return { ok: false, nameOk: false, phoneOk: false, message: `Could not save name: ${nameError.message}` };
   }
-  if (!updated) {
-    return { ok: false, message: 'Membership row not found — please refresh and try again.' };
+  if (!nameUpdated) {
+    return { ok: false, nameOk: false, phoneOk: false, message: 'Membership row not found — please refresh and try again.' };
   }
+  nameOk = true;
 
-  // Upsert parent_profiles (always include email to avoid NOT NULL violation)
+  // Step 2: Save phone only if it changed (avoids self-collision on unique index)
+  const currentPhone = nameUpdated.parent_phone;
+  const normalizedCurrent = currentPhone ? currentPhone.replace(/[^0-9+]/g, '') : '';
+  const normalizedNew = parentPhone.replace(/[^0-9+]/g, '');
+
+  if (normalizedCurrent !== normalizedNew) {
+    const { error: phoneError } = await supabase
+      .from('sq_memberships')
+      .update({ parent_phone: parentPhone })
+      .eq('user_id', userId);
+
+    if (phoneError) {
+      if (phoneError.message.includes('uq_sq_memberships_parent_phone')) {
+        return { ok: false, nameOk: true, phoneOk: false, message: 'Name saved! But this WhatsApp number is already linked to another account. Please use a different number.' };
+      }
+      return { ok: false, nameOk: true, phoneOk: false, message: `Name saved, but could not save phone: ${phoneError.message}` };
+    }
+  }
+  phoneOk = true;
+
+  // Step 3: Upsert parent_profiles
   const profileEmail = email || '';
-  const { error: profileError } = await supabase
+  await supabase
     .from('parent_profiles')
     .upsert({ id: userId, full_name: parentName, email: profileEmail, phone: parentPhone }, { onConflict: 'id' });
 
-  if (profileError) {
-    return { ok: false, message: `Could not save parent profile: ${profileError.message}` };
-  }
-
-  return { ok: true };
+  return { ok: true, nameOk, phoneOk };
 }
 
 function formatLocalDate(date: Date): string {
@@ -398,14 +408,19 @@ const StudyPulseApp: React.FC = () => {
     setDashboardNotice(null);
     setUpgrading(true);
 
-    const checkout = await startPremiumCheckout(plan);
-    if (checkout.ok && checkout.url) {
-      window.location.assign(checkout.url);
-      return;
-    }
+    try {
+      const checkout = await startPremiumCheckout(plan);
+      if (checkout.ok && checkout.url) {
+        window.location.assign(checkout.url);
+        return;
+      }
 
-    setDashboardNotice({ type: 'error', text: checkout.message || 'Could not start secure checkout yet.' });
-    setUpgrading(false);
+      setDashboardNotice({ type: 'error', text: checkout.message || 'Could not start secure checkout yet. Please try again.' });
+    } catch (err: any) {
+      setDashboardNotice({ type: 'error', text: err?.message || 'Something went wrong starting checkout. Please try again.' });
+    } finally {
+      setUpgrading(false);
+    }
   };
 
   const handleManageBilling = async () => {
@@ -1870,7 +1885,11 @@ const StudyPulseApp: React.FC = () => {
               </div>
 
               {!premium && (
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <div className="mt-4">
+                  {upgrading && (
+                    <p className="mb-2 text-xs font-semibold text-amber-700">Opening secure checkout — please wait...</p>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-2">
                   {CHECKOUT_PLAN_OPTIONS.map((plan) => (
                     <button
                       key={plan.code}
@@ -1885,6 +1904,7 @@ const StudyPulseApp: React.FC = () => {
                       <p className="mt-1 text-[11px] text-slate-500">{plan.description}</p>
                     </button>
                   ))}
+                  </div>
                 </div>
               )}
 
@@ -1946,14 +1966,22 @@ const StudyPulseApp: React.FC = () => {
 
                         setSavingProfile(true);
                         const result = await persistParentProfile(userId, editProfileName, editProfilePhone, membership?.parent_email || undefined);
+
+                        // Always update local state for whatever DID save
+                        if (result.nameOk) {
+                          setMembership(prev => prev ? { ...prev, parent_name: editProfileName.trim() } : prev);
+                        }
+                        if (result.phoneOk) {
+                          const normPhone = normaliseSGPhone(editProfilePhone);
+                          setMembership(prev => prev ? { ...prev, parent_phone: normPhone } : prev);
+                        }
+
                         if (!result.ok) {
                           setSavingProfile(false);
                           setProfileSaveMsg({ type: 'error', text: result.message || 'Could not save your profile yet. Please try again.' });
                           return;
                         }
 
-                        const normPhone = normaliseSGPhone(editProfilePhone);
-                        setMembership(prev => prev ? { ...prev, parent_name: editProfileName.trim(), parent_phone: normPhone } : prev);
                         setEditingProfile(false);
                         setSavingProfile(false);
                         setProfileSaveMsg(null);
