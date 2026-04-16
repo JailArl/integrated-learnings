@@ -110,16 +110,16 @@ const T = {
 
   // Pricing
   priceH2: { en: 'Simple pricing. No hidden fees.', zh: '简单透明的价格。没有隐藏费用。' },
-  priceSub: { en: 'Start free. Choose the plan that fits your exam season.', zh: '免费开始。选择最适合考季的方案。' },
+  priceSub: { en: 'Start free. Choose between recurring monthly or one-time exam passes.', zh: '免费开始。可选择按月续费或一次性考季通行证。' },
   priceFree: { en: 'Free', zh: '免费版' },
   priceForever: { en: 'forever', zh: '永久免费' },
   priceFreeTry: { en: 'Try it with 1 child, 1 subject', zh: '可跟踪 1 个孩子、1 个科目' },
-  pricePrem: { en: 'Premium', zh: '升级版' },
+  pricePrem: { en: 'Premium · Core Monthly', zh: '升级版 · 月度核心计划' },
   priceMonth: { en: '/month', zh: '/月' },
-  priceBubble: { en: 'Monthly Flex is the lowest monthly cost', zh: 'Monthly Flex 的月均费用最低' },
+  priceBubble: { en: 'Best value for ongoing daily accountability', zh: '最适合持续每日监督，月均最划算' },
   priceStartFree: { en: 'Start Free', zh: '免费开始' },
   priceGetPrem: { en: 'Get Premium', zh: '立即升级' },
-  pricePaynow: { en: 'Monthly Flex auto-renews at the best monthly rate. Exam passes are one-time and higher because there is no auto-renewal.', zh: 'Monthly Flex 自动续费，月均价格最划算。考季通行证为一次性付款，因此价格会更高。' },
+  pricePaynow: { en: 'Core Monthly (S$9.90) is recurring and cancellable anytime via Billing. Exam Pass / Sprint / Season are one-time payments with no auto-renew.', zh: 'Core Monthly（S$9.90）为自动续费，可随时在账单页面取消。Exam Pass / Sprint / Season 为一次性付款，不会自动续费。' },
   priceCompare: { en: 'View full plan comparison', zh: '查看完整方案对比' },
   priceFeature: { en: 'Feature', zh: '功能' },
   priceLabel: { en: 'Price', zh: '价格' },
@@ -567,10 +567,10 @@ const StudyPulseLanding: React.FC = () => {
                 <Row label={t('rSmartTutor')} included highlight />
               </div>
               <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-slate-700">
-                <div className="flex items-center justify-between"><span className="font-semibold">Monthly Flex</span><span className="font-black">$9.90/mo</span></div>
-                <div className="mt-2 flex items-center justify-between"><span>1-Month Pass</span><span>$14.90</span></div>
-                <div className="mt-1 flex items-center justify-between"><span>2-Month Sprint</span><span>$24.90</span></div>
-                <div className="mt-1 flex items-center justify-between"><span>4-Month Season</span><span>$43.90</span></div>
+                <div className="flex items-center justify-between"><span className="font-semibold">Core Monthly (Recurring)</span><span className="font-black">S$9.90/mo</span></div>
+                <div className="mt-2 flex items-center justify-between"><span>Exam Pass (30 Days, One-Time)</span><span>S$14.90</span></div>
+                <div className="mt-1 flex items-center justify-between"><span>Exam Sprint (60 Days, One-Time)</span><span>S$24.90</span></div>
+                <div className="mt-1 flex items-center justify-between"><span>Exam Season (120 Days, One-Time)</span><span>S$43.90</span></div>
               </div>
               <Link to="/studypulse/setup?plan=premium" className="mt-7 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 shadow transition hover:bg-amber-400">
                 <Crown size={16} className="mr-2" /> {t('priceGetPrem')}

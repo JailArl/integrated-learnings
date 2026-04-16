@@ -11,10 +11,10 @@ const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABA
 
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
 const PLAN_CONFIG = {
-  monthly_flex: { mode: 'subscription', priceId: stripePriceIdMonthly, label: 'Monthly Flex', durationDays: null },
-  pass_1m: { mode: 'payment', priceId: stripePriceIdPass1m, label: '1-Month Pass', durationDays: 30 },
-  pack_2m: { mode: 'payment', priceId: stripePriceIdPack2m, label: '2-Month Sprint', durationDays: 60 },
-  pack_4m: { mode: 'payment', priceId: stripePriceIdPack4m, label: '4-Month Season', durationDays: 120 },
+  monthly_flex: { mode: 'subscription', priceId: stripePriceIdMonthly, label: 'Core Monthly', durationDays: null },
+  pass_1m: { mode: 'payment', priceId: stripePriceIdPass1m, label: 'Exam Pass (30 Days)', durationDays: 30 },
+  pack_2m: { mode: 'payment', priceId: stripePriceIdPack2m, label: 'Exam Sprint (60 Days)', durationDays: 60 },
+  pack_4m: { mode: 'payment', priceId: stripePriceIdPack4m, label: 'Exam Season (120 Days)', durationDays: 120 },
 };
 
 function json(res, status, payload) {

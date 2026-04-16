@@ -140,10 +140,10 @@ export const CHECKOUT_PLAN_OPTIONS: Array<{
   priceLabel: string;
   description: string;
 }> = [
-  { code: 'monthly_flex', label: 'Monthly Flex', priceLabel: '$9.90/mo', description: 'Lowest monthly cost · auto-renews · cancel anytime' },
-  { code: 'pass_1m', label: '1-Month Pass', priceLabel: '$14.90', description: 'One-time payment · no auto-renewal' },
-  { code: 'pack_2m', label: '2-Month Sprint', priceLabel: '$24.90', description: 'One-time payment · short exam push' },
-  { code: 'pack_4m', label: '4-Month Season', priceLabel: '$43.90', description: 'One-time payment · best exam-season coverage' },
+  { code: 'monthly_flex', label: 'Core Monthly', priceLabel: '$9.90/mo', description: 'Recurring monthly plan · lowest monthly cost · cancel anytime in Billing' },
+  { code: 'pass_1m', label: 'Exam Pass (30 Days)', priceLabel: '$14.90', description: 'One-time payment · no auto-renew' },
+  { code: 'pack_2m', label: 'Exam Sprint (60 Days)', priceLabel: '$24.90', description: 'One-time payment · no auto-renew · exam-focused push' },
+  { code: 'pack_4m', label: 'Exam Season (120 Days)', priceLabel: '$43.90', description: 'One-time payment · no auto-renew · longest coverage' },
 ];
 
 export const FREE_CHECKIN_DAYS = ['Tuesday', 'Thursday', 'Sunday'] as const;
