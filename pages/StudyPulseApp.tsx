@@ -360,13 +360,31 @@ const StudyPulseApp: React.FC = () => {
 
   const handleCTA = async (table: 'sq_tutor_requests'|'sq_diagnostic_requests'|'sq_crash_course_interest'|'sq_holiday_programme_interest', reason?: string) => {
     if (!userId || !child) return;
-    const ok = await submitCTARequest(table, userId, child.id, { trigger_reason: reason });
-    if (!ok) {
-      setDashboardNotice({ type: 'error', text: 'Could not send your request yet. Please try again.' });
-      return;
-    }
+    // Best-effort DB insert — don't block the user if table doesn't exist yet
+    const ok = await submitCTARequest(table, userId, child.id, { trigger_reason: reason }).catch(() => false);
     setSubmittedCTAs(prev => new Set([...prev, table]));
-    setDashboardNotice({ type: 'success', text: 'Your request has been sent successfully.' });
+    if (ok) {
+      setDashboardNotice({ type: 'success', text: 'Your request has been sent successfully.' });
+    } else {
+      setDashboardNotice({ type: 'success', text: 'Request noted — we\'ll be in touch via WhatsApp shortly.' });
+    }
+  };
+
+  const openCrashCourseWhatsApp = () => {
+    const name = child?.name ?? 'my child';
+    const level = displaySubjects.length ? displaySubjects[0].level ?? '' : '';
+    const msg = encodeURIComponent(
+      `Hi, I'd like to find out more about the June Holiday Crash Course for ${name}${level ? ` (${level})` : ''}. Please send me more details. Thank you!`
+    );
+    window.open(`https://wa.me/6500000000?text=${msg}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const openHolidayProgrammeWhatsApp = () => {
+    const name = child?.name ?? 'my child';
+    const msg = encodeURIComponent(
+      `Hi, I'd like to find out more about the Holiday Programme for ${name}. Please send me more details. Thank you!`
+    );
+    window.open(`https://wa.me/6500000000?text=${msg}`, '_blank', 'noopener,noreferrer');
   };
 
   const handleSaveWeeklyTargets = async () => {
@@ -1048,25 +1066,38 @@ const StudyPulseApp: React.FC = () => {
                 )}
               </article>
 
-              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <article className="rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-5 shadow-sm">
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-orange-100 text-orange-700"><Flame size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Crash Course</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-600">Intensive revision before major exams or holiday catch-up sessions.</p>
+                <p className="mt-1 text-[11px] font-semibold text-orange-600">📅 June Holidays · 15–26 Jun 2026</p>
+                <p className="mt-2 text-xs leading-5 text-slate-600">Intensive holiday revision for PSLE (Math & Science, 4 days) and O-Level (Physics, Chem, A/E Math — 2 days per subject). Morning concept + afternoon exam practice. All materials provided. Max 6 per class.</p>
                 {submittedCTAs.has('sq_crash_course_interest') ? (
-                  <p className="mt-3 rounded-lg bg-orange-50 px-4 py-2.5 text-xs font-bold text-orange-700">✅ Interest registered — we&apos;ll be in touch!</p>
+                  <p className="mt-3 rounded-lg bg-orange-50 px-4 py-2.5 text-xs font-bold text-orange-700">✅ Interest registered — we'll WhatsApp you with details!</p>
                 ) : (
-                  <button onClick={() => handleCTA('sq_crash_course_interest', 'manual_request')} className="mt-3 w-full rounded-lg bg-orange-600 px-4 py-2.5 text-xs font-bold text-white">Express Interest</button>
+                  <button
+                    onClick={() => { handleCTA('sq_crash_course_interest', 'manual_request'); openCrashCourseWhatsApp(); }}
+                    className="mt-3 w-full rounded-lg bg-orange-500 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-orange-400"
+                  >
+                    🔥 Reserve a Spot — WhatsApp Us
+                  </button>
                 )}
+                <a href="/studypulse#crash-courses" className="mt-2 inline-block text-xs font-semibold text-orange-600 underline">View full programme →</a>
               </article>
 
-              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <article className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
                 <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700"><GraduationCap size={20} /></div>
                 <h3 className="text-base font-bold text-slate-900">Holiday Programme</h3>
-                <p className="mt-2 text-xs leading-5 text-slate-600">Financial literacy enrichment for P4–P6 and Sec 1–3 during school holidays.</p>
+                <p className="mt-1 text-[11px] font-semibold text-emerald-600">📅 June & December Holidays</p>
+                <p className="mt-2 text-xs leading-5 text-slate-600">Financial literacy & life skills enrichment for P4–P6 and Sec 1–3. Fun, hands-on workshops designed to build real-world confidence alongside academic preparation.</p>
                 {submittedCTAs.has('sq_holiday_programme_interest') ? (
-                  <p className="mt-3 rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700">✅ Interest registered — we&apos;ll be in touch!</p>
+                  <p className="mt-3 rounded-lg bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-700">✅ Interest registered — we'll WhatsApp you with details!</p>
                 ) : (
-                  <button onClick={() => handleCTA('sq_holiday_programme_interest', 'manual_request')} className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white">Register Interest</button>
+                  <button
+                    onClick={() => { handleCTA('sq_holiday_programme_interest', 'manual_request'); openHolidayProgrammeWhatsApp(); }}
+                    className="mt-3 w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-emerald-500"
+                  >
+                    📲 Register Interest — WhatsApp Us
+                  </button>
                 )}
                 <Link to="/enrichment" className="mt-2 inline-block text-xs font-semibold text-emerald-700 underline">Learn more →</Link>
               </article>
