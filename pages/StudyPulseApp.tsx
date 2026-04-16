@@ -2142,15 +2142,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
                 {childWhatsapp.trim() && (
                   <div className="mt-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
                     <p className="text-xs font-bold text-emerald-800 mb-2">⚠️ {childName || 'Your child'} must tap this on <em>their own phone</em></p>
+                    <p className="text-xs text-emerald-700 mb-2">Send this activation link to {childName || 'your child'} via WhatsApp or SMS.</p>
                     <div className="flex flex-wrap gap-2">
-                      <a
-                        href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName || 'joining')}+and+I'm+ready+for+my+daily+check-ins!`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
-                      >
-                        📲 Open on this device
-                      </a>
                       <button
                         type="button"
                         onClick={async () => {
@@ -2163,7 +2156,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
                         }}
                         className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
                       >
-                        🔗 Copy link to send to {childName || 'child'}
+                        🔗 Share / Copy link to send to {childName || 'child'}
                       </button>
                     </div>
                   </div>
@@ -2244,19 +2237,24 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
             </p>
             <div className="mt-5 space-y-3 text-left">
               <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">One last step — activate WhatsApp:</p>
+              {/* Parent activation — parent taps on their own device */}
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
+                <p className="text-xs font-bold text-blue-800 mb-2">1️⃣ Your parent updates</p>
+                <p className="text-xs text-blue-700 mb-2">Tap this yourself first — it activates your weekly parent reports.</p>
+                <a
+                  href={onboardingParentActivationLink(childName)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100"
+                >
+                  📲 Tap to activate your updates
+                </a>
+              </div>
               {/* Child activation — parent must SEND this link to child's phone */}
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
-                <p className="text-xs font-bold text-emerald-800 mb-2">1️⃣ {childName}&apos;s check-ins</p>
+                <p className="text-xs font-bold text-emerald-800 mb-2">2️⃣ {childName}&apos;s check-ins</p>
                 <p className="text-xs text-emerald-700 mb-2">{childName} must tap this link on <strong>their own phone</strong>. Send it to them via WhatsApp or SMS.</p>
                 <div className="flex flex-wrap gap-2">
-                  <a
-                    href={`https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName)}+and+I'm+ready+for+my+daily+check-ins!`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
-                  >
-                    📲 Open on this device
-                  </a>
                   <button
                     onClick={async () => {
                       const link = `https://wa.me/6589598553?text=Hi+StudyPulse%2C+I'm+${encodeURIComponent(childName)}+and+I'm+ready+for+my+daily+check-ins!`;
@@ -2268,22 +2266,9 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
                     }}
                     className="flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
                   >
-                    🔗 Copy link to send to {childName}
+                    🔗 Share / Copy link to send to {childName}
                   </button>
                 </div>
-              </div>
-              {/* Parent activation — parent taps on their own device */}
-              <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
-                <p className="text-xs font-bold text-blue-800 mb-2">2️⃣ Your parent updates</p>
-                <p className="text-xs text-blue-700 mb-2">Tap this yourself — it will open WhatsApp on your phone.</p>
-                <a
-                  href={onboardingParentActivationLink(childName)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100"
-                >
-                  📲 Tap to activate your updates
-                </a>
               </div>
               <p className="text-xs text-slate-400">Both need to send once. After that, everything is automatic.</p>
             </div>
