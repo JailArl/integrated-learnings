@@ -434,7 +434,7 @@ async function sendFollowupReminders(
   // Find children who were prompted but haven't replied
   const { data: pending } = await sb
     .from("sq_checkins")
-    .select("id, child_id, prompt_sent_at")
+    .select("id, child_id, prompt_sent_at, target_quantity, target_unit, subject_reported")
     .eq("checkin_date", today)
     .eq("status", "pending")
     .not("prompt_sent_at", "is", null);
@@ -454,11 +454,19 @@ async function sendFollowupReminders(
     if (!child.whatsapp_number) continue;
 
     // Send a gentle nudge to the kid
+    const qty = Number((checkin as { target_quantity?: number }).target_quantity || 0);
+    const unit = (checkin as { target_unit?: string }).target_unit || "";
+    const subject = (checkin as { subject_reported?: string }).subject_reported || "";
+
+    const reminderMsg = qty > 0 && unit && subject
+      ? `Hey ${child.name}, quick reminder 😊\n\nHave you finished your target: *${qty} ${formatUnitLabel(qty, unit)} of ${subject}*?\n\nReply: *yes* / *partial* / *no*.`
+      : `Hey ${child.name}, just a friendly reminder! 😊 Quick check-in — reply *yes*, *partial*, or *no*.`;
+
     await sendWhatsApp(
       child.whatsapp_number,
       undefined,
       undefined,
-      `Hey ${child.name}, just a friendly reminder! 😊 Quick check-in — reply *yes*, *partial*, or *no*.`,
+      reminderMsg,
     );
 
     // Also nudge parent
