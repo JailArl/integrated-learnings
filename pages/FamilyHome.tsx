@@ -232,7 +232,7 @@ const FamilyHome: React.FC = () => {
               >
                 Reserve a Spot via WhatsApp <ArrowRight size={15} className="ml-2" />
               </a>
-              <Link to="/studypulse#crash-courses" className="mt-2 inline-block w-full text-center text-xs font-semibold text-orange-600 underline">
+              <Link to="/studypulse/crash-courses" className="mt-2 inline-block w-full text-center text-xs font-semibold text-orange-600 underline">
                 See full programme details →
               </Link>
             </article>
