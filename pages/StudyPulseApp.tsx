@@ -135,6 +135,23 @@ const getEffectiveStudyDays = (child: SQChild | undefined): number[] => {
   return DEFAULT_STUDY_DAYS;
 };
 
+function getLevelDefaultCheckTime(level: string, isWeekend: boolean): string {
+  const l = level.trim().toUpperCase();
+  if (/^(P[1-3]|PRIMARY [1-3])$/.test(l)) return isWeekend ? '15:00' : '18:30';
+  if (/^(P[4-6]|PRIMARY [4-6])$/.test(l)) return isWeekend ? '15:00' : '19:00';
+  if (/^(SEC[1-3]|SECONDARY [1-3])$/.test(l)) return isWeekend ? '15:30' : '20:00';
+  return isWeekend ? '16:00' : '20:00'; // Sec4/5, JC
+}
+
+function to12h(time24: string): string {
+  const [hStr, mStr] = time24.split(':');
+  const h = Number(hStr);
+  const m = Number(mStr);
+  const suffix = h >= 12 ? 'pm' : 'am';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, '0')}${suffix}`;
+}
+
 /* ═══════════════════════════════════════════ */
 const StudyPulseApp: React.FC = () => {
   const navigate = useNavigate();
@@ -531,22 +548,13 @@ const StudyPulseApp: React.FC = () => {
   // Returns check-in time label. Parent-set time takes priority, then level default fallback.
   function getCheckinTimeLabel(childRow: SQChild): string {
     if (childCheckTimes[childRow.id]) {
-      const [hStr, mStr] = childCheckTimes[childRow.id].split(':');
-      const h = Number(hStr);
-      const m = Number(mStr);
-      const suffix = h >= 12 ? 'pm' : 'am';
-      const h12 = h % 12 === 0 ? 12 : h % 12;
-      return `${h12}:${String(m).padStart(2, '0')}${suffix}`;
+      return to12h(childCheckTimes[childRow.id]);
     }
 
-    const l = childRow.level.trim().toUpperCase();
     const now = new Date();
     const sgDay = new Date(now.getTime() + 8 * 60 * 60 * 1000).getUTCDay();
     const isWeekend = sgDay === 0 || sgDay === 6;
-    if (/^(P[1-3]|PRIMARY [1-3])$/.test(l)) return isWeekend ? '3:00pm' : '6:30pm';
-    if (/^(P[4-6]|PRIMARY [4-6])$/.test(l)) return isWeekend ? '3:00pm' : '7:00pm';
-    if (/^(SEC[1-3]|SECONDARY [1-3])$/.test(l)) return isWeekend ? '3:30pm' : '8:00pm';
-    return isWeekend ? '4:00pm' : '8:00pm'; // Sec4/5, JC
+    return to12h(getLevelDefaultCheckTime(childRow.level, isWeekend));
   }
 
   const CHECK_TIME_OPTIONS = [
@@ -1379,19 +1387,25 @@ const StudyPulseApp: React.FC = () => {
                       If you do not save a custom time, StudyPulse uses the level-based default timing automatically.
                     </p>
                     <div className="mt-2 flex items-center gap-2">
+                      {(() => {
+                        const levelDefault = getLevelDefaultCheckTime(c.level, false);
+                        const selected = childCheckTimes[c.id] || levelDefault;
+                        return (
                       <select
                         className="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                        value={childCheckTimes[c.id] || '20:00'}
+                        value={selected}
                         onChange={(e) => setChildCheckTimes((prev) => ({ ...prev, [c.id]: e.target.value }))}
                       >
                         {CHECK_TIME_OPTIONS.map((t) => (
                           <option key={t} value={t}>{t}</option>
                         ))}
                       </select>
+                        );
+                      })()}
                       <button
                         disabled={savingCheckTimeId === c.id}
                         onClick={async () => {
-                          const selected = childCheckTimes[c.id] || '20:00';
+                          const selected = childCheckTimes[c.id] || getLevelDefaultCheckTime(c.level, false);
                           setSavingCheckTimeId(c.id);
                           await upsertStudySettings(c.id, { check_completion_time: selected });
                           setSavingCheckTimeId(null);
@@ -2028,7 +2042,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
       commence_date: today(),
       study_days_per_week: 5,
       first_reminder_time: '16:00',
-      check_completion_time: '21:00',
+      check_completion_time: getLevelDefaultCheckTime(childLevel, false),
     });
     setSaving(false);
     setStep(3);
