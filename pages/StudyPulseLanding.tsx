@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowRight,
   BarChart3,
+  BookOpen,
   CalendarCheck,
   Check,
   CheckCircle2,
@@ -13,9 +14,12 @@ import {
   Globe,
   MessageSquare,
   Minus,
+  PhoneCall,
   Smartphone,
   Sparkles,
+  Star,
   Target,
+  Timer,
   X,
   Zap,
 } from 'lucide-react';
@@ -167,8 +171,75 @@ const T = {
     ],
   },
 
+  // Crash Course section
+  // Crash courses header
+  ccSectionBadge: { en: 'June School Holidays 2026 · Limited Spots', zh: '2026年六月学校假期 · 名额有限' },
+  ccSectionH2: { en: 'Holiday Crash Courses', zh: '假期强化班' },
+  ccSectionSub: { en: 'Two weeks before school reopens — the perfect time to consolidate, sharpen, and walk into the new term with confidence.', zh: '开学前两周 — 巩固知识、提升技巧、自信迎接新学期的最佳时机。' },
+  ccDeadlineLabel: { en: 'Early bird registration closes in', zh: '早鸟报名截止倒计时' },
+  ccContactSchedule: { en: 'Contact us for full schedule', zh: '联系我们获取完整时间表' },
+  ccSpotsLeft: { en: 'Only 6 spots per class — first come, first served.', zh: '每班仅6个名额 — 先到先得。' },
+  ccCTA: { en: 'Reserve a Spot Now', zh: '立即预留名额' },
+  ccScheduleNote: { en: 'Detailed schedule upon enquiry', zh: '详细时间表请查询' },
+  ccEarlyBird: { en: 'Early Bird — before 20 May', zh: '早鸟价 — 5月20日前' },
+  ccRegularLabel: { en: 'Regular price', zh: '正常价格' },
+
+  // PSLE crash course
+  psleBadge: { en: 'PSLE · P6', zh: 'PSLE · 小六' },
+  psleH3: { en: 'PSLE Crash Course', zh: 'PSLE 强化班' },
+  psleSub: { en: '4-day intensive covering Mathematics & Science — the two highest-weightage subjects. Morning concept sessions + afternoon timed-practice sessions every day.', zh: '4天强化课程，专攻数学和科学 — 两个最高比重科目。每天上午概念课 + 下午限时练习。' },
+  psleDates: { en: '15 – 18 June 2026  ·  Last 2 weeks of school holidays', zh: '2026年6月15–18日  ·  学校假期最后两周' },
+  psleStructure: { en: 'Day 1–2: Mathematics  ·  Day 3–4: Science', zh: '第1–2天：数学  ·  第3–4天：科学' },
+  psleSession: { en: 'Morning 9 am – 12 pm  ·  Afternoon 2 pm – 5 pm', zh: '上午 9时–12时  ·  下午 2时–5时' },
+  psleF1t: { en: 'All Materials Provided', zh: '全套学习材料提供' },
+  psleF1d: { en: 'Workbooks, past-year papers, and summary sheets included — zero prep needed from parents.', zh: '练习册、历年试卷及归纳表全包 — 家长无需额外准备。' },
+  psleF2t: { en: 'Small Group · Max 6', zh: '小班制 · 最多6人' },
+  psleF2d: { en: 'Every student gets personal attention. Tutors spot weak areas and address them directly.', zh: '每位学生获得个人关注，导师识别薄弱点并直接解决。' },
+  psleF3t: { en: 'Exam Technique Drills', zh: '考试技巧训练' },
+  psleF3d: { en: 'Structured answering, question analysis, and time management practised under exam conditions each afternoon.', zh: '每天下午在模拟考试条件下练习结构化作答、题目分析和时间管理。' },
+  psleF4t: { en: 'Experienced PSLE Coaches', zh: '经验丰富的PSLE导师' },
+  psleF4d: { en: 'Our tutors have coached PSLE students for years and know exactly where marks are lost — and how to recover them.', zh: '导师拥有多年PSLE指导经验，深知失分原因及如何补救。' },
+  psleEarlyPrice: { en: '$320 / subject', zh: '每科 $320' },
+  psleRegularPrice: { en: '$380 / subject', zh: '每科 $380' },
+
+  // O-Level crash course
+  olevBadge: { en: 'O-Level · Sec 4 / 5', zh: 'O水准 · 中四/五' },
+  olevH3: { en: 'O-Level Crash Course', zh: 'O水准强化班' },
+  olevSub: { en: 'Tell us your weak topics — we prepare targeted materials just for your child. 2 days per subject, morning theory + afternoon exam practice. No cookie-cutter notes.', zh: '告诉我们薄弱主题 — 我们专门为孩子准备针对性材料。每科2天，上午理论+下午考试练习。没有千篇一律的笔记。' },
+  olevTopicLabel: { en: 'Select your weak topics', zh: '选择薄弱主题' },
+  olevTopicSub: { en: 'Tick what your child struggles with. We’ll prepare materials specifically for those areas.', zh: '勾选孩子的薄弱环节，我们将专门准备针对性学习材料。' },
+  olevTopicCTAnone: { en: 'Select topics above to personalise your enquiry', zh: '请先选择上方主题以个性化查询' },
+  olevTopicCTAsome: { en: 'Send Weak Topics via WhatsApp', zh: '通过WhatsApp发送薄弱主题' },
+  olevTopicSelected: { en: 'topics selected', zh: '个主题已选' },
+  olevTopicNone: { en: 'None selected', zh: '未选择' },
+  olevDates: { en: '15 – 26 June 2026  ·  Last 2 weeks of school holidays', zh: '2026年6月15–26日  ·  学校假期最后两周' },
+  olevSession: { en: 'Morning 9 am – 12 pm  ·  Afternoon 2 pm – 5 pm', zh: '上午 9时–12时  ·  下午 2时–5时' },
+  olevSubjects: {
+    en: [
+      { subj: 'Physics', days: '2 days', note: 'Waves, Electricity, Forces & Motion — common exam traps covered.' },
+      { subj: 'Chemistry', days: '2 days', note: 'Organic & Inorganic concepts, structured answering mastered.' },
+      { subj: 'A. Mathematics', days: '2 days', note: 'Calculus, trigo, algebra — difficult topics broken down step by step.' },
+      { subj: 'E. Mathematics', days: '2 days', note: 'Statistics, geometry, problem sums — marks maximised efficiently.' },
+    ],
+    zh: [
+      { subj: '物理', days: '2天', note: '波动、电学、力学 — 涵盖常见考试陷阱。' },
+      { subj: '化学', days: '2天', note: '有机与无机概念，掌握结构化作答。' },
+      { subj: '高级数学', days: '2天', note: '微积分、三角函数、代数 — 难题逐步拆解。' },
+      { subj: '普通数学', days: '2天', note: '统计、几何、应用题 — 高效拿分。' },
+    ],
+  },
+  olevF1t: { en: 'All Materials Provided', zh: '全套学习材料提供' },
+  olevF1d: { en: 'Topical notes, past-year TYS questions, and formula sheets — everything in one folder.', zh: '主题笔记、历年TYS题目、公式表 — 全部一文件夹搞定。' },
+  olevF2t: { en: 'Small Group · Max 6', zh: '小班制 · 最多6人' },
+  olevF2d: { en: 'Not a lecture hall. Weak spots are caught and fixed in real time.', zh: '非大堂讲课，薄弱点实时发现并修正。' },
+  olevF3t: { en: 'TYS-Style Practice', zh: 'TYS题型真实练习' },
+  olevF3d: { en: 'Afternoons are dedicated to exam-condition practice using actual past-year paper formats.', zh: '下午全程模拟真实历年试题格式进行考试练习。' },
+  olevF4t: { en: 'Subject Specialist Tutors', zh: '专科导师' },
+  olevF4d: { en: 'Each subject taught by a specialist — no generalists. Students get expert-level coaching for every paper.', zh: '每科由专科导师执教，无通才讲师。学生获得每份试卷的专家级指导。' },
+  olevEarlyPrice: { en: '$280 / subject', zh: '每科 $280' },
+  olevRegularPrice: { en: '$340 / subject', zh: '每科 $340' },
+
   // Bottom CTA
-  bottomH2a: { en: 'PSLE. O-Level. A-Level.', zh: 'PSLE。O水准。A水准。' },
   bottomH2b: { en: 'Small daily habits \u2192 big exam results.', zh: '每天一点小习惯 \u2192 考试大突破。' },
   bottomSub: { en: 'Set up in under 5 minutes. Start free \u2014 upgrade when your child\u2019s exam season begins.', zh: '5分钟内完成设置。免费开始 \u2014 孩子考季来临时再升级。' },
   bottomBtn: { en: 'Start Free', zh: '免费开始' },
@@ -207,10 +278,70 @@ const T = {
   },
 } as const;
 
+/* ── O-Level topic bank ── */
+const OLEVEL_TOPICS: Record<string, string[]> = {
+  'Physics': [
+    'Kinematics', 'Dynamics & Newton\'s Laws', 'Forces & Pressure',
+    'Thermal Physics', 'Waves & Light', 'Electromagnetic Spectrum',
+    'Electricity & Circuits', 'Magnetism & Electromagnetism', 'Radioactivity',
+  ],
+  'Chemistry': [
+    'Atomic Structure & Bonding', 'Mole Concept & Stoichiometry',
+    'Acids, Bases & Salts', 'Redox Reactions', 'Electrolysis',
+    'Energy Changes', 'Rate of Reaction', 'Organic Chemistry',
+  ],
+  'A. Mathematics': [
+    'Quadratic Functions & Inequalities', 'Indices & Surds',
+    'Polynomials & Partial Fractions', 'Logarithms', 'Trigonometry',
+    'Differentiation', 'Integration', 'Binomial Theorem', 'Matrices',
+  ],
+  'E. Mathematics': [
+    'Numbers & Algebra', 'Percentage & Ratio', 'Mensuration',
+    'Geometry & Angles', 'Trigonometry', 'Graphs & Functions',
+    'Statistics', 'Probability', 'Vectors & Transformations',
+  ],
+};
+const OLEVEL_SUBJ_KEYS = Object.keys(OLEVEL_TOPICS);
+
 const StudyPulseLanding: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [lang, setLang] = useState<Lang>('en');
   const t = (key: keyof typeof T) => (T[key] as Record<Lang, string>)[lang];
+
+  // O-Level topic selector
+  const [activeSubj, setActiveSubj] = useState<string>(OLEVEL_SUBJ_KEYS[0]);
+  const [selectedTopics, setSelectedTopics] = useState<Record<string, Set<string>>>(
+    () => Object.fromEntries(OLEVEL_SUBJ_KEYS.map((k) => [k, new Set<string>()])),
+  );
+  const toggleTopic = (subj: string, topic: string) => {
+    setSelectedTopics((prev) => {
+      const next = new Set(prev[subj]);
+      next.has(topic) ? next.delete(topic) : next.add(topic);
+      return { ...prev, [subj]: next };
+    });
+  };
+  const totalSelected = OLEVEL_SUBJ_KEYS.reduce((acc, k) => acc + selectedTopics[k].size, 0);
+  const buildWaMessage = () => {
+    const lines: string[] = ['Hi, I\'d like to reserve a spot for the O-Level June Holiday Crash Course.', ''];
+    OLEVEL_SUBJ_KEYS.forEach((subj) => {
+      const topics = [...selectedTopics[subj]];
+      if (topics.length) lines.push(`${subj}: ${topics.join(', ')}`);
+    });
+    lines.push('', 'Please prepare materials for the above weak topics. Thank you!');
+    return encodeURIComponent(lines.join('\n'));
+  };
+
+  // Countdown to registration deadline: 20 May 2026 23:59:59 SGT (UTC+8)
+  const DEADLINE = new Date('2026-05-20T23:59:59+08:00').getTime();
+  const [timeLeft, setTimeLeft] = useState(() => Math.max(0, DEADLINE - Date.now()));
+  useEffect(() => {
+    const id = setInterval(() => setTimeLeft(Math.max(0, DEADLINE - Date.now())), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const days = Math.floor(timeLeft / 86400000);
+  const hours = Math.floor((timeLeft % 86400000) / 3600000);
+  const mins = Math.floor((timeLeft % 3600000) / 60000);
+  const secs = Math.floor((timeLeft % 60000) / 1000);
 
   return (
     <div className="min-h-screen bg-[#faf8f4] text-slate-900">
@@ -512,6 +643,275 @@ const StudyPulseLanding: React.FC = () => {
               )}
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ═══════════ HOLIDAY CRASH COURSES ═══════════ */}
+      <section className="border-t-4 border-amber-500 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+        <div className="mx-auto max-w-6xl">
+
+          {/* Section header */}
+          <div className="mb-3 flex justify-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-amber-400/40 bg-amber-500/15 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-amber-300">
+              <Timer size={13} /> {t('ccSectionBadge')}
+            </span>
+          </div>
+          <h2 className="text-center text-3xl font-black text-white sm:text-4xl lg:text-5xl">
+            {t('ccSectionH2')}
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-7 text-slate-300 sm:text-base">
+            {t('ccSectionSub')}
+          </p>
+
+          {/* Countdown */}
+          <div className="mx-auto mt-8 max-w-lg rounded-2xl border border-amber-500/30 bg-amber-950/30 p-5 text-center">
+            <p className="mb-4 text-xs font-bold uppercase tracking-widest text-amber-300">{t('ccDeadlineLabel')}</p>
+            <div className="flex items-center justify-center gap-3 sm:gap-5">
+              {[
+                { val: days, label: lang === 'en' ? 'Days' : '天' },
+                { val: hours, label: lang === 'en' ? 'Hrs' : '时' },
+                { val: mins, label: lang === 'en' ? 'Min' : '分' },
+                { val: secs, label: lang === 'en' ? 'Sec' : '秒' },
+              ].map(({ val, label }, i, arr) => (
+                <React.Fragment key={label}>
+                  <div className="flex flex-col items-center">
+                    <span className="tabular-nums rounded-xl bg-white/10 px-3 py-2 text-3xl font-black text-white sm:text-4xl">
+                      {String(val).padStart(2, '0')}
+                    </span>
+                    <span className="mt-1.5 text-[10px] font-semibold uppercase tracking-widest text-slate-400">{label}</span>
+                  </div>
+                  {i < arr.length - 1 && <span className="mb-4 text-2xl font-black text-amber-400">:</span>}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* ── TWO PROGRAMME CARDS ── */}
+          <div className="mt-10 grid gap-8 lg:grid-cols-2">
+
+            {/* ── PSLE CARD ── */}
+            <div className="rounded-3xl border border-sky-500/30 bg-gradient-to-br from-sky-950/60 to-slate-900 p-7">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="rounded-full border border-sky-400/40 bg-sky-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-sky-300">{t('psleBadge')}</span>
+              </div>
+              <h3 className="text-2xl font-black text-white">{t('psleH3')}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{t('psleSub')}</p>
+
+              {/* Schedule info */}
+              <div className="mt-5 space-y-2">
+                <div className="flex items-start gap-2">
+                  <CalendarCheck size={14} className="mt-0.5 shrink-0 text-sky-400" />
+                  <span className="text-xs font-semibold text-sky-200">{t('psleDates')}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <BookOpen size={14} className="mt-0.5 shrink-0 text-sky-400" />
+                  <span className="text-xs text-slate-300">{t('psleStructure')}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Clock3 size={14} className="mt-0.5 shrink-0 text-sky-400" />
+                  <span className="text-xs text-slate-300">{t('psleSession')}</span>
+                </div>
+              </div>
+
+              {/* Feature mini-grid */}
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                {([
+                  { icon: BookOpen, tKey: 'psleF1t' as const, dKey: 'psleF1d' as const },
+                  { icon: Star, tKey: 'psleF2t' as const, dKey: 'psleF2d' as const },
+                  { icon: Target, tKey: 'psleF3t' as const, dKey: 'psleF3d' as const },
+                  { icon: Crown, tKey: 'psleF4t' as const, dKey: 'psleF4d' as const },
+                ] as const).map(({ icon: Icon, tKey, dKey }) => (
+                  <div key={tKey} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <Icon size={14} className="mb-1.5 text-sky-300" aria-hidden="true" />
+                    <p className="text-[11px] font-bold text-white">{t(tKey)}</p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-400">{t(dKey)}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pricing */}
+              <div className="mt-6 rounded-2xl border border-sky-400/20 bg-sky-950/40 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-sky-300">{t('ccEarlyBird')}</p>
+                <div className="mt-1 flex items-end gap-3">
+                  <span className="text-2xl font-black text-white">{t('psleEarlyPrice')}</span>
+                  <span className="mb-0.5 text-sm text-slate-400 line-through">{t('psleRegularPrice')}</span>
+                  <span className="mb-0.5 text-xs text-slate-500">{t('ccRegularLabel')}</span>
+                </div>
+                <p className="mt-2 text-[11px] text-red-300">{t('ccSpotsLeft')}</p>
+              </div>
+
+              {/* CTAs */}
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                <a
+                  href="https://wa.me/6500000000?text=Hi%2C%20I%27d%20like%20to%20reserve%20a%20spot%20for%20the%20PSLE%20June%20Holiday%20Crash%20Course"
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex flex-1 items-center justify-center rounded-xl bg-sky-500 px-5 py-3 text-sm font-bold text-white shadow transition hover:bg-sky-400"
+                >
+                  {t('ccCTA')} <ArrowRight size={15} className="ml-2" />
+                </a>
+                <a
+                  href="mailto:hello@integratedlearnings.com?subject=PSLE%20Crash%20Course%20Enquiry"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/8 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/15"
+                >
+                  <PhoneCall size={14} className="mr-1.5" /> {t('ccContactSchedule')}
+                </a>
+              </div>
+            </div>
+
+            {/* ── O-LEVEL CARD ── */}
+            <div className="rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/60 to-slate-900 p-7">
+              <div className="mb-4 flex items-center gap-3">
+                <span className="rounded-full border border-emerald-400/40 bg-emerald-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-emerald-300">{t('olevBadge')}</span>
+              </div>
+              <h3 className="text-2xl font-black text-white">{t('olevH3')}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{t('olevSub')}</p>
+
+              {/* Schedule info */}
+              <div className="mt-5 space-y-2">
+                <div className="flex items-start gap-2">
+                  <CalendarCheck size={14} className="mt-0.5 shrink-0 text-emerald-400" />
+                  <span className="text-xs font-semibold text-emerald-200">{t('olevDates')}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Clock3 size={14} className="mt-0.5 shrink-0 text-emerald-400" />
+                  <span className="text-xs text-slate-300">{t('olevSession')}</span>
+                </div>
+              </div>
+
+              {/* ── TOPIC SELECTOR ── */}
+              <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-black/30 p-4">
+                <p className="text-xs font-bold text-emerald-300">{t('olevTopicLabel')}</p>
+                <p className="mt-0.5 text-[11px] leading-4 text-slate-400">{t('olevTopicSub')}</p>
+
+                {/* Subject tabs */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {OLEVEL_SUBJ_KEYS.map((subj) => {
+                    const count = selectedTopics[subj].size;
+                    const active = activeSubj === subj;
+                    return (
+                      <button
+                        key={subj}
+                        onClick={() => setActiveSubj(subj)}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+                          active
+                            ? 'bg-emerald-500 text-white shadow'
+                            : 'border border-white/15 bg-white/5 text-slate-300 hover:bg-white/10'
+                        }`}
+                      >
+                        {subj}
+                        {count > 0 && (
+                          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-black ${
+                            active ? 'bg-white/30 text-white' : 'bg-emerald-500/70 text-white'
+                          }`}>{count}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Topic checkboxes */}
+                <div className="mt-4 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  {OLEVEL_TOPICS[activeSubj].map((topic) => {
+                    const checked = selectedTopics[activeSubj].has(topic);
+                    return (
+                      <button
+                        key={topic}
+                        onClick={() => toggleTopic(activeSubj, topic)}
+                        className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-[11px] font-medium transition ${
+                          checked
+                            ? 'border-emerald-400/60 bg-emerald-500/20 text-emerald-200'
+                            : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/20 hover:bg-white/10'
+                        }`}
+                      >
+                        <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+                          checked ? 'border-emerald-400 bg-emerald-500' : 'border-slate-600'
+                        }`}>
+                          {checked && <Check size={10} strokeWidth={3} className="text-white" />}
+                        </span>
+                        {topic}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Selection summary */}
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-[11px] text-slate-500">
+                    {totalSelected > 0
+                      ? <span className="font-semibold text-emerald-300">{totalSelected} {t('olevTopicSelected')}</span>
+                      : <span>{t('olevTopicNone')}</span>}
+                  </p>
+                  {totalSelected > 0 && (
+                    <button
+                      onClick={() => setSelectedTopics(Object.fromEntries(OLEVEL_SUBJ_KEYS.map((k) => [k, new Set<string>()])))}
+                      className="text-[11px] text-slate-500 underline hover:text-slate-300"
+                    >
+                      {lang === 'en' ? 'Clear all' : '清除全部'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Feature mini-grid */}
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                {([
+                  { icon: BookOpen, tKey: 'olevF1t' as const, dKey: 'olevF1d' as const },
+                  { icon: Star, tKey: 'olevF2t' as const, dKey: 'olevF2d' as const },
+                  { icon: Target, tKey: 'olevF3t' as const, dKey: 'olevF3d' as const },
+                  { icon: Crown, tKey: 'olevF4t' as const, dKey: 'olevF4d' as const },
+                ] as const).map(({ icon: Icon, tKey, dKey }) => (
+                  <div key={tKey} className="rounded-xl border border-white/10 bg-white/5 p-3">
+                    <Icon size={14} className="mb-1.5 text-emerald-300" aria-hidden="true" />
+                    <p className="text-[11px] font-bold text-white">{t(tKey)}</p>
+                    <p className="mt-1 text-[10px] leading-4 text-slate-400">{t(dKey)}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pricing */}
+              <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-950/40 p-4">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-300">{t('ccEarlyBird')}</p>
+                <div className="mt-1 flex items-end gap-3">
+                  <span className="text-2xl font-black text-white">{t('olevEarlyPrice')}</span>
+                  <span className="mb-0.5 text-sm text-slate-400 line-through">{t('olevRegularPrice')}</span>
+                  <span className="mb-0.5 text-xs text-slate-500">{t('ccRegularLabel')}</span>
+                </div>
+                <p className="mt-2 text-[11px] text-red-300">{t('ccSpotsLeft')}</p>
+              </div>
+
+              {/* CTAs */}
+              <div className="mt-5 flex flex-col gap-2">
+                {totalSelected > 0 ? (
+                  <a
+                    href={`https://wa.me/6500000000?text=${buildWaMessage()}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-500 px-5 py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-emerald-400"
+                  >
+                    <MessageSquare size={15} className="mr-2" />
+                    {t('olevTopicCTAsome')}
+                    <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black">{totalSelected}</span>
+                  </a>
+                ) : (
+                  <button
+                    disabled
+                    className="inline-flex w-full cursor-not-allowed items-center justify-center rounded-xl bg-white/10 px-5 py-3.5 text-sm font-semibold text-slate-500"
+                  >
+                    {t('olevTopicCTAnone')}
+                  </button>
+                )}
+                <a
+                  href="mailto:hello@integratedlearnings.com?subject=O-Level%20Crash%20Course%20Enquiry"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/15 bg-white/8 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/15"
+                >
+                  <PhoneCall size={14} className="mr-1.5" /> {t('ccContactSchedule')}
+                </a>
+              </div>
+            </div>
+
+          </div>{/* end two-card grid */}
+
+          {/* Bottom note */}
+          <p className="mt-8 text-center text-xs text-slate-500">{t('ccScheduleNote')}</p>
         </div>
       </section>
 
