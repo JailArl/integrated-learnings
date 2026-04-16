@@ -99,6 +99,32 @@ function normaliseSGPhone(raw: string): string {
   return `+65${digits}`;
 }
 
+async function persistParentProfile(userId: string, fullName: string, phone: string, email?: string): Promise<{ ok: boolean; message?: string }> {
+  if (!supabase) return { ok: false, message: 'Authentication service is not configured.' };
+
+  const parentName = fullName.trim();
+  const parentPhone = normaliseSGPhone(phone);
+
+  const { error: membershipError } = await supabase
+    .from('sq_memberships')
+    .update({ parent_name: parentName, parent_phone: parentPhone, ...(email ? { parent_email: email } : {}) })
+    .eq('user_id', userId);
+
+  if (membershipError) {
+    return { ok: false, message: `Could not save profile to membership: ${membershipError.message}` };
+  }
+
+  const { error: profileError } = await supabase
+    .from('parent_profiles')
+    .upsert({ id: userId, full_name: parentName, ...(email ? { email } : {}), phone: parentPhone }, { onConflict: 'id' });
+
+  if (profileError) {
+    return { ok: false, message: `Could not save parent profile: ${profileError.message}` };
+  }
+
+  return { ok: true };
+}
+
 function formatLocalDate(date: Date): string {
   const year = date.getFullYear();
   const month = `${date.getMonth() + 1}`.padStart(2, '0');
@@ -349,13 +375,7 @@ const StudyPulseApp: React.FC = () => {
       : `Your premium pass ends in ${billingDaysLeft} day${billingDaysLeft === 1 ? '' : 's'}. Renew before it expires to keep daily check-ins active.`
     : null;
 
-  const handleUpgrade = async (plan?: CheckoutPlan) => {
-    if (!plan) {
-      setTab('settings');
-      setDashboardNotice({ type: 'info', text: 'Choose a plan below: Core Monthly or one-time Exam Pass / Sprint / Season.' });
-      return;
-    }
-
+  const handleUpgrade = async (plan: CheckoutPlan = 'monthly_flex') => {
     if (!userId || upgrading) return;
     setDashboardNotice(null);
     setUpgrading(true);
@@ -596,7 +616,7 @@ const StudyPulseApp: React.FC = () => {
           </div>
           <div className="flex items-center gap-3">
             {!premium && (
-              <button disabled={upgrading} onClick={() => handleUpgrade()} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+              <button disabled={upgrading} onClick={() => handleUpgrade('monthly_flex')} className="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
                 <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
               </button>
             )}
@@ -783,7 +803,7 @@ const StudyPulseApp: React.FC = () => {
                   <div>
                     <p className="text-xs font-bold text-slate-900">Free plan: Tue, Thu, Sun check-ins</p>
                     <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, all subjects, and unlimited children.</p>
-                    <button disabled={upgrading} onClick={() => handleUpgrade()} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+                    <button disabled={upgrading} onClick={() => handleUpgrade('monthly_flex')} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
                       {upgrading ? 'Please wait...' : 'Upgrade securely soon'} <ArrowRight size={12} className="ml-1" />
                     </button>
                   </div>
@@ -1119,7 +1139,7 @@ const StudyPulseApp: React.FC = () => {
             subjects={displaySubjects}
             exams={exams}
             streak={streak}
-            onUpgrade={handleUpgrade}
+            onUpgrade={() => handleUpgrade('monthly_flex')}
           />
         )}
 
@@ -1697,7 +1717,7 @@ const StudyPulseApp: React.FC = () => {
                           : `You've reached the ${limit} exam limit. Complete or remove an exam to add more.`}
                       </p>
                       {!premium && (
-                        <button disabled={upgrading} onClick={() => handleUpgrade()} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
+                        <button disabled={upgrading} onClick={() => handleUpgrade('monthly_flex')} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950 disabled:opacity-50">
                           <Crown size={12} className="mr-1" /> {upgrading ? 'Please wait...' : 'Upgrade'}
                         </button>
                       )}
@@ -1889,13 +1909,28 @@ const StudyPulseApp: React.FC = () => {
                       disabled={savingProfile}
                       onClick={async () => {
                         if (!supabase || !userId) return;
+                        if (!editProfileName.trim()) {
+                          setDashboardNotice({ type: 'error', text: 'Please enter your name before saving.' });
+                          return;
+                        }
+                        if (!editProfilePhone.trim()) {
+                          setDashboardNotice({ type: 'error', text: 'Please enter your WhatsApp number before saving.' });
+                          return;
+                        }
+
                         setSavingProfile(true);
+                        const result = await persistParentProfile(userId, editProfileName, editProfilePhone, membership?.parent_email || undefined);
+                        if (!result.ok) {
+                          setSavingProfile(false);
+                          setDashboardNotice({ type: 'error', text: result.message || 'Could not save your profile yet. Please try again.' });
+                          return;
+                        }
+
                         const normPhone = normaliseSGPhone(editProfilePhone);
-                        await supabase.from('sq_memberships').update({ parent_name: editProfileName.trim(), parent_phone: normPhone }).eq('user_id', userId);
-                        await supabase.from('parent_profiles').upsert({ id: userId, full_name: editProfileName.trim(), phone: normPhone }, { onConflict: 'id' });
                         setMembership(prev => prev ? { ...prev, parent_name: editProfileName.trim(), parent_phone: normPhone } : prev);
                         setEditingProfile(false);
                         setSavingProfile(false);
+                        setDashboardNotice({ type: 'success', text: 'Profile updated successfully.' });
                       }}
                       className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
                     >
@@ -2028,11 +2063,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     if (!whatsapp.trim()) { setError('WhatsApp number is required.'); return; }
     setError('');
     setSaving(true);
-    const normWhatsapp = normaliseSGPhone(whatsapp);
-    await createMembership(userId, membership?.plan_type || 'free', { name: fullName, email: membership?.parent_email || '', phone: normWhatsapp, language: parentLang });
-    if (supabase) {
-      await supabase.from('parent_profiles').upsert({ id: userId, full_name: fullName, email: membership?.parent_email || '', phone: normWhatsapp }, { onConflict: 'id' });
+    const ensuredMembership = await createMembership(userId, membership?.plan_type || 'free', {
+      name: fullName,
+      email: membership?.parent_email || '',
+      phone: normaliseSGPhone(whatsapp),
+      language: parentLang,
+    });
+    if (!ensuredMembership) {
+      setSaving(false);
+      setError('Could not initialize your parent profile. Please try again.');
+      return;
     }
+
+    const persisted = await persistParentProfile(userId, fullName, whatsapp, membership?.parent_email || undefined);
+    if (!persisted.ok) {
+      setSaving(false);
+      setError(persisted.message || 'Could not save your profile yet. Please try again.');
+      return;
+    }
+
     setSaving(false);
     setStep(2);
   };
