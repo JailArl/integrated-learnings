@@ -372,7 +372,7 @@ const StudyPulseApp: React.FC = () => {
 
   const openCrashCourseWhatsApp = () => {
     const name = child?.name ?? 'my child';
-    const level = displaySubjects.length ? displaySubjects[0].level ?? '' : '';
+    const level = child?.level ?? '';
     const msg = encodeURIComponent(
       `Hi, I'd like to find out more about the June Holiday Crash Course for ${name}${level ? ` (${level})` : ''}. Please send me more details. Thank you!`
     );
