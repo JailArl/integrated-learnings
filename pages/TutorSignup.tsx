@@ -14,6 +14,7 @@ export const TutorSignup: React.FC = () => {
     phone: '',
     dateOfBirth: '',
     gender: '',
+    acceptPolicies: false,
   });
   const [fieldErrors, setFieldErrors] = useState<{
     fullName?: string;
@@ -23,13 +24,16 @@ export const TutorSignup: React.FC = () => {
     phone?: string;
     dateOfBirth?: string;
     gender?: string;
+    acceptPolicies?: string;
   }>({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, type } = e.target;
+    const value = type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
+    setFormData({ ...formData, [name]: value });
     if (fieldErrors[e.target.name as keyof typeof fieldErrors]) {
       setFieldErrors({ ...fieldErrors, [e.target.name]: undefined });
     }
@@ -67,6 +71,9 @@ export const TutorSignup: React.FC = () => {
     }
     if (!formData.phone.trim()) {
       nextErrors.phone = 'Phone number is required.';
+    }
+    if (!formData.acceptPolicies) {
+      nextErrors.acceptPolicies = 'You must accept the tutor policy terms to continue.';
     }
 
     // Age validation
@@ -132,15 +139,15 @@ export const TutorSignup: React.FC = () => {
             <p className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-green-700">
               For New Tutors
             </p>
-            <h2 className="mt-4 text-3xl font-black text-gray-900">Get Matched With Real Parent Requests</h2>
+            <h2 className="mt-4 text-3xl font-black text-gray-900">Keep More Earnings. Teach Better-Fit Students.</h2>
             <p className="mt-3 text-sm leading-6 text-gray-600">
-              Sign up to join our tutor network in Singapore. After profile review, you can browse matching cases and apply based on your subject strength and schedule.
+              Join our Singapore tutor network with a fee model and matching process designed to help you grow sustainable, high-quality assignments.
             </p>
             <ul className="mt-5 space-y-2.5 text-sm text-gray-700">
-              <li>• Assignment alerts based on your profile</li>
-              <li>• Choose the cases you want to take</li>
-              <li>• Clear onboarding flow with document submission</li>
-              <li>• Ongoing opportunities for primary to JC levels</li>
+              <li>• 25% service fee applies only for your first 2 months per assignment</li>
+              <li>• Better-fit parent and student matching by subject, level, and teaching style</li>
+              <li>• Less mismatch, smoother lessons, stronger retention</li>
+              <li>• Assignment alerts and clear onboarding workflow</li>
             </ul>
 
             <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
@@ -157,26 +164,38 @@ export const TutorSignup: React.FC = () => {
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-green-700">Why Tutors Choose Integrated Learnings</p>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-green-100 bg-white p-3">
-                  <p className="text-xs font-bold text-gray-900">With Us</p>
+                  <p className="text-xs font-bold text-gray-900">Our Approach</p>
                   <ul className="mt-2 space-y-1 text-xs leading-5 text-gray-700">
-                    <li>• Profile-based case matching</li>
-                    <li>• You decide which assignments to take</li>
-                    <li>• Clear onboarding and review standards</li>
-                    <li>• Built-in dashboard and case workflow</li>
+                    <li>• 25% fee for first 2 months, then you keep more</li>
+                    <li>• Profile-based matching for stronger tutor-student fit</li>
+                    <li>• You decide which assignments to accept</li>
+                    <li>• Structured onboarding and case workflow</li>
                   </ul>
                 </div>
                 <div className="rounded-lg border border-gray-200 bg-white p-3">
-                  <p className="text-xs font-bold text-gray-900">Typical Agency Friction</p>
+                  <p className="text-xs font-bold text-gray-900">What This Means For You</p>
                   <ul className="mt-2 space-y-1 text-xs leading-5 text-gray-700">
-                    <li>• Generic blast messages for all tutors</li>
-                    <li>• Limited visibility into fit before applying</li>
-                    <li>• Unclear onboarding sequence</li>
-                    <li>• Manual follow-up with slower turnaround</li>
+                    <li>• Better lesson fit and smoother first sessions</li>
+                    <li>• More consistent student retention potential</li>
+                    <li>• Clear expectations before each assignment</li>
+                    <li>• Less admin friction in your teaching workflow</li>
                   </ul>
                 </div>
               </div>
               <p className="mt-3 text-xs text-green-800">
                 Best fit for tutors who want structured matching, faster case handling, and long-term parent demand.
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-amber-700">Key Tutor Policy Highlights</p>
+              <ul className="mt-2 space-y-1.5 text-xs leading-5 text-gray-700">
+                <li>• Service fee: 25% during the first 2 months of each assignment.</li>
+                <li>• Tutors must provide accurate profile details and credentials during onboarding.</li>
+                <li>• Professional conduct and parent communication standards apply to all assignments.</li>
+              </ul>
+              <p className="mt-2 text-xs text-gray-600">
+                Full terms are available at <Link to="/tuition/policies" className="font-semibold text-amber-700 underline hover:text-amber-800">Tutor Policies</Link>.
               </p>
             </div>
           </div>
@@ -383,6 +402,31 @@ export const TutorSignup: React.FC = () => {
                 {fieldErrors.phone && (
                   <p id="tutor-signup-phone-error" className="text-xs text-red-600 mt-1">
                     {fieldErrors.phone}
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+                <label className="flex items-start gap-2 text-sm text-gray-700">
+                  <input
+                    id="tutor-signup-accept-policies"
+                    type="checkbox"
+                    name="acceptPolicies"
+                    checked={formData.acceptPolicies}
+                    onChange={handleChange}
+                    aria-invalid={!!fieldErrors.acceptPolicies}
+                    aria-describedby={fieldErrors.acceptPolicies ? 'tutor-signup-accept-policies-error' : undefined}
+                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                  />
+                  <span>
+                    I confirm that I have read and agree to the tutor policy terms, including the 25% service fee for the first 2 months of each assignment.
+                    {' '}
+                    <Link to="/tuition/policies" className="font-semibold text-green-700 underline hover:text-green-800">View policy</Link>
+                  </span>
+                </label>
+                {fieldErrors.acceptPolicies && (
+                  <p id="tutor-signup-accept-policies-error" className="text-xs text-red-600 mt-2">
+                    {fieldErrors.acceptPolicies}
                   </p>
                 )}
               </div>
