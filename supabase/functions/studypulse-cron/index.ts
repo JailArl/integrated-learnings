@@ -23,6 +23,14 @@ function getSGTime() {
   const now = new Date();
   return new Date(now.getTime() + 8 * 60 * 60 * 1000);
 }
+
+function normalizePhone(raw) {
+  if (!raw) return "";
+  const digits = String(raw).replace(/\D/g, "");
+  if (!digits) return "";
+  // SG numbers are typically 8 digits; keep last 8 for robust matching.
+  return digits.length > 8 ? digits.slice(-8) : digits;
+}
 // ── Parent message translations (Chinese) ──
 const ZH_CRON = {
   followup_reminder: (name)=>`${name} 今天还没有打卡哦。`,
@@ -254,10 +262,16 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
   // Get all children in this level group
   const { data: children } = await sb.from("sq_children").select("id, name, level, whatsapp_number, parent_id, study_days, cca_days").not("whatsapp_number", "is", null);
   if (!children) return 0;
+
+  // Guardrail: never send child check-ins to numbers already registered as parent numbers.
+  const { data: parentPhones } = await sb.from("sq_memberships").select("parent_phone").not("parent_phone", "is", null);
+  const parentPhoneSet = new Set((parentPhones || []).map((p)=>normalizePhone(p.parent_phone)).filter(Boolean));
+
   let sent = 0;
   for (const child of children){
     if (getLevelGroup(child.level) !== levelGroup) continue;
     if (!child.whatsapp_number) continue;
+    if (parentPhoneSet.has(normalizePhone(child.whatsapp_number))) continue;
     // Check plan
     const { data: membership } = await sb.from("sq_memberships").select("plan_type").eq("user_id", child.parent_id).single();
     const { data: settings } = await sb.from("sq_study_settings").select("commence_date, check_completion_time").eq("child_id", child.id).single();
@@ -378,11 +392,16 @@ async function sendFollowupReminders(sb, levelGroup, today) {
   // Find children who were prompted but haven't replied
   const { data: pending } = await sb.from("sq_checkins").select("id, child_id, prompt_sent_at, target_quantity, target_unit, subject_reported").eq("checkin_date", today).eq("status", "pending").not("prompt_sent_at", "is", null);
   if (!pending) return 0;
+
+  const { data: parentPhones } = await sb.from("sq_memberships").select("parent_phone").not("parent_phone", "is", null);
+  const parentPhoneSet = new Set((parentPhones || []).map((p)=>normalizePhone(p.parent_phone)).filter(Boolean));
+
   let reminded = 0;
   for (const checkin of pending){
     const { data: child } = await sb.from("sq_children").select("name, level, whatsapp_number, parent_id").eq("id", checkin.child_id).single();
     if (!child || getLevelGroup(child.level) !== levelGroup) continue;
     if (!child.whatsapp_number) continue;
+    if (parentPhoneSet.has(normalizePhone(child.whatsapp_number))) continue;
     // Send a gentle nudge to the kid
     const qty = Number(checkin.target_quantity || 0);
     const unit = checkin.target_unit || "";

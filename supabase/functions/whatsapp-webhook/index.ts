@@ -300,36 +300,38 @@ serve(async (req)=>{
       sb.from("sq_children").select("id, name, parent_id, level, conversation_state, conversation_context, study_days").eq("whatsapp_number", phone).single(),
       sb.from("sq_memberships").select("user_id, parent_name, preferred_language").eq("parent_phone", phone).single()
     ]);
-    // If this number is a registered parent number and they are activating parent updates,
-    // acknowledge immediately (even if this phone is also stored as a child number by mistake).
-    if (phoneMembership && isParentActivationIntent(body)) {
+    const parsedParent = parseCheckinStatus(body);
+
+    // Parent lane has priority: if a number is registered as a parent number,
+    // never process it as a child channel (even if mistakenly duplicated in sq_children).
+    if (phoneMembership) {
       const pLang = phoneMembership.preferred_language || "en";
       const parentName = phoneMembership.parent_name || "Parent";
-      const ack = pLang === "zh" ? `✅ ${parentName}，家长周报已启用。之后我们会把每周总结发到这个号码。\n\n如果要启用孩子每日打卡，请让孩子用自己的手机发送孩子激活链接。` : `✅ Parent updates activated, ${parentName}. We'll send weekly summaries to this WhatsApp number.\n\nFor child daily check-ins, your child must send the child activation message from their own phone.`;
-      await sendRaw(phone, ack);
+
+      if (isParentActivationIntent(body)) {
+        const ack = pLang === "zh" ? `✅ ${parentName}，家长周报已启用。之后我们会把每周总结发到这个号码。\n\n如果要启用孩子每日打卡，请让孩子用自己的手机发送孩子激活链接。` : `✅ Parent updates activated, ${parentName}. We'll send weekly summaries to this WhatsApp number.\n\nFor child daily check-ins, your child must send the child activation message from their own phone.`;
+        await sendRaw(phone, ack);
+        return ok();
+      }
+
+      if (parsedParent?.status === "parent_confirm" || parsedParent?.status === "parent_adjust") {
+        await handleParentReply(sb, phoneMembership, parsedParent.status, phone, pLang);
+        return ok();
+      }
+
+      if (isChildActivationIntent(body)) {
+        const msg = pLang === "zh" ? `这个号码是家长账号。\n\n如要启用孩子每日打卡，请让孩子用自己的手机点击孩子激活链接并发送第一条消息。` : `This number is registered as the parent account.\n\nTo activate child daily check-ins, your child must send the child activation message from their own phone.`;
+        await sendRaw(phone, msg);
+        return ok();
+      }
+
+      // Friendly fallback for parent messages and dual-registered number protection.
+      const help = pLang === "zh" ? `已收到您的消息 ✅\n\n您可以：\n• 发送 *CONFIRM* 确认本周记录\n• 发送 *ADJUST* 要求调整\n\n家长周报会发到这个号码。` : `Message received ✅\n\nYou can reply with:\n• *CONFIRM* to confirm this week's record\n• *ADJUST* if something needs correction\n\nYour weekly parent summary will be sent to this number.`;
+      await sendRaw(phone, help);
       return ok();
     }
+
     if (!child) {
-      // Check if parent (for activation help + CONFIRM/ADJUST)
-      const membership = phoneMembership;
-      if (membership) {
-        if (isChildActivationIntent(body)) {
-          const pLang = membership.preferred_language || "en";
-          const msg = pLang === "zh" ? `这个号码是家长账号。\n\n如要启用孩子每日打卡，请让孩子用自己的手机点击孩子激活链接并发送第一条消息。` : `This number is registered as the parent account.\n\nTo activate child daily check-ins, your child must send the child activation message from their own phone.`;
-          await sendRaw(phone, msg);
-          return ok();
-        }
-        const parsed = parseCheckinStatus(body);
-        if (parsed?.status === "parent_confirm" || parsed?.status === "parent_adjust") {
-          const pLang = membership.preferred_language || "en";
-          await handleParentReply(sb, membership, parsed.status, phone, pLang);
-          return ok();
-        }
-        // Friendly fallback for first-time parent messages.
-        const pLang = membership.preferred_language || "en";
-        const help = pLang === "zh" ? `已收到您的消息 ✅\n\n您可以：\n• 发送 *CONFIRM* 确认本周记录\n• 发送 *ADJUST* 要求调整\n\n家长周报会发到这个号码。` : `Message received ✅\n\nYou can reply with:\n• *CONFIRM* to confirm this week's record\n• *ADJUST* if something needs correction\n\nYour weekly parent summary will be sent to this number.`;
-        await sendRaw(phone, help);
-      }
       return ok();
     }
     const state = child.conversation_state || "idle";
