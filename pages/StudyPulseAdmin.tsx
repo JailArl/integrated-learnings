@@ -42,6 +42,7 @@ interface MembershipRow {
   parent_email: string;
   parent_phone: string;
   preferred_language?: 'en' | 'zh';
+  current_period_end?: string | null;
   created_at: string;
 }
 interface ChildRow {
@@ -116,6 +117,8 @@ const StudyPulseAdmin: React.FC = () => {
   const [previewLangMode, setPreviewLangMode] = useState<'auto' | 'en' | 'zh'>('auto');
   const [expandedRequestKey, setExpandedRequestKey] = useState<string | null>(null);
   const [updatingRequestKey, setUpdatingRequestKey] = useState<string | null>(null);
+  const [updatingMembershipId, setUpdatingMembershipId] = useState<string | null>(null);
+  const [membershipActionMessage, setMembershipActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -240,6 +243,66 @@ const StudyPulseAdmin: React.FC = () => {
     if (table === 'sq_diagnostic_requests') setDiagReqs((prev) => applyStatus(prev));
     if (table === 'sq_crash_course_interest') setCrashReqs((prev) => applyStatus(prev));
     if (table === 'sq_holiday_programme_interest') setHolidayReqs((prev) => applyStatus(prev));
+  };
+
+  const setMembershipPlan = async (membership: MembershipRow, target: 'premium' | 'free') => {
+    if (!supabase) return;
+
+    const isPremiumTarget = target === 'premium';
+    const actionLabel = isPremiumTarget ? 'grant premium access' : 'revert this account to free';
+    const owner = membership.parent_name || membership.parent_email || membership.user_id;
+    const confirmed = window.confirm(`Confirm: ${actionLabel} for ${owner}?`);
+    if (!confirmed) return;
+
+    setMembershipActionMessage(null);
+    setUpdatingMembershipId(membership.id);
+
+    const nowIso = new Date().toISOString();
+    const currentPeriodEndIso = membership.current_period_end && !Number.isNaN(new Date(membership.current_period_end).getTime())
+      ? membership.current_period_end
+      : null;
+    const defaultPremiumEndIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
+    const payload = isPremiumTarget
+      ? {
+          plan_type: 'premium',
+          status: 'premium_active',
+          current_period_end: currentPeriodEndIso || defaultPremiumEndIso,
+          updated_at: nowIso,
+        }
+      : {
+          plan_type: 'free',
+          status: 'free',
+          current_period_end: null,
+          updated_at: nowIso,
+        };
+
+    const { error } = await supabase
+      .from('sq_memberships')
+      .update(payload)
+      .eq('id', membership.id);
+
+    setUpdatingMembershipId(null);
+    if (error) {
+      setMembershipActionMessage({ type: 'error', text: `Could not update membership: ${error.message}` });
+      return;
+    }
+
+    setMemberships((prev) => prev.map((row) => (
+      row.id === membership.id
+        ? {
+            ...row,
+            ...payload,
+          }
+        : row
+    )));
+
+    setMembershipActionMessage({
+      type: 'success',
+      text: isPremiumTarget
+        ? 'Premium access granted successfully.'
+        : 'Account reverted to free successfully.',
+    });
   };
 
   const previewParent = memberships.find(m => m.user_id === previewParentId) || null;
@@ -633,6 +696,11 @@ const StudyPulseAdmin: React.FC = () => {
         {/* ═══════════ MEMBERS TAB ═══════════ */}
         {adminTab === 'members' && (
           <div>
+            {membershipActionMessage && (
+              <div className={`mb-4 rounded-xl border px-4 py-3 text-xs font-semibold ${membershipActionMessage.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                {membershipActionMessage.text}
+              </div>
+            )}
             {/* Filters */}
             <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
               <div className="relative flex-1">
@@ -687,6 +755,27 @@ const StudyPulseAdmin: React.FC = () => {
                           <td colSpan={6} className="bg-slate-50 px-6 py-4">
                             <div className="space-y-3">
                               <p className="text-xs text-slate-500"><strong>Phone:</strong> {m.parent_phone || '—'}</p>
+                              <div className="flex flex-wrap gap-2">
+                                {m.status !== 'premium_active' ? (
+                                  <button
+                                    type="button"
+                                    disabled={updatingMembershipId === m.id}
+                                    onClick={() => setMembershipPlan(m, 'premium')}
+                                    className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
+                                  >
+                                    {updatingMembershipId === m.id ? 'Saving...' : 'Grant Premium'}
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    disabled={updatingMembershipId === m.id}
+                                    onClick={() => setMembershipPlan(m, 'free')}
+                                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                                  >
+                                    {updatingMembershipId === m.id ? 'Saving...' : 'Revert to Free'}
+                                  </button>
+                                )}
+                              </div>
                               {kids.map((k) => {
                                 const subs = subjects.filter(s => s.child_id === k.id);
                                 return (
