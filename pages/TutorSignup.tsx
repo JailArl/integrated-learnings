@@ -127,7 +127,33 @@ export const TutorSignup: React.FC = () => {
       />
       
       <Section className="bg-gradient-to-br from-green-50 to-slate-50 py-12">
-        <div className="max-w-md mx-auto">
+        <div className="max-w-5xl mx-auto grid gap-8 lg:grid-cols-[1fr,1.1fr]">
+          <div className="rounded-2xl border border-green-200 bg-white p-7 shadow-sm">
+            <p className="inline-flex rounded-full bg-green-100 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-green-700">
+              For New Tutors
+            </p>
+            <h2 className="mt-4 text-3xl font-black text-gray-900">Get Matched With Real Parent Requests</h2>
+            <p className="mt-3 text-sm leading-6 text-gray-600">
+              Sign up to join our tutor network in Singapore. After profile review, you can browse matching cases and apply based on your subject strength and schedule.
+            </p>
+            <ul className="mt-5 space-y-2.5 text-sm text-gray-700">
+              <li>• Assignment alerts based on your profile</li>
+              <li>• Choose the cases you want to take</li>
+              <li>• Clear onboarding flow with document submission</li>
+              <li>• Ongoing opportunities for primary to JC levels</li>
+            </ul>
+
+            <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-gray-600">How It Works</p>
+              <ol className="mt-2 space-y-1.5 text-sm text-gray-700">
+                <li>1. Create your account</li>
+                <li>2. Complete onboarding and credentials</li>
+                <li>3. Get reviewed and approved</li>
+                <li>4. Start applying for matched assignments</li>
+              </ol>
+            </div>
+          </div>
+
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-200">
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Educator Signup</h2>

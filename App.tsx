@@ -11,6 +11,7 @@ import StudyPulseApp from './pages/StudyPulseApp';
 import StudyPulseSetup from './pages/StudyPulseSetup';
 import StudyPulseAdmin from './pages/StudyPulseAdmin';
 import StudyPulseLogin from './pages/StudyPulseLogin';
+import TuitionRequestLanding from './pages/TuitionRequestLanding';
 import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
 import Pricing from './pages/Pricing';
 import { AdminDashboard } from './pages/AdminDashboard'; 
@@ -154,7 +155,7 @@ const App: React.FC = () => {
           <Route path="/tuition/teach" element={<TutorLanding />} />
           <Route path="/tuition/about" element={<Navigate to="/tuition" replace />} />
           <Route path="/tuition/contact" element={<Contact />} />
-          <Route path="/tuition/request" element={<Navigate to="/tuition#parent-inquiry" replace />} />
+          <Route path="/tuition/request" element={<TuitionRequestLanding />} />
           <Route path="/tuition/specialized-request" element={<Navigate to="/tuition#parent-inquiry" replace />} />
           <Route path="/tuition/extra" element={<ExtraLearnings />} />
           <Route path="/zh" element={<InternationalStudents />} />
