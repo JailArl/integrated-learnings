@@ -43,7 +43,17 @@ interface MembershipRow {
   parent_phone: string;
   preferred_language?: 'en' | 'zh';
   current_period_end?: string | null;
+  stripe_customer_id?: string | null;
+  stripe_subscription_id?: string | null;
   created_at: string;
+}
+
+interface StripeSubscriptionStatus {
+  ok: boolean;
+  status?: string;
+  cancel_at_period_end?: boolean;
+  current_period_end?: string | null;
+  error?: string;
 }
 interface ChildRow {
   id: string;
@@ -91,6 +101,14 @@ const badge = (type: string) => {
   return map[type] || 'bg-slate-100 text-slate-500';
 };
 
+const hasPaidAccess = (membership: MembershipRow): boolean => {
+  if (membership.status !== 'premium_active') return false;
+  if (!membership.current_period_end) return true;
+  const endsAt = new Date(membership.current_period_end).getTime();
+  if (Number.isNaN(endsAt)) return true;
+  return endsAt > Date.now();
+};
+
 /* ═══════════════════════════════════════════ */
 const StudyPulseAdmin: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -119,6 +137,8 @@ const StudyPulseAdmin: React.FC = () => {
   const [updatingRequestKey, setUpdatingRequestKey] = useState<string | null>(null);
   const [updatingMembershipId, setUpdatingMembershipId] = useState<string | null>(null);
   const [membershipActionMessage, setMembershipActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [subscriptionStatusMap, setSubscriptionStatusMap] = useState<Record<string, StripeSubscriptionStatus>>({});
+  const [syncingSubscriptionState, setSyncingSubscriptionState] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -153,6 +173,54 @@ const StudyPulseAdmin: React.FC = () => {
       setLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    const subIds = Array.from(new Set(memberships.map((m) => m.stripe_subscription_id).filter(Boolean) as string[]));
+    if (subIds.length === 0) {
+      setSubscriptionStatusMap({});
+      return;
+    }
+
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) return;
+
+    let cancelled = false;
+    (async () => {
+      setSyncingSubscriptionState(true);
+      try {
+        const response = await fetch('/api/stripe/admin-subscriptions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ action: 'status', subscriptionIds: subIds }),
+        });
+
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (!cancelled) {
+            setMembershipActionMessage({ type: 'error', text: payload?.error || 'Could not sync Stripe status for memberships.' });
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setSubscriptionStatusMap(payload?.statuses || {});
+        }
+      } catch (error: any) {
+        if (!cancelled) {
+          setMembershipActionMessage({ type: 'error', text: error?.message || 'Could not sync Stripe status for memberships.' });
+        }
+      } finally {
+        if (!cancelled) setSyncingSubscriptionState(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [memberships]);
 
   useEffect(() => {
     if (!previewParentId) return;
@@ -303,6 +371,88 @@ const StudyPulseAdmin: React.FC = () => {
         ? 'Premium access granted successfully.'
         : 'Account reverted to free successfully.',
     });
+  };
+
+  const runStripeSubscriptionAction = async (
+    membership: MembershipRow,
+    action: 'cancel_at_period_end' | 'resume_auto_renew' | 'cancel_now'
+  ) => {
+    if (!membership.stripe_subscription_id) {
+      setMembershipActionMessage({ type: 'error', text: 'This account has no recurring Stripe subscription to manage.' });
+      return;
+    }
+
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      setMembershipActionMessage({ type: 'error', text: 'Admin session expired. Please log in again.' });
+      return;
+    }
+
+    const actionLabelMap = {
+      cancel_at_period_end: 'turn off auto-renew at period end',
+      resume_auto_renew: 'resume auto-renew',
+      cancel_now: 'cancel premium immediately',
+    } as const;
+
+    const owner = membership.parent_name || membership.parent_email || membership.user_id;
+    const confirmed = window.confirm(`Confirm: ${actionLabelMap[action]} for ${owner}?`);
+    if (!confirmed) return;
+
+    setUpdatingMembershipId(membership.id);
+    setMembershipActionMessage(null);
+    try {
+      const response = await fetch('/api/stripe/admin-subscriptions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ action, subscriptionId: membership.stripe_subscription_id }),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setMembershipActionMessage({ type: 'error', text: payload?.error || 'Could not update Stripe subscription.' });
+        return;
+      }
+
+      const nextSubscriptionState: StripeSubscriptionStatus = {
+        ok: true,
+        status: payload?.status,
+        cancel_at_period_end: payload?.cancel_at_period_end,
+        current_period_end: payload?.current_period_end || null,
+      };
+
+      setSubscriptionStatusMap((prev) => ({
+        ...prev,
+        [membership.stripe_subscription_id as string]: nextSubscriptionState,
+      }));
+
+      if (action === 'cancel_now') {
+        setMemberships((prev) => prev.map((row) => (
+          row.id === membership.id
+            ? {
+                ...row,
+                plan_type: 'free',
+                status: 'premium_cancelled',
+                current_period_end: payload?.current_period_end || row.current_period_end || null,
+              }
+            : row
+        )));
+      }
+
+      const successText =
+        action === 'cancel_at_period_end'
+          ? 'Auto-renew is now turned off (subscription ends at period end).'
+          : action === 'resume_auto_renew'
+            ? 'Auto-renew resumed successfully.'
+            : 'Subscription cancelled immediately and membership updated.';
+      setMembershipActionMessage({ type: 'success', text: successText });
+    } catch (error: any) {
+      setMembershipActionMessage({ type: 'error', text: error?.message || 'Could not update Stripe subscription.' });
+    } finally {
+      setUpdatingMembershipId(null);
+    }
   };
 
   const previewParent = memberships.find(m => m.user_id === previewParentId) || null;
@@ -715,6 +865,9 @@ const StudyPulseAdmin: React.FC = () => {
                 ))}
               </div>
             </div>
+            {syncingSubscriptionState && (
+              <p className="mb-3 text-xs text-slate-500">Syncing recurring Stripe status...</p>
+            )}
 
             {/* Memberships table */}
             <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -724,19 +877,35 @@ const StudyPulseAdmin: React.FC = () => {
                 <tr className="border-b border-slate-100 bg-slate-50">
                   <th className="px-4 py-3 font-bold text-slate-500"></th>
                   <th className="px-4 py-3 font-bold text-slate-500">Parent</th>
+                  <th className="px-4 py-3 font-bold text-slate-500">Paid</th>
                   <th className="px-4 py-3 font-bold text-slate-500">Plan</th>
                   <th className="px-4 py-3 font-bold text-slate-500">Status</th>
+                  <th className="px-4 py-3 font-bold text-slate-500">Billing</th>
+                  <th className="px-4 py-3 font-bold text-slate-500">Auto-renew</th>
                   <th className="px-4 py-3 font-bold text-slate-500">Children</th>
                   <th className="px-4 py-3 font-bold text-slate-500">Joined</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-400">No memberships found.</td></tr>
+                  <tr><td colSpan={9} className="px-4 py-8 text-center text-sm text-slate-400">No memberships found.</td></tr>
                 )}
                 {filtered.map((m) => {
                   const kids = children.filter(c => c.parent_id === m.user_id);
                   const expanded = expandedId === m.id;
+                  const paid = hasPaidAccess(m);
+                  const recurring = !!m.stripe_subscription_id;
+                  const stripeStatus = recurring && m.stripe_subscription_id ? subscriptionStatusMap[m.stripe_subscription_id] : undefined;
+                  const autoRenewLabel = !recurring
+                    ? '—'
+                    : stripeStatus?.ok
+                      ? (stripeStatus.cancel_at_period_end ? 'Off (ends period)' : 'On')
+                      : 'Unknown';
+                  const billingLabel = recurring
+                    ? 'Recurring'
+                    : m.plan_type === 'premium'
+                      ? 'One-time pass'
+                      : 'Free';
                   return (
                     <React.Fragment key={m.id}>
                       <tr className="border-b border-slate-50 hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedId(expanded ? null : m.id)}>
@@ -745,16 +914,22 @@ const StudyPulseAdmin: React.FC = () => {
                           <p className="font-semibold text-slate-900">{m.parent_name || '—'}</p>
                           <p className="text-xs text-slate-400">{m.parent_email}</p>
                         </td>
+                        <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${paid ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{paid ? 'paid' : 'not paid'}</span></td>
                         <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${badge(m.plan_type)}`}>{m.plan_type}</span></td>
                         <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${badge(m.status)}`}>{m.status}</span></td>
+                        <td className="px-4 py-3 text-xs text-slate-600">{billingLabel}</td>
+                        <td className="px-4 py-3 text-xs text-slate-600">{autoRenewLabel}</td>
                         <td className="px-4 py-3 font-semibold">{kids.length}</td>
                         <td className="px-4 py-3 text-xs text-slate-400">{m.created_at?.split('T')[0]}</td>
                       </tr>
                       {expanded && (
                         <tr>
-                          <td colSpan={6} className="bg-slate-50 px-6 py-4">
+                          <td colSpan={9} className="bg-slate-50 px-6 py-4">
                             <div className="space-y-3">
                               <p className="text-xs text-slate-500"><strong>Phone:</strong> {m.parent_phone || '—'}</p>
+                              <p className="text-xs text-slate-500"><strong>Stripe Customer:</strong> {m.stripe_customer_id || '—'}</p>
+                              <p className="text-xs text-slate-500"><strong>Stripe Subscription:</strong> {m.stripe_subscription_id || '—'}</p>
+                              <p className="text-xs text-slate-500"><strong>Period End:</strong> {(stripeStatus?.current_period_end || m.current_period_end || '—') ? String(stripeStatus?.current_period_end || m.current_period_end || '—').split('T')[0] : '—'}</p>
                               <div className="flex flex-wrap gap-2">
                                 {m.status !== 'premium_active' ? (
                                   <button
@@ -774,6 +949,34 @@ const StudyPulseAdmin: React.FC = () => {
                                   >
                                     {updatingMembershipId === m.id ? 'Saving...' : 'Revert to Free'}
                                   </button>
+                                )}
+                                {m.stripe_subscription_id && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={updatingMembershipId === m.id || stripeStatus?.cancel_at_period_end === true}
+                                      onClick={() => runStripeSubscriptionAction(m, 'cancel_at_period_end')}
+                                      className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-[11px] font-bold text-amber-700 hover:bg-amber-100 disabled:opacity-60"
+                                    >
+                                      {updatingMembershipId === m.id ? 'Saving...' : 'Turn Off Auto-Renew'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={updatingMembershipId === m.id || stripeStatus?.cancel_at_period_end === false}
+                                      onClick={() => runStripeSubscriptionAction(m, 'resume_auto_renew')}
+                                      className="rounded-lg border border-blue-300 bg-blue-50 px-3 py-1.5 text-[11px] font-bold text-blue-700 hover:bg-blue-100 disabled:opacity-60"
+                                    >
+                                      {updatingMembershipId === m.id ? 'Saving...' : 'Resume Auto-Renew'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={updatingMembershipId === m.id}
+                                      onClick={() => runStripeSubscriptionAction(m, 'cancel_now')}
+                                      className="rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-[11px] font-bold text-red-700 hover:bg-red-100 disabled:opacity-60"
+                                    >
+                                      {updatingMembershipId === m.id ? 'Saving...' : 'Cancel Subscription Now'}
+                                    </button>
+                                  </>
                                 )}
                               </div>
                               {kids.map((k) => {
