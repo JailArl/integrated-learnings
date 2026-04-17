@@ -529,7 +529,7 @@ async function checkExamProximity(sb, today) {
       }
       await sendWhatsApp(membership.parent_phone, undefined, undefined, parentMsg);
       // Kid message (if has WhatsApp)
-      if (child.whatsapp_number) {
+      if (child.whatsapp_number && normalizePhone(child.whatsapp_number) !== normalizePhone(membership.parent_phone)) {
         const kidMsg = daysOut === 1 ? `💪 ${child.name}, your ${subjectName} exam is *TOMORROW*! You've been preparing — trust yourself and rest well tonight!` : daysOut === 3 ? `📝 3 days to ${subjectName} exam! Focus on your toughest topics today.` : `📚 1 week to ${subjectName} exam! Stay consistent — you've got this.`;
         await sendWhatsApp(child.whatsapp_number, undefined, undefined, kidMsg);
       }
@@ -573,7 +573,7 @@ async function checkExamProximity(sb, today) {
         await sendWhatsApp(membership.parent_phone, undefined, undefined, diagMsg);
       }
       // Tell kid well done
-      if (child.whatsapp_number) {
+      if (child.whatsapp_number && normalizePhone(child.whatsapp_number) !== normalizePhone(membership?.parent_phone)) {
         await sendWhatsApp(child.whatsapp_number, undefined, undefined, `${subjectName} exam done! 🎉 Great job finishing it. Take a well-deserved break today! 😊`);
       }
     }
@@ -845,11 +845,11 @@ async function autoCloseStaleCheckins(sb, levelGroup, today) {
       reply_received_at: new Date().toISOString()
     }).eq("id", checkin.id);
     // Soft notify child (no scolding — gentle)
-    if (child.whatsapp_number) {
+    const { data: membership } = await sb.from("sq_memberships").select("parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
+    if (child.whatsapp_number && normalizePhone(child.whatsapp_number) !== normalizePhone(membership?.parent_phone)) {
       await sendWhatsApp(child.whatsapp_number, undefined, undefined, `No worries, ${child.name}! 😴 Looks like you forgot to check in today — that's okay. Tomorrow is a fresh start! 💪`);
     }
     // Notify parent
-    const { data: membership } = await sb.from("sq_memberships").select("parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
     if (membership?.parent_phone) {
       const lang = membership.preferred_language || "en";
       const msg = lang === "zh" ? `📋 ${child.name} 今天没有打卡（已超时）。明天继续加油！` : `📋 ${child.name} didn't check in today — logged as *forgot*. Gentle nudge for tomorrow! 🙂`;

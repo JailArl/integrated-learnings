@@ -14,6 +14,32 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
  *   like "tired" or "sick" and the system will record it.
  */ const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+function normalizePhone(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.length > 8 ? digits.slice(-8) : digits;
+}
+
+function phoneVariants(rawPhone) {
+  const raw = String(rawPhone || "").trim();
+  const digits = raw.replace(/\D/g, "");
+  const last8 = normalizePhone(raw);
+  const variants = new Set();
+
+  if (raw) variants.add(raw);
+  if (digits) {
+    variants.add(digits);
+    variants.add(`+${digits}`);
+  }
+  if (last8) {
+    variants.add(last8);
+    variants.add(`65${last8}`);
+    variants.add(`+65${last8}`);
+  }
+
+  return Array.from(variants).filter(Boolean);
+}
 // ── PARENT MESSAGE TRANSLATIONS (en → zh) ──
 // Kids always get English. Parents get their preferred_language.
 const ZH = {
@@ -296,10 +322,14 @@ serve(async (req)=>{
     });
     if (logError) console.error("Log error:", JSON.stringify(logError));
     // ── LOOKUP CHILD + PARENT NUMBER OWNER ──
-    const [{ data: child }, { data: phoneMembership }] = await Promise.all([
-      sb.from("sq_children").select("id, name, parent_id, level, conversation_state, conversation_context, study_days").eq("whatsapp_number", phone).single(),
-      sb.from("sq_memberships").select("user_id, parent_name, preferred_language").eq("parent_phone", phone).single()
+    const variants = phoneVariants(phone);
+    const [{ data: childRows }, { data: membershipRows }] = await Promise.all([
+      sb.from("sq_children").select("id, name, parent_id, level, conversation_state, conversation_context, study_days, whatsapp_number").in("whatsapp_number", variants).limit(10),
+      sb.from("sq_memberships").select("user_id, parent_name, preferred_language, parent_phone").in("parent_phone", variants).limit(10)
     ]);
+    const normalizedInbound = normalizePhone(phone);
+    const child = (childRows || []).find((row)=>normalizePhone(row.whatsapp_number) === normalizedInbound) || (childRows || [])[0] || null;
+    const phoneMembership = (membershipRows || []).find((row)=>normalizePhone(row.parent_phone) === normalizedInbound) || (membershipRows || [])[0] || null;
     const parsedParent = parseCheckinStatus(body);
 
     // Parent lane has priority: if a number is registered as a parent number,
