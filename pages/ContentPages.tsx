@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { PageHeader, Section, Button, Card } from '../components/Components';
 import { Phone, Mail, Clock, Shield, FileText, AlertCircle, Users, DollarSign, Microscope, Target, BarChart3, CheckCircle2, TrendingUp, Calendar } from 'lucide-react';
 import { POLICY_CONTENT, PRIVACY_POLICY_TEXT } from '../constants';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
 export const About: React.FC = () => (
   <div>
@@ -368,8 +368,15 @@ export const About: React.FC = () => (
 );
 
 export const Policies: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<'parents' | 'tutors'>('parents');
+  const [acknowledged, setAcknowledged] = useState(false);
+
+  const ackFlow = searchParams.get('ackFlow') === 'tutor-signup';
+  const policyFlowState = (location.state as { pendingSignup?: unknown; returnTo?: string } | null) || null;
+  const canContinueSignup = ackFlow && activeTab === 'tutors' && !!policyFlowState?.pendingSignup && !!policyFlowState?.returnTo;
 
   useEffect(() => {
     if (searchParams.get('tab') === 'tutors') {
@@ -390,6 +397,43 @@ export const Policies: React.FC = () => {
               <AlertCircle size={16} className="mr-2" />
               Viewing Tutor Partner Policies. <button onClick={() => setActiveTab('parents')} className="underline ml-2">Switch back to Parent View</button>
             </div>
+          </div>
+        )}
+
+        {canContinueSignup && (
+          <div className="max-w-4xl mx-auto mb-8 rounded-xl border border-green-200 bg-green-50 p-5">
+            <h3 className="text-sm font-bold uppercase tracking-[0.12em] text-green-800">Tutor Signup Policy Acknowledgement</h3>
+            <p className="mt-2 text-sm text-slate-700">
+              Please review the tutor policies below. To continue your account creation, acknowledge that you accept these terms, including the 25% service fee for the first 2 months of each assignment.
+            </p>
+            <label className="mt-4 flex items-start gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={acknowledged}
+                onChange={(e) => setAcknowledged(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+              />
+              I have read and agree to the tutor policy terms.
+            </label>
+            <button
+              onClick={() => {
+                if (!acknowledged || !policyFlowState?.returnTo || !policyFlowState?.pendingSignup) return;
+                navigate(`${policyFlowState.returnTo}?policyAck=1`, {
+                  state: {
+                    policyAck: true,
+                    pendingSignup: policyFlowState.pendingSignup,
+                  },
+                });
+              }}
+              disabled={!acknowledged}
+              className={`mt-4 inline-flex items-center rounded-lg px-4 py-2 text-sm font-bold transition ${
+                acknowledged
+                  ? 'bg-green-600 text-white hover:bg-green-700'
+                  : 'cursor-not-allowed bg-green-200 text-green-800'
+              }`}
+            >
+              Acknowledge & Continue Signup
+            </button>
           </div>
         )}
 

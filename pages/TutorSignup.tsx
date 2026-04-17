@@ -1,11 +1,22 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { signUpTutor } from '../services/auth';
 import { PageHeader, Section } from '../components/Components';
 import { Mail, Lock, Phone, User, Calendar, UserCircle } from 'lucide-react';
 
+type PendingTutorSignup = {
+  fullName: string;
+  email: string;
+  password: string;
+  phone: string;
+  dateOfBirth: string;
+  gender: string;
+};
+
 export const TutorSignup: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -14,7 +25,6 @@ export const TutorSignup: React.FC = () => {
     phone: '',
     dateOfBirth: '',
     gender: '',
-    acceptPolicies: false,
   });
   const [fieldErrors, setFieldErrors] = useState<{
     fullName?: string;
@@ -24,15 +34,57 @@ export const TutorSignup: React.FC = () => {
     phone?: string;
     dateOfBirth?: string;
     gender?: string;
-    acceptPolicies?: string;
   }>({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const runSignup = async (payload: PendingTutorSignup) => {
+    setLoading(true);
+    const result = await signUpTutor(
+      payload.email,
+      payload.password,
+      {
+        fullName: payload.fullName,
+        phone: payload.phone,
+        dateOfBirth: payload.dateOfBirth,
+        gender: payload.gender,
+      }
+    );
+
+    setLoading(false);
+
+    if (!result.success) {
+      setError(result.error || 'Signup failed');
+      return;
+    }
+
+    if (result.needsEmailVerification) {
+      setSuccess('Account created. Please verify your email first, then log in to complete onboarding.');
+      setTimeout(() => navigate('/tutors/login'), 1200);
+      return;
+    }
+
+    setSuccess('Account created successfully. Redirecting you to onboarding...');
+    setTimeout(() => navigate('/tutors/onboarding'), 500);
+  };
+
+  React.useEffect(() => {
+    const shouldContinueFromPolicy = searchParams.get('policyAck') === '1';
+    const state = location.state as { policyAck?: boolean; pendingSignup?: PendingTutorSignup } | null;
+
+    if (!shouldContinueFromPolicy || !state?.policyAck || !state.pendingSignup) return;
+
+    setError('');
+    setSuccess('Policy acknowledged. Creating your account...');
+    void runSignup(state.pendingSignup);
+    navigate('/tutors/signup', { replace: true });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, location.state]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, type } = e.target;
-    const value = type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
+    const { name } = e.target;
+    const value = e.target.value;
     setFormData({ ...formData, [name]: value });
     if (fieldErrors[e.target.name as keyof typeof fieldErrors]) {
       setFieldErrors({ ...fieldErrors, [e.target.name]: undefined });
@@ -72,9 +124,6 @@ export const TutorSignup: React.FC = () => {
     if (!formData.phone.trim()) {
       nextErrors.phone = 'Phone number is required.';
     }
-    if (!formData.acceptPolicies) {
-      nextErrors.acceptPolicies = 'You must accept the tutor policy terms to continue.';
-    }
 
     // Age validation
     if (formData.dateOfBirth) {
@@ -96,34 +145,21 @@ export const TutorSignup: React.FC = () => {
     }
     setFieldErrors({});
 
-    setLoading(true);
+    const pendingSignup: PendingTutorSignup = {
+      fullName: formData.fullName,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone,
+      dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
+    };
 
-    const result = await signUpTutor(
-      formData.email,
-      formData.password,
-      {
-        fullName: formData.fullName,
-        phone: formData.phone,
-        dateOfBirth: formData.dateOfBirth,
-        gender: formData.gender,
-      }
-    );
-
-    setLoading(false);
-
-    if (!result.success) {
-      setError(result.error || 'Signup failed');
-      return;
-    }
-
-    if (result.needsEmailVerification) {
-      setSuccess('Account created. Please verify your email first, then log in to complete onboarding.');
-      setTimeout(() => navigate('/tutors/login'), 1200);
-      return;
-    }
-
-    setSuccess('Account created successfully. Redirecting you to onboarding...');
-    setTimeout(() => navigate('/tutors/onboarding'), 500);
+    navigate('/tuition/policies?tab=tutors&ackFlow=tutor-signup', {
+      state: {
+        pendingSignup,
+        returnTo: '/tutors/signup',
+      },
+    });
   };
 
   return (
@@ -406,31 +442,6 @@ export const TutorSignup: React.FC = () => {
                 )}
               </div>
 
-              <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-                <label className="flex items-start gap-2 text-sm text-gray-700">
-                  <input
-                    id="tutor-signup-accept-policies"
-                    type="checkbox"
-                    name="acceptPolicies"
-                    checked={formData.acceptPolicies}
-                    onChange={handleChange}
-                    aria-invalid={!!fieldErrors.acceptPolicies}
-                    aria-describedby={fieldErrors.acceptPolicies ? 'tutor-signup-accept-policies-error' : undefined}
-                    className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                  />
-                  <span>
-                    I confirm that I have read and agree to the tutor policy terms, including the 25% service fee for the first 2 months of each assignment.
-                    {' '}
-                    <Link to="/tuition/policies" className="font-semibold text-green-700 underline hover:text-green-800">View policy</Link>
-                  </span>
-                </label>
-                {fieldErrors.acceptPolicies && (
-                  <p id="tutor-signup-accept-policies-error" className="text-xs text-red-600 mt-2">
-                    {fieldErrors.acceptPolicies}
-                  </p>
-                )}
-              </div>
-
               <button
                 type="submit"
                 disabled={loading}
@@ -440,7 +451,7 @@ export const TutorSignup: React.FC = () => {
                     : 'bg-green-600 hover:bg-green-700 active:bg-green-800'
                 }`}
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? 'Creating Account...' : 'Create Account & Review Policies'}
               </button>
             </form>
 
