@@ -140,6 +140,7 @@ const StudyPulseAdmin: React.FC = () => {
   const [membershipActionMessage, setMembershipActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [subscriptionStatusMap, setSubscriptionStatusMap] = useState<Record<string, StripeSubscriptionStatus>>({});
   const [syncingSubscriptionState, setSyncingSubscriptionState] = useState(false);
+  const [disputeGateAcknowledged, setDisputeGateAcknowledged] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -242,6 +243,13 @@ const StudyPulseAdmin: React.FC = () => {
   const totalChildren = children.length;
   const totalReqs = tutorReqs.length + diagReqs.length + crashReqs.length + holidayReqs.length + accountDisputeReqs.length;
   const openAccountDisputes = accountDisputeReqs.filter((r) => (r.status || 'pending') !== 'contacted').length;
+  const nonDisputeRequestActionsBlocked = openAccountDisputes > 0 && !disputeGateAcknowledged;
+
+  useEffect(() => {
+    if (openAccountDisputes === 0 && disputeGateAcknowledged) {
+      setDisputeGateAcknowledged(false);
+    }
+  }, [openAccountDisputes, disputeGateAcknowledged]);
 
   // ── Monitoring analytics ──
   const todayStr = new Date().toISOString().split('T')[0];
@@ -1029,6 +1037,16 @@ const StudyPulseAdmin: React.FC = () => {
             <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
               <p className="text-xs font-bold text-red-800">Money/Account Disputes Need Attention</p>
               <p className="mt-1 text-xs text-red-700">There {openAccountDisputes === 1 ? 'is' : 'are'} currently {openAccountDisputes} open account dispute case{openAccountDisputes === 1 ? '' : 's'}. Resolve these first to reduce payment-risk issues.</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDisputeGateAcknowledged(true)}
+                  className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-[11px] font-bold text-red-700 hover:bg-red-100"
+                >
+                  Acknowledge and continue
+                </button>
+                <p className="text-[11px] text-red-700">Other CTA queues stay locked until you acknowledge this warning.</p>
+              </div>
             </div>
           )}
           <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
@@ -1059,6 +1077,7 @@ const StudyPulseAdmin: React.FC = () => {
                     const child = findChild(r.child_id);
                     const key = `${section.table}:${r.id}`;
                     const isExpanded = expandedRequestKey === key;
+                    const sectionActionLocked = section.table !== 'sq_account_disputes' && nonDisputeRequestActionsBlocked;
                     // Use embedded fields first (new requests), fall back to join (old requests)
                     const parentName = r.parent_name || parent?.parent_name || r.parent_email || parent?.parent_email || '(No name set)';
                     const parentPhone = r.parent_phone || parent?.parent_phone || 'Not provided';
@@ -1096,20 +1115,25 @@ const StudyPulseAdmin: React.FC = () => {
                             <p className="text-[11px] text-slate-600"><strong className="text-slate-700">Child:</strong> {childName}{childLevel ? ` (${childLevel})` : ''}</p>
                             <p className="text-[11px] text-slate-600"><strong className="text-slate-700">Request Type:</strong> {r.trigger_reason || 'manual_request'}</p>
                             <p className="text-[11px] text-slate-600"><strong className="text-slate-700">Submitted:</strong> {r.created_at ? new Date(r.created_at).toLocaleString('en-SG', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</p>
+                            {sectionActionLocked && (
+                              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800">
+                                Non-dispute actions are temporarily locked until account disputes are acknowledged.
+                              </div>
+                            )}
                             <div className="flex flex-wrap gap-2 pt-1">
                               <button
                                 type="button"
-                                disabled={updatingRequestKey === key}
+                                disabled={updatingRequestKey === key || sectionActionLocked}
                                 onClick={() => markRequestStatus(section.table, r.id, 'contacted')}
-                                className="rounded-lg bg-blue-600 px-2.5 py-1 text-[11px] font-bold text-white disabled:opacity-50"
+                                className="rounded-lg bg-blue-600 px-2.5 py-1 text-[11px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 {updatingRequestKey === key ? 'Saving...' : 'Mark Contacted'}
                               </button>
                               <button
                                 type="button"
-                                disabled={updatingRequestKey === key}
+                                disabled={updatingRequestKey === key || sectionActionLocked}
                                 onClick={() => markRequestStatus(section.table, r.id, 'pending')}
-                                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 disabled:opacity-50"
+                                className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-[11px] font-bold text-slate-600 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 Set Pending
                               </button>
