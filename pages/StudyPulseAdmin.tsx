@@ -241,6 +241,7 @@ const StudyPulseAdmin: React.FC = () => {
   const premCt = memberships.filter(m => m.plan_type !== 'free').length;
   const totalChildren = children.length;
   const totalReqs = tutorReqs.length + diagReqs.length + crashReqs.length + holidayReqs.length + accountDisputeReqs.length;
+  const openAccountDisputes = accountDisputeReqs.filter((r) => (r.status || 'pending') !== 'contacted').length;
 
   // ── Monitoring analytics ──
   const todayStr = new Date().toISOString().split('T')[0];
@@ -526,12 +527,13 @@ const StudyPulseAdmin: React.FC = () => {
 
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
         {/* Stats row */}
-        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {[
             { label: 'Total Parents', value: memberships.length, icon: Users, color: 'bg-blue-100 text-blue-700' },
             { label: 'Free / Premium', value: `${freeCt} / ${premCt}`, icon: Crown, color: 'bg-amber-100 text-amber-700' },
             { label: 'Children', value: totalChildren, icon: BookOpen, color: 'bg-emerald-100 text-emerald-700' },
             { label: 'CTA Requests', value: totalReqs, icon: Zap, color: 'bg-purple-100 text-purple-700', clickable: true },
+            { label: 'Open Disputes', value: openAccountDisputes, icon: AlertTriangle, color: 'bg-red-100 text-red-700', clickable: true },
           ].map((s) => (
             <button
               key={s.label}
@@ -563,6 +565,9 @@ const StudyPulseAdmin: React.FC = () => {
           ]).map((t) => (
             <button key={t.id} onClick={() => setAdminTab(t.id)} className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition ${adminTab === t.id ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
               <t.icon size={14} /> {t.label}
+              {t.id === 'requests' && openAccountDisputes > 0 && (
+                <span className="ml-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-black text-white">{openAccountDisputes}</span>
+              )}
             </button>
           ))}
         </nav>
@@ -1020,6 +1025,12 @@ const StudyPulseAdmin: React.FC = () => {
         {/* ═══════════ REQUESTS TAB ═══════════ */}
         {adminTab === 'requests' && (
         <div className="space-y-4">
+          {openAccountDisputes > 0 && (
+            <div className="rounded-2xl border border-red-200 bg-red-50 p-4">
+              <p className="text-xs font-bold text-red-800">Money/Account Disputes Need Attention</p>
+              <p className="mt-1 text-xs text-red-700">There {openAccountDisputes === 1 ? 'is' : 'are'} currently {openAccountDisputes} open account dispute case{openAccountDisputes === 1 ? '' : 's'}. Resolve these first to reduce payment-risk issues.</p>
+            </div>
+          )}
           <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
             <p className="text-xs font-bold text-blue-800">How this queue works</p>
             <p className="mt-1 text-xs text-blue-700">When a parent taps an action button in StudyPulse, the request is stored here in this admin queue. Open a row to see parent and child details, then mark it as contacted after outreach.</p>
@@ -1027,11 +1038,11 @@ const StudyPulseAdmin: React.FC = () => {
 
           <div className="grid gap-5 sm:grid-cols-2">
           {[
+            { title: 'Account Disputes', data: accountDisputeReqs, icon: AlertTriangle, color: 'text-red-700', table: 'sq_account_disputes' as const },
             { title: 'Tutor Requests', data: tutorReqs, icon: UserPlus, color: 'text-blue-700', table: 'sq_tutor_requests' as const },
             { title: 'Diagnostic Requests', data: diagReqs, icon: Target, color: 'text-purple-700', table: 'sq_diagnostic_requests' as const },
             { title: 'Crash Course Interest', data: crashReqs, icon: Zap, color: 'text-orange-700', table: 'sq_crash_course_interest' as const },
             { title: 'Holiday Programme Interest', data: holidayReqs, icon: CalendarDays, color: 'text-emerald-700', table: 'sq_holiday_programme_interest' as const },
-            { title: 'Account Disputes', data: accountDisputeReqs, icon: AlertTriangle, color: 'text-red-700', table: 'sq_account_disputes' as const },
           ].map((section) => (
             <div key={section.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-3 flex items-center gap-2">
