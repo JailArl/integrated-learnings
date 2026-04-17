@@ -255,6 +255,8 @@ const StudyPulseApp: React.FC = () => {
   const [openingBilling, setOpeningBilling] = useState(false);
   const [editingStudyDaysId, setEditingStudyDaysId] = useState<string | null>(null);
   const [dashboardNotice, setDashboardNotice] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [refreshingBilling, setRefreshingBilling] = useState(false);
+  const [showBillingEscalation, setShowBillingEscalation] = useState(false);
   const [savingParentLanguage, setSavingParentLanguage] = useState(false);
   const [parentLanguageMessage, setParentLanguageMessage] = useState('');
   const [targetQuantities, setTargetQuantities] = useState<Record<string, string>>({});
@@ -359,13 +361,60 @@ const StudyPulseApp: React.FC = () => {
     const params = new URLSearchParams(location.search);
     const billing = params.get('billing');
     if (billing === 'success') {
+      setShowBillingEscalation(false);
       setDashboardNotice({ type: 'success', text: 'Payment received. Premium access will refresh shortly.' });
     } else if (billing === 'cancel') {
+      setShowBillingEscalation(false);
       setDashboardNotice({ type: 'info', text: 'Checkout was canceled. No charge was made.' });
     } else if (billing === 'setup_error') {
+      setShowBillingEscalation(false);
       setDashboardNotice({ type: 'error', text: 'Your account was created, but checkout did not start. Please use Billing below to retry.' });
     }
   }, [location.search]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('billing') !== 'success' || !userId) return;
+
+    let cancelled = false;
+    let attempts = 0;
+
+    const pollMembership = async () => {
+      if (cancelled) return;
+      setRefreshingBilling(true);
+
+      const nextMembership = await getMembership(userId);
+      if (cancelled) return;
+
+      if (nextMembership) {
+        setMembership(nextMembership);
+        if (isPremium(nextMembership)) {
+          setRefreshingBilling(false);
+          setShowBillingEscalation(false);
+          setUpgraded(true);
+          setDashboardNotice({ type: 'success', text: 'Premium access is now active.' });
+          return;
+        }
+      }
+
+      attempts += 1;
+      if (attempts >= 15) {
+        setRefreshingBilling(false);
+        setShowBillingEscalation(true);
+        setDashboardNotice({ type: 'info', text: 'Payment was received. Premium unlock is still syncing. If access does not update in a minute, contact admin and we can unlock it manually.' });
+        return;
+      }
+
+      window.setTimeout(pollMembership, 2000);
+    };
+
+    void pollMembership();
+
+    return () => {
+      cancelled = true;
+      setRefreshingBilling(false);
+    };
+  }, [location.search, userId]);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-slate-100"><div className="text-center"><div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600" /><p className="text-sm text-slate-500">Loading dashboard…</p></div></div>;
 
@@ -403,6 +452,21 @@ const StudyPulseApp: React.FC = () => {
       ? `Monthly Flex renews automatically in ${billingDaysLeft} day${billingDaysLeft === 1 ? '' : 's'}.`
       : `Your premium pass ends in ${billingDaysLeft} day${billingDaysLeft === 1 ? '' : 's'}. Renew before it expires to keep daily check-ins active.`
     : null;
+
+  const getBillingEscalationLink = (): string => {
+    const supportNumber = '6598882675';
+    const message = [
+      'Hi admin, I paid for StudyPulse but premium is still locked.',
+      `User ID: ${userId || '-'}`,
+      `Name: ${membership?.parent_name || '-'}`,
+      `Email: ${membership?.parent_email || '-'}`,
+      `Phone: ${membership?.parent_phone || '-'}`,
+      `Plan Type: ${membership?.plan_type || '-'}`,
+      `Status: ${membership?.status || '-'}`,
+      membership?.current_period_end ? `Current Period End: ${membership.current_period_end}` : 'Current Period End: -',
+    ].join('\n');
+    return `https://wa.me/${supportNumber}?text=${encodeURIComponent(message)}`;
+  };
 
   const handleUpgrade = async (plan: CheckoutPlan = 'monthly_flex') => {
     if (!userId || upgrading) return;
@@ -707,6 +771,18 @@ const StudyPulseApp: React.FC = () => {
                 ? 'text-emerald-700'
                 : 'text-amber-800'
             }`}>{dashboardNotice.text}</p>
+            {showBillingEscalation && !premium && (
+              <div className="mt-3">
+                <a
+                  href={getBillingEscalationLink()}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-bold text-amber-800 hover:bg-amber-50"
+                >
+                  I paid but premium is still locked
+                </a>
+              </div>
+            )}
           </div>
         )}
 
