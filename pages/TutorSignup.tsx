@@ -152,6 +152,33 @@ export const TutorSignup: React.FC = () => {
                 <li>4. Start applying for matched assignments</li>
               </ol>
             </div>
+
+            <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-green-700">Why Tutors Choose Integrated Learnings</p>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-green-100 bg-white p-3">
+                  <p className="text-xs font-bold text-gray-900">With Us</p>
+                  <ul className="mt-2 space-y-1 text-xs leading-5 text-gray-700">
+                    <li>• Profile-based case matching</li>
+                    <li>• You decide which assignments to take</li>
+                    <li>• Clear onboarding and review standards</li>
+                    <li>• Built-in dashboard and case workflow</li>
+                  </ul>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-white p-3">
+                  <p className="text-xs font-bold text-gray-900">Typical Agency Friction</p>
+                  <ul className="mt-2 space-y-1 text-xs leading-5 text-gray-700">
+                    <li>• Generic blast messages for all tutors</li>
+                    <li>• Limited visibility into fit before applying</li>
+                    <li>• Unclear onboarding sequence</li>
+                    <li>• Manual follow-up with slower turnaround</li>
+                  </ul>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-green-800">
+                Best fit for tutors who want structured matching, faster case handling, and long-term parent demand.
+              </p>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-green-200">

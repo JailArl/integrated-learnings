@@ -49,6 +49,30 @@ const TuitionRequestLanding: React.FC = () => {
       </section>
 
       <section className="px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <div className="mx-auto max-w-5xl mb-8 rounded-2xl border border-sky-200 bg-sky-50 p-6 sm:p-8">
+          <p className="text-xs font-bold uppercase tracking-[0.14em] text-sky-700">Why Parents Choose Us</p>
+          <h2 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">More Than Just Sending Any Available Tutor</h2>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-sky-100 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">Our Matching Approach</p>
+              <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
+                <li>• Matched by subject strengths and learning needs</li>
+                <li>• Parent goals and budget considered early</li>
+                <li>• Clear communication and follow-up after request</li>
+                <li>• Support from primary to JC levels</li>
+              </ul>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-700">Common Parent Frustrations Elsewhere</p>
+              <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
+                <li>• Generic recommendations without real fit</li>
+                <li>• Slow response and unclear next steps</li>
+                <li>• Limited context on tutor suitability</li>
+                <li>• Extra back-and-forth before shortlisting</li>
+              </ul>
+            </div>
+          </div>
+        </div>
         <div className="mx-auto max-w-5xl">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <ParentInquiryForm />

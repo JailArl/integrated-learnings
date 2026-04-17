@@ -78,6 +78,13 @@ const FamilyHome: React.FC = () => {
                   Try Free — No App Needed
                   <ArrowRight size={16} className="ml-2" />
                 </Link>
+                <Link
+                  to="/tuition/request"
+                  className="inline-flex items-center justify-center rounded-xl border border-white/25 bg-white/10 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/20"
+                >
+                  Find a Tutor
+                  <ArrowRight size={16} className="ml-2" />
+                </Link>
               </div>
               <p className="mt-4 text-xs text-slate-500">Works via WhatsApp. Your child doesn&rsquo;t need to install anything.</p>
             </div>
@@ -289,6 +296,10 @@ const FamilyHome: React.FC = () => {
               </ul>
             </div>
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm">
+              <div className="mb-4 rounded-xl border border-sky-200 bg-white p-3 text-xs text-sky-800">
+                Prefer a full-page experience? Use our dedicated parent request page:
+                <Link to="/tuition/request" className="ml-1 font-bold underline hover:text-sky-900">/tuition/request</Link>
+              </div>
               <ParentInquiryForm />
             </div>
           </div>
