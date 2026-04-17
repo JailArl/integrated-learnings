@@ -707,7 +707,7 @@ export async function submitExamResult(result: { child_id: string; subject_id?: 
 // CTA REQUESTS
 // ═══════════════════════════════════════════
 export async function submitCTARequest(
-  table: 'sq_tutor_requests' | 'sq_diagnostic_requests' | 'sq_crash_course_interest' | 'sq_holiday_programme_interest',
+  table: 'sq_tutor_requests' | 'sq_diagnostic_requests' | 'sq_crash_course_interest' | 'sq_holiday_programme_interest' | 'sq_account_disputes',
   parentId: string,
   childId: string,
   extra?: Record<string, unknown>
@@ -736,6 +736,18 @@ export async function submitCTARequest(
         child_id: childId,
         availability_dates: null,
         notes: readableSummary || null,
+      }
+    : table === 'sq_account_disputes'
+    ? {
+        parent_id: parentId,
+        child_id: childId,
+        issue_type: triggerReason || 'account_dispute',
+        details: readableSummary || null,
+        parent_name: typeof extra?.parent_name === 'string' ? extra.parent_name : null,
+        parent_phone: typeof extra?.parent_phone === 'string' ? extra.parent_phone : null,
+        parent_email: typeof extra?.parent_email === 'string' ? extra.parent_email : null,
+        child_name: typeof extra?.child_name === 'string' ? extra.child_name : null,
+        child_level: typeof extra?.child_level === 'string' ? extra.child_level : null,
       }
     : {
         parent_id: parentId,

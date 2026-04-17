@@ -522,7 +522,7 @@ const StudyPulseApp: React.FC = () => {
     setResults(r);
   };
 
-  const handleCTA = async (table: 'sq_tutor_requests'|'sq_diagnostic_requests'|'sq_crash_course_interest'|'sq_holiday_programme_interest', reason?: string) => {
+  const handleCTA = async (table: 'sq_tutor_requests'|'sq_diagnostic_requests'|'sq_crash_course_interest'|'sq_holiday_programme_interest'|'sq_account_disputes', reason?: string) => {
     if (!userId || !child) return;
     // Best-effort DB insert — embed readable info so admin queue never shows raw UUIDs
     const ok = await submitCTARequest(table, userId, child.id, {
@@ -539,6 +539,7 @@ const StudyPulseApp: React.FC = () => {
       sq_diagnostic_requests: 'Diagnostic Booking',
       sq_crash_course_interest: 'Crash Course Interest',
       sq_holiday_programme_interest: 'Holiday Programme Interest',
+      sq_account_disputes: 'Account Dispute',
     }[table];
     if (ok) {
       setDashboardNotice({ type: 'success', text: `✅ ${requestLabel} submitted for ${child.name}. Our team will WhatsApp you within 24 hours.` });
@@ -1331,6 +1332,23 @@ const StudyPulseApp: React.FC = () => {
                   </button>
                 )}
                 <Link to="/enrichment" className="mt-2 inline-block text-xs font-semibold text-emerald-700 underline">Learn more →</Link>
+              </article>
+
+              <article className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-white p-5 shadow-sm">
+                <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-red-700"><AlertCircle size={20} /></div>
+                <h3 className="text-base font-bold text-slate-900">Account Dispute</h3>
+                <p className="mt-2 text-xs leading-5 text-slate-600">Billing mismatch, access issue, or account conflict? Send it to the StudyPulse admin dispute queue for direct follow-up.</p>
+                <p className="mt-1 text-[11px] text-slate-400">Use this for premium unlock/payment/account ownership disputes.</p>
+                {submittedCTAs.has('sq_account_disputes') ? (
+                  <p className="mt-3 rounded-lg bg-red-50 px-4 py-2.5 text-xs font-bold text-red-700">✅ Dispute submitted — admin will contact you via WhatsApp.</p>
+                ) : (
+                  <button
+                    onClick={() => handleCTA('sq_account_disputes', 'account_dispute')}
+                    className="mt-3 w-full rounded-lg bg-red-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-red-500"
+                  >
+                    Report Account Dispute
+                  </button>
+                )}
               </article>
             </div>
           </div>

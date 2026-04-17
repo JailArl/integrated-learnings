@@ -119,6 +119,7 @@ const StudyPulseAdmin: React.FC = () => {
   const [diagReqs, setDiagReqs] = useState<RequestRow[]>([]);
   const [crashReqs, setCrashReqs] = useState<RequestRow[]>([]);
   const [holidayReqs, setHolidayReqs] = useState<RequestRow[]>([]);
+  const [accountDisputeReqs, setAccountDisputeReqs] = useState<RequestRow[]>([]);
 
   // Monitoring data
   const [recentCheckins, setRecentCheckins] = useState<Checkin[]>([]);
@@ -143,7 +144,7 @@ const StudyPulseAdmin: React.FC = () => {
   useEffect(() => {
     (async () => {
       if (!supabase) { setLoading(false); return; }
-      const [mRes, cRes, sRes, trRes, drRes, crRes, hrRes] = await Promise.all([
+      const [mRes, cRes, sRes, trRes, drRes, crRes, hrRes, arRes] = await Promise.all([
         supabase.from('sq_memberships').select('*').order('created_at', { ascending: false }),
         supabase.from('sq_children').select('*'),
         supabase.from('sq_monitored_subjects').select('*'),
@@ -151,6 +152,7 @@ const StudyPulseAdmin: React.FC = () => {
         supabase.from('sq_diagnostic_requests').select('*').order('created_at', { ascending: false }),
         supabase.from('sq_crash_course_interest').select('*').order('created_at', { ascending: false }),
         supabase.from('sq_holiday_programme_interest').select('*').order('created_at', { ascending: false }),
+        supabase.from('sq_account_disputes').select('*').order('created_at', { ascending: false }),
       ]);
       setMemberships(mRes.data || []);
       setChildren(cRes.data || []);
@@ -159,6 +161,7 @@ const StudyPulseAdmin: React.FC = () => {
       setDiagReqs(drRes.data || []);
       setCrashReqs(crRes.data || []);
       setHolidayReqs(hrRes.data || []);
+      setAccountDisputeReqs(arRes.data || []);
       // Load monitoring data
       const [rc, rt, ws, et] = await Promise.all([
         adminGetRecentCheckins(14),
@@ -237,7 +240,7 @@ const StudyPulseAdmin: React.FC = () => {
   const freeCt = memberships.filter(m => m.plan_type === 'free').length;
   const premCt = memberships.filter(m => m.plan_type !== 'free').length;
   const totalChildren = children.length;
-  const totalReqs = tutorReqs.length + diagReqs.length + crashReqs.length + holidayReqs.length;
+  const totalReqs = tutorReqs.length + diagReqs.length + crashReqs.length + holidayReqs.length + accountDisputeReqs.length;
 
   // ── Monitoring analytics ──
   const todayStr = new Date().toISOString().split('T')[0];
@@ -295,7 +298,7 @@ const StudyPulseAdmin: React.FC = () => {
   const findChild = (childId: string) => children.find(c => c.id === childId);
 
   const markRequestStatus = async (
-    table: 'sq_tutor_requests' | 'sq_diagnostic_requests' | 'sq_crash_course_interest' | 'sq_holiday_programme_interest',
+    table: 'sq_tutor_requests' | 'sq_diagnostic_requests' | 'sq_crash_course_interest' | 'sq_holiday_programme_interest' | 'sq_account_disputes',
     id: string,
     status: string
   ) => {
@@ -311,6 +314,7 @@ const StudyPulseAdmin: React.FC = () => {
     if (table === 'sq_diagnostic_requests') setDiagReqs((prev) => applyStatus(prev));
     if (table === 'sq_crash_course_interest') setCrashReqs((prev) => applyStatus(prev));
     if (table === 'sq_holiday_programme_interest') setHolidayReqs((prev) => applyStatus(prev));
+    if (table === 'sq_account_disputes') setAccountDisputeReqs((prev) => applyStatus(prev));
   };
 
   const setMembershipPlan = async (membership: MembershipRow, target: 'premium' | 'free') => {
@@ -1027,6 +1031,7 @@ const StudyPulseAdmin: React.FC = () => {
             { title: 'Diagnostic Requests', data: diagReqs, icon: Target, color: 'text-purple-700', table: 'sq_diagnostic_requests' as const },
             { title: 'Crash Course Interest', data: crashReqs, icon: Zap, color: 'text-orange-700', table: 'sq_crash_course_interest' as const },
             { title: 'Holiday Programme Interest', data: holidayReqs, icon: CalendarDays, color: 'text-emerald-700', table: 'sq_holiday_programme_interest' as const },
+            { title: 'Account Disputes', data: accountDisputeReqs, icon: AlertTriangle, color: 'text-red-700', table: 'sq_account_disputes' as const },
           ].map((section) => (
             <div key={section.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="mb-3 flex items-center gap-2">

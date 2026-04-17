@@ -156,6 +156,21 @@ CREATE TABLE IF NOT EXISTS sq_holiday_programme_interest (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE IF NOT EXISTS sq_account_disputes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  parent_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  child_id UUID REFERENCES sq_children(id) ON DELETE SET NULL,
+  issue_type TEXT NOT NULL DEFAULT 'account_dispute',
+  details TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  parent_name TEXT,
+  parent_phone TEXT,
+  parent_email TEXT,
+  child_name TEXT,
+  child_level TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- ═══════════════════════════════════════════════════════════
 -- RLS POLICIES
 -- ═══════════════════════════════════════════════════════════
@@ -173,6 +188,7 @@ ALTER TABLE sq_tutor_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sq_diagnostic_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sq_crash_course_interest ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sq_holiday_programme_interest ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sq_account_disputes ENABLE ROW LEVEL SECURITY;
 
 -- Parent can CRUD own data
 CREATE POLICY "sq_memberships_owner" ON sq_memberships FOR ALL USING (auth.uid() = user_id);
@@ -205,6 +221,7 @@ CREATE POLICY "sq_tutor_req_owner" ON sq_tutor_requests FOR ALL USING (auth.uid(
 CREATE POLICY "sq_diag_req_owner" ON sq_diagnostic_requests FOR ALL USING (auth.uid() = parent_id);
 CREATE POLICY "sq_crash_owner" ON sq_crash_course_interest FOR ALL USING (auth.uid() = parent_id);
 CREATE POLICY "sq_holiday_owner" ON sq_holiday_programme_interest FOR ALL USING (auth.uid() = parent_id);
+CREATE POLICY "sq_account_dispute_owner" ON sq_account_disputes FOR ALL USING (auth.uid() = parent_id);
 
 -- INDEXES
 CREATE INDEX IF NOT EXISTS idx_sq_children_parent ON sq_children(parent_id);
@@ -213,3 +230,5 @@ CREATE INDEX IF NOT EXISTS idx_sq_exams_child ON sq_exam_targets(child_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_sq_checkins_child_date ON sq_checkins(child_id, checkin_date);
 CREATE INDEX IF NOT EXISTS idx_sq_daily_child_date ON sq_daily_tasks(child_id, task_date);
 CREATE INDEX IF NOT EXISTS idx_sq_plans_child_week ON sq_weekly_plans(child_id, week_start);
+CREATE INDEX IF NOT EXISTS idx_sq_account_disputes_parent ON sq_account_disputes(parent_id);
+CREATE INDEX IF NOT EXISTS idx_sq_account_disputes_status ON sq_account_disputes(status);
