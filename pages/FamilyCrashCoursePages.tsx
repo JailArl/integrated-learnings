@@ -49,7 +49,33 @@ const WA_NUMBER = '6598882675';
 
 const toWhatsApp = (text: string) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
 
-const setPageSeo = (title: string, description: string) => {
+const trackCtaClick = (pageSlug: CrashCourseSlug, ctaName: string, destination: string) => {
+  try {
+    const w = window as any;
+    if (typeof w.gtag === 'function') {
+      w.gtag('event', 'crash_course_cta_click', {
+        event_category: 'crash_course',
+        event_label: `${pageSlug}:${ctaName}`,
+        page_path: window.location.pathname,
+        destination,
+      });
+      return;
+    }
+    if (Array.isArray(w.dataLayer)) {
+      w.dataLayer.push({
+        event: 'crash_course_cta_click',
+        event_category: 'crash_course',
+        event_label: `${pageSlug}:${ctaName}`,
+        page_path: window.location.pathname,
+        destination,
+      });
+    }
+  } catch {
+    // Tracking must never block conversion actions.
+  }
+};
+
+const setPageSeo = (title: string, description: string, canonicalPath: string) => {
   const prevTitle = document.title;
   document.title = title;
 
@@ -63,9 +89,33 @@ const setPageSeo = (title: string, description: string) => {
   }
   metaDescription.setAttribute('content', description);
 
+  const setMeta = (selector: string, attr: 'name' | 'property', key: string, value: string) => {
+    let el = document.querySelector<HTMLMetaElement>(selector);
+    const previous = el?.getAttribute('content') ?? '';
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', value);
+    return { el, previous };
+  };
+
+  const origin = window.location.origin || 'https://www.integratedlearnings.com.sg';
+  const ogTitle = setMeta('meta[property="og:title"]', 'property', 'og:title', title);
+  const ogDescription = setMeta('meta[property="og:description"]', 'property', 'og:description', description);
+  const ogUrl = setMeta('meta[property="og:url"]', 'property', 'og:url', `${origin}${canonicalPath}`);
+  const twitterTitle = setMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title);
+  const twitterDescription = setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description);
+
   return () => {
     document.title = prevTitle;
     metaDescription?.setAttribute('content', previousDescription);
+    ogTitle.el?.setAttribute('content', ogTitle.previous);
+    ogDescription.el?.setAttribute('content', ogDescription.previous);
+    ogUrl.el?.setAttribute('content', ogUrl.previous);
+    twitterTitle.el?.setAttribute('content', twitterTitle.previous);
+    twitterDescription.el?.setAttribute('content', twitterDescription.previous);
   };
 };
 
@@ -78,6 +128,7 @@ const SectionHeading: React.FC<{ kicker?: string; title: string; subtitle?: stri
 );
 
 const CampaignHero: React.FC<{
+  pageSlug: CrashCourseSlug;
   badge: string;
   title: string;
   subtitle: string;
@@ -91,6 +142,7 @@ const CampaignHero: React.FC<{
   waLink: string;
   fitCheckLink: string;
 }> = ({
+  pageSlug,
   badge,
   title,
   subtitle,
@@ -124,6 +176,7 @@ const CampaignHero: React.FC<{
           href={reserveLink}
           target="_blank"
           rel="noreferrer"
+          onClick={() => trackCtaClick(pageSlug, 'hero_reserve', reserveLink)}
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 py-3.5 text-sm font-black text-slate-950 shadow-lg transition hover:bg-amber-300"
         >
           {reserveLabel} <ArrowRight size={15} aria-hidden="true" />
@@ -132,6 +185,7 @@ const CampaignHero: React.FC<{
           href={waLink}
           target="_blank"
           rel="noreferrer"
+          onClick={() => trackCtaClick(pageSlug, 'hero_whatsapp', waLink)}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/15"
         >
           <MessageCircle size={15} aria-hidden="true" /> {waLabel}
@@ -140,6 +194,7 @@ const CampaignHero: React.FC<{
           href={fitCheckLink}
           target="_blank"
           rel="noreferrer"
+          onClick={() => trackCtaClick(pageSlug, 'hero_fit_check', fitCheckLink)}
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300/40 bg-amber-300/10 px-6 py-3.5 text-sm font-bold text-amber-100 transition hover:bg-amber-300/20"
         >
           <ShieldCheck size={15} aria-hidden="true" /> {fitCheckLabel}
@@ -159,11 +214,12 @@ const CampaignHero: React.FC<{
 );
 
 const ActionBand: React.FC<{
+  pageSlug: CrashCourseSlug;
   reserveLink: string;
   waLink: string;
   fitCheckLink: string;
   waLabel: string;
-}> = ({ reserveLink, waLink, fitCheckLink, waLabel }) => (
+}> = ({ pageSlug, reserveLink, waLink, fitCheckLink, waLabel }) => (
   <section aria-label="Quick actions" className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
@@ -174,6 +230,7 @@ const ActionBand: React.FC<{
           href={reserveLink}
           target="_blank"
           rel="noreferrer"
+          onClick={() => trackCtaClick(pageSlug, 'band_reserve', reserveLink)}
           className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-black text-slate-950 hover:bg-amber-400"
         >
           Reserve a Seat
@@ -182,6 +239,7 @@ const ActionBand: React.FC<{
           href={waLink}
           target="_blank"
           rel="noreferrer"
+          onClick={() => trackCtaClick(pageSlug, 'band_whatsapp', waLink)}
           className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
         >
           <MessageCircle size={14} aria-hidden="true" /> {waLabel}
@@ -190,6 +248,7 @@ const ActionBand: React.FC<{
           href={fitCheckLink}
           target="_blank"
           rel="noreferrer"
+          onClick={() => trackCtaClick(pageSlug, 'band_fit_check', fitCheckLink)}
           className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
         >
           Send Latest Results Slip for Fit Check
@@ -292,13 +351,14 @@ const BenefitsSection: React.FC<{ title: string; items: string[] }> = ({ title, 
 );
 
 const PricingSection: React.FC<{
+  pageSlug: CrashCourseSlug;
   heading: string;
   cards: PricingCard[];
   reserveLink: string;
   waLink: string;
   friendStripText: string;
   friendSmallPrint: string;
-}> = ({ heading, cards, reserveLink, waLink, friendStripText, friendSmallPrint }) => (
+}> = ({ pageSlug, heading, cards, reserveLink, waLink, friendStripText, friendSmallPrint }) => (
   <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
     <SectionHeading
       kicker="Pricing"
@@ -350,14 +410,14 @@ const PricingSection: React.FC<{
       <p>Small-group format, capped at 8 students for closer feedback and correction.</p>
       <p>Some clinic sessions may be capped smaller for closer correction.</p>
       <p>{friendSmallPrint}</p>
-      <p>Promotions are not stackable. Students may choose the best available offer.</p>
+      <p>Promotions are not stackable. Students may choose either Early Bird or Friend Rate.</p>
     </div>
 
     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-      <a href={reserveLink} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3 text-sm font-black text-slate-950 hover:bg-amber-400">
+      <a href={reserveLink} target="_blank" rel="noreferrer" onClick={() => trackCtaClick(pageSlug, 'pricing_reserve', reserveLink)} className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3 text-sm font-black text-slate-950 hover:bg-amber-400">
         Reserve a Seat
       </a>
-      <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-6 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-100">
+      <a href={waLink} target="_blank" rel="noreferrer" onClick={() => trackCtaClick(pageSlug, 'pricing_whatsapp', waLink)} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-6 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-100">
         <MessageCircle size={14} aria-hidden="true" /> Get Timetable on WhatsApp
       </a>
     </div>
@@ -578,26 +638,26 @@ const CampaignLeadForm: React.FC<{
   );
 };
 
-const FinalCta: React.FC<{ headline: string; reserveLink: string; waLink: string; waLabel: string }> = ({ headline, reserveLink, waLink, waLabel }) => (
+const FinalCta: React.FC<{ pageSlug: CrashCourseSlug; headline: string; reserveLink: string; waLink: string; waLabel: string }> = ({ pageSlug, headline, reserveLink, waLink, waLabel }) => (
   <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 p-6 shadow-sm sm:p-8">
     <h2 className="text-2xl font-black tracking-tight text-slate-900">{headline}</h2>
     <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-      <a href={reserveLink} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-black text-slate-950 hover:bg-amber-400">
+      <a href={reserveLink} target="_blank" rel="noreferrer" onClick={() => trackCtaClick(pageSlug, 'final_reserve', reserveLink)} className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-black text-slate-950 hover:bg-amber-400">
         Reserve a Seat
       </a>
-      <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-400 bg-white px-6 py-3.5 text-sm font-bold text-amber-700 hover:bg-amber-50">
+      <a href={waLink} target="_blank" rel="noreferrer" onClick={() => trackCtaClick(pageSlug, 'final_whatsapp', waLink)} className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-400 bg-white px-6 py-3.5 text-sm font-bold text-amber-700 hover:bg-amber-50">
         <MessageCircle size={14} aria-hidden="true" /> {waLabel}
       </a>
     </div>
   </section>
 );
 
-const StickyMobileCta: React.FC<{ waLink: string; reserveLink: string }> = ({ waLink, reserveLink }) => (
+const StickyMobileCta: React.FC<{ pageSlug: CrashCourseSlug; waLink: string; reserveLink: string }> = ({ pageSlug, waLink, reserveLink }) => (
   <div className="fixed inset-x-0 bottom-0 z-50 flex gap-2 border-t border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur-sm md:hidden">
-    <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-3 text-xs font-black text-white">
+    <a href={waLink} target="_blank" rel="noreferrer" onClick={() => trackCtaClick(pageSlug, 'sticky_whatsapp', waLink)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-3 text-xs font-black text-white">
       <MessageCircle size={14} aria-hidden="true" /> WhatsApp
     </a>
-    <a href={reserveLink} target="_blank" rel="noreferrer" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-3 text-xs font-black text-slate-950">
+    <a href={reserveLink} target="_blank" rel="noreferrer" onClick={() => trackCtaClick(pageSlug, 'sticky_reserve', reserveLink)} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-3 text-xs font-black text-slate-950">
       Reserve a Seat <ArrowRight size={14} aria-hidden="true" />
     </a>
   </div>
@@ -681,6 +741,7 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
   useEffect(() => setPageSeo(
     'PSLE Math & Science June Intensive | Integrated Learnings',
     'Small-group PSLE Math & Science June Intensive with targeted practice, correction, and weak-topic support. Founding June Intake pricing now available.',
+    '/family/crash-courses/psle-june-intensive',
   ), []);
 
   const reserveLink = useMemo(() => toWhatsApp('Hi Integrated Learnings, I want to reserve a seat for PSLE June Intensive.'), []);
@@ -777,6 +838,7 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
     <PageScaffold
       hero={(
         <CampaignHero
+          pageSlug="psle-june-intensive"
           badge="Founding June Intake"
           title="PSLE Math & Science June Intensive"
           subtitle="Focused small-group revision for students who need clearer understanding, stronger answering technique, and more structured practice this holiday."
@@ -791,8 +853,8 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
           fitCheckLink={fitCheckLink}
         />
       )}
-      topCta={<ActionBand reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Get Timetable on WhatsApp" />}
-      stickyBar={<StickyMobileCta waLink={waLink} reserveLink={reserveLink} />}
+      topCta={<ActionBand pageSlug="psle-june-intensive" reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Get Timetable on WhatsApp" />}
+      stickyBar={<StickyMobileCta pageSlug="psle-june-intensive" waLink={waLink} reserveLink={reserveLink} />}
       body={(
         <>
           <WhoForSection
@@ -825,6 +887,7 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
           />
 
           <PricingSection
+            pageSlug="psle-june-intensive"
             heading="Founding June Intake Pricing"
             cards={pricingCards}
             reserveLink={reserveLink}
@@ -833,7 +896,7 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
             friendSmallPrint="Friend pricing applies only when both students register for the same block or full bundle."
           />
 
-          <ActionBand reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Get Timetable on WhatsApp" />
+          <ActionBand pageSlug="psle-june-intensive" reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Get Timetable on WhatsApp" />
 
           <WhySection
             heading="Why Integrated Learnings"
@@ -884,6 +947,7 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
           <PSLELeadForm />
 
           <FinalCta
+            pageSlug="psle-june-intensive"
             headline="Use the June holidays properly. Don’t wait for the next poor result."
             reserveLink={reserveLink}
             waLink={waLink}
@@ -899,6 +963,7 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
   useEffect(() => setPageSeo(
     'O-Level June Intensive Subject Bootcamps | Integrated Learnings',
     'Small-group O-Level holiday revision for Physics, Chemistry, A Math and E Math with weak-topic clinic and mock correction support. Founding June Intake pricing available.',
+    '/family/crash-courses/o-level-june-intensive',
   ), []);
 
   const reserveLink = useMemo(() => toWhatsApp('Hi Integrated Learnings, I want to reserve a seat for O-Level June Intensive.'), []);
@@ -1002,7 +1067,7 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
     },
     {
       title: 'Final Review Bundle',
-      subtitle: '6 sessions | 18 hours total',
+      subtitle: '2 subject bootcamps + Weak-Topic Clinic + Mock + Correction Clinic | 6 sessions | 18 hours total',
       standard: 'S$638',
       earlyBird: 'S$568',
       popular: true,
@@ -1013,6 +1078,7 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
     <PageScaffold
       hero={(
         <CampaignHero
+          pageSlug="o-level-june-intensive"
           badge="Founding June Intake"
           title="O-Level June Intensive Subject Bootcamps"
           subtitle="Focused holiday revision for Physics, Chemistry, A Math and E Math - with weak-topic clinic and mock correction support."
@@ -1027,8 +1093,8 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
           fitCheckLink={fitCheckLink}
         />
       )}
-      topCta={<ActionBand reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Check Subject Fit on WhatsApp" />}
-      stickyBar={<StickyMobileCta waLink={waLink} reserveLink={reserveLink} />}
+      topCta={<ActionBand pageSlug="o-level-june-intensive" reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Check Subject Fit on WhatsApp" />}
+      stickyBar={<StickyMobileCta pageSlug="o-level-june-intensive" waLink={waLink} reserveLink={reserveLink} />}
       body={(
         <>
           <WhoForSection
@@ -1061,6 +1127,7 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
           />
 
           <PricingSection
+            pageSlug="o-level-june-intensive"
             heading="Founding June Intake Pricing"
             cards={pricingCards}
             reserveLink={reserveLink}
@@ -1069,7 +1136,7 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
             friendSmallPrint="Friend pricing applies only when both students register for the same block or bundle."
           />
 
-          <ActionBand reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Check Subject Fit on WhatsApp" />
+          <ActionBand pageSlug="o-level-june-intensive" reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Check Subject Fit on WhatsApp" />
 
           <WhySection
             heading="Why Integrated Learnings"
@@ -1120,6 +1187,7 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
           <OLevelLeadForm />
 
           <FinalCta
+            pageSlug="o-level-june-intensive"
             headline="Don’t let the June holidays pass without a proper revision push."
             reserveLink={reserveLink}
             waLink={waLink}
