@@ -1,1496 +1,1132 @@
-/**
- * FamilyCrashCoursePages.tsx
- *
- * Two SEO-optimised, production-ready landing pages:
- *   - PSLE Math & Science June Intensive
- *   - O-Level June Intensive Subject Bootcamps
- *
- * Architecture:
- *   - CrashCourseConfig  — shared data type (timetable, pricing, FAQs, CTAs)
- *   - configs            — one config per slug; update each season without
- *                          touching component logic
- *   - Shared components  — TimetableSection, PricingSection, FaqAccordion,
- *                          WhyUsSection, TestimonialsSection, FinalCtaSection,
- *                          LeadForm, MobileStickyBar, CtaBand
- *   - CrashCourseCampaignPage — single page renderer driven by config
- *   - Named page exports — consumed by App.tsx routes
- */
-
-import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   CheckCircle2,
   ChevronDown,
-  Clock,
+  Clock3,
   MessageCircle,
+  ShieldCheck,
   Sparkles,
   Target,
   Users,
 } from 'lucide-react';
 import { submitParentInquiry } from '../services/parentSubmissions';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TYPES
-// ─────────────────────────────────────────────────────────────────────────────
-
 type CrashCourseSlug = 'psle-june-intensive' | 'o-level-june-intensive';
 
-interface TimetableBlock {
+interface ScheduleEntry {
   date: string;
   title: string;
   time: string;
-  focus: string[];
-  highlight?: boolean;
+  bullets: string[];
+  keySession?: boolean;
 }
 
-interface PricingOption {
+interface PricingCard {
   title: string;
-  range: string;
-  note: string;
-  highlight?: boolean;
+  subtitle: string;
+  standard: string;
+  earlyBird: string;
+  friendRate?: string;
+  popular?: boolean;
 }
 
-interface FaqEntry {
-  q: string;
-  a: string;
+interface FaqItem {
+  question: string;
+  answer: string;
 }
 
-interface Testimonial {
-  quote: string;
-  attribution: string;
+interface LeadFormContent {
+  heading: string;
+  levelLabel: string;
+  interestLabel: string;
+  interestOptions: string[];
+  ctaLabel: string;
 }
-
-interface CrashCourseConfig {
-  slug: CrashCourseSlug;
-  // SEO
-  pageTitle: string;
-  metaDescription: string;
-  h1: string;
-  h1Sub: string;
-  // Hero
-  eyebrow: string;
-  heroCopy: string;
-  capacityBadge: string;
-  reserveCtaLabel: string;
-  whatsappCtaLabel: string;
-  whatsappHeroText: string;
-  // Sections
-  whoFor: string[];
-  timetableBlocks: TimetableBlock[];
-  timetableNote: string;
-  pricingOptions: PricingOption[];
-  pricingNote: string;
-  whyUs: string[];
-  safePromiseTitle: string;
-  safePromiseBody: string;
-  testimonials: Testimonial[];
-  faq: FaqEntry[];
-  // Final CTA
-  finalHeadline: string;
-  finalBody: string;
-  whatsappFinalText: string;
-  // Lead form
-  formLevelLabel: string;
-  formSubjectLabel: string;
-  formSubjectOptions: string[];
-  defaultLevel: string;
-  defaultSchedule: string;
-  // WhatsApp reservation text
-  whatsappReserveText: string;
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────────────────────
 
 const WA_NUMBER = '6598882675';
-const toWhatsApp = (text: string) =>
-  `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DATA — update this section each season, component logic stays untouched
-// ─────────────────────────────────────────────────────────────────────────────
+const toWhatsApp = (text: string) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
 
-const configs: Record<CrashCourseSlug, CrashCourseConfig> = {
-  'psle-june-intensive': {
-    slug: 'psle-june-intensive',
+const setPageSeo = (title: string, description: string) => {
+  const prevTitle = document.title;
+  document.title = title;
 
-    pageTitle: 'PSLE Math & Science June Intensive | Integrated Learnings Singapore',
-    metaDescription:
-      'Small-group PSLE Math and Science June Intensive crash course in Singapore. Structured revision, exam technique, and weak-topic correction. Capped at 8 students per group. Enquire now.',
-    h1: 'PSLE Math & Science June Intensive',
-    h1Sub:
-      'A focused holiday revision programme for PSLE students who need stronger foundations, sharper exam technique, and structured practice — not just more worksheets.',
+  let metaDescription = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+  const previousDescription = metaDescription?.getAttribute('content') ?? '';
 
-    eyebrow: 'June 2026 · Small-Group · PSLE Crash Course Singapore',
-    heroCopy:
-      'Targeted bootcamp blocks covering Math problem sums, Science answering technique, and mixed mock correction. Each block is built around the most common PSLE sticking points.',
-    capacityBadge: 'Capped at 8 students per group · Seat confirmed upon payment',
-    reserveCtaLabel: 'Reserve a Slot',
-    whatsappCtaLabel: 'Get Timetable on WhatsApp',
-    whatsappHeroText: 'Hi Integrated Learnings, please send the PSLE June Intensive timetable.',
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', description);
 
-    whoFor: [
-      'Students who are weak in PSLE Math or Science',
-      'Students who revise but keep making the same mistakes',
-      'Students who need more structure, not just more drilling',
-      'Parents who want the June holidays used purposefully',
-    ],
-
-    timetableBlocks: [
-      {
-        date: '16 Jun',
-        title: 'Math Bootcamp — Part 1',
-        time: '10:00 am – 1:00 pm',
-        focus: [
-          'Diagnostic drill to identify gaps',
-          'Core concept review',
-          'Worked examples with teacher explanation',
-          'Guided practice',
-        ],
-      },
-      {
-        date: '17 Jun',
-        title: 'Math Bootcamp — Part 2',
-        time: '10:00 am – 1:00 pm',
-        focus: [
-          'Problem sums with varied question types',
-          'Timed structured practice',
-          'Method correction and strategy review',
-        ],
-      },
-      {
-        date: '18 Jun',
-        title: 'Science Bootcamp — Part 1',
-        time: '10:00 am – 1:00 pm',
-        focus: [
-          'Key concept consolidation',
-          'Answering structure walkthrough',
-          'MCQ and open-ended practice',
-        ],
-      },
-      {
-        date: '19 Jun',
-        title: 'Science Bootcamp — Part 2',
-        time: '10:00 am – 1:00 pm',
-        focus: [
-          'Application questions',
-          'Open-ended correction clinic',
-          'Common mistake review',
-        ],
-      },
-      {
-        date: '20 Jun',
-        title: 'Mixed Mock + Correction Clinic',
-        time: '10:00 am – 1:00 pm',
-        highlight: true,
-        focus: [
-          'Timed mixed practice set',
-          'Teacher-led correction and review',
-          'Personal weak-topic action plan',
-        ],
-      },
-    ],
-    timetableNote:
-      'Each session is 3 hours. Guided worksheets and practice materials are included. Sessions are modular — join one block or the full programme.',
-
-    pricingOptions: [
-      {
-        title: 'Math Bootcamp',
-        range: 'S$32/hr (S$192 total)',
-        note: '2 sessions (6 hrs) · Concept review + method correction',
-      },
-      {
-        title: 'Science Bootcamp',
-        range: 'S$32/hr (S$192 total)',
-        note: '2 sessions (6 hrs) · Answering structure + open-ended correction',
-      },
-      {
-        title: 'Mock + Correction Clinic',
-        range: 'S$32/hr (S$96 total)',
-        note: '1 session (3 hrs) · Timed mixed set + teacher feedback',
-      },
-      {
-        title: 'Full PSLE Intensive Bundle',
-        range: 'Bundle rate: S$29/hr (S$435 total)',
-        note: 'All 5 sessions (15 hrs) · Save vs a la carte pricing',
-        highlight: true,
-      },
-    ],
-    pricingNote:
-      'Per-hour pricing shown for transparency. Bundle rates give lower effective hourly cost. Seat confirmed upon payment. Groups capped at 8 students.',
-
-    whyUs: [
-      'We identify exactly where your child is losing marks, not just which topics to cover.',
-      'Concepts are explained clearly before students are asked to apply them under time pressure.',
-      'Lessons are structured and paced to keep students focused across the session.',
-      'Strong delivery in PSLE Math and Science, with materials built for exam application.',
-      'Optional study tracking continuation after the programme to support follow-through.',
-    ],
-
-    safePromiseTitle: 'Right-Fit Promise',
-    safePromiseBody:
-      'If after the first session the programme is clearly not the right fit for your child, we will recommend the most suitable alternative and refund the unused prepaid portion in line with our policy.',
-
-    testimonials: [
-      {
-        quote:
-          '"My child finally understood where the marks were going. The correction session made a real difference."',
-        attribution: 'Parent · P6 Student · PSLE Math Bootcamp',
-      },
-      {
-        quote:
-          '"Very structured. No wasted time, straight to the exam gaps. We knew exactly what to work on after."',
-        attribution: 'Parent · P6 Student · Full PSLE Bundle',
-      },
-    ],
-
-    faq: [
-      {
-        q: 'Is this suitable if my child is quite weak?',
-        a: 'Yes. The programme is designed for students who need stronger foundations and active correction — not those who are already scoring well.',
-      },
-      {
-        q: 'Can my child join only Math or only Science?',
-        a: 'Yes. Each bootcamp block is standalone. You can choose one subject, both, or add the correction clinic.',
-      },
-      {
-        q: 'What materials are provided?',
-        a: 'Guided worksheets, structured practice sets, and correction resources are included in every session.',
-      },
-      {
-        q: 'How small is the group?',
-        a: 'Groups are capped at 8 students, which keeps feedback quality high and allows the teacher to correct individual mistakes.',
-      },
-      {
-        q: 'What happens after I enquire?',
-        a: 'Our team replies on WhatsApp, does a quick fit-check, and confirms the right block and slot before you enrol.',
-      },
-    ],
-
-    finalHeadline: 'Use the June holidays to close the gaps — not let them widen.',
-    finalBody:
-      'Seats are limited. The earlier you confirm, the more flexibility you have on timing and subject combination.',
-    whatsappFinalText: 'Hi Integrated Learnings, I want to enquire about PSLE June Intensive.',
-
-    formLevelLabel: "Child's level (e.g. Primary 6)",
-    formSubjectLabel: 'Programme of interest',
-    formSubjectOptions: [
-      'PSLE Math Bootcamp (2 sessions)',
-      'PSLE Science Bootcamp (2 sessions)',
-      'Mixed Mock + Correction Clinic',
-      'Full PSLE Intensive Bundle (All 5 sessions)',
-      'Not sure — please advise',
-    ],
-    defaultLevel: 'Primary 6',
-    defaultSchedule: '10:00am – 1:00pm',
-    whatsappReserveText:
-      'Hi Integrated Learnings, I want to reserve a slot for PSLE June Intensive.',
-  },
-
-  'o-level-june-intensive': {
-    slug: 'o-level-june-intensive',
-
-    pageTitle:
-      'O-Level June Intensive Subject Bootcamps | Physics Chemistry A Math E Math | Integrated Learnings',
-    metaDescription:
-      'O-Level June Intensive bootcamps in Singapore for Physics, Chemistry, A Math, and E Math. Small-group revision, weak-topic clinic, and mock correction. Capped at 8 students. Enquire now.',
-    h1: 'O-Level June Intensive Subject Bootcamps',
-    h1Sub:
-      'Targeted revision for O-Level Physics, Chemistry, A Math, and E Math — with subject-specific bootcamps, a weak-topic clinic, and a mock correction session. Choose only the blocks your child needs.',
-
-    eyebrow: 'June 2026 · Small-Group · O-Level Crash Course Singapore',
-    heroCopy:
-      'Each subject block targets the exact areas where O-Level students lose marks: structured question technique, calculation errors, concept application, and exam-pacing. Standalone or bundled.',
-    capacityBadge: 'Capped at 8 students per subject block · Clinic sessions may be smaller',
-    reserveCtaLabel: 'Reserve a Slot',
-    whatsappCtaLabel: 'Check Subject Fit on WhatsApp',
-    whatsappHeroText:
-      'Hi Integrated Learnings, I want to check subject fit for O-Level June Intensive.',
-
-    whoFor: [
-      'Students falling behind in Physics, Chemistry, A Math, or E Math',
-      'Students who understand content but cannot apply it well in exams',
-      'Students who need a structured, focused holiday revision push',
-      'Parents who want targeted revision — not last-minute panic sessions',
-    ],
-
-    timetableBlocks: [
-      {
-        date: '16–17 Jun',
-        title: 'Physics Bootcamp',
-        time: '2:00 pm – 5:00 pm',
-        focus: [
-          'Structured questions and technique',
-          'MCQ review',
-          'Calculation practice',
-          'Error correction walkthrough',
-        ],
-      },
-      {
-        date: '18–19 Jun',
-        title: 'Chemistry Bootcamp',
-        time: '2:00 pm – 5:00 pm',
-        focus: [
-          'Concept consolidation',
-          'Structured questions',
-          'Application questions',
-          'Mistake correction',
-        ],
-      },
-      {
-        date: '20–21 Jun',
-        title: 'A Math Bootcamp',
-        time: '2:00 pm – 5:00 pm',
-        focus: [
-          'Method flow and algebra',
-          'Differentiation and integration drills',
-          'Trigonometry review',
-          'Exam-style practice',
-        ],
-      },
-      {
-        date: '22–23 Jun',
-        title: 'E Math Bootcamp',
-        time: '2:00 pm – 5:00 pm',
-        focus: [
-          'Timed practice sets',
-          'Graphs, statistics, and geometry',
-          'Accuracy and method correction',
-        ],
-      },
-      {
-        date: '24 Jun',
-        title: 'Weak-Topic Clinic',
-        time: '2:00 pm – 5:00 pm',
-        highlight: true,
-        focus: [
-          'Students regrouped by topic weakness',
-          'Targeted worksheet pack per group',
-          'Guided walkthrough with teacher',
-        ],
-      },
-      {
-        date: '25 Jun',
-        title: 'Mock + Correction Clinic',
-        time: '2:00 pm – 5:00 pm',
-        highlight: true,
-        focus: [
-          'Timed paper segment',
-          'Live teacher review',
-          'Personal weak-topic action plan',
-        ],
-      },
-    ],
-    timetableNote:
-      'Sessions are 3 hours each. Materials included. Each subject block is standalone — join one, two, or combine with clinic sessions.',
-
-    pricingOptions: [
-      {
-        title: '2-Day Subject Block',
-        range: 'S$34/hr (S$204 per subject block)',
-        note: 'Per subject (6 hrs) · Physics, Chem, A Math, or E Math',
-      },
-      {
-        title: 'Weak-Topic Clinic',
-        range: 'S$36/hr (S$108 total)',
-        note: '1 session (3 hrs) · Targeted correction by weakness',
-      },
-      {
-        title: 'Mock + Correction Clinic',
-        range: 'S$36/hr (S$108 total)',
-        note: '1 session (3 hrs) · Timed segment + immediate feedback',
-      },
-      {
-        title: '2-Subject Bundle',
-        range: 'Bundle rate: S$31/hr (S$372 total)',
-        note: '12 hrs total · Good fit for Math + Science combinations',
-        highlight: true,
-      },
-      {
-        title: 'Multi-Block Bundle',
-        range: 'Bundle rate from S$29/hr (from S$522 total)',
-        note: '3+ subject blocks (18+ hrs) · Broader intensive support',
-      },
-    ],
-    pricingNote:
-      'Per-hour pricing shown for transparency. Bundle rates lower effective hourly cost. Seat confirmed upon payment. Each block is capped at 8 students.',
-
-    whyUs: [
-      'Clarity-first approach — students understand the method before applying it under pressure.',
-      'Strong diagnostic focus: we target repeated error patterns, not just topic coverage.',
-      'Particularly strong delivery in Math, Physics, and Chemistry.',
-      'Every session includes structured feedback and marked correction.',
-      'Follow-through support available beyond the intensive — including optional study tracking.',
-    ],
-
-    safePromiseTitle: 'Clarity Promise',
-    safePromiseBody:
-      'Every student leaves with marked corrections, specific feedback on their key error patterns, and a clear next-step action plan for their weakest areas.',
-
-    testimonials: [
-      {
-        quote:
-          '"The Physics bootcamp gave my child the structured practice they were missing. Very focused and well-paced."',
-        attribution: 'Parent · Sec 4 Student · Physics Bootcamp',
-      },
-      {
-        quote:
-          '"Very targeted. The correction feedback was specific and the action plan was practical. We knew what to do next."',
-        attribution: 'Parent · Sec 4 Student · A Math + Chemistry Bundle',
-      },
-    ],
-
-    faq: [
-      {
-        q: 'Can my child join just one subject block?',
-        a: 'Yes. Every subject block is standalone. You choose based on where your child needs the most focused revision.',
-      },
-      {
-        q: 'Is this suitable if my child is significantly behind?',
-        a: 'Yes. We structure pacing and correction support for students who need rebuilding — not just revision acceleration.',
-      },
-      {
-        q: 'Does every session include practice and correction?',
-        a: 'Yes. Every block includes structured practice, active teacher feedback during the session, and correction of key errors.',
-      },
-      {
-        q: 'Are the clinic sessions separate from the subject blocks?',
-        a: 'Yes. The Weak-Topic Clinic and Mock Correction Clinic are standalone and can be taken independently or added to a subject block bundle.',
-      },
-      {
-        q: 'What happens after I send an enquiry?',
-        a: 'Our team contacts you on WhatsApp, does a subject fit-check, discusses priorities, and confirms available slots before enrolment.',
-      },
-    ],
-
-    finalHeadline: 'The O-Level year is short. Use the June holidays well.',
-    finalBody:
-      'Subject blocks fill up quickly. Reserve early to secure the right combination and timing for your child.',
-    whatsappFinalText:
-      'Hi Integrated Learnings, I want to enquire about O-Level June Intensive.',
-
-    formLevelLabel: "Student's level (e.g. Sec 4)",
-    formSubjectLabel: 'Subject block(s) of interest',
-    formSubjectOptions: [
-      'Physics Bootcamp',
-      'Chemistry Bootcamp',
-      'A Math Bootcamp',
-      'E Math Bootcamp',
-      'Weak-Topic Clinic',
-      'Mock + Correction Clinic',
-      '2-Subject Bundle',
-      'Multi-Block Bundle',
-      'Not sure — please advise',
-    ],
-    defaultLevel: 'Secondary 4',
-    defaultSchedule: '2:00pm – 5:00pm',
-    whatsappReserveText:
-      'Hi Integrated Learnings, I want to reserve a slot for O-Level June Intensive.',
-  },
+  return () => {
+    document.title = prevTitle;
+    metaDescription?.setAttribute('content', previousDescription);
+  };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SHARED COMPONENTS
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** CtaBand — repeatable urgency + action row */
-const CtaBand: React.FC<{
-  reserveLink: string;
-  waLink: string;
-  reserveLabel?: string;
-  waLabel: string;
-}> = ({ reserveLink, waLink, reserveLabel = 'Reserve a Slot', waLabel }) => (
-  <div
-    role="complementary"
-    aria-label="Quick actions"
-    className="flex flex-col gap-3 rounded-2xl border border-slate-100 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
-  >
-    <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-      Limited seats &middot; Small-group intensive &middot; Seat confirmed upon payment
-    </p>
-    <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-      <a
-        href={reserveLink}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-black text-slate-950 transition hover:bg-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
-      >
-        {reserveLabel} <ArrowRight size={14} aria-hidden="true" />
-      </a>
-      <a
-        href={waLink}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-2.5 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
-      >
-        <MessageCircle size={14} aria-hidden="true" /> {waLabel}
-      </a>
-    </div>
+const SectionHeading: React.FC<{ kicker?: string; title: string; subtitle?: string }> = ({ kicker, title, subtitle }) => (
+  <div>
+    {kicker && <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-blue-600">{kicker}</p>}
+    <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{title}</h2>
+    {subtitle && <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-600">{subtitle}</p>}
   </div>
 );
 
-/** TimetableSection — premium timeline-style programme schedule */
-const TimetableSection: React.FC<{
-  blocks: TimetableBlock[];
-  note: string;
-  headingId: string;
-}> = ({ blocks, note, headingId }) => (
-  <section
-    aria-labelledby={headingId}
-    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-  >
-    {/* Header */}
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-widest text-blue-500">
-          June 2026
-        </p>
-        <h2
-          id={headingId}
-          className="mt-1 text-2xl font-black tracking-tight text-slate-900"
-        >
-          Programme Schedule
-        </h2>
-      </div>
-      <p className="max-w-sm text-xs leading-relaxed text-slate-400 sm:text-right">
-        {note}
+const CampaignHero: React.FC<{
+  badge: string;
+  title: string;
+  subtitle: string;
+  supporting: string;
+  trustLine: string;
+  seatLine: string;
+  reserveLabel: string;
+  waLabel: string;
+  fitCheckLabel: string;
+  reserveLink: string;
+  waLink: string;
+  fitCheckLink: string;
+}> = ({
+  badge,
+  title,
+  subtitle,
+  supporting,
+  trustLine,
+  seatLine,
+  reserveLabel,
+  waLabel,
+  fitCheckLabel,
+  reserveLink,
+  waLink,
+  fitCheckLink,
+}) => (
+  <header className="relative overflow-hidden bg-[linear-gradient(140deg,#0b1220_0%,#1e293b_45%,#1e3a8a_100%)] px-4 pb-14 pt-14 text-white sm:px-6 sm:pb-20 sm:pt-20">
+    <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+      <div className="absolute -left-24 top-8 h-80 w-80 rounded-full bg-amber-300/15 blur-3xl" />
+      <div className="absolute -right-28 bottom-0 h-80 w-80 rounded-full bg-sky-300/15 blur-3xl" />
+    </div>
+
+    <div className="relative mx-auto max-w-6xl">
+      <p className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-amber-300">
+        <Sparkles size={12} aria-hidden="true" /> {badge}
       </p>
+
+      <h1 className="mt-5 max-w-4xl text-3xl font-black tracking-tight sm:text-5xl">{title}</h1>
+      <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-slate-200">{subtitle}</p>
+      <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-300">{supporting}</p>
+
+      <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <a
+          href={reserveLink}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-6 py-3.5 text-sm font-black text-slate-950 shadow-lg transition hover:bg-amber-300"
+        >
+          {reserveLabel} <ArrowRight size={15} aria-hidden="true" />
+        </a>
+        <a
+          href={waLink}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-white/15"
+        >
+          <MessageCircle size={15} aria-hidden="true" /> {waLabel}
+        </a>
+        <a
+          href={fitCheckLink}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300/40 bg-amber-300/10 px-6 py-3.5 text-sm font-bold text-amber-100 transition hover:bg-amber-300/20"
+        >
+          <ShieldCheck size={15} aria-hidden="true" /> {fitCheckLabel}
+        </a>
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <p className="rounded-2xl border border-emerald-300/30 bg-emerald-300/10 px-4 py-3 text-xs font-semibold text-emerald-100">
+          {trustLine}
+        </p>
+        <p className="rounded-2xl border border-amber-300/30 bg-amber-300/10 px-4 py-3 text-xs font-semibold text-amber-100">
+          {seatLine}
+        </p>
+      </div>
     </div>
+  </header>
+);
 
-    {/* Legend */}
-    <div className="mt-4 flex items-center gap-4">
-      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-        <span className="h-2.5 w-2.5 rounded-full border-2 border-slate-300 bg-white" />
-        Regular session
-      </span>
-      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600">
-        <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-        Key session
-      </span>
+const ActionBand: React.FC<{
+  reserveLink: string;
+  waLink: string;
+  fitCheckLink: string;
+  waLabel: string;
+}> = ({ reserveLink, waLink, fitCheckLink, waLabel }) => (
+  <section aria-label="Quick actions" className="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500">
+        Limited seats available · Seat confirmed upon payment
+      </p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <a
+          href={reserveLink}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-black text-slate-950 hover:bg-amber-400"
+        >
+          Reserve a Seat
+        </a>
+        <a
+          href={waLink}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
+        >
+          <MessageCircle size={14} aria-hidden="true" /> {waLabel}
+        </a>
+        <a
+          href={fitCheckLink}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+        >
+          Send Latest Results Slip for Fit Check
+        </a>
+      </div>
     </div>
+  </section>
+);
 
-    {/* Timeline */}
-    <ol
-      className="relative mt-6 space-y-0"
-      aria-label="Programme schedule"
-    >
-      {/* Vertical line — visible on sm+ */}
-      <li
-        aria-hidden="true"
-        className="pointer-events-none absolute left-[23px] top-5 hidden h-[calc(100%-2.5rem)] w-px bg-slate-200 sm:block"
-      />
+const WhoForSection: React.FC<{ title: string; items: string[] }> = ({ title, items }) => (
+  <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <SectionHeading title={title} />
+    <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+      {items.map((item) => (
+        <li key={item} className="flex items-start gap-2.5 rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          <Users size={14} className="mt-0.5 shrink-0 text-blue-600" aria-hidden="true" />
+          {item}
+        </li>
+      ))}
+    </ul>
+  </section>
+);
 
-      {blocks.map((block, idx) => {
-        const isHighlight = block.highlight === true;
-        return (
-          <li
-            key={`${block.date}-${block.title}`}
-            className="relative flex flex-col gap-0 sm:flex-row sm:gap-0"
+const ProgrammeFormat: React.FC<{ heading: string; copy: string; packages: string[] }> = ({ heading, copy, packages }) => (
+  <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <SectionHeading title={heading} subtitle={copy} />
+    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      {packages.map((pkg) => (
+        <article key={pkg} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+          <p className="text-sm font-black text-slate-900">{pkg}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+);
+
+const ScheduleSection: React.FC<{ entries: ScheduleEntry[] }> = ({ entries }) => (
+  <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <SectionHeading
+      kicker="Programme Schedule"
+      title="Structured session flow for June"
+      subtitle="Each session includes guided explanation, active practice, and correction feedback."
+    />
+
+    <ol className="mt-6 space-y-4" aria-label="Crash course schedule">
+      {entries.map((entry, index) => (
+        <li key={`${entry.date}-${entry.title}`} className="relative">
+          <article
+            className={`rounded-2xl border p-5 ${entry.keySession ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 ring-1 ring-amber-200' : 'border-slate-200 bg-slate-50'}`}
           >
-            {/* Step indicator (visible sm+) */}
-            <div
-              aria-hidden="true"
-              className="relative z-10 hidden shrink-0 sm:flex sm:w-12 sm:flex-col sm:items-center sm:pt-5"
-            >
-              <div
-                className={`flex h-[1.875rem] w-[1.875rem] items-center justify-center rounded-full text-[11px] font-black ring-2 ring-white ${
-                  isHighlight
-                    ? 'bg-amber-400 text-slate-900 ring-amber-200'
-                    : 'bg-blue-100 text-blue-700'
-                }`}
-              >
-                {idx + 1}
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-black uppercase tracking-wider ${entry.keySession ? 'bg-amber-200 text-amber-800' : 'bg-blue-100 text-blue-700'}`}>
+                  {entry.date}
+                </p>
+                <h3 className="mt-2 text-lg font-black text-slate-900">{entry.title}</h3>
               </div>
-            </div>
-
-            {/* Card */}
-            <article
-              className={`mb-4 flex-1 rounded-2xl border p-5 transition sm:ml-4 ${
-                isHighlight
-                  ? 'border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 shadow-sm ring-1 ring-amber-200'
-                  : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white'
-              }`}
-            >
-              {/* Card top row */}
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                  {/* Date pill */}
-                  <span
-                    className={`inline-flex w-fit items-center rounded-full px-3 py-0.5 text-[11px] font-bold uppercase tracking-widest ${
-                      isHighlight
-                        ? 'bg-amber-400/20 text-amber-700'
-                        : 'bg-blue-100 text-blue-700'
-                    }`}
-                  >
-                    {block.date}
-                  </span>
-                  {/* Session title */}
-                  <h3
-                    className={`text-base font-black leading-snug ${
-                      isHighlight ? 'text-amber-900' : 'text-slate-900'
-                    }`}
-                  >
-                    {block.title}
-                  </h3>
-                </div>
-
-                {/* Key session badge */}
-                {isHighlight && (
-                  <span
-                    aria-label="Key session"
-                    className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-900"
-                  >
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-xs font-semibold text-slate-600 ring-1 ring-slate-200">
+                  <Clock3 size={12} aria-hidden="true" /> {entry.time}
+                </span>
+                {entry.keySession && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-900">
                     <Sparkles size={10} aria-hidden="true" /> Key session
                   </span>
                 )}
               </div>
+            </div>
 
-              {/* Time row */}
-              <p
-                className={`mt-2.5 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${
-                  isHighlight
-                    ? 'bg-amber-100 text-amber-800'
-                    : 'bg-white text-slate-500 ring-1 ring-slate-200'
-                }`}
-              >
-                <Clock size={12} aria-hidden="true" />
-                {block.time}
-              </p>
+            <ul className="mt-4 grid gap-y-2 sm:grid-cols-2">
+              {entry.bullets.map((point) => (
+                <li key={point} className="flex items-start gap-2 text-sm text-slate-700">
+                  <Target size={13} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
+                  {point}
+                </li>
+              ))}
+            </ul>
 
-              {/* Divider */}
-              <div
-                className={`my-3.5 border-t ${
-                  isHighlight ? 'border-amber-200' : 'border-slate-200'
-                }`}
-              />
-
-              {/* Focus list */}
-              <ul
-                className="grid gap-y-2 sm:grid-cols-2"
-                aria-label={`Session focus for ${block.title}`}
-              >
-                {block.focus.map((point) => (
-                  <li
-                    key={point}
-                    className="flex items-start gap-2 text-sm leading-snug text-slate-700"
-                  >
-                    <Target
-                      size={13}
-                      className={`mt-[2px] shrink-0 ${
-                        isHighlight ? 'text-amber-500' : 'text-emerald-600'
-                      }`}
-                      aria-hidden="true"
-                    />
-                    {point}
-                  </li>
-                ))}
-              </ul>
-            </article>
-          </li>
-        );
-      })}
+            <span className="pointer-events-none absolute -left-3 top-5 hidden h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-xs font-black text-white sm:flex">
+              {index + 1}
+            </span>
+          </article>
+        </li>
+      ))}
     </ol>
   </section>
 );
 
-/** PricingSection — cards + comparison table */
-const PricingSection: React.FC<{
-  options: PricingOption[];
-  note: string;
-  reserveLink: string;
-  headingId: string;
-}> = ({ options, note, reserveLink, headingId }) => (
-  <section
-    aria-labelledby={headingId}
-    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-  >
-    <h2 id={headingId} className="text-2xl font-black tracking-tight text-slate-900">
-      Pricing &amp; Package Options
-    </h2>
+const BenefitsSection: React.FC<{ title: string; items: string[] }> = ({ title, items }) => (
+  <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <SectionHeading title={title} />
+    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {items.map((item) => (
+        <article key={item} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+          <p className="text-sm leading-relaxed text-slate-700">{item}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+);
 
-    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {options.map((opt) => (
+const PricingSection: React.FC<{
+  heading: string;
+  cards: PricingCard[];
+  reserveLink: string;
+  waLink: string;
+  friendStripText: string;
+  friendSmallPrint: string;
+}> = ({ heading, cards, reserveLink, waLink, friendStripText, friendSmallPrint }) => (
+  <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <SectionHeading
+      kicker="Pricing"
+      title={heading}
+      subtitle="All prices are for the full block or bundle, not hourly rates."
+    />
+
+    <div className="mt-5 grid gap-4 lg:grid-cols-2">
+      {cards.map((card) => (
         <article
-          key={opt.title}
-          className={`relative flex flex-col gap-2 rounded-2xl border p-5 transition ${
-            opt.highlight
-              ? 'border-amber-300 bg-amber-50 ring-1 ring-amber-200'
-              : 'border-slate-200 bg-slate-50 hover:border-slate-300'
-          }`}
+          key={card.title}
+          className={`relative rounded-2xl border p-5 ${card.popular ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 ring-1 ring-amber-200' : 'border-slate-200 bg-slate-50'}`}
         >
-          {opt.highlight && (
-            <span
-              aria-label="Best value package"
-              className="absolute right-4 top-4 rounded-full bg-amber-400 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-slate-900"
-            >
-              Best value
+          {card.popular && (
+            <span className="absolute right-4 top-4 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-900">
+              Most Popular
             </span>
           )}
-          <p className="pr-20 text-sm font-black text-slate-900">{opt.title}</p>
-          <p className="text-2xl font-black text-blue-800">{opt.range}</p>
-          <p className="mt-auto text-xs leading-relaxed text-slate-500">{opt.note}</p>
+          <h3 className="pr-24 text-base font-black text-slate-900">{card.title}</h3>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{card.subtitle}</p>
+
+          <dl className="mt-4 space-y-1.5 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-500">Standard</dt>
+              <dd className="font-bold text-slate-800">{card.standard}</dd>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <dt className="text-slate-500">Early Bird</dt>
+              <dd className="font-black text-emerald-700">{card.earlyBird}</dd>
+            </div>
+            {card.friendRate && (
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-slate-500">Friend Rate</dt>
+                <dd className="font-black text-blue-700">{card.friendRate}</dd>
+              </div>
+            )}
+          </dl>
         </article>
       ))}
     </div>
 
-    <div className="mt-6 overflow-x-auto rounded-2xl border border-slate-200">
-      <table className="w-full min-w-[460px] text-left text-sm">
-        <caption className="sr-only">Package pricing comparison table</caption>
-        <thead>
-          <tr className="bg-slate-50">
-            <th scope="col" className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-              Package
-            </th>
-            <th scope="col" className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-              Price range
-            </th>
-            <th scope="col" className="px-4 py-3 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-              Best for
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {options.map((opt) => (
-            <tr
-              key={`cmp-${opt.title}`}
-              className={`border-t border-slate-100 ${opt.highlight ? 'bg-amber-50/50' : ''}`}
-            >
-              <td className="px-4 py-3 font-semibold text-slate-800">{opt.title}</td>
-              <td className="px-4 py-3 font-black text-blue-800">{opt.range}</td>
-              <td className="px-4 py-3 text-slate-600">{opt.note}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+      <p className="text-sm font-black text-emerald-800">Bring a Friend, Save Together</p>
+      <p className="mt-1 text-sm text-emerald-700">{friendStripText}</p>
     </div>
 
-    <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <p className="max-w-sm text-xs leading-relaxed text-slate-500">{note}</p>
-      <a
-        href={reserveLink}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-3 text-sm font-black text-slate-950 transition hover:bg-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
-      >
-        Reserve a Slot <ArrowRight size={14} aria-hidden="true" />
+    <div className="mt-4 space-y-1 text-xs text-slate-500">
+      <p>Seat confirmed upon payment. Limited seats available.</p>
+      <p>Small-group format, capped at 8 students for closer feedback and correction.</p>
+      <p>Some clinic sessions may be capped smaller for closer correction.</p>
+      <p>{friendSmallPrint}</p>
+      <p>Promotions are not stackable. Students may choose the best available offer.</p>
+    </div>
+
+    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <a href={reserveLink} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3 text-sm font-black text-slate-950 hover:bg-amber-400">
+        Reserve a Seat
+      </a>
+      <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-6 py-3 text-sm font-bold text-emerald-700 hover:bg-emerald-100">
+        <MessageCircle size={14} aria-hidden="true" /> Get Timetable on WhatsApp
       </a>
     </div>
   </section>
 );
 
-/** FaqAccordion — accessible expand/collapse using <dl> */
-const FaqAccordion: React.FC<{ items: FaqEntry[]; headingId: string }> = ({
-  items,
-  headingId,
-}) => {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+const WhySection: React.FC<{ heading: string; points: string[] }> = ({ heading, points }) => (
+  <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <SectionHeading title={heading} />
+    <ul className="mt-5 space-y-3">
+      {points.map((point) => (
+        <li key={point} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-700">
+          <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
+          {point}
+        </li>
+      ))}
+    </ul>
+  </section>
+);
+
+const PromiseBlock: React.FC<{ heading: string; body: string }> = ({ heading, body }) => (
+  <section className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-slate-50 p-6 shadow-sm sm:p-8">
+    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-blue-600">Promise</p>
+    <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-900">{heading}</h2>
+    <p className="mt-3 text-sm leading-relaxed text-slate-600">{body}</p>
+  </section>
+);
+
+const FaqAccordion: React.FC<{ items: FaqItem[] }> = ({ items }) => {
+  const [open, setOpen] = useState<number | null>(0);
   const uid = useId();
 
   return (
-    <section
-      aria-labelledby={headingId}
-      className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-    >
-      <h2 id={headingId} className="text-2xl font-black tracking-tight text-slate-900">
-        Frequently Asked Questions
-      </h2>
-      <dl className="mt-6 space-y-2">
-        {items.map((item, idx) => {
-          const isOpen = openIndex === idx;
-          const btnId = `${uid}-q-${idx}`;
-          const panelId = `${uid}-a-${idx}`;
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <SectionHeading title="FAQ" />
+      <div className="mt-5 space-y-2">
+        {items.map((item, index) => {
+          const isOpen = open === index;
+          const buttonId = `${uid}-faq-btn-${index}`;
+          const panelId = `${uid}-faq-panel-${index}`;
           return (
-            <div
-              key={item.q}
-              className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
-            >
-              <dt>
+            <article key={item.question} className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <h3>
                 <button
-                  id={btnId}
+                  id={buttonId}
                   type="button"
                   aria-expanded={isOpen}
                   aria-controls={panelId}
-                  onClick={() =>
-                    setOpenIndex((prev) => (prev === idx ? null : idx))
-                  }
+                  onClick={() => setOpen((prev) => (prev === index ? null : index))}
                   className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
                 >
-                  <span className="text-sm font-bold text-slate-900">{item.q}</span>
-                  <ChevronDown
-                    size={16}
-                    aria-hidden="true"
-                    className={`shrink-0 text-slate-400 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180' : ''
-                    }`}
-                  />
+                  <span className="text-sm font-bold text-slate-900">{item.question}</span>
+                  <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
-              </dt>
-              <dd
-                id={panelId}
-                role="region"
-                aria-labelledby={btnId}
-                hidden={!isOpen}
-                className="border-t border-slate-200 px-5 py-4"
-              >
-                <p className="text-sm leading-relaxed text-slate-600">{item.a}</p>
-              </dd>
-            </div>
+              </h3>
+              <div id={panelId} role="region" aria-labelledby={buttonId} hidden={!isOpen} className="border-t border-slate-200 px-5 py-4">
+                <p className="text-sm leading-relaxed text-slate-600">{item.answer}</p>
+              </div>
+            </article>
           );
         })}
-      </dl>
+      </div>
     </section>
   );
 };
 
-/** WhyUsSection — credibility points + safe promise card side by side */
-const WhyUsSection: React.FC<{
-  points: string[];
-  promiseTitle: string;
-  promiseBody: string;
-  headingId: string;
-}> = ({ points, promiseTitle, promiseBody, headingId }) => (
-  <div className="grid gap-5 lg:grid-cols-5">
-    <section
-      aria-labelledby={headingId}
-      className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8 lg:col-span-3"
-    >
-      <h2
-        id={headingId}
-        className="text-2xl font-black tracking-tight text-slate-900"
-      >
-        Why Integrated Learnings
-      </h2>
-      <ul className="mt-5 space-y-3">
-        {points.map((pt) => (
-          <li
-            key={pt}
-            className="flex items-start gap-3 text-sm leading-relaxed text-slate-700"
-          >
-            <CheckCircle2
-              size={16}
-              className="mt-[2px] shrink-0 text-emerald-600"
-              aria-hidden="true"
-            />
-            {pt}
-          </li>
-        ))}
-      </ul>
-    </section>
-
-    <section
-      aria-label={promiseTitle}
-      className="flex flex-col justify-between rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 to-slate-50 p-6 shadow-sm sm:p-8 lg:col-span-2"
-    >
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-widest text-blue-500">
-          Our Commitment
-        </p>
-        <h2 className="mt-2 text-xl font-black tracking-tight text-slate-900">
-          {promiseTitle}
-        </h2>
-        <p className="mt-4 text-sm leading-relaxed text-slate-600">{promiseBody}</p>
-      </div>
-      <div className="mt-6 rounded-2xl border border-blue-100 bg-white/80 px-4 py-3">
-        <p className="text-xs leading-relaxed text-slate-500">
-          We focus on fit and follow-through. If the programme is not right for
-          your child, we will say so.
-        </p>
-      </div>
-    </section>
-  </div>
-);
-
-/** FinalCtaSection — bottom conversion block */
-const FinalCtaSection: React.FC<{
-  headline: string;
-  body: string;
-  reserveLink: string;
-  waLink: string;
-  waLabel: string;
-}> = ({ headline, body, reserveLink, waLink, waLabel }) => (
-  <section
-    aria-label="Reserve or enquire"
-    className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 p-8 shadow-sm sm:p-10"
-  >
-    <p className="text-[11px] font-bold uppercase tracking-widest text-amber-600">
-      Limited seats &middot; June 2026
-    </p>
-    <h2 className="mt-3 text-2xl font-black leading-snug tracking-tight text-slate-900 sm:text-3xl">
-      {headline}
-    </h2>
-    <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-600">{body}</p>
-    <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-      <a
-        href={reserveLink}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 px-7 py-3.5 text-sm font-black text-slate-950 shadow-md transition hover:bg-amber-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
-      >
-        Reserve a Slot <ArrowRight size={15} aria-hidden="true" />
-      </a>
-      <a
-        href={waLink}
-        target="_blank"
-        rel="noreferrer"
-        className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400 bg-white px-7 py-3.5 text-sm font-bold text-amber-700 transition hover:bg-amber-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500"
-      >
-        <MessageCircle size={15} aria-hidden="true" /> {waLabel}
-      </a>
-    </div>
-  </section>
-);
-
-/** LeadForm — short, friction-light, accessible enquiry form */
-const LeadForm: React.FC<{ config: CrashCourseConfig }> = ({ config }) => {
+const CampaignLeadForm: React.FC<{
+  slug: CrashCourseSlug;
+  content: LeadFormContent;
+  defaultLevel: string;
+  defaultSchedule: string;
+  pageTitle: string;
+}> = ({ slug, content, defaultLevel, defaultSchedule, pageTitle }) => {
   const uid = useId();
   const [parentName, setParentName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
-  const [level, setLevel] = useState(config.defaultLevel);
-  const [subjectInterest, setSubjectInterest] = useState('');
-  const [gradeConcern, setGradeConcern] = useState('');
-  const [showExtra, setShowExtra] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [level, setLevel] = useState(defaultLevel);
+  const [interest, setInterest] = useState('');
+  const [concern, setConcern] = useState('');
   const [resultsNote, setResultsNote] = useState('');
   const [resultsFile, setResultsFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [notice, setNotice] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const [notice, setNotice] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setNotice(null);
 
-    if (
-      !parentName.trim() ||
-      !contactNumber.trim() ||
-      !level.trim() ||
-      !subjectInterest.trim() ||
-      !gradeConcern.trim()
-    ) {
-      setNotice({
-        type: 'error',
-        text: 'Please complete all required fields before submitting.',
-      });
+    if (!parentName.trim() || !phone.trim() || !level.trim() || !interest.trim() || !concern.trim()) {
+      setNotice({ type: 'error', text: 'Please complete all required fields.' });
       return;
     }
 
     setSubmitting(true);
-
     const result = await submitParentInquiry({
       parent_name: parentName.trim(),
-      student_name: `${config.pageTitle} Lead`,
-      contact_number: contactNumber.replace(/\s+/g, ''),
-      email: `${contactNumber.replace(/\D/g, '') || 'lead'}@integratedlearns.local`,
+      student_name: `${slug}-lead`,
+      contact_number: phone.replace(/\s+/g, ''),
+      email: `${phone.replace(/\D/g, '') || 'lead'}@integratedlearns.local`,
       student_level: level.trim(),
-      subjects: [subjectInterest.trim()],
+      subjects: [interest.trim()],
       preferred_mode: 'group',
       postal_code: '',
-      address: `Crash Course Landing — ${config.pageTitle}`,
+      address: `Crash Course Landing - ${pageTitle}`,
       unit_number: '',
-      learning_needs: gradeConcern.trim(),
+      learning_needs: concern.trim(),
       tutor_type: 'no-preference',
-      preferred_schedule: config.defaultSchedule,
+      preferred_schedule: defaultSchedule,
       additional_notes: [
-        resultsNote.trim() || 'No results note provided.',
+        resultsNote.trim() || 'No results note.',
         resultsFile ? `Results file: ${resultsFile.name}` : 'No file attached.',
       ].join(' | '),
     });
 
     setSubmitting(false);
-
     if (!result.success) {
-      setNotice({
-        type: 'error',
-        text: result.error || 'Submission failed. Please WhatsApp us directly.',
-      });
+      setNotice({ type: 'error', text: result.error || 'Submission failed. Please WhatsApp us directly.' });
       return;
     }
 
-    setNotice({
-      type: 'success',
-      text: 'Submitted. Our team will contact you on WhatsApp shortly to confirm fit and slot options.',
-    });
+    setNotice({ type: 'success', text: 'Submitted successfully. We will contact you on WhatsApp shortly.' });
     setParentName('');
-    setContactNumber('');
-    setSubjectInterest('');
-    setGradeConcern('');
+    setPhone('');
+    setInterest('');
+    setConcern('');
     setResultsNote('');
     setResultsFile(null);
-    setShowExtra(false);
   };
 
-  const labelCls =
-    'mb-1.5 block text-xs font-bold uppercase tracking-widest text-slate-500';
-  const inputCls =
-    'w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 transition placeholder:text-slate-400 focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-100';
+  const labelClass = 'mb-1.5 block text-xs font-black uppercase tracking-[0.12em] text-slate-500';
+  const inputClass = 'w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-200';
 
   return (
-    <section
-      id="enquire"
-      aria-label="Enquire and reserve a slot"
-      className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-    >
-      <h2 className="text-2xl font-black tracking-tight text-slate-900">
-        Reserve or Enquire
-      </h2>
-      <p className="mt-1.5 text-sm text-slate-500">
-        Short form — we reply on WhatsApp to confirm fit and available slots.
-      </p>
-
-      <form
-        ref={formRef}
-        className="mt-6 grid gap-5 sm:grid-cols-2"
-        onSubmit={handleSubmit}
-        noValidate
-      >
+    <section id="reserve-form" className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <SectionHeading title={content.heading} />
+      <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit} noValidate>
         <div>
-          <label htmlFor={`${uid}-name`} className={labelCls}>
-            Parent name{' '}
-            <span aria-hidden="true" className="text-red-400">
-              *
-            </span>
-          </label>
-          <input
-            id={`${uid}-name`}
-            type="text"
-            autoComplete="name"
-            required
-            value={parentName}
-            onChange={(e) => setParentName(e.target.value)}
-            className={inputCls}
-            aria-required="true"
-          />
+          <label htmlFor={`${uid}-name`} className={labelClass}>Parent name *</label>
+          <input id={`${uid}-name`} required value={parentName} onChange={(e) => setParentName(e.target.value)} className={inputClass} autoComplete="name" />
         </div>
 
         <div>
-          <label htmlFor={`${uid}-phone`} className={labelCls}>
-            WhatsApp number{' '}
-            <span aria-hidden="true" className="text-red-400">
-              *
-            </span>
-          </label>
-          <input
-            id={`${uid}-phone`}
-            type="tel"
-            autoComplete="tel"
-            inputMode="tel"
-            required
-            placeholder="+65 9123 4567"
-            value={contactNumber}
-            onChange={(e) => setContactNumber(e.target.value)}
-            className={inputCls}
-            aria-required="true"
-          />
+          <label htmlFor={`${uid}-phone`} className={labelClass}>Mobile / WhatsApp number *</label>
+          <input id={`${uid}-phone`} required value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} autoComplete="tel" />
         </div>
 
         <div>
-          <label htmlFor={`${uid}-level`} className={labelCls}>
-            {config.formLevelLabel}{' '}
-            <span aria-hidden="true" className="text-red-400">
-              *
-            </span>
-          </label>
-          <input
-            id={`${uid}-level`}
-            type="text"
-            required
-            value={level}
-            onChange={(e) => setLevel(e.target.value)}
-            className={inputCls}
-            aria-required="true"
-          />
+          <label htmlFor={`${uid}-level`} className={labelClass}>{content.levelLabel} *</label>
+          <input id={`${uid}-level`} required value={level} onChange={(e) => setLevel(e.target.value)} className={inputClass} />
         </div>
 
         <div>
-          <label htmlFor={`${uid}-subject`} className={labelCls}>
-            {config.formSubjectLabel}{' '}
-            <span aria-hidden="true" className="text-red-400">
-              *
-            </span>
-          </label>
-          <select
-            id={`${uid}-subject`}
-            required
-            value={subjectInterest}
-            onChange={(e) => setSubjectInterest(e.target.value)}
-            className={inputCls}
-            aria-required="true"
-          >
-            <option value="">Select a programme</option>
-            {config.formSubjectOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
+          <label htmlFor={`${uid}-interest`} className={labelClass}>{content.interestLabel} *</label>
+          <select id={`${uid}-interest`} required value={interest} onChange={(e) => setInterest(e.target.value)} className={inputClass}>
+            <option value="">Select an option</option>
+            {content.interestOptions.map((option) => (
+              <option key={option} value={option}>{option}</option>
             ))}
           </select>
         </div>
 
         <div className="sm:col-span-2">
-          <label htmlFor={`${uid}-concern`} className={labelCls}>
-            Latest grade or main concern{' '}
-            <span aria-hidden="true" className="text-red-400">
-              *
-            </span>
-          </label>
+          <label htmlFor={`${uid}-concern`} className={labelClass}>Latest grade / main concern *</label>
           <textarea
             id={`${uid}-concern`}
             required
             rows={3}
-            placeholder="e.g. Scored 55 for Math last CA, struggles with problem sums"
-            value={gradeConcern}
-            onChange={(e) => setGradeConcern(e.target.value)}
-            className={`${inputCls} resize-none`}
-            aria-required="true"
+            value={concern}
+            onChange={(e) => setConcern(e.target.value)}
+            placeholder="Share latest score and main weakness areas"
+            className={`${inputClass} resize-none`}
           />
         </div>
 
-        <div className="sm:col-span-2">
-          <button
-            type="button"
-            aria-expanded={showExtra}
-            onClick={() => setShowExtra((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50"
-          >
-            <ChevronDown
-              size={13}
-              aria-hidden="true"
-              className={`transition-transform ${showExtra ? 'rotate-180' : ''}`}
+        <div className="sm:col-span-2 grid gap-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div>
+            <label htmlFor={`${uid}-results-note`} className={labelClass}>Optional results slip note</label>
+            <textarea
+              id={`${uid}-results-note`}
+              rows={2}
+              value={resultsNote}
+              onChange={(e) => setResultsNote(e.target.value)}
+              placeholder="Add context if sending latest result snapshot"
+              className={`${inputClass} resize-none`}
             />
-            {showExtra ? 'Hide results slip fields' : 'Attach results slip (optional)'}
-          </button>
-
-          {showExtra && (
-            <div className="mt-4 space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-4">
-              <div>
-                <label htmlFor={`${uid}-file`} className={labelCls}>
-                  Upload results slip (PDF, JPG, PNG)
-                </label>
-                <input
-                  id={`${uid}-file`}
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png,.webp"
-                  onChange={(e) =>
-                    setResultsFile(e.target.files?.[0] ?? null)
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
-                />
-              </div>
-              <div>
-                <label htmlFor={`${uid}-note`} className={labelCls}>
-                  Note about results slip
-                </label>
-                <textarea
-                  id={`${uid}-note`}
-                  rows={2}
-                  placeholder="Any context about the results"
-                  value={resultsNote}
-                  onChange={(e) => setResultsNote(e.target.value)}
-                  className={`${inputCls} resize-none`}
-                />
-              </div>
-            </div>
-          )}
+          </div>
+          <div>
+            <label htmlFor={`${uid}-results-file`} className={labelClass}>Optional results slip upload</label>
+            <input
+              id={`${uid}-results-file`}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png,.webp"
+              onChange={(e) => setResultsFile(e.target.files?.[0] ?? null)}
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-white"
+            />
+          </div>
         </div>
 
         <div className="sm:col-span-2">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-800 px-6 py-3.5 text-sm font-black text-white shadow-md transition hover:bg-blue-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-          >
-            {submitting ? 'Submitting…' : 'Reserve My Slot'}
-            {!submitting && <ArrowRight size={15} aria-hidden="true" />}
+          <button type="submit" disabled={submitting} className="inline-flex w-full items-center justify-center rounded-xl bg-blue-800 px-6 py-3.5 text-sm font-black text-white shadow transition hover:bg-blue-900 disabled:opacity-60 sm:w-auto">
+            {submitting ? 'Submitting...' : content.ctaLabel}
           </button>
         </div>
       </form>
 
-      <div className="mt-5 space-y-1 rounded-2xl border border-slate-100 bg-slate-50 px-5 py-4 text-xs leading-relaxed text-slate-500">
-        <p>&#10003; We will reply with the timetable, package options, and fit-check steps.</p>
-        <p>&#10003; No hard selling — we confirm fit before you commit.</p>
-        <p>&#10003; Parents can share latest results for a quicker recommendation.</p>
+      <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-xs leading-relaxed text-slate-600">
+        <p>We’ll reply with the timetable, package options, and fit-check steps.</p>
+        <p>No hard selling.</p>
+        <p>Parents can send latest results for a quick recommendation.</p>
       </div>
 
       {notice && (
-        <div
-          role="alert"
-          aria-live="polite"
-          className={`mt-5 rounded-xl border px-4 py-3 text-sm font-semibold ${
-            notice.type === 'success'
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-              : 'border-red-200 bg-red-50 text-red-700'
-          }`}
-        >
+        <p className={`mt-4 rounded-xl border px-4 py-3 text-sm font-semibold ${notice.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-red-200 bg-red-50 text-red-700'}`}>
           {notice.text}
-        </div>
+        </p>
       )}
     </section>
   );
 };
 
-/** MobileStickyBar — fixed bottom bar, hidden on md+ */
-const MobileStickyBar: React.FC<{
-  waLink: string;
-  reserveLink: string;
-}> = ({ waLink, reserveLink }) => (
-  <div
-    aria-label="Quick contact actions"
-    className="fixed inset-x-0 bottom-0 z-50 flex gap-2 border-t border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur-sm md:hidden"
-  >
-    <a
-      href={waLink}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-3 text-xs font-black text-white transition active:bg-emerald-700"
-    >
+const FinalCta: React.FC<{ headline: string; reserveLink: string; waLink: string; waLabel: string }> = ({ headline, reserveLink, waLink, waLabel }) => (
+  <section className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 p-6 shadow-sm sm:p-8">
+    <h2 className="text-2xl font-black tracking-tight text-slate-900">{headline}</h2>
+    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+      <a href={reserveLink} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-black text-slate-950 hover:bg-amber-400">
+        Reserve a Seat
+      </a>
+      <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-amber-400 bg-white px-6 py-3.5 text-sm font-bold text-amber-700 hover:bg-amber-50">
+        <MessageCircle size={14} aria-hidden="true" /> {waLabel}
+      </a>
+    </div>
+  </section>
+);
+
+const StickyMobileCta: React.FC<{ waLink: string; reserveLink: string }> = ({ waLink, reserveLink }) => (
+  <div className="fixed inset-x-0 bottom-0 z-50 flex gap-2 border-t border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur-sm md:hidden">
+    <a href={waLink} target="_blank" rel="noreferrer" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-3 text-xs font-black text-white">
       <MessageCircle size={14} aria-hidden="true" /> WhatsApp
     </a>
-    <a
-      href={reserveLink}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-3 text-xs font-black text-slate-950 transition active:bg-amber-400"
-    >
-      Reserve a Slot <ArrowRight size={14} aria-hidden="true" />
+    <a href={reserveLink} target="_blank" rel="noreferrer" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-500 py-3 text-xs font-black text-slate-950">
+      Reserve a Seat <ArrowRight size={14} aria-hidden="true" />
     </a>
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PAGE RENDERER
-// ─────────────────────────────────────────────────────────────────────────────
+const PageScaffold: React.FC<{
+  hero: React.ReactNode;
+  topCta: React.ReactNode;
+  body: React.ReactNode;
+  stickyBar: React.ReactNode;
+}> = ({ hero, topCta, body, stickyBar }) => (
+  <>
+    <a href="#reserve-form" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:shadow-lg">
+      Skip to reserve form
+    </a>
+    <div className="bg-[#f7f7f6] pb-24 md:pb-0">
+      {hero}
+      <main className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6">
+        {topCta}
+        {body}
+        <nav className="flex flex-col gap-3 sm:flex-row">
+          <Link to="/tuition" className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            Back to Family Tuition
+          </Link>
+        </nav>
+      </main>
+    </div>
+    {stickyBar}
+  </>
+);
 
-const CrashCourseCampaignPage: React.FC<{ config: CrashCourseConfig }> = ({
-  config,
-}) => {
-  const reserveLink = useMemo(
-    () => toWhatsApp(config.whatsappReserveText),
-    [config.whatsappReserveText],
-  );
-  const waHeroLink = useMemo(
-    () => toWhatsApp(config.whatsappHeroText),
-    [config.whatsappHeroText],
-  );
-  const waFinalLink = useMemo(
-    () => toWhatsApp(config.whatsappFinalText),
-    [config.whatsappFinalText],
-  );
+const PSLELeadForm: React.FC = () => (
+  <CampaignLeadForm
+    slug="psle-june-intensive"
+    pageTitle="PSLE Math & Science June Intensive"
+    defaultLevel="Primary 6"
+    defaultSchedule="10:00am - 1:00pm"
+    content={{
+      heading: 'Reserve a PSLE Seat',
+      levelLabel: 'Child level',
+      interestLabel: 'Subject interest',
+      interestOptions: [
+        'Math Bootcamp',
+        'Science Bootcamp',
+        'Mixed Mock + Correction Clinic',
+        'Full PSLE Intensive Bundle',
+        'Not sure - please advise',
+      ],
+      ctaLabel: 'Reserve My Seat',
+    }}
+  />
+);
 
-  // SEO: manage page title + meta description, restore on unmount
-  useEffect(() => {
-    const prevTitle = document.title;
-    document.title = config.pageTitle;
+const OLevelLeadForm: React.FC = () => (
+  <CampaignLeadForm
+    slug="o-level-june-intensive"
+    pageTitle="O-Level June Intensive Subject Bootcamps"
+    defaultLevel="Secondary 4"
+    defaultSchedule="2:00pm - 5:00pm"
+    content={{
+      heading: 'Reserve an O-Level Seat',
+      levelLabel: 'Student level',
+      interestLabel: 'Subject block(s) interested in',
+      interestOptions: [
+        'Physics Bootcamp',
+        'Chemistry Bootcamp',
+        'A Math Bootcamp',
+        'E Math Bootcamp',
+        'Weak-Topic Clinic',
+        'Mock + Correction Clinic',
+        '2-Subject Bundle',
+        'Final Review Bundle',
+        'Not sure - please advise',
+      ],
+      ctaLabel: 'Reserve My Seat',
+    }}
+  />
+);
 
-    let metaEl = document.querySelector<HTMLMetaElement>(
-      'meta[name="description"]',
-    );
-    const prevContent = metaEl?.getAttribute('content') ?? '';
-    if (!metaEl) {
-      metaEl = document.createElement('meta');
-      metaEl.setAttribute('name', 'description');
-      document.head.appendChild(metaEl);
-    }
-    metaEl.setAttribute('content', config.metaDescription);
+export const FamilyPSLEJuneIntensivePage: React.FC = () => {
+  useEffect(() => setPageSeo(
+    'PSLE Math & Science June Intensive | Integrated Learnings',
+    'Small-group PSLE Math & Science June Intensive with targeted practice, correction, and weak-topic support. Founding June Intake pricing now available.',
+  ), []);
 
-    return () => {
-      document.title = prevTitle;
-      metaEl?.setAttribute('content', prevContent);
-    };
-  }, [config.pageTitle, config.metaDescription]);
+  const reserveLink = useMemo(() => toWhatsApp('Hi Integrated Learnings, I want to reserve a seat for PSLE June Intensive.'), []);
+  const waLink = useMemo(() => toWhatsApp('Hi Integrated Learnings, please send me the PSLE June Intensive timetable.'), []);
+  const fitCheckLink = useMemo(() => toWhatsApp('Hi Integrated Learnings, I want to send latest results slip for PSLE fit check.'), []);
 
-  // Stable section heading IDs (per slug)
-  const ids = useMemo(
-    () => ({
-      whoFor: `${config.slug}-who`,
-      timetable: `${config.slug}-timetable`,
-      pricing: `${config.slug}-pricing`,
-      why: `${config.slug}-why`,
-      testimonials: `${config.slug}-testimonials`,
-      faq: `${config.slug}-faq`,
-    }),
-    [config.slug],
-  );
+  const schedule: ScheduleEntry[] = [
+    {
+      date: '16 Jun',
+      title: 'Math Bootcamp - Part 1',
+      time: '10:00am - 1:00pm',
+      bullets: [
+        'Diagnostic drill to identify gaps',
+        'Worked examples with teacher explanation',
+        'Core concept review',
+        'Guided practice',
+      ],
+    },
+    {
+      date: '17 Jun',
+      title: 'Math Bootcamp - Part 2',
+      time: '10:00am - 1:00pm',
+      bullets: [
+        'Problem sums with varied question types',
+        'Timed structured practice',
+        'Method correction and strategy review',
+      ],
+    },
+    {
+      date: '18 Jun',
+      title: 'Science Bootcamp - Part 1',
+      time: '10:00am - 1:00pm',
+      bullets: [
+        'Key concept consolidation',
+        'Answering structure walkthrough',
+        'MCQ and open-ended practice',
+      ],
+    },
+    {
+      date: '19 Jun',
+      title: 'Science Bootcamp - Part 2',
+      time: '10:00am - 1:00pm',
+      bullets: [
+        'Application questions',
+        'Open-ended correction clinic',
+        'Common mistake review',
+      ],
+    },
+    {
+      date: '20 Jun',
+      title: 'Mixed Mock + Correction Clinic',
+      time: '10:00am - 1:00pm',
+      keySession: true,
+      bullets: [
+        'Timed mixed practice set',
+        'Teacher-led correction and review',
+        'Personal weak-topic action plan',
+      ],
+    },
+  ];
+
+  const pricingCards: PricingCard[] = [
+    {
+      title: 'Math Bootcamp',
+      subtitle: '2 sessions | 6 hours total',
+      standard: 'S$218',
+      earlyBird: 'S$188',
+      friendRate: 'S$198 each',
+    },
+    {
+      title: 'Science Bootcamp',
+      subtitle: '2 sessions | 6 hours total',
+      standard: 'S$218',
+      earlyBird: 'S$188',
+      friendRate: 'S$198 each',
+    },
+    {
+      title: 'Mixed Mock + Correction Clinic',
+      subtitle: '1 session | 3 hours total',
+      standard: 'S$108',
+      earlyBird: 'S$88',
+    },
+    {
+      title: 'Full PSLE Intensive Bundle',
+      subtitle: '5 sessions | 15 hours total',
+      standard: 'S$488',
+      earlyBird: 'S$428',
+      friendRate: 'S$408 each',
+      popular: true,
+    },
+  ];
 
   return (
-    <>
-      {/* Skip to form for keyboard users */}
-      <a
-        href="#enquire"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-xl focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:shadow-lg"
-      >
-        Skip to enquiry form
-      </a>
-
-      <div className="bg-[#f7f7f6] pb-24 text-slate-900 md:pb-0">
-        {/* ── HERO ──────────────────────────────────────────────────── */}
-        <header className="relative overflow-hidden bg-[linear-gradient(150deg,#0f172a_0%,#1e2940_50%,#1e3a8a_100%)] px-4 pb-16 pt-16 text-white sm:px-6 sm:pt-24">
-          <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-            <div className="absolute -left-20 top-10 h-96 w-96 rounded-full bg-amber-400/10 blur-3xl" />
-            <div className="absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-sky-400/10 blur-3xl" />
-          </div>
-
-          <div className="relative mx-auto max-w-5xl">
-            <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-300">
-              <Sparkles size={12} aria-hidden="true" /> {config.eyebrow}
-            </p>
-
-            <h1 className="mt-5 max-w-3xl text-3xl font-black leading-[1.1] tracking-tight sm:text-5xl">
-              {config.h1}
-            </h1>
-
-            <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-slate-300">
-              {config.h1Sub}
-            </p>
-
-            <p className="mt-3 max-w-xl text-sm font-medium leading-relaxed text-slate-400">
-              {config.heroCopy}
-            </p>
-
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <a
-                href={reserveLink}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-400 px-7 py-3.5 text-sm font-black text-slate-950 shadow-lg transition hover:bg-amber-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400"
-              >
-                {config.reserveCtaLabel} <ArrowRight size={15} aria-hidden="true" />
-              </a>
-              <a
-                href={waHeroLink}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-7 py-3.5 text-sm font-bold text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/50"
-              >
-                <MessageCircle size={15} aria-hidden="true" />{' '}
-                {config.whatsappCtaLabel}
-              </a>
-            </div>
-
-            <div className="mt-6 inline-flex items-center gap-2 rounded-2xl border border-amber-300/30 bg-amber-400/10 px-5 py-3 text-xs font-semibold text-amber-200">
-              <Users size={13} aria-hidden="true" /> {config.capacityBadge}
-            </div>
-          </div>
-        </header>
-
-        {/* ── MAIN CONTENT ──────────────────────────────────────────── */}
-        <main className="mx-auto max-w-5xl space-y-8 px-4 py-10 sm:px-6">
-          {/* CTA band — post-hero */}
-          <CtaBand
-            reserveLink={reserveLink}
-            waLink={waHeroLink}
-            waLabel={config.whatsappCtaLabel}
+    <PageScaffold
+      hero={(
+        <CampaignHero
+          badge="Founding June Intake"
+          title="PSLE Math & Science June Intensive"
+          subtitle="Focused small-group revision for students who need clearer understanding, stronger answering technique, and more structured practice this holiday."
+          supporting="Designed for students who need more than random worksheets - with targeted practice, correction, and weak-topic support."
+          trustLine="Led by an educator with 10+ years of teaching experience in Math and Science support."
+          seatLine="Small-group format, capped at 8 students for closer feedback and correction."
+          reserveLabel="Reserve a Seat"
+          waLabel="Get Timetable on WhatsApp"
+          fitCheckLabel="Send Latest Results Slip for Fit Check"
+          reserveLink={reserveLink}
+          waLink={waLink}
+          fitCheckLink={fitCheckLink}
+        />
+      )}
+      topCta={<ActionBand reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Get Timetable on WhatsApp" />}
+      stickyBar={<StickyMobileCta waLink={waLink} reserveLink={reserveLink} />}
+      body={(
+        <>
+          <WhoForSection
+            title="Who this is for"
+            items={[
+              'Students who are weak in PSLE Math or Science',
+              'Students who revise but still repeat the same mistakes',
+              'Students who need clearer explanation and more structured guidance',
+              'Parents who want the June holidays used properly',
+            ]}
           />
 
-          {/* Who this is for */}
-          <section
-            aria-labelledby={ids.whoFor}
-            className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-          >
-            <h2
-              id={ids.whoFor}
-              className="text-2xl font-black tracking-tight text-slate-900"
-            >
-              Who this programme is for
-            </h2>
-            <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-              {config.whoFor.map((item) => (
-                <li
-                  key={item}
-                  className="flex items-start gap-3 text-sm leading-relaxed text-slate-700"
-                >
-                  <Users
-                    size={15}
-                    className="mt-[2px] shrink-0 text-blue-600"
-                    aria-hidden="true"
-                  />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </section>
-
-          {/* Timetable */}
-          <TimetableSection
-            blocks={config.timetableBlocks}
-            note={config.timetableNote}
-            headingId={ids.timetable}
+          <ProgrammeFormat
+            heading="A compact 5-day revision format"
+            copy="This June programme is designed as a focused 5-day intensive. Students may join a single subject bootcamp or the full PSLE bundle."
+            packages={['Math Bootcamp', 'Science Bootcamp', 'Full PSLE Intensive Bundle']}
           />
 
-          {/* Pricing */}
+          <ScheduleSection entries={schedule} />
+
+          <BenefitsSection
+            title="What students will walk away with"
+            items={[
+              'clearer understanding of key Math and Science topics',
+              'guided correction of repeated mistakes',
+              'stronger answering structure for exam-style questions',
+              'focused holiday momentum instead of random revision',
+              'a clearer next-step plan after the programme',
+            ]}
+          />
+
           <PricingSection
-            options={config.pricingOptions}
-            note={config.pricingNote}
+            heading="Founding June Intake Pricing"
+            cards={pricingCards}
             reserveLink={reserveLink}
-            headingId={ids.pricing}
+            waLink={waLink}
+            friendStripText="Sign up with 1 friend for the same PSLE block or bundle and both enjoy a special pair rate."
+            friendSmallPrint="Friend pricing applies only when both students register for the same block or full bundle."
           />
 
-          {/* CTA band — post-pricing */}
-          <CtaBand
+          <ActionBand reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Get Timetable on WhatsApp" />
+
+          <WhySection
+            heading="Why Integrated Learnings"
+            points={[
+              '10+ years of teaching experience in Math and Science support',
+              'strong focus on identifying where students are actually getting stuck',
+              'clearer explanation for students who struggle to follow difficult topics',
+              'structured practice and correction, not random drilling',
+              'lessons designed to keep students engaged and switched on',
+              'optional study-tracking follow-through after the programme',
+            ]}
+          />
+
+          <PromiseBlock
+            heading="Right-Fit Promise"
+            body="If after the first session the programme is clearly not the right fit, we will recommend the next best option and handle any unused portion according to our policy."
+          />
+
+          <FaqAccordion
+            items={[
+              {
+                question: 'Is this suitable for weak students?',
+                answer: 'Yes. The lessons are structured for students who need clearer guidance, more focused correction, and stronger fundamentals.',
+              },
+              {
+                question: 'Can my child join only Math or only Science?',
+                answer: 'Yes. Students can join only one subject bootcamp or choose the full bundle based on needs.',
+              },
+              {
+                question: 'Are materials provided?',
+                answer: 'Yes. Guided worksheets and structured practice materials are included.',
+              },
+              {
+                question: 'Is this a small-group class?',
+                answer: 'Yes. Small-group format is capped at 8 students for closer feedback and correction.',
+              },
+              {
+                question: 'What happens after I enquire?',
+                answer: 'We reply on WhatsApp with timetable details, package options, and fit-check steps before enrolment.',
+              },
+              {
+                question: 'Can I send my child’s latest results slip first?',
+                answer: 'Yes. You may send the latest results slip for a quick recommendation before deciding on a block or bundle.',
+              },
+            ]}
+          />
+
+          <PSLELeadForm />
+
+          <FinalCta
+            headline="Use the June holidays properly. Don’t wait for the next poor result."
             reserveLink={reserveLink}
-            waLink={waHeroLink}
-            waLabel={config.whatsappCtaLabel}
+            waLink={waLink}
+            waLabel="WhatsApp for Details"
           />
-
-          {/* Why us + promise */}
-          <WhyUsSection
-            points={config.whyUs}
-            promiseTitle={config.safePromiseTitle}
-            promiseBody={config.safePromiseBody}
-            headingId={ids.why}
-          />
-
-          {/* FAQ */}
-          <FaqAccordion items={config.faq} headingId={ids.faq} />
-
-          {/* Final CTA */}
-          <FinalCtaSection
-            headline={config.finalHeadline}
-            body={config.finalBody}
-            reserveLink={reserveLink}
-            waLink={waFinalLink}
-            waLabel={config.whatsappCtaLabel}
-          />
-
-          {/* Lead form */}
-          <LeadForm config={config} />
-
-          {/* Footer nav */}
-          <nav aria-label="Page footer navigation" className="flex flex-col gap-3 sm:flex-row">
-            <a
-              href={waHeroLink}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-emerald-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500"
-            >
-              <MessageCircle size={15} aria-hidden="true" /> WhatsApp Integrated
-              Learnings
-            </a>
-            <Link
-              to="/tuition"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-            >
-              &larr; Back to Family Tuition
-            </Link>
-          </nav>
-        </main>
-      </div>
-
-      <MobileStickyBar waLink={waHeroLink} reserveLink={reserveLink} />
-    </>
+        </>
+      )}
+    />
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// NAMED PAGE EXPORTS — consumed by App.tsx routes
-// ─────────────────────────────────────────────────────────────────────────────
+export const FamilyOLevelJuneIntensivePage: React.FC = () => {
+  useEffect(() => setPageSeo(
+    'O-Level June Intensive Subject Bootcamps | Integrated Learnings',
+    'Small-group O-Level holiday revision for Physics, Chemistry, A Math and E Math with weak-topic clinic and mock correction support. Founding June Intake pricing available.',
+  ), []);
 
-export const FamilyPSLEJuneIntensivePage: React.FC = () => (
-  <CrashCourseCampaignPage config={configs['psle-june-intensive']} />
-);
+  const reserveLink = useMemo(() => toWhatsApp('Hi Integrated Learnings, I want to reserve a seat for O-Level June Intensive.'), []);
+  const waLink = useMemo(() => toWhatsApp('Hi Integrated Learnings, please check subject fit for O-Level June Intensive.'), []);
+  const fitCheckLink = useMemo(() => toWhatsApp('Hi Integrated Learnings, I want to send latest results slip for O-Level fit check.'), []);
 
-export const FamilyOLevelJuneIntensivePage: React.FC = () => (
-  <CrashCourseCampaignPage config={configs['o-level-june-intensive']} />
-);
+  const schedule: ScheduleEntry[] = [
+    {
+      date: '16-17 Jun',
+      title: 'Physics Bootcamp',
+      time: '2:00pm - 5:00pm',
+      bullets: [
+        'Structured questions and technique',
+        'MCQ review',
+        'Calculation practice',
+        'Error correction walkthrough',
+      ],
+    },
+    {
+      date: '18-19 Jun',
+      title: 'Chemistry Bootcamp',
+      time: '2:00pm - 5:00pm',
+      bullets: [
+        'Concept consolidation',
+        'Structured questions',
+        'Application questions',
+        'Mistake correction',
+      ],
+    },
+    {
+      date: '20-21 Jun',
+      title: 'A Math Bootcamp',
+      time: '2:00pm - 5:00pm',
+      bullets: [
+        'Method flow and algebra',
+        'Trigonometry review',
+        'Differentiation and integration drills',
+        'Exam-style practice',
+      ],
+    },
+    {
+      date: '22-23 Jun',
+      title: 'E Math Bootcamp',
+      time: '2:00pm - 5:00pm',
+      bullets: [
+        'Timed practice sets',
+        'Graphs, statistics, and geometry',
+        'Accuracy and method correction',
+      ],
+    },
+    {
+      date: '24 Jun',
+      title: 'Weak-Topic Clinic',
+      time: '2:00pm - 5:00pm',
+      keySession: true,
+      bullets: [
+        'Students regrouped by topic weakness',
+        'Guided walkthrough with teacher',
+        'Targeted worksheet pack per group',
+      ],
+    },
+    {
+      date: '25 Jun',
+      title: 'Mock + Correction Clinic',
+      time: '2:00pm - 5:00pm',
+      keySession: true,
+      bullets: [
+        'Timed paper segment',
+        'Live teacher review',
+        'Personal weak-topic action plan',
+      ],
+    },
+  ];
+
+  const pricingCards: PricingCard[] = [
+    {
+      title: 'Single Subject Bootcamp',
+      subtitle: '2 sessions | 6 hours total',
+      standard: 'S$248',
+      earlyBird: 'S$218',
+      friendRate: 'S$228 each',
+    },
+    {
+      title: 'Weak-Topic Clinic',
+      subtitle: '1 session | 3 hours total',
+      standard: 'S$118',
+      earlyBird: 'S$98',
+    },
+    {
+      title: 'Mock + Correction Clinic',
+      subtitle: '1 session | 3 hours total',
+      standard: 'S$118',
+      earlyBird: 'S$98',
+    },
+    {
+      title: '2-Subject Bundle',
+      subtitle: '4 sessions | 12 hours total',
+      standard: 'S$458',
+      earlyBird: 'S$398',
+      friendRate: 'S$418 each',
+    },
+    {
+      title: 'Final Review Bundle',
+      subtitle: '6 sessions | 18 hours total',
+      standard: 'S$638',
+      earlyBird: 'S$568',
+      popular: true,
+    },
+  ];
+
+  return (
+    <PageScaffold
+      hero={(
+        <CampaignHero
+          badge="Founding June Intake"
+          title="O-Level June Intensive Subject Bootcamps"
+          subtitle="Focused holiday revision for Physics, Chemistry, A Math and E Math - with weak-topic clinic and mock correction support."
+          supporting="Choose only the subject blocks your child needs, or bundle them for a stronger revision push."
+          trustLine="Led by an educator with strong teaching support in Math, Physics and Chemistry."
+          seatLine="Each core block is capped at 8 students. Clinic sessions may be capped smaller for closer correction."
+          reserveLabel="Reserve a Seat"
+          waLabel="Check Subject Fit on WhatsApp"
+          fitCheckLabel="Send Latest Results Slip for Fit Check"
+          reserveLink={reserveLink}
+          waLink={waLink}
+          fitCheckLink={fitCheckLink}
+        />
+      )}
+      topCta={<ActionBand reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Check Subject Fit on WhatsApp" />}
+      stickyBar={<StickyMobileCta waLink={waLink} reserveLink={reserveLink} />}
+      body={(
+        <>
+          <WhoForSection
+            title="Who this is for"
+            items={[
+              'Students falling behind in Physics, Chemistry, A Math or E Math',
+              'Students who know content but struggle to apply it in exam questions',
+              'Students who need a structured holiday push',
+              'Parents who want targeted revision, not last-minute panic',
+            ]}
+          />
+
+          <ProgrammeFormat
+            heading="Modular subject bootcamps for focused revision"
+            copy="Students may join a single subject block, combine two subject blocks, or choose a stronger review bundle with clinic support."
+            packages={['Single Subject Bootcamp', '2-Subject Bundle', 'Final Review Bundle']}
+          />
+
+          <ScheduleSection entries={schedule} />
+
+          <BenefitsSection
+            title="What students will walk away with"
+            items={[
+              'stronger clarity in weak topics',
+              'structured correction of repeated mistakes',
+              'more confidence with exam-style questions',
+              'targeted practice instead of broad random drilling',
+              'a clearer next-step action plan after the clinic and mock review',
+            ]}
+          />
+
+          <PricingSection
+            heading="Founding June Intake Pricing"
+            cards={pricingCards}
+            reserveLink={reserveLink}
+            waLink={waLink}
+            friendStripText="Sign up with 1 friend for the same O-Level block or bundle and both enjoy a special pair rate."
+            friendSmallPrint="Friend pricing applies only when both students register for the same block or bundle."
+          />
+
+          <ActionBand reserveLink={reserveLink} waLink={waLink} fitCheckLink={fitCheckLink} waLabel="Check Subject Fit on WhatsApp" />
+
+          <WhySection
+            heading="Why Integrated Learnings"
+            points={[
+              'strong support in Math, Physics and Chemistry',
+              'focus on diagnosing repeated mistakes clearly',
+              'teaching style that helps students understand first, then apply',
+              'structured practice and correction instead of rushed drilling',
+              'lessons built to improve clarity, accuracy, and confidence',
+              'optional study-tracking follow-through after the programme',
+            ]}
+          />
+
+          <PromiseBlock
+            heading="Clarity Promise"
+            body="Students leave with clearer feedback, marked correction, and a next-step weak-topic action plan."
+          />
+
+          <FaqAccordion
+            items={[
+              {
+                question: 'Can my child join only one subject?',
+                answer: 'Yes. Subject blocks are modular, so you can choose only what is needed.',
+              },
+              {
+                question: 'Is this suitable for weaker students?',
+                answer: 'Yes. Sessions are structured to rebuild clarity and improve applied answering confidence.',
+              },
+              {
+                question: 'Will there be practice and correction?',
+                answer: 'Yes. Every block includes structured practice and guided correction.',
+              },
+              {
+                question: 'Are the clinic sessions included?',
+                answer: 'Clinic sessions can be taken standalone or as part of a bundle, depending on your chosen package.',
+              },
+              {
+                question: 'What happens after I enquire?',
+                answer: 'We reply via WhatsApp, run a fit check, and propose the most suitable block combination.',
+              },
+              {
+                question: 'Can I send my child’s latest results slip first?',
+                answer: 'Yes. You can send results first for a faster recommendation.',
+              },
+            ]}
+          />
+
+          <OLevelLeadForm />
+
+          <FinalCta
+            headline="Don’t let the June holidays pass without a proper revision push."
+            reserveLink={reserveLink}
+            waLink={waLink}
+            waLabel="Get Full Timetable"
+          />
+        </>
+      )}
+    />
+  );
+};
