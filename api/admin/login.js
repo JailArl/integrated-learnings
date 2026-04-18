@@ -2,8 +2,14 @@ import bcrypt from 'bcryptjs';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'node:crypto';
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl =
+  process.env.SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL;
+const serviceRoleKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY ||
+  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 const admin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -54,7 +60,14 @@ function getClientIp(req) {
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
-  if (!admin) return json(res, 500, { error: 'Admin auth is not configured.' });
+  if (!admin) {
+    const missing = [];
+    if (!supabaseUrl) missing.push('SUPABASE_URL');
+    if (!serviceRoleKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+    return json(res, 500, {
+      error: `Admin auth is not configured. Missing: ${missing.join(', ')}`,
+    });
+  }
 
   try {
     const body = await readJsonBody(req);
