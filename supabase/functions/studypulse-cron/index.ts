@@ -160,6 +160,20 @@ async function sendWhatsApp(to, templateName, variables, rawMessage) {
   throw new Error(`WhatsApp send failed for ${to}: ${lastError}`);
 }
 
+async function safeSendWhatsApp(to, templateName, variables, rawMessage, contextLabel = "send") {
+  try {
+    await sendWhatsApp(to, templateName, variables, rawMessage);
+    return true;
+  } catch (error) {
+    console.error("WhatsApp send failed", {
+      context: contextLabel,
+      to,
+      error: error instanceof Error ? error.message : String(error)
+    });
+    return false;
+  }
+}
+
 function isServiceRoleRequest(req) {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
@@ -271,6 +285,19 @@ serve(async (req)=>{
     const today = sgNow.toISOString().split("T")[0];
     const dayOfWeek = sgNow.getUTCDay(); // 0=Sun
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    let failureCount = 0;
+    const runGuarded = async (label, fn)=>{
+      try {
+        return await fn();
+      } catch (error) {
+        failureCount++;
+        console.error("Cron phase failed", {
+          phase: label,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        return null;
+      }
+    };
 
     if (body?.action === "manual_send_checkin") {
       if (!isServiceRoleRequest(req)) {
@@ -322,46 +349,47 @@ serve(async (req)=>{
       const parentReportTime = isWeekend ? schedule.weekend_parent_report : schedule.weekday_parent_report;
       // ── SEND CHECK-IN PROMPTS ──
       // Always evaluate each run; sendCheckinPrompts enforces per-child timing window.
-      const sent = await sendCheckinPrompts(sb, schedule.level_group, today, dayOfWeek, currentTime, checkinTime);
-      totalSent += sent;
+      const sent = await runGuarded(`checkins:${schedule.level_group}`, ()=>sendCheckinPrompts(sb, schedule.level_group, today, dayOfWeek, currentTime, checkinTime));
+      totalSent += Number(sent || 0);
       // ── SEND FOLLOW-UP REMINDERS (no reply after ~45 min) ──
       // Runs on weekdays AND weekends
       if (isWithinWindow(currentTime, followupTime, 7)) {
-        const reminded = await sendFollowupReminders(sb, schedule.level_group, today);
-        totalReminders += reminded;
+        const reminded = await runGuarded(`followups:${schedule.level_group}`, ()=>sendFollowupReminders(sb, schedule.level_group, today));
+        totalReminders += Number(reminded || 0);
       }
       // ── AUTO-CLOSE STALE CHECK-INS (still pending 2h after prompt) ──
       if (isWithinWindow(currentTime, autoCloseTime, 7)) {
-        await autoCloseStaleCheckins(sb, schedule.level_group, today);
+        await runGuarded(`autoclose:${schedule.level_group}`, ()=>autoCloseStaleCheckins(sb, schedule.level_group, today));
       }
       // ── SEND PARENT REPORTS ──
       if (isWithinWindow(currentTime, parentReportTime, 7)) {
-        await sendParentReports(sb, schedule.level_group, today, dayOfWeek);
+        await runGuarded(`parent-reports:${schedule.level_group}`, ()=>sendParentReports(sb, schedule.level_group, today, dayOfWeek));
       }
     }
     // ── MONDAY TARGET PROMPT (premium kids with no targets this week) ──
     if (dayOfWeek === 1 && isWithinWindow(currentTime, "16:00", 7)) {
-      await sendWeeklyTargetPrompts(sb, today);
+      await runGuarded("weekly-target-prompts", ()=>sendWeeklyTargetPrompts(sb, today));
     }
     // ── WEDNESDAY MID-WEEK PARENT CHECK ──
     if (dayOfWeek === 3 && isWithinWindow(currentTime, "20:00", 7)) {
-      await sendMidWeekParentNudge(sb, today);
+      await runGuarded("midweek-parent-nudge", ()=>sendMidWeekParentNudge(sb, today));
     }
     // ── CHECK EXAM PROXIMITY + POST-EXAM ──
-    await checkExamProximity(sb, today);
+    await runGuarded("exam-proximity", ()=>checkExamProximity(sb, today));
     // ── WEEKLY SUMMARIES (Sunday 8pm SGT) ──
     if (dayOfWeek === 0 && isWithinWindow(currentTime, "20:00", 7)) {
-      await sendWeeklySummaries(sb, today);
+      await runGuarded("weekly-summaries", ()=>sendWeeklySummaries(sb, today));
     }
     // ── BILLING REMINDERS (daily 10am SGT) ──
     if (isWithinWindow(currentTime, "10:00", 7)) {
-      await sendBillingRenewalReminders(sb, today);
+      await runGuarded("billing-reminders", ()=>sendBillingRenewalReminders(sb, today));
     }
     return new Response(JSON.stringify({
       success: true,
       time_sg: currentTime,
       sent: totalSent,
-      reminders: totalReminders
+      reminders: totalReminders,
+      failures: failureCount
     }), {
       status: 200,
       headers: {
@@ -589,21 +617,22 @@ async function sendFollowupReminders(sb, levelGroup, today) {
     const unit = checkin.target_unit || "";
     const subject = checkin.subject_reported || "";
     const reminderMsg = qty > 0 && unit && subject ? `Hey ${child.name}, quick reminder 😊\n\nYour target:\n• ${subject}: *${qty} ${formatUnitLabel(qty, unit)}*\n\nHave you finished it?\n\nReply: *yes* / *partial* / *no*.` : `Hey ${child.name}, just a friendly reminder! 😊\n\nHave you finished your study target for today?\n\nReply: *yes* / *partial* / *no*.`;
-    await sendWhatsApp(child.whatsapp_number, undefined, undefined, reminderMsg);
+    const childSent = await safeSendWhatsApp(child.whatsapp_number, undefined, undefined, reminderMsg, "followup-child");
     // Also nudge parent
     const { data: membership } = await sb.from("sq_memberships").select("parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
+    let parentSent = false;
     if (membership?.parent_phone) {
       const lang = membership.preferred_language || "en";
       if (lang === "zh") {
-        await sendWhatsApp(membership.parent_phone, undefined, undefined, ZH_CRON.followup_reminder(child.name));
+        parentSent = await safeSendWhatsApp(membership.parent_phone, undefined, undefined, ZH_CRON.followup_reminder(child.name), "followup-parent-zh");
       } else {
-        await sendWhatsApp(membership.parent_phone, "sp_reminder_checkin", {
+        parentSent = await safeSendWhatsApp(membership.parent_phone, "sp_reminder_checkin", {
           parent_name: membership.parent_name || "Parent",
           child_name: child.name
-        });
+        }, undefined, "followup-parent-en");
       }
     }
-    reminded++;
+    if (childSent || parentSent) reminded++;
   }
   return reminded;
 }
@@ -674,7 +703,7 @@ async function sendParentReports(sb, levelGroup, today, dayOfWeek) {
       }
       msg += `\nReply *confirm* if accurate, or *adjust* if not.`;
     }
-    await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
+    await safeSendWhatsApp(membership.parent_phone, undefined, undefined, msg, "parent-report");
   }
 }
 async function checkExamProximity(sb, today) {
@@ -709,11 +738,11 @@ async function checkExamProximity(sb, today) {
       } else {
         parentMsg = daysOut === 1 ? `🚨 ${child.name}'s ${examLabel} exam is *TOMORROW*! Make sure revision is done tonight.` : daysOut === 3 ? `⚠️ ${child.name}'s ${examLabel} exam in *3 days*. Final stretch — focus on weak areas.` : `📅 ${child.name}'s ${examLabel} exam in *7 days*. Good time to review and consolidate.`;
       }
-      await sendWhatsApp(membership.parent_phone, undefined, undefined, parentMsg);
+      await safeSendWhatsApp(membership.parent_phone, undefined, undefined, parentMsg, "exam-parent");
       // Kid message (if has WhatsApp)
       if (child.whatsapp_number && normalizePhone(child.whatsapp_number) !== normalizePhone(membership.parent_phone)) {
         const kidMsg = daysOut === 1 ? `💪 ${child.name}, your ${subjectName} exam is *TOMORROW*! You've been preparing — trust yourself and rest well tonight!` : daysOut === 3 ? `📝 3 days to ${subjectName} exam! Focus on your toughest topics today.` : `📚 1 week to ${subjectName} exam! Stay consistent — you've got this.`;
-        await sendWhatsApp(child.whatsapp_number, undefined, undefined, kidMsg);
+        await safeSendWhatsApp(child.whatsapp_number, undefined, undefined, kidMsg, "exam-child");
       }
       // ── FUNNEL: exam < 30 days → suggest tutor ──
       if (daysOut <= 7 && membership.plan_type !== 'free') {
@@ -721,7 +750,7 @@ async function checkExamProximity(sb, today) {
         const { data: existingReq } = await sb.from("sq_tutor_requests").select("id").eq("user_id", child.parent_id).limit(1);
         if (!existingReq || existingReq.length === 0) {
           const tutorMsg = lang === "zh" ? ZH_CRON.exam_tutor(child.name, String(daysOut)) : `💡 With ${child.name}'s exam ${daysOut} day${daysOut === 1 ? '' : 's'} away — need a tutor for focused revision? Reply *tutor* and we'll match one for you.`;
-          await sendWhatsApp(membership.parent_phone, undefined, undefined, tutorMsg);
+          await safeSendWhatsApp(membership.parent_phone, undefined, undefined, tutorMsg, "exam-tutor-nudge");
         }
       }
     }
@@ -749,14 +778,14 @@ async function checkExamProximity(sb, today) {
       // Ask parent about next exam
       if (membership?.parent_phone) {
         const postMsg = pLang === "zh" ? ZH_CRON.post_exam(child.name, subjectName) : `${child.name}'s ${subjectName} exam is done! 🎉\n\nHow did it go? When is the next exam?\nYou can update exam dates in the StudyPulse dashboard.`;
-        await sendWhatsApp(membership.parent_phone, undefined, undefined, postMsg);
+        await safeSendWhatsApp(membership.parent_phone, undefined, undefined, postMsg, "post-exam-parent");
         // Funnel: suggest diagnostic after exam
         const diagMsg = pLang === "zh" ? ZH_CRON.post_exam_diagnostic(child.name) : `💡 Want to know exactly where ${child.name} stands? A *diagnostic assessment* can pinpoint gaps before the next exam cycle.\nBook one at studypulse.co → Actions → Book Diagnostic`;
-        await sendWhatsApp(membership.parent_phone, undefined, undefined, diagMsg);
+        await safeSendWhatsApp(membership.parent_phone, undefined, undefined, diagMsg, "post-exam-diagnostic");
       }
       // Tell kid well done
       if (child.whatsapp_number && normalizePhone(child.whatsapp_number) !== normalizePhone(membership?.parent_phone)) {
-        await sendWhatsApp(child.whatsapp_number, undefined, undefined, `${subjectName} exam done! 🎉 Great job finishing it. Take a well-deserved break today! 😊`);
+        await safeSendWhatsApp(child.whatsapp_number, undefined, undefined, `${subjectName} exam done! 🎉 Great job finishing it. Take a well-deserved break today! 😊`, "post-exam-child");
       }
     }
   }
@@ -825,7 +854,7 @@ async function sendWeeklySummaries(sb, today) {
     if (missedCount >= 3 && weeksEnrolled >= 2) {
       summaryMsg += lang === "zh" ? ZH_CRON.weekly_tutor_nudge(child.name, String(missedCount)) : `\n\n💡 ${child.name} missed ${missedCount} days this week. A tutor can help build a structured routine. Visit studypulse.co → Actions → Find a Tutor.`;
     }
-    await sendWhatsApp(membership.parent_phone, undefined, undefined, summaryMsg);
+    await safeSendWhatsApp(membership.parent_phone, undefined, undefined, summaryMsg, "weekly-summary");
     // Save summary record
     await sb.from("sq_weekly_summaries").insert({
       child_id: child.id,
@@ -870,7 +899,7 @@ async function sendMidWeekParentNudge(sb, today) {
       msg += lang === "zh" ? ZH_CRON.midweek_child(kid.name, String(count || 0)) : `${kid.name}: ${count || 0} check-ins so far\n`;
     }
     msg += lang === "zh" ? ZH_CRON.midweek_footer() : `\nHave you checked their work? A quick look keeps things honest! 👀`;
-    await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
+    await safeSendWhatsApp(membership.parent_phone, undefined, undefined, msg, "midweek-parent-nudge");
   }
 }
 // ── BILLING / RENEWAL REMINDERS ──
@@ -894,7 +923,7 @@ async function sendBillingRenewalReminders(sb, today) {
         updated_at: new Date().toISOString()
       }).eq("user_id", membership.user_id);
       const expiredMsg = lang === "zh" ? `📌 您的 StudyPulse Premium 通行证已经结束。如需继续每日打卡和家长摘要，请重新续费。` : `📌 Your StudyPulse Premium pass has ended. Renew anytime to continue daily check-ins and parent summaries.`;
-      await sendWhatsApp(membership.parent_phone, undefined, undefined, expiredMsg);
+      await safeSendWhatsApp(membership.parent_phone, undefined, undefined, expiredMsg, "billing-expired");
       continue;
     }
     let reminderMsg = null;
@@ -912,7 +941,7 @@ async function sendBillingRenewalReminders(sb, today) {
       reminderMsg = lang === "zh" ? `⏳ 您的 StudyPulse Premium 通行证将在 ${daysLeft} 天后结束。若要继续每日跟进，请及时续费。` : `⏳ Your StudyPulse Premium pass ends in ${daysLeft} day${daysLeft === 1 ? "" : "s"}. Renew before it ends to keep daily follow-ups active.`;
     }
     if (reminderMsg) {
-      await sendWhatsApp(membership.parent_phone, undefined, undefined, reminderMsg);
+      await safeSendWhatsApp(membership.parent_phone, undefined, undefined, reminderMsg, "billing-reminder");
     }
   }
 }
@@ -931,7 +960,7 @@ async function sendWeeklyTargetPrompts(sb, today) {
     if (existing && existing.length > 0) continue; // Already set
     if (membership?.parent_phone) {
       const msg = membership.preferred_language === 'zh' ? `📋 ${child.name} 这周还没有设置学习目标。请打开 StudyPulse 家长面板，设置每周目标，系统会自动拆分成每天的任务。` : `📋 ${child.name} does not have a weekly target yet. Please open the StudyPulse parent dashboard and set this week's target so the system can send the daily goal automatically.`;
-      await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
+      await safeSendWhatsApp(membership.parent_phone, undefined, undefined, msg, "weekly-target-prompt");
     }
   }
 }
@@ -1029,13 +1058,13 @@ async function autoCloseStaleCheckins(sb, levelGroup, today) {
     // Soft notify child (no scolding — gentle)
     const { data: membership } = await sb.from("sq_memberships").select("parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
     if (child.whatsapp_number && normalizePhone(child.whatsapp_number) !== normalizePhone(membership?.parent_phone)) {
-      await sendWhatsApp(child.whatsapp_number, undefined, undefined, `No worries, ${child.name}! 😴 Looks like you forgot to check in today — that's okay. Tomorrow is a fresh start! 💪`);
+      await safeSendWhatsApp(child.whatsapp_number, undefined, undefined, `No worries, ${child.name}! 😴 Looks like you forgot to check in today — that's okay. Tomorrow is a fresh start! 💪`, "autoclose-child");
     }
     // Notify parent
     if (membership?.parent_phone) {
       const lang = membership.preferred_language || "en";
       const msg = lang === "zh" ? `📋 ${child.name} 今天没有打卡（已超时）。明天继续加油！` : `📋 ${child.name} didn't check in today — logged as *forgot*. Gentle nudge for tomorrow! 🙂`;
-      await sendWhatsApp(membership.parent_phone, undefined, undefined, msg);
+      await safeSendWhatsApp(membership.parent_phone, undefined, undefined, msg, "autoclose-parent");
     }
   }
 }
