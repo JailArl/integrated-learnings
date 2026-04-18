@@ -7,6 +7,7 @@ import FamilyHome from './pages/FamilyHome';
 import EnrichmentHome from './pages/EnrichmentHome';
 import StudyPulseLanding from './pages/StudyPulseLanding';
 import StudyPulseCrashCourses from './pages/StudyPulseCrashCourses';
+import { FamilyPSLEJuneIntensivePage, FamilyOLevelJuneIntensivePage } from './pages/FamilyCrashCoursePages';
 import StudyPulseApp from './pages/StudyPulseApp';
 import StudyPulseSetup from './pages/StudyPulseSetup';
 import StudyPulseAdmin from './pages/StudyPulseAdmin';
@@ -136,6 +137,8 @@ const App: React.FC = () => {
           
           {/* Tuition Service Routes */}
           <Route path="/tuition" element={<FamilyHome />} />
+          <Route path="/family/crash-courses/psle-june-intensive" element={<FamilyPSLEJuneIntensivePage />} />
+          <Route path="/family/crash-courses/o-level-june-intensive" element={<FamilyOLevelJuneIntensivePage />} />
           <Route path="/studypulse" element={<StudyPulseLanding />} />
           <Route path="/studypulse/crash-courses" element={<StudyPulseCrashCourses />} />
           <Route path="/studypulse/login" element={<StudyPulseLogin />} />
