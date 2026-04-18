@@ -41,6 +41,7 @@ interface TimetableBlock {
   title: string;
   time: string;
   focus: string[];
+  highlight?: boolean;
 }
 
 interface PricingOption {
@@ -183,6 +184,7 @@ const configs: Record<CrashCourseSlug, CrashCourseConfig> = {
         date: '20 Jun',
         title: 'Mixed Mock + Correction Clinic',
         time: '10:00 am – 1:00 pm',
+        highlight: true,
         focus: [
           'Timed mixed practice set',
           'Teacher-led correction and review',
@@ -362,6 +364,7 @@ const configs: Record<CrashCourseSlug, CrashCourseConfig> = {
         date: '24 Jun',
         title: 'Weak-Topic Clinic',
         time: '2:00 pm – 5:00 pm',
+        highlight: true,
         focus: [
           'Students regrouped by topic weakness',
           'Targeted worksheet pack per group',
@@ -372,6 +375,7 @@ const configs: Record<CrashCourseSlug, CrashCourseConfig> = {
         date: '25 Jun',
         title: 'Mock + Correction Clinic',
         time: '2:00 pm – 5:00 pm',
+        highlight: true,
         focus: [
           'Timed paper segment',
           'Live teacher review',
@@ -527,7 +531,7 @@ const CtaBand: React.FC<{
   </div>
 );
 
-/** TimetableSection — mobile-scannable grid of session cards */
+/** TimetableSection — premium timeline-style programme schedule */
 const TimetableSection: React.FC<{
   blocks: TimetableBlock[];
   note: string;
@@ -537,46 +541,157 @@ const TimetableSection: React.FC<{
     aria-labelledby={headingId}
     className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
   >
-    <h2 id={headingId} className="text-2xl font-black tracking-tight text-slate-900">
-      Programme Timetable
-    </h2>
-    <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-500">{note}</p>
-
-    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {blocks.map((block) => (
-        <article
-          key={`${block.date}-${block.title}`}
-          className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-200"
+    {/* Header */}
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-blue-500">
+          June 2026
+        </p>
+        <h2
+          id={headingId}
+          className="mt-1 text-2xl font-black tracking-tight text-slate-900"
         >
-          <div className="inline-flex w-fit items-center rounded-full border border-blue-100 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-blue-700">
-            {block.date}
-          </div>
-
-          <div>
-            <h3 className="text-base font-black leading-snug text-slate-900">{block.title}</h3>
-            <p className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
-              <Clock size={12} aria-hidden="true" /> {block.time}
-            </p>
-          </div>
-
-          <ul
-            className="mt-auto space-y-1.5"
-            aria-label={`Session focus for ${block.title}`}
-          >
-            {block.focus.map((point) => (
-              <li key={point} className="flex items-start gap-2 text-sm text-slate-700">
-                <Target
-                  size={13}
-                  className="mt-[3px] shrink-0 text-emerald-600"
-                  aria-hidden="true"
-                />
-                {point}
-              </li>
-            ))}
-          </ul>
-        </article>
-      ))}
+          Programme Schedule
+        </h2>
+      </div>
+      <p className="max-w-sm text-xs leading-relaxed text-slate-400 sm:text-right">
+        {note}
+      </p>
     </div>
+
+    {/* Legend */}
+    <div className="mt-4 flex items-center gap-4">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+        <span className="h-2.5 w-2.5 rounded-full border-2 border-slate-300 bg-white" />
+        Regular session
+      </span>
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600">
+        <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+        Key session
+      </span>
+    </div>
+
+    {/* Timeline */}
+    <ol
+      className="relative mt-6 space-y-0"
+      aria-label="Programme schedule"
+    >
+      {/* Vertical line — visible on sm+ */}
+      <li
+        aria-hidden="true"
+        className="pointer-events-none absolute left-[23px] top-5 hidden h-[calc(100%-2.5rem)] w-px bg-slate-200 sm:block"
+      />
+
+      {blocks.map((block, idx) => {
+        const isHighlight = block.highlight === true;
+        return (
+          <li
+            key={`${block.date}-${block.title}`}
+            className="relative flex flex-col gap-0 sm:flex-row sm:gap-0"
+          >
+            {/* Step indicator (visible sm+) */}
+            <div
+              aria-hidden="true"
+              className="relative z-10 hidden shrink-0 sm:flex sm:w-12 sm:flex-col sm:items-center sm:pt-5"
+            >
+              <div
+                className={`flex h-[1.875rem] w-[1.875rem] items-center justify-center rounded-full text-[11px] font-black ring-2 ring-white ${
+                  isHighlight
+                    ? 'bg-amber-400 text-slate-900 ring-amber-200'
+                    : 'bg-blue-100 text-blue-700'
+                }`}
+              >
+                {idx + 1}
+              </div>
+            </div>
+
+            {/* Card */}
+            <article
+              className={`mb-4 flex-1 rounded-2xl border p-5 transition sm:ml-4 ${
+                isHighlight
+                  ? 'border-amber-300 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 shadow-sm ring-1 ring-amber-200'
+                  : 'border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white'
+              }`}
+            >
+              {/* Card top row */}
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  {/* Date pill */}
+                  <span
+                    className={`inline-flex w-fit items-center rounded-full px-3 py-0.5 text-[11px] font-bold uppercase tracking-widest ${
+                      isHighlight
+                        ? 'bg-amber-400/20 text-amber-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {block.date}
+                  </span>
+                  {/* Session title */}
+                  <h3
+                    className={`text-base font-black leading-snug ${
+                      isHighlight ? 'text-amber-900' : 'text-slate-900'
+                    }`}
+                  >
+                    {block.title}
+                  </h3>
+                </div>
+
+                {/* Key session badge */}
+                {isHighlight && (
+                  <span
+                    aria-label="Key session"
+                    className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-900"
+                  >
+                    <Sparkles size={10} aria-hidden="true" /> Key session
+                  </span>
+                )}
+              </div>
+
+              {/* Time row */}
+              <p
+                className={`mt-2.5 inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                  isHighlight
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-white text-slate-500 ring-1 ring-slate-200'
+                }`}
+              >
+                <Clock size={12} aria-hidden="true" />
+                {block.time}
+              </p>
+
+              {/* Divider */}
+              <div
+                className={`my-3.5 border-t ${
+                  isHighlight ? 'border-amber-200' : 'border-slate-200'
+                }`}
+              />
+
+              {/* Focus list */}
+              <ul
+                className="grid gap-y-2 sm:grid-cols-2"
+                aria-label={`Session focus for ${block.title}`}
+              >
+                {block.focus.map((point) => (
+                  <li
+                    key={point}
+                    className="flex items-start gap-2 text-sm leading-snug text-slate-700"
+                  >
+                    <Target
+                      size={13}
+                      className={`mt-[2px] shrink-0 ${
+                        isHighlight ? 'text-amber-500' : 'text-emerald-600'
+                      }`}
+                      aria-hidden="true"
+                    />
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          </li>
+        );
+      })}
+    </ol>
   </section>
 );
 
