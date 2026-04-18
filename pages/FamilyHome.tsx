@@ -7,6 +7,7 @@ import {
   CheckCircle,
   ClipboardCheck,
   Flame,
+  MessageCircle,
   Search,
   Timer,
   UserPlus,
@@ -225,23 +226,34 @@ const FamilyHome: React.FC = () => {
                 </div>
               </div>
               <ul className="mt-4 space-y-2">
-                {['All materials provided — zero prep for parents', 'Max 6 students per class', 'PSLE: $320/subject (5 half-days) · O-Level: $280/subject (2 half-days)'].map((f) => (
+                {['All materials provided — zero prep for parents', 'Max 10 students per class', 'PSLE: $320/subject (5 half-days) · O-Level: $280/subject (2 half-days)'].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
                     <CheckCircle size={15} className="mt-0.5 shrink-0 text-orange-500" />
                     {f}
                   </li>
                 ))}
               </ul>
+              <div className="mt-6 grid grid-cols-2 gap-2">
+                <Link
+                  to="/family/crash-courses/psle-june-intensive"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white shadow transition hover:bg-sky-700"
+                >
+                  PSLE Details <ArrowRight size={14} />
+                </Link>
+                <Link
+                  to="/family/crash-courses/o-level-june-intensive"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow transition hover:bg-emerald-700"
+                >
+                  O-Level Details <ArrowRight size={14} />
+                </Link>
+              </div>
               <a
                 href="https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20to%20find%20out%20more%20about%20the%20June%20Holiday%20Crash%20Course"
                 target="_blank" rel="noopener noreferrer"
-                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-orange-500 px-5 py-3 text-sm font-bold text-white shadow transition hover:bg-orange-400"
+                className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-white px-5 py-2.5 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
               >
-                Reserve a Spot via WhatsApp <ArrowRight size={15} className="ml-2" />
+                <MessageCircle size={14} /> Enquire on WhatsApp
               </a>
-              <Link to="/family/crash-courses/psle-june-intensive" className="mt-2 inline-block w-full text-center text-xs font-semibold text-orange-600 underline">
-                See full programme details →
-              </Link>
             </article>
 
             {/* Card 3 — Become a Tutor */}
