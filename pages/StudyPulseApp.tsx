@@ -430,10 +430,24 @@ const StudyPulseApp: React.FC = () => {
       if (nextMembership) {
         setMembership(nextMembership);
         if (isPremium(nextMembership)) {
+          // Clear any stale free-plan pending check-ins for today so the premium
+          // daily cron can send a fresh prompt the same evening.
+          if (supabase && userId) {
+            const todayStr = new Date(Date.now() + 8 * 3600000).toISOString().split('T')[0];
+            const { data: kids } = await supabase.from('sq_children').select('id').eq('parent_id', userId);
+            if (kids && kids.length > 0) {
+              const childIds = kids.map((k: any) => k.id);
+              await supabase.from('sq_checkins')
+                .delete()
+                .in('child_id', childIds)
+                .eq('checkin_date', todayStr)
+                .eq('status', 'pending');
+            }
+          }
           setRefreshingBilling(false);
           setShowBillingEscalation(false);
           setUpgraded(true);
-          setDashboardNotice({ type: 'success', text: 'Premium access is now active.' });
+          setDashboardNotice({ type: 'success', text: 'Premium access is now active. Daily check-ins will begin from tonight.' });
           return;
         }
       }
