@@ -322,23 +322,41 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
       // Only study days in this window (excluding CCA days)
       const coveredStudyDays = windowDays.filter((d)=>childStudyDays.includes(d) && !ccaDays.includes(d));
       if (coveredStudyDays.length === 0) continue;
-      // Check if already prompted today
-      const { data: existing } = await sb.from("sq_checkins").select("id").eq("child_id", child.id).eq("checkin_date", today).limit(1);
-      if (existing && existing.length > 0) continue;
+      // Retry behavior:
+      // - If today's row exists with prompt_sent_at set, skip (already sent).
+      // - If today's row exists but prompt_sent_at is null, retry send on this cron run.
+      // - If no row exists, create one and attempt send.
+      const { data: existing } = await sb.from("sq_checkins").select("id, prompt_sent_at").eq("child_id", child.id).eq("checkin_date", today).limit(1);
+      let checkinId = null;
+      if (existing && existing.length > 0) {
+        if (existing[0].prompt_sent_at) continue;
+        checkinId = existing[0].id;
+      }
       const coveredDayNames = coveredStudyDays.map((d)=>DAY_NAMES[d]).join(' & ');
       // Bundled target = daily × covered days
       const bundledQty = todayTarget ? todayTarget.daily_quantity * coveredStudyDays.length : 0;
-      await sb.from("sq_checkins").insert({
-        child_id: child.id,
-        checkin_date: today,
-        status: "pending",
-        prompt_sent_at: new Date().toISOString(),
-        ...todayTarget && {
-          target_quantity: bundledQty,
-          target_unit: todayTarget.target_unit,
-          subject_reported: todayTarget.subject_name
+      if (!checkinId) {
+        const { data: inserted, error: insertError } = await sb.from("sq_checkins").insert({
+          child_id: child.id,
+          checkin_date: today,
+          status: "pending",
+          prompt_sent_at: null,
+          ...todayTarget && {
+            target_quantity: bundledQty,
+            target_unit: todayTarget.target_unit,
+            subject_reported: todayTarget.subject_name
+          }
+        }).select("id").single();
+        if (insertError || !inserted) {
+          console.error("Failed to create free-tier check-in row", {
+            childId: child.id,
+            date: today,
+            error: insertError?.message
+          });
+          continue;
         }
-      });
+        checkinId = inserted.id;
+      }
       let message;
       if (hasTargets) {
         const targetLine = targets.map((t)=>{
@@ -352,26 +370,52 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
       } else {
         message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your study target for ${coveredDayNames}?${examLine}\n\nReply: *yes* / *partial* / *no*`;
       }
-      await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
-      sent++;
+      try {
+        await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
+        await sb.from("sq_checkins").update({
+          prompt_sent_at: new Date().toISOString()
+        }).eq("id", checkinId);
+        sent++;
+      } catch (err) {
+        // Keep prompt_sent_at null so subsequent cron runs can retry automatically.
+        console.error("Free-tier check-in send failed; will retry next run", {
+          childId: child.id,
+          date: today,
+          error: err instanceof Error ? err.message : String(err)
+        });
+      }
     } else {
       // ═══ PREMIUM TIER: daily check-in on each study day ═══
       if (!childStudyDays.includes(dayOfWeek)) continue;
       if (ccaDays.includes(dayOfWeek)) continue;
-      // Check if already prompted today
-      const { data: existing } = await sb.from("sq_checkins").select("id").eq("child_id", child.id).eq("checkin_date", today).limit(1);
-      if (existing && existing.length > 0) continue;
-      await sb.from("sq_checkins").insert({
-        child_id: child.id,
-        checkin_date: today,
-        status: "pending",
-        prompt_sent_at: new Date().toISOString(),
-        ...todayTarget && {
-          target_quantity: todayTarget.daily_quantity,
-          target_unit: todayTarget.target_unit,
-          subject_reported: todayTarget.subject_name
+      const { data: existing } = await sb.from("sq_checkins").select("id, prompt_sent_at").eq("child_id", child.id).eq("checkin_date", today).limit(1);
+      let checkinId = null;
+      if (existing && existing.length > 0) {
+        if (existing[0].prompt_sent_at) continue;
+        checkinId = existing[0].id;
+      }
+      if (!checkinId) {
+        const { data: inserted, error: insertError } = await sb.from("sq_checkins").insert({
+          child_id: child.id,
+          checkin_date: today,
+          status: "pending",
+          prompt_sent_at: null,
+          ...todayTarget && {
+            target_quantity: todayTarget.daily_quantity,
+            target_unit: todayTarget.target_unit,
+            subject_reported: todayTarget.subject_name
+          }
+        }).select("id").single();
+        if (insertError || !inserted) {
+          console.error("Failed to create premium check-in row", {
+            childId: child.id,
+            date: today,
+            error: insertError?.message
+          });
+          continue;
         }
-      });
+        checkinId = inserted.id;
+      }
       let message;
       if (hasTargets) {
         const targetLine = targets.map((t)=>`• ${t.subject_name}: *${t.daily_quantity} ${formatUnitLabel(t.daily_quantity, t.target_unit)}*`).join("\n");
@@ -382,8 +426,20 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
       } else {
         message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your study target for today?${examLine}\n\nReply: *yes* / *partial* / *no*`;
       }
-      await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
-      sent++;
+      try {
+        await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
+        await sb.from("sq_checkins").update({
+          prompt_sent_at: new Date().toISOString()
+        }).eq("id", checkinId);
+        sent++;
+      } catch (err) {
+        // Keep prompt_sent_at null so subsequent cron runs can retry automatically.
+        console.error("Premium check-in send failed; will retry next run", {
+          childId: child.id,
+          date: today,
+          error: err instanceof Error ? err.message : String(err)
+        });
+      }
     }
   }
   return sent;
