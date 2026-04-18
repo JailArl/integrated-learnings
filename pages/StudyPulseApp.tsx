@@ -205,6 +205,47 @@ function to12h(time24: string): string {
   return `${h12}:${String(m).padStart(2, '0')}${suffix}`;
 }
 
+/* ─── AddSubjectInline ───────────────────────────────────────── */
+const AddSubjectInline: React.FC<{
+  childId: string;
+  onAdded: (subject: any) => void;
+}> = ({ childId, onAdded }) => {
+  const [name, setName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const SUBJECT_OPTIONS = [
+    'Math', 'Science', 'English', 'Chinese', 'Malay', 'Tamil',
+    'Physics', 'Chemistry', 'Biology', 'A Math', 'E Math',
+    'History', 'Geography', 'Literature', 'Economics', 'Other',
+  ];
+  const handleAdd = async () => {
+    if (!name.trim()) return;
+    setSaving(true);
+    const result = await addSubject(childId, name.trim());
+    if (result) onAdded(result);
+    setName('');
+    setSaving(false);
+  };
+  return (
+    <div className="mt-3 flex gap-2">
+      <select
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+      >
+        <option value="">Select subject…</option>
+        {SUBJECT_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+      </select>
+      <button
+        disabled={!name || saving}
+        onClick={handleAdd}
+        className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white disabled:opacity-40"
+      >
+        {saving ? '…' : 'Add'}
+      </button>
+    </div>
+  );
+};
+
 /* ═══════════════════════════════════════════ */
 const StudyPulseApp: React.FC = () => {
   const navigate = useNavigate();
@@ -1746,6 +1787,59 @@ const StudyPulseApp: React.FC = () => {
               >
                 {savingTargets ? 'Saving targets...' : 'Save Weekly Targets'}
               </button>
+            </div>
+
+            {/* Subject Management */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-700">Subjects</h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Manage the subjects being tracked for {child?.name || 'your child'}.
+                {!premium && ' Free plan: 1 subject. Upgrade for more.'}
+              </p>
+              {/* Existing subjects */}
+              {subjects.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  {subjects.map((s) => (
+                    <div key={s.id} className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                      <span className="text-sm font-semibold text-slate-800">{s.subject_name}</span>
+                      {subjects.length > 1 && (
+                        <button
+                          onClick={async () => {
+                            if (!supabase) return;
+                            if (!window.confirm(`Remove ${s.subject_name}? This will also remove its weekly targets.`)) return;
+                            await supabase.from('sq_monitored_subjects').delete().eq('id', s.id);
+                            setSubjects(prev => prev.filter(x => x.id !== s.id));
+                          }}
+                          className="text-xs font-semibold text-red-400 hover:text-red-600"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {/* Add subject form */}
+              {(premium || subjects.length === 0) && (() => {
+                const maxReached = !premium ? subjects.length >= 1 : subjects.length >= 5;
+                if (maxReached && premium) return (
+                  <p className="mt-3 text-xs text-slate-400">Maximum 5 subjects reached.</p>
+                );
+                return (
+                  <AddSubjectInline
+                    childId={child?.id || ''}
+                    onAdded={(newSubject) => setSubjects(prev => [...prev, newSubject])}
+                  />
+                );
+              })()}
+              {!premium && subjects.length >= 1 && (
+                <div className="mt-3 rounded-xl border border-blue-200 bg-blue-50 p-3">
+                  <p className="text-xs text-blue-800">Upgrade to Premium to track multiple subjects.</p>
+                  <button onClick={() => setShowPlanModal(true)} className="mt-2 inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white">
+                    Upgrade
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Exam Management */}

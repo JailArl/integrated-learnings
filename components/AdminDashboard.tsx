@@ -155,7 +155,8 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors' | 'rankings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'submissions' | 'parents' | 'tutors' | 'rankings' | 'crash-courses'>('overview');
+  const [crashCourseRequests, setCrashCourseRequests] = useState<any[]>([]);
   const [activeSection, setActiveSection] = useState<'tuition' | 'enrichment'>('enrichment');
   const [enrichmentEvents, setEnrichmentEvents] = useState<any[]>([]);
   const [enrichmentDetail, setEnrichmentDetail] = useState<any>(null);
@@ -209,8 +210,22 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       if (isSupabaseConfigured && supabase) {
-        const parentsRes = await supabase.from('parent_submissions').select('*');
+        const parentsRes = await supabase.from('parent_submissions').select('*').order('created_at', { ascending: false });
         const tutorsRes = await supabase.from('tutor_profiles').select('*');
+        // Fetch crash course enquiries: match by known programme subject names
+        const crashSubjects = [
+          'PSLE Math Bootcamp (2 sessions)',
+          'PSLE Science Bootcamp (2 sessions)',
+          'Mixed Mock + Correction Clinic',
+          'Full PSLE Intensive Bundle (All 5 sessions)',
+          'Physics Bootcamp','Chemistry Bootcamp','A Math Bootcamp','E Math Bootcamp',
+          'Weak-Topic Clinic','Mock + Correction Clinic','2-Subject Bundle','Multi-Block Bundle',
+          'Not sure — please advise',
+        ];
+        const crashRes = await supabase.from('parent_submissions').select('*')
+          .overlaps('subjects', crashSubjects)
+          .order('created_at', { ascending: false });
+        setCrashCourseRequests(crashRes.data || []);
         const studyPulseRes = await supabase.from('sq_memberships').select('user_id,parent_name,parent_email,parent_phone,plan_type,status,created_at').order('created_at', { ascending: false });
         const parents = (parentsRes.data || []).map((p: any) => ({
           id: p.id,
@@ -607,7 +622,7 @@ export default function AdminDashboard() {
 
         {/* Tabs */}
         <div className="flex gap-0 mb-6 bg-white rounded-lg border border-gray-200 overflow-hidden">
-          {(['overview', 'submissions', 'parents', 'tutors', 'rankings'] as const).map(tab => (
+          {(['overview', 'submissions', 'parents', 'tutors', 'rankings', 'crash-courses'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -617,7 +632,7 @@ export default function AdminDashboard() {
                   : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
             >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'crash-courses' ? '🔥 Crash Courses' : tab.charAt(0).toUpperCase() + tab.slice(1)}
             </button>
           ))}
         </div>
@@ -1194,6 +1209,107 @@ export default function AdminDashboard() {
 
         {activeTab === 'rankings' && (
           <AdminTutorRanking />
+        )}
+
+        {activeTab === 'crash-courses' && (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold text-orange-900">🔥 Crash Course Enquiries</h2>
+                <p className="text-sm text-orange-700 mt-0.5">{crashCourseRequests.length} total · from PSLE &amp; O-Level intensive pages</p>
+              </div>
+              <button
+                onClick={() => {
+                  const csv = ['Name,Phone,Level,Programme,Date,Status'].concat(
+                    crashCourseRequests.map(r =>
+                      `"${r.parent_name || ''}","${r.contact_number || ''}","${r.student_level || ''}","${(r.subjects || []).join('; ')}","${r.created_at?.split('T')[0] || ''}","${r.status || 'new'}"`
+                    )
+                  ).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a'); a.href = url; a.download = 'crash-course-enquiries.csv'; a.click();
+                }}
+                className="rounded-lg bg-orange-500 px-3 py-2 text-sm font-semibold text-white hover:bg-orange-600"
+              >
+                Export CSV
+              </button>
+            </div>
+
+            {crashCourseRequests.length === 0 ? (
+              <div className="rounded-lg border border-gray-200 bg-white p-8 text-center text-gray-400">
+                No crash course enquiries yet. They will appear here once parents submit the form on the PSLE or O-Level intensive pages.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {crashCourseRequests.map((r) => (
+                  <div key={r.id} className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="font-bold text-gray-900">{r.parent_name || 'No name'}</p>
+                        <p className="text-sm text-gray-600">{r.contact_number || 'No phone'}</p>
+                        <p className="mt-0.5 text-xs text-gray-400">{r.created_at ? new Date(r.created_at).toLocaleString('en-SG', { timeZone: 'Asia/Singapore' }) : '—'}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`rounded-full px-3 py-1 text-xs font-bold ${
+                          !r.status || r.status === 'new' ? 'bg-red-100 text-red-700' :
+                          r.status === 'contacted' ? 'bg-amber-100 text-amber-700' :
+                          r.status === 'enrolled' || r.status === 'converted' ? 'bg-green-100 text-green-700' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>{r.status || 'new'}</span>
+                        <select
+                          value={r.status || 'new'}
+                          onChange={async (e) => {
+                            if (!supabase) return;
+                            await supabase.from('parent_submissions').update({ status: e.target.value }).eq('id', r.id);
+                            setCrashCourseRequests(prev => prev.map(x => x.id === r.id ? { ...x, status: e.target.value } : x));
+                          }}
+                          className="rounded-lg border border-gray-200 px-2 py-1 text-xs"
+                        >
+                          <option value="new">New</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="enrolled">Enrolled</option>
+                          <option value="converted">Converted</option>
+                          <option value="not_suitable">Not suitable</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                      <div>
+                        <p className="text-xs font-semibold uppercase text-gray-400">Level</p>
+                        <p className="text-gray-800">{r.student_level || '—'}</p>
+                      </div>
+                      <div className="col-span-2">
+                        <p className="text-xs font-semibold uppercase text-gray-400">Programme Interest</p>
+                        <p className="text-gray-800">{(r.subjects || []).join(', ') || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold uppercase text-gray-400">Preferred Schedule</p>
+                        <p className="text-gray-800">{r.preferred_contact_timing || '—'}</p>
+                      </div>
+                    </div>
+
+                    {r.additional_notes && (
+                      <div className="mt-3 rounded-lg bg-gray-50 px-3 py-2">
+                        <p className="text-xs font-semibold uppercase text-gray-400">Notes / Results Slip</p>
+                        <p className="text-sm text-gray-700">{r.additional_notes}</p>
+                      </div>
+                    )}
+
+                    <div className="mt-3">
+                      <a
+                        href={`https://wa.me/${(r.contact_number || '').replace(/\D/g, '')}`}
+                        target="_blank" rel="noreferrer"
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                      >
+                        WhatsApp {r.parent_name?.split(' ')[0] || 'Parent'}
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         )}
         </>)}
       </div>
