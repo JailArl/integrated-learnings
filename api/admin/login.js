@@ -75,15 +75,25 @@ export default async function handler(req, res) {
       return json(res, 401, { success: false, error: 'Invalid credentials.' });
     }
 
-    // Be resilient to legacy duplicate rows for the same email.
-    const adminUser = adminRows.find((row) => row?.is_active) || adminRows[0];
+    // Be resilient to duplicate legacy rows: authenticate against any matching row.
+    let adminUser = null;
+    let matchedInactiveAccount = false;
+    for (const row of adminRows) {
+      const validPassword = await matchesPassword(row?.password_hash, password);
+      if (!validPassword) continue;
 
-    if (!adminUser.is_active) {
-      return json(res, 403, { success: false, error: 'Admin account is disabled.' });
+      if (row?.is_active) {
+        adminUser = row;
+        break;
+      }
+
+      matchedInactiveAccount = true;
     }
 
-    const validPassword = await matchesPassword(adminUser.password_hash, password);
-    if (!validPassword) {
+    if (!adminUser) {
+      if (matchedInactiveAccount) {
+        return json(res, 403, { success: false, error: 'Admin account is disabled.' });
+      }
       return json(res, 401, { success: false, error: 'Invalid credentials.' });
     }
 
