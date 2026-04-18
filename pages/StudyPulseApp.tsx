@@ -1313,7 +1313,10 @@ const StudyPulseApp: React.FC = () => {
                     🔥 Reserve a Spot — WhatsApp Us
                   </button>
                 )}
-                <a href="/studypulse/crash-courses" className="mt-2 inline-block text-xs font-semibold text-orange-600 underline">View full programme →</a>
+                <div className="mt-2 flex gap-3">
+                  <a href="/family/crash-courses/psle-june-intensive" className="text-xs font-semibold text-sky-600 underline">PSLE Intensive →</a>
+                  <a href="/family/crash-courses/o-level-june-intensive" className="text-xs font-semibold text-emerald-600 underline">O-Level Intensive →</a>
+                </div>
               </article>
 
               <article className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
