@@ -159,6 +159,96 @@ async function sendWhatsApp(to, templateName, variables, rawMessage) {
   }
   throw new Error(`WhatsApp send failed for ${to}: ${lastError}`);
 }
+
+function isServiceRoleRequest(req) {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  return !!token && token === supabaseKey;
+}
+
+async function triggerManualCheckinNow(sb, childId, today) {
+  if (!childId || typeof childId !== "string") {
+    return {
+      ok: false,
+      error: "child_id is required"
+    };
+  }
+  const { data: child } = await sb.from("sq_children").select("id, name, level, whatsapp_number, parent_id").eq("id", childId).single();
+  if (!child) {
+    return {
+      ok: false,
+      error: "Child not found"
+    };
+  }
+  if (!child.whatsapp_number) {
+    return {
+      ok: false,
+      error: "Child has no WhatsApp number"
+    };
+  }
+
+  const { data: parentPhones } = await sb.from("sq_memberships").select("parent_phone").not("parent_phone", "is", null);
+  const parentPhoneSet = new Set((parentPhones || []).map((p)=>normalizePhone(p.parent_phone)).filter(Boolean));
+  if (parentPhoneSet.has(normalizePhone(child.whatsapp_number))) {
+    return {
+      ok: false,
+      error: "Child phone matches parent phone; blocked by guardrail"
+    };
+  }
+
+  const weekStart = getWeekStart(today);
+  const { data: targets } = await sb.from("sq_weekly_targets").select("subject_name, daily_quantity, target_unit").eq("child_id", child.id).eq("week_start", weekStart);
+  const hasTargets = targets && targets.length > 0;
+  const todayTarget = hasTargets ? targets[0] : null;
+
+  const { data: existing } = await sb.from("sq_checkins").select("id, prompt_sent_at").eq("child_id", child.id).eq("checkin_date", today).limit(1);
+  let checkinId = null;
+  if (existing && existing.length > 0) {
+    checkinId = existing[0].id;
+  } else {
+    const { data: inserted, error: insertError } = await sb.from("sq_checkins").insert({
+      child_id: child.id,
+      checkin_date: today,
+      status: "pending",
+      prompt_sent_at: null,
+      ...todayTarget && {
+        target_quantity: todayTarget.daily_quantity,
+        target_unit: todayTarget.target_unit,
+        subject_reported: todayTarget.subject_name
+      }
+    }).select("id").single();
+    if (insertError || !inserted) {
+      return {
+        ok: false,
+        error: insertError?.message || "Could not create check-in row"
+      };
+    }
+    checkinId = inserted.id;
+  }
+
+  let message;
+  if (hasTargets) {
+    const targetLine = targets.map((t)=>`• ${t.subject_name}: *${t.daily_quantity} ${formatUnitLabel(t.daily_quantity, t.target_unit)}*`).join("\n");
+    message = `Hey ${child.name}! 📚 Study check-in time!\n\nToday's targets:\n${targetLine}\n\nHave you finished them?\n\nReply: *yes* / *partial* / *no*`;
+  } else {
+    message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your study target for today?\n\nReply: *yes* / *partial* / *no*`;
+  }
+
+  await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
+  await sb.from("sq_checkins").update({
+    status: "pending",
+    prompt_sent_at: new Date().toISOString()
+  }).eq("id", checkinId);
+
+  return {
+    ok: true,
+    child_id: child.id,
+    child_name: child.name,
+    sent_to: child.whatsapp_number,
+    checkin_id: checkinId
+  };
+}
+
 serve(async (req)=>{
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -168,11 +258,47 @@ serve(async (req)=>{
   }
   try {
     const sb = createClient(supabaseUrl, supabaseKey);
+    let body = {};
+    if (req.method === "POST") {
+      try {
+        body = await req.json();
+      } catch {
+        body = {};
+      }
+    }
     const sgNow = getSGTime();
     const currentTime = formatTime(sgNow);
     const today = sgNow.toISOString().split("T")[0];
     const dayOfWeek = sgNow.getUTCDay(); // 0=Sun
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    if (body?.action === "manual_send_checkin") {
+      if (!isServiceRoleRequest(req)) {
+        return new Response(JSON.stringify({
+          success: false,
+          error: "Unauthorized manual trigger"
+        }), {
+          status: 403,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json"
+          }
+        });
+      }
+      const result = await triggerManualCheckinNow(sb, body?.child_id, today);
+      return new Response(JSON.stringify({
+        success: !!result?.ok,
+        manual: true,
+        ...result
+      }), {
+        status: result?.ok ? 200 : 400,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
+    }
+
     // Get all schedule windows
     const { data: schedules } = await sb.from("sq_checkin_schedule").select("*");
     if (!schedules || schedules.length === 0) {

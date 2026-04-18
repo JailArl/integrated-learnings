@@ -138,6 +138,8 @@ const StudyPulseAdmin: React.FC = () => {
   const [updatingRequestKey, setUpdatingRequestKey] = useState<string | null>(null);
   const [updatingMembershipId, setUpdatingMembershipId] = useState<string | null>(null);
   const [membershipActionMessage, setMembershipActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [opsActionMessage, setOpsActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [manualCheckinChildId, setManualCheckinChildId] = useState<string | null>(null);
   const [subscriptionStatusMap, setSubscriptionStatusMap] = useState<Record<string, StripeSubscriptionStatus>>({});
   const [syncingSubscriptionState, setSyncingSubscriptionState] = useState(false);
   const [disputeGateAcknowledged, setDisputeGateAcknowledged] = useState(false);
@@ -324,6 +326,48 @@ const StudyPulseAdmin: React.FC = () => {
     if (table === 'sq_crash_course_interest') setCrashReqs((prev) => applyStatus(prev));
     if (table === 'sq_holiday_programme_interest') setHolidayReqs((prev) => applyStatus(prev));
     if (table === 'sq_account_disputes') setAccountDisputeReqs((prev) => applyStatus(prev));
+  };
+
+  const sendManualCheckinNow = async (child: ChildRow) => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      setOpsActionMessage({ type: 'error', text: 'Admin session expired. Please log in again.' });
+      return;
+    }
+    const confirmed = window.confirm(`Send check-in immediately to ${child.name} now?`);
+    if (!confirmed) return;
+
+    setOpsActionMessage(null);
+    setManualCheckinChildId(child.id);
+    try {
+      const response = await fetch('/api/studypulse/admin-checkins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          action: 'manual_send_checkin',
+          childId: child.id,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.ok) {
+        setOpsActionMessage({ type: 'error', text: payload?.error || 'Manual check-in failed.' });
+        return;
+      }
+      setOpsActionMessage({ type: 'success', text: `Manual check-in sent to ${child.name}.` });
+      const [rc, rt] = await Promise.all([
+        adminGetRecentCheckins(14),
+        adminGetRecentDailyTasks(14),
+      ]);
+      setRecentCheckins(rc);
+      setRecentTasks(rt);
+    } catch (error: any) {
+      setOpsActionMessage({ type: 'error', text: error?.message || 'Manual check-in failed.' });
+    } finally {
+      setManualCheckinChildId(null);
+    }
   };
 
   const setMembershipPlan = async (membership: MembershipRow, target: 'premium' | 'free') => {
@@ -583,6 +627,11 @@ const StudyPulseAdmin: React.FC = () => {
         {/* ═══════════ MONITORING TAB ═══════════ */}
         {adminTab === 'monitoring' && (
           <div className="space-y-6">
+            {opsActionMessage && (
+              <div className={`rounded-xl border px-4 py-3 text-xs font-semibold ${opsActionMessage.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                {opsActionMessage.text}
+              </div>
+            )}
             {/* Platform Health Row */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -710,6 +759,14 @@ const StudyPulseAdmin: React.FC = () => {
                           {noData && <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] text-slate-600">Zero check-ins recorded</span>}
                           {!noData && pct < 40 && <span className="rounded-full bg-red-200 px-2 py-0.5 text-[10px] text-red-700">Below min compliance</span>}
                           {daysToExam !== null && daysToExam <= 21 && <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] text-amber-700">Exam in {daysToExam}d</span>}
+                          <button
+                            type="button"
+                            onClick={() => sendManualCheckinNow(c)}
+                            disabled={manualCheckinChildId === c.id}
+                            className="rounded-lg border border-blue-300 bg-white px-2.5 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-50 disabled:opacity-60"
+                          >
+                            {manualCheckinChildId === c.id ? 'Sending...' : 'Send Check-In Now'}
+                          </button>
                         </div>
                       </div>
                     );
@@ -863,6 +920,11 @@ const StudyPulseAdmin: React.FC = () => {
         {/* ═══════════ MEMBERS TAB ═══════════ */}
         {adminTab === 'members' && (
           <div>
+            {opsActionMessage && (
+              <div className={`mb-4 rounded-xl border px-4 py-3 text-xs font-semibold ${opsActionMessage.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
+                {opsActionMessage.text}
+              </div>
+            )}
             {membershipActionMessage && (
               <div className={`mb-4 rounded-xl border px-4 py-3 text-xs font-semibold ${membershipActionMessage.type === 'error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-700'}`}>
                 {membershipActionMessage.text}
@@ -1002,7 +1064,17 @@ const StudyPulseAdmin: React.FC = () => {
                                   <div key={k.id} className="rounded-xl bg-white p-3 border border-slate-200">
                                     <div className="flex items-center justify-between">
                                       <p className="text-sm font-bold text-slate-900">{k.name} <span className="font-normal text-slate-400">({k.level})</span></p>
-                                      <p className="text-xs text-slate-400">WhatsApp: {k.whatsapp_number || '—'}</p>
+                                      <div className="flex items-center gap-2">
+                                        <p className="text-xs text-slate-400">WhatsApp: {k.whatsapp_number || '—'}</p>
+                                        <button
+                                          type="button"
+                                          onClick={() => sendManualCheckinNow(k)}
+                                          disabled={manualCheckinChildId === k.id}
+                                          className="rounded-lg border border-blue-300 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-100 disabled:opacity-60"
+                                        >
+                                          {manualCheckinChildId === k.id ? 'Sending...' : 'Send Check-In Now'}
+                                        </button>
+                                      </div>
                                     </div>
                                     {subs.length > 0 && (
                                       <div className="mt-2 flex flex-wrap gap-2">
