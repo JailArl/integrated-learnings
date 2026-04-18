@@ -259,7 +259,6 @@ serve(async (req)=>{
 });
 // ── CORE FUNCTIONS ──
 async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime, levelDefaultCheckinTime) {
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
   // Get all children in this level group
   const { data: children } = await sb.from("sq_children").select("id, name, level, whatsapp_number, parent_id, study_days, cca_days").not("whatsapp_number", "is", null);
   if (!children) return 0;
@@ -279,11 +278,8 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
     if (settings?.commence_date && today < settings.commence_date) {
       continue; // Programme hasn't started yet for this child
     }
-    // On weekends, ignore custom time and use the level group's weekend schedule
-    // On weekdays, use custom time if set, else use level group's weekday schedule
-    const preferredCheckinTime = isWeekend && settings?.check_completion_time 
-      ? levelDefaultCheckinTime 
-      : (settings?.check_completion_time || levelDefaultCheckinTime);
+    // Parent-selected check-in time takes priority over level defaults.
+    const preferredCheckinTime = settings?.check_completion_time || levelDefaultCheckinTime;
     if (!isWithinWindow(currentTime, preferredCheckinTime, 8)) continue;
     // Study days: parent-set days take priority, default Mon-Fri
     const savedStudyDays = Array.isArray(child.study_days) ? child.study_days.map((d)=>Number(d)).filter((d)=>Number.isInteger(d) && d >= 0 && d <= 6) : [];
