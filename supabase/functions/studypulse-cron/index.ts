@@ -280,7 +280,7 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
     }
     // Parent-set check-in time takes priority. Fallback to level default timing.
     const preferredCheckinTime = settings?.check_completion_time || levelDefaultCheckinTime;
-    if (!isWithinWindow(currentTime, preferredCheckinTime, 7)) continue;
+    if (!isWithinWindow(currentTime, preferredCheckinTime, 8)) continue;
     // Study days: parent-set days take priority, default Mon-Fri
     const savedStudyDays = Array.isArray(child.study_days) ? child.study_days.map((d)=>Number(d)).filter((d)=>Number.isInteger(d) && d >= 0 && d <= 6) : [];
     const isFreePlan = !membership || membership.plan_type === "free";
