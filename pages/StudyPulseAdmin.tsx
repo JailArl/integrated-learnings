@@ -313,12 +313,38 @@ const StudyPulseAdmin: React.FC = () => {
     id: string,
     status: string
   ) => {
-    if (!supabase) return;
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      setOpsActionMessage({ type: 'error', text: 'Admin session expired. Please log in again.' });
+      return;
+    }
     const key = `${table}:${id}`;
     setUpdatingRequestKey(key);
-    const { error } = await supabase.from(table).update({ status }).eq('id', id);
-    setUpdatingRequestKey(null);
-    if (error) return;
+    try {
+      const response = await fetch('/api/studypulse/admin-memberships', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          action: 'set_request_status',
+          table,
+          id,
+          status,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.ok) {
+        setOpsActionMessage({ type: 'error', text: payload?.error || 'Could not update request status.' });
+        return;
+      }
+    } catch (error: any) {
+      setOpsActionMessage({ type: 'error', text: error?.message || 'Could not update request status.' });
+      return;
+    } finally {
+      setUpdatingRequestKey(null);
+    }
 
     const applyStatus = (rows: RequestRow[]) => rows.map((row) => (row.id === id ? { ...row, status } : row));
     if (table === 'sq_tutor_requests') setTutorReqs((prev) => applyStatus(prev));
@@ -371,7 +397,11 @@ const StudyPulseAdmin: React.FC = () => {
   };
 
   const setMembershipPlan = async (membership: MembershipRow, target: 'premium' | 'free') => {
-    if (!supabase) return;
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      setMembershipActionMessage({ type: 'error', text: 'Admin session expired. Please log in again.' });
+      return;
+    }
 
     const isPremiumTarget = target === 'premium';
     const actionLabel = isPremiumTarget ? 'grant premium access' : 'revert this account to free';
@@ -381,46 +411,41 @@ const StudyPulseAdmin: React.FC = () => {
 
     setMembershipActionMessage(null);
     setUpdatingMembershipId(membership.id);
+    try {
+      const response = await fetch('/api/studypulse/admin-memberships', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({
+          action: 'set_membership_plan',
+          membershipId: membership.id,
+          targetPlan: target,
+          currentPeriodEnd: membership.current_period_end || null,
+        }),
+      });
 
-    const nowIso = new Date().toISOString();
-    const currentPeriodEndIso = membership.current_period_end && !Number.isNaN(new Date(membership.current_period_end).getTime())
-      ? membership.current_period_end
-      : null;
-    const defaultPremiumEndIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.ok || !payload?.membership) {
+        setMembershipActionMessage({ type: 'error', text: payload?.error || 'Could not update membership.' });
+        return;
+      }
 
-    const payload = isPremiumTarget
-      ? {
-          plan_type: 'premium',
-          status: 'premium_active',
-          current_period_end: currentPeriodEndIso || defaultPremiumEndIso,
-          updated_at: nowIso,
-        }
-      : {
-          plan_type: 'free',
-          status: 'free',
-          current_period_end: null,
-          updated_at: nowIso,
-        };
-
-    const { error } = await supabase
-      .from('sq_memberships')
-      .update(payload)
-      .eq('id', membership.id);
-
-    setUpdatingMembershipId(null);
-    if (error) {
-      setMembershipActionMessage({ type: 'error', text: `Could not update membership: ${error.message}` });
+      setMemberships((prev) => prev.map((row) => (
+        row.id === membership.id
+          ? {
+              ...row,
+              ...payload.membership,
+            }
+          : row
+      )));
+    } catch (error: any) {
+      setMembershipActionMessage({ type: 'error', text: error?.message || 'Could not update membership.' });
       return;
+    } finally {
+      setUpdatingMembershipId(null);
     }
-
-    setMemberships((prev) => prev.map((row) => (
-      row.id === membership.id
-        ? {
-            ...row,
-            ...payload,
-          }
-        : row
-    )));
 
     setMembershipActionMessage({
       type: 'success',

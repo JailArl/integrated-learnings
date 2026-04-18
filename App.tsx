@@ -1,5 +1,5 @@
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import MainLanding from './pages/MainLanding';
@@ -34,6 +34,7 @@ import TutorOnboarding from './pages/TutorOnboarding';
 import EnrichmentLogin from './pages/EnrichmentLogin';
 import EnrichmentGame from './pages/EnrichmentGame';
 import ClassroomAdmin from './pages/ClassroomAdmin';
+import { validateAdminSession } from './services/adminAuth';
 
 // Global Error Boundary — prevents white-screen crashes
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -84,22 +85,69 @@ const LegacyRoadmapRedirect: React.FC = () => {
 
 // Admin Protection Wrapper with Token Validation
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = localStorage.getItem('adminToken');
-  const tokenExpiry = localStorage.getItem('adminTokenExpiry');
-  
-  // Check if token exists and hasn't expired
-  const isTokenValid = () => {
-    if (!token || !tokenExpiry) return false;
-    const expiryTime = parseInt(tokenExpiry);
-    return Date.now() < expiryTime;
-  };
-  
-  if (!isTokenValid()) {
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminTokenExpiry');
+  const [checking, setChecking] = useState(true);
+  const [allowed, setAllowed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const clearAdminSession = () => {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminTokenExpiry');
+      localStorage.removeItem('adminId');
+    };
+
+    const runValidation = async () => {
+      const token = localStorage.getItem('adminToken');
+      const tokenExpiry = localStorage.getItem('adminTokenExpiry');
+      if (!token || !tokenExpiry) {
+        clearAdminSession();
+        if (!cancelled) {
+          setAllowed(false);
+          setChecking(false);
+        }
+        return;
+      }
+
+      const expiryTime = Number.parseInt(tokenExpiry, 10);
+      if (!Number.isFinite(expiryTime) || Date.now() >= expiryTime) {
+        clearAdminSession();
+        if (!cancelled) {
+          setAllowed(false);
+          setChecking(false);
+        }
+        return;
+      }
+
+      const isServerValid = await validateAdminSession(token);
+      if (!isServerValid) {
+        clearAdminSession();
+      }
+
+      if (!cancelled) {
+        setAllowed(isServerValid);
+        setChecking(false);
+      }
+    };
+
+    runValidation();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+      </div>
+    );
+  }
+
+  if (!allowed) {
     return <Navigate to="/admin/login" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
