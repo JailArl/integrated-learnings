@@ -902,38 +902,6 @@ const WhyUsSection: React.FC<{
   </div>
 );
 
-/** TestimonialsSection — parent quote cards */
-const TestimonialsSection: React.FC<{
-  testimonials: Testimonial[];
-  headingId: string;
-}> = ({ testimonials, headingId }) => (
-  <section
-    aria-labelledby={headingId}
-    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
-  >
-    <h2 id={headingId} className="text-2xl font-black tracking-tight text-slate-900">
-      What Parents Have Said
-    </h2>
-    <div className="mt-6 grid gap-4 sm:grid-cols-2">
-      {testimonials.map((t) => (
-        <figure
-          key={t.attribution}
-          className="rounded-2xl border border-slate-200 bg-slate-50 p-5"
-        >
-          <blockquote>
-            <p className="text-sm leading-relaxed text-slate-700 before:content-none after:content-none">
-              {t.quote}
-            </p>
-          </blockquote>
-          <figcaption className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-            {t.attribution}
-          </figcaption>
-        </figure>
-      ))}
-    </div>
-  </section>
-);
-
 /** FinalCtaSection — bottom conversion block */
 const FinalCtaSection: React.FC<{
   headline: string;
@@ -1472,12 +1440,6 @@ const CrashCourseCampaignPage: React.FC<{ config: CrashCourseConfig }> = ({
             promiseTitle={config.safePromiseTitle}
             promiseBody={config.safePromiseBody}
             headingId={ids.why}
-          />
-
-          {/* Testimonials */}
-          <TestimonialsSection
-            testimonials={config.testimonials}
-            headingId={ids.testimonials}
           />
 
           {/* FAQ */}
