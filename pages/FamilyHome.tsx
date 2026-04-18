@@ -226,7 +226,7 @@ const FamilyHome: React.FC = () => {
                 </div>
               </div>
               <ul className="mt-4 space-y-2">
-                {['All materials provided — zero prep for parents', 'Max 10 students per class', 'PSLE: $320/subject (5 half-days) · O-Level: $280/subject (2 half-days)'].map((f) => (
+                {['All materials provided — zero prep for parents', 'Max 10 students per class', 'From S$29/hr with bundle discounts · PSLE 5-session bundle: S$435 · O-Level 2-subject bundle: S$372'].map((f) => (
                   <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
                     <CheckCircle size={15} className="mt-0.5 shrink-0 text-orange-500" />
                     {f}

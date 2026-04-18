@@ -198,28 +198,28 @@ const configs: Record<CrashCourseSlug, CrashCourseConfig> = {
     pricingOptions: [
       {
         title: 'Math Bootcamp',
-        range: 'S$188 – S$218',
-        note: '2 sessions · Concept review + method correction',
+        range: 'S$32/hr (S$192 total)',
+        note: '2 sessions (6 hrs) · Concept review + method correction',
       },
       {
         title: 'Science Bootcamp',
-        range: 'S$188 – S$218',
-        note: '2 sessions · Answering structure + open-ended correction',
+        range: 'S$32/hr (S$192 total)',
+        note: '2 sessions (6 hrs) · Answering structure + open-ended correction',
       },
       {
         title: 'Mock + Correction Clinic',
-        range: 'S$88 – S$108',
-        note: '1 session · Timed mixed set + teacher feedback',
+        range: 'S$32/hr (S$96 total)',
+        note: '1 session (3 hrs) · Timed mixed set + teacher feedback',
       },
       {
         title: 'Full PSLE Intensive Bundle',
-        range: 'S$398 – S$458',
-        note: 'All 5 sessions · Complete programme support',
+        range: 'Bundle rate: S$29/hr (S$435 total)',
+        note: 'All 5 sessions (15 hrs) · Save vs a la carte pricing',
         highlight: true,
       },
     ],
     pricingNote:
-      'Early-batch pricing applies while seats are available. Seat confirmed upon payment. Groups capped at 8 students.',
+      'Per-hour pricing shown for transparency. Bundle rates give lower effective hourly cost. Seat confirmed upon payment. Groups capped at 8 students.',
 
     whyUs: [
       'We identify exactly where your child is losing marks, not just which topics to cover.',
@@ -389,33 +389,33 @@ const configs: Record<CrashCourseSlug, CrashCourseConfig> = {
     pricingOptions: [
       {
         title: '2-Day Subject Block',
-        range: 'S$218 – S$258',
-        note: 'Per subject · Physics, Chem, A Math, or E Math',
+        range: 'S$34/hr (S$204 per subject block)',
+        note: 'Per subject (6 hrs) · Physics, Chem, A Math, or E Math',
       },
       {
         title: 'Weak-Topic Clinic',
-        range: 'S$98 – S$118',
-        note: '1 session · Targeted correction by weakness',
+        range: 'S$36/hr (S$108 total)',
+        note: '1 session (3 hrs) · Targeted correction by weakness',
       },
       {
         title: 'Mock + Correction Clinic',
-        range: 'S$98 – S$118',
-        note: '1 session · Timed segment + immediate feedback',
+        range: 'S$36/hr (S$108 total)',
+        note: '1 session (3 hrs) · Timed segment + immediate feedback',
       },
       {
         title: '2-Subject Bundle',
-        range: 'S$398 – S$478',
-        note: 'Good fit for Math + Science combinations',
+        range: 'Bundle rate: S$31/hr (S$372 total)',
+        note: '12 hrs total · Good fit for Math + Science combinations',
         highlight: true,
       },
       {
         title: 'Multi-Block Bundle',
-        range: 'S$698 – S$798',
-        note: '3+ subjects · Broader intensive support',
+        range: 'Bundle rate from S$29/hr (from S$522 total)',
+        note: '3+ subject blocks (18+ hrs) · Broader intensive support',
       },
     ],
     pricingNote:
-      'Early-batch pricing applies while seats are available. Seat confirmed upon payment. Each block is capped at 8 students.',
+      'Per-hour pricing shown for transparency. Bundle rates lower effective hourly cost. Seat confirmed upon payment. Each block is capped at 8 students.',
 
     whyUs: [
       'Clarity-first approach — students understand the method before applying it under pressure.',
