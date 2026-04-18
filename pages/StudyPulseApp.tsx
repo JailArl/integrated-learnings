@@ -740,12 +740,6 @@ const StudyPulseApp: React.FC = () => {
     if (!raw) return getLevelDefaultCheckTime(childRow.level, isWeekend);
 
     const timeHHMM = raw.slice(0, 5);
-    const lvl = childRow.level.trim().toUpperCase();
-    const isSecLower = /^(SEC[1-3]|SEC [1-3]|SECONDARY [1-3])$/.test(lvl);
-
-    // Legacy compatibility: some Sec1-3 rows were incorrectly saved as 21:00.
-    // Runtime schedule is 20:00, so normalize UI to avoid showing wrong timing.
-    if (!isWeekend && isSecLower && timeHHMM === '21:00') return '20:00';
     return timeHHMM;
   }
 
