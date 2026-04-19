@@ -1,11 +1,12 @@
-import { supabase } from './supabase';
+import { getAppBaseUrl, supabase } from './supabase';
 import { notifyTutorSignup } from './discord';
 
 type AuthResult = { success: boolean; error?: string; user?: any; needsEmailVerification?: boolean };
 
 const getEmailRedirectUrl = (): string | undefined => {
-  if (typeof window === 'undefined') return undefined;
-  return `${window.location.origin}/tutors/login`;
+  const baseUrl = getAppBaseUrl();
+  if (!baseUrl) return undefined;
+  return `${baseUrl}/tutors/login`;
 };
 
 const formatAuthError = (message?: string): string => {

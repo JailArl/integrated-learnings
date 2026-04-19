@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff, Loader2, Mail, ArrowRight, Lock } from 'lucide-react';
-import { supabase } from '../services/supabase';
+import { getAppBaseUrl, supabase } from '../services/supabase';
 
 /* ═══════════════════════════════════════════
    StudyPulse Parent Login
@@ -74,7 +74,7 @@ const StudyPulseLogin: React.FC = () => {
 
     setLoading(true);
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password?type=parent`,
+      redirectTo: `${getAppBaseUrl()}/reset-password?type=parent`,
     });
     setLoading(false);
 

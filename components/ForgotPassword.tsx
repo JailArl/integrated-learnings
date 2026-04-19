@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, ArrowLeft } from 'lucide-react';
-import { supabase } from '../services/supabase';
+import { getAppBaseUrl, supabase } from '../services/supabase';
 
 interface ForgotPasswordProps {
   onBack: () => void;
@@ -38,7 +38,7 @@ export const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBack, userType
       }
 
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password?type=${userType}`,
+        redirectTo: `${getAppBaseUrl()}/reset-password?type=${userType}`,
       });
 
       if (resetError) {
