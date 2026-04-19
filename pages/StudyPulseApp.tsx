@@ -918,7 +918,7 @@ const StudyPulseApp: React.FC = () => {
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-200 text-xs font-bold text-blue-900">4</span>
                     <div>
                       <p className="font-bold">Done! Check-ins will start automatically</p>
-                      <p className="text-blue-700">{premium ? 'Your child will get a WhatsApp prompt every study day evening.' : 'Your child will get bundled check-ins every Tue, Thu & Sun evening.'} You&apos;ll receive reports automatically.</p>
+                      <p className="text-blue-700">{premium ? 'Your child will get a WhatsApp prompt every study day evening.' : 'Your child will get bundled check-ins every Tue, Thu & Sat evening.'} You&apos;ll receive reports automatically.</p>
                     </div>
                   </div>
                 </div>
@@ -1015,7 +1015,7 @@ const StudyPulseApp: React.FC = () => {
                 <div className="flex items-start gap-3">
                   <Crown size={18} className="mt-0.5 flex-shrink-0 text-amber-500" />
                   <div>
-                    <p className="text-xs font-bold text-slate-900">Free plan: Tue, Thu, Sun check-ins</p>
+                    <p className="text-xs font-bold text-slate-900">Free plan: Tue, Thu, Sat check-ins</p>
                     <p className="mt-1 text-xs text-slate-600">Upgrade for daily check-ins, all subjects, and unlimited children.</p>
                     <button onClick={() => setShowPlanModal(true)} className="mt-2 inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-bold text-slate-950">
                       Choose a plan <ArrowRight size={12} className="ml-1" />
@@ -1163,7 +1163,7 @@ const StudyPulseApp: React.FC = () => {
               {/* Free plan day indicator */}
               {!premium && (
                 <p className="mt-4 text-xs text-slate-500">
-                  Free plan check-ins: <strong className="text-emerald-600">Tue, Thu, Sun</strong> (bundled — covers all your study days). Upgrade for daily check-ins.
+                  Free plan check-ins: <strong className="text-emerald-600">Tue, Thu, Sat</strong> (bundled — covers all your study days). Upgrade for daily check-ins.
                 </p>
               )}
             </div>
@@ -2117,7 +2117,7 @@ const StudyPulseApp: React.FC = () => {
                 <div>
                   <p className="text-lg font-black text-slate-900">{membership?.plan_type === 'free' ? 'Free' : 'Premium'}</p>
                   <p className="text-xs text-slate-500">
-                    {premium ? 'Daily check-ins · All subjects · Unlimited children' : 'Tue/Thu/Sun bundled check-ins · 1 subject · 1 child'}
+                    {premium ? 'Daily check-ins · All subjects · Unlimited children' : 'Tue/Thu/Sat bundled check-ins · 1 subject · 1 child'}
                   </p>
                   {membership?.current_period_end && (
                     <p className="mt-1 text-[11px] text-slate-400">

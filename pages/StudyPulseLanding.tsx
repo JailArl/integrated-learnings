@@ -77,12 +77,12 @@ const T = {
   freeDontGet: { en: 'You don\u2019t get', zh: '不包含' },
   freeDiff: { en: 'The difference', zh: '区别在哪里' },
   freeGet: {
-    en: ['Track 1 child, 1 subject', 'Bundled check-ins 3x/week (Tue, Thu, Sun)', 'Sunday weekly report', 'Exam countdown visible', 'Request tutor / diagnostic anytime'],
-    zh: ['跟踪 1 个孩子、1 个科目', '每周打卡 3 次（二、四、日）', '周日周报', '考试倒计时可见', '随时申请补习/评估'],
+    en: ['Track 1 child, 1 subject', 'Bundled check-ins 3x/week (Tue, Thu, Sat)', 'Sunday weekly report', 'Exam countdown visible', 'Request tutor / diagnostic anytime'],
+    zh: ['跟踪 1 个孩子、1 个科目', '每周打卡 3 次（二、四、六）', '周日周报', '考试倒计时可见', '随时申请补习/评估'],
   },
   freeMiss: {
-    en: ['No daily check-ins (bundled into Tue, Thu, Sun)', 'No daily summary to parent', 'No auto pause / restart after exams', 'No exam follow-up reminders', 'No smart tutor triggers'],
-    zh: ['无每日打卡（合并为二、四、日）', '无每日家长摘要', '考后无自动暂停/重启', '无考试跟进提醒', '无智能补习推荐'],
+    en: ['No daily check-ins (bundled into Tue, Thu, Sat)', 'No daily summary to parent', 'No auto pause / restart after exams', 'No exam follow-up reminders', 'No smart tutor triggers'],
+    zh: ['无每日打卡（合并为二、四、六）', '无每日家长摘要', '考后无自动暂停/重启', '无考试跟进提醒', '无智能补习推荐'],
   },
   freeDiffP1: {
     en: 'Free check-ins happen 3 times a week, bundled to cover every study day. But daily check-ins are harder to fake and build stronger habits.',
@@ -126,7 +126,7 @@ const T = {
   recommended: { en: 'RECOMMENDED', zh: '推荐' },
   r1child: { en: '1 child', zh: '1 个孩子' },
   r1subj: { en: '1 subject', zh: '1 个科目' },
-  r3wk: { en: 'Bundled check-ins (Tue/Thu/Sun)', zh: '合并打卡（二/四/日）' },
+  r3wk: { en: 'Bundled check-ins (Tue/Thu/Sat)', zh: '合并打卡（二/四/六）' },
   rWeekly: { en: 'Weekly report', zh: '周报' },
   rDaily: { en: 'Daily summary', zh: '每日摘要' },
   rPause: { en: 'Auto pause / restart', zh: '自动暂停/重启' },
@@ -251,7 +251,7 @@ const T = {
     en: [
       { label: 'Children tracked', free: '1', premium: 'Unlimited' },
       { label: 'Subjects per child', free: '1', premium: 'All subjects' },
-      { label: 'Check-in frequency', free: 'Bundled 3x/week (Tue, Thu, Sun)', premium: 'Daily' },
+      { label: 'Check-in frequency', free: 'Bundled 3x/week (Tue, Thu, Sat)', premium: 'Daily' },
       { label: 'Weekly parent report', free: true as string | boolean, premium: true as string | boolean },
       { label: 'Daily parent summary', free: false as string | boolean, premium: true as string | boolean },
       { label: 'Exam countdown & alerts', free: true as string | boolean, premium: true as string | boolean },

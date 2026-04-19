@@ -76,12 +76,12 @@ function getLevelGroup(level) {
   // Sec4, Sec5, Secondary 4-5, JC 1, JC 2 — all upper/JC group
   return "secondary_upper_jc";
 }
-// FREE plan: check-in on Tue/Thu/Sun (bundled — covers neighbouring study days)
+// FREE plan: check-in on Tue/Thu/Sat (bundled — covers neighbouring study days)
 const FREE_CHECKIN_DAYS = [
-  0,
+  6,
   2,
   4
-]; // 0=Sun, 2=Tue, 4=Thu
+]; // 6=Sat, 2=Tue, 4=Thu
 const FREE_CHECKIN_WINDOWS = {
   2: [
     1,
@@ -91,10 +91,9 @@ const FREE_CHECKIN_WINDOWS = {
     3,
     4
   ],
-  0: [
+  6: [
     5,
-    6,
-    0
+    6
   ]
 };
 const DAY_NAMES = [
@@ -470,7 +469,7 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
       }
     }
     if (isFreePlan) {
-      // ═══ FREE TIER: bundled check-in on Tue/Thu/Sun ═══
+      // ═══ FREE TIER: bundled check-in on Tue/Thu/Sat ═══
       if (!FREE_CHECKIN_DAYS.includes(dayOfWeek)) continue;
       const windowDays = FREE_CHECKIN_WINDOWS[dayOfWeek] || [];
       // Only study days in this window (excluding CCA days)
@@ -1052,7 +1051,7 @@ async function autoCloseStaleCheckins(sb, levelGroup, today) {
     // Determine plan so we only close on actual study days
     const { data: membership } = await sb.from("sq_memberships").select("plan_type, parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
     const isFreePlan = !membership || membership.plan_type === "free";
-    // Free tier: only close on scheduled check-in days (Tue/Thu/Sun)
+    // Free tier: only close on scheduled check-in days (Tue/Thu/Sat)
     if (isFreePlan && !FREE_CHECKIN_DAYS.includes(todayDow)) {
       await sb.from("sq_checkins").delete().eq("id", checkin.id);
       continue;
