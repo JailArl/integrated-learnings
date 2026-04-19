@@ -1039,16 +1039,33 @@ async function autoCloseStaleCheckins(sb, levelGroup, today) {
       continue;
     }
 
-    const { data: child } = await sb.from("sq_children").select("name, level, whatsapp_number, parent_id").eq("id", checkin.child_id).single();
+    const { data: child } = await sb.from("sq_children").select("name, level, whatsapp_number, parent_id, study_days, cca_days").eq("id", checkin.child_id).single();
     if (!child || getLevelGroup(child.level) !== levelGroup) continue;
-    // Don't auto-close on CCA days
-    const ccaDays = child.cca_days || [];
     const sgNow = getSGTime();
     const todayDow = sgNow.getUTCDay();
+    // Don't auto-close on CCA days
+    const ccaDays = child.cca_days || [];
     if (ccaDays.includes(todayDow)) {
-      // Clean up the pending record silently
       await sb.from("sq_checkins").delete().eq("id", checkin.id);
       continue;
+    }
+    // Determine plan so we only close on actual study days
+    const { data: membership } = await sb.from("sq_memberships").select("plan_type, parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
+    const isFreePlan = !membership || membership.plan_type === "free";
+    // Free tier: only close on scheduled check-in days (Tue/Thu/Sun)
+    if (isFreePlan && !FREE_CHECKIN_DAYS.includes(todayDow)) {
+      await sb.from("sq_checkins").delete().eq("id", checkin.id);
+      continue;
+    }
+    // Premium tier: only close if today is actually in their study_days
+    if (!isFreePlan) {
+      const savedStudyDays = Array.isArray(child.study_days)
+        ? child.study_days.map((d) => Number(d)).filter((d) => Number.isInteger(d) && d >= 0 && d <= 6)
+        : [1, 2, 3, 4, 5]; // default Mon-Fri
+      if (!savedStudyDays.includes(todayDow)) {
+        await sb.from("sq_checkins").delete().eq("id", checkin.id);
+        continue;
+      }
     }
     // Mark as 'forgot'
     await sb.from("sq_checkins").update({
@@ -1056,7 +1073,7 @@ async function autoCloseStaleCheckins(sb, levelGroup, today) {
       reply_received_at: new Date().toISOString()
     }).eq("id", checkin.id);
     // Soft notify child (no scolding — gentle)
-    const { data: membership } = await sb.from("sq_memberships").select("parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
+    // membership already fetched above for plan check
     if (child.whatsapp_number && normalizePhone(child.whatsapp_number) !== normalizePhone(membership?.parent_phone)) {
       await safeSendWhatsApp(child.whatsapp_number, undefined, undefined, `No worries, ${child.name}! 😴 Looks like you forgot to check in today — that's okay. Tomorrow is a fresh start! 💪`, "autoclose-child");
     }
