@@ -288,6 +288,7 @@ const StudyPulseApp: React.FC = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileSaveMsg, setProfileSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deletingAccountBusy, setDeletingAccountBusy] = useState(false);
   const [copiedChildId, setCopiedChildId] = useState<string | null>(null);
   const [submittedCTAs, setSubmittedCTAs] = useState<Set<string>>(new Set());
   const [upgraded, setUpgraded] = useState(false);
@@ -556,6 +557,51 @@ const StudyPulseApp: React.FC = () => {
 
     setDashboardNotice({ type: 'error', text: portal.message || 'Could not open billing settings yet.' });
     setOpeningBilling(false);
+  };
+
+  const handlePermanentDeleteAccount = async () => {
+    if (!supabase || deletingAccountBusy) return;
+
+    setDeletingAccountBusy(true);
+    setDashboardNotice(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setDashboardNotice({ type: 'error', text: 'Please sign in again before deleting account.' });
+        setDeletingAccountBusy(false);
+        return;
+      }
+
+      const response = await fetch('/api/studypulse/delete-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ confirm: true }),
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.ok) {
+        setDashboardNotice({
+          type: 'error',
+          text: payload?.error || 'Could not permanently delete your account. Please try again.',
+        });
+        setDeletingAccountBusy(false);
+        return;
+      }
+
+      await supabase.auth.signOut();
+      navigate('/studypulse/login', {
+        replace: true,
+        state: { success: 'Your StudyPulse account was permanently deleted.' },
+      });
+    } catch (error: any) {
+      setDashboardNotice({ type: 'error', text: error?.message || 'Unexpected delete account error.' });
+      setDeletingAccountBusy(false);
+    }
   };
 
   const handleExamResult = async (targetId: string) => {
@@ -2242,27 +2288,21 @@ const StudyPulseApp: React.FC = () => {
                 </button>
                 {!deletingAccount ? (
                   <button onClick={() => setDeletingAccount(true)} className="w-full rounded-xl border border-red-200 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50">
-                    Delete StudyPulse Data
+                    Delete Account Permanently
                   </button>
                 ) : (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-                    <p className="text-xs font-semibold text-red-700">This will remove your StudyPulse dashboard data and sign you out. Are you sure?</p>
-                    <p className="mt-1 text-[11px] text-red-600">This does not guarantee deletion of your authentication login from Supabase.</p>
+                    <p className="text-xs font-semibold text-red-700">This will permanently delete your StudyPulse account and sign you out. This cannot be undone.</p>
+                    <p className="mt-1 text-[11px] text-red-600">If you still have an active premium subscription, cancel it in Billing first.</p>
                     <div className="mt-3 flex gap-2">
                       <button
-                        onClick={async () => {
-                          if (!supabase || !userId) return;
-                          await supabase.from('sq_children').delete().eq('parent_id', userId);
-                          await supabase.from('sq_memberships').delete().eq('user_id', userId);
-                          await supabase.from('parent_profiles').delete().eq('id', userId);
-                          await supabase.auth.signOut();
-                          navigate('/studypulse');
-                        }}
+                        onClick={handlePermanentDeleteAccount}
+                        disabled={deletingAccountBusy}
                         className="rounded-lg bg-red-600 px-4 py-2 text-xs font-bold text-white"
                       >
-                        Yes, remove my StudyPulse data
+                        {deletingAccountBusy ? 'Deleting...' : 'Yes, permanently delete my account'}
                       </button>
-                      <button onClick={() => setDeletingAccount(false)} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
+                      <button onClick={() => setDeletingAccount(false)} disabled={deletingAccountBusy} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-500">Cancel</button>
                     </div>
                   </div>
                 )}
