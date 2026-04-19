@@ -608,7 +608,7 @@ async function sendFollowupReminders(sb, levelGroup, today) {
 
   let reminded = 0;
   for (const checkin of pending){
-    const { data: child } = await sb.from("sq_children").select("name, level, whatsapp_number, parent_id").eq("id", checkin.child_id).single();
+    const { data: child } = await sb.from("sq_children").select("name, level, whatsapp_number, parent_id, cca_days").eq("id", checkin.child_id).single();
     if (!child || getLevelGroup(child.level) !== levelGroup) continue;
     if (!child.whatsapp_number) continue;
     if (parentPhoneSet.has(normalizePhone(child.whatsapp_number))) continue;
