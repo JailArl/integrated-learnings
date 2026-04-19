@@ -14,15 +14,40 @@ export const isSupabaseConfigured = !!supabase;
 
 const trimTrailingSlash = (value: string): string => value.replace(/\/$/, '');
 
+const isLocalhostUrl = (value: string): boolean => {
+	const normalized = value.trim().toLowerCase();
+	return (
+		normalized.includes('localhost') ||
+		normalized.includes('127.0.0.1') ||
+		normalized.includes('0.0.0.0')
+	);
+};
+
 export const getAppBaseUrl = (): string => {
 	const configured = publicAppUrl || appUrl || siteUrl;
+	const browserOrigin = typeof window !== 'undefined' && window.location?.origin
+		? trimTrailingSlash(window.location.origin)
+		: '';
+
 	if (configured && configured.trim().length > 0) {
-		return trimTrailingSlash(configured.trim());
+		const normalizedConfigured = trimTrailingSlash(configured.trim());
+
+		// If env is accidentally left as localhost in production, prefer runtime origin.
+		if (
+			isLocalhostUrl(normalizedConfigured) &&
+			browserOrigin &&
+			!isLocalhostUrl(browserOrigin)
+		) {
+			return browserOrigin;
+		}
+
+		return normalizedConfigured;
 	}
 
-	if (typeof window !== 'undefined' && window.location?.origin) {
-		return trimTrailingSlash(window.location.origin);
+	if (browserOrigin) {
+		return browserOrigin;
 	}
 
-	return '';
+	// Final fallback for non-browser contexts.
+	return 'https://www.integratedlearnings.com.sg';
 };
