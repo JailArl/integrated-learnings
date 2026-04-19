@@ -376,8 +376,8 @@ serve(async (req)=>{
     }
     // ── CHECK EXAM PROXIMITY + POST-EXAM ──
     await runGuarded("exam-proximity", ()=>checkExamProximity(sb, today));
-    // ── WEEKLY SUMMARIES (Sunday 8pm SGT) ──
-    if (dayOfWeek === 0 && isWithinWindow(currentTime, "20:00", 7)) {
+    // ── WEEKLY SUMMARIES (Sunday 10pm SGT) ──
+    if (dayOfWeek === 0 && isWithinWindow(currentTime, "22:00", 7)) {
       await runGuarded("weekly-summaries", ()=>sendWeeklySummaries(sb, today));
     }
     // ── BILLING REMINDERS (daily 10am SGT) ──
