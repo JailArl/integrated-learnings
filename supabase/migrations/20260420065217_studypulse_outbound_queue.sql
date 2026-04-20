@@ -50,7 +50,21 @@ COMMENT ON TABLE sq_outbound_queue IS 'Centralised outbound WhatsApp message que
 -- ── Add twilio_content_sid column to whatsapp_message_templates ──────────
 -- Phase 2 will populate these with approved Meta template SIDs.
 -- NULL = not yet registered / use raw_body for now.
-ALTER TABLE whatsapp_message_templates
-  ADD COLUMN IF NOT EXISTS twilio_content_sid TEXT DEFAULT NULL;
+-- Conditional: whatsapp_message_templates may not exist in this project yet
+-- (it is created by whatsapp-schema.sql which is not yet a tracked migration).
+-- Skip safely if the table is absent so this Phase 1 migration never blocks.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_name   = 'whatsapp_message_templates'
+  ) THEN
+    ALTER TABLE public.whatsapp_message_templates
+      ADD COLUMN IF NOT EXISTS twilio_content_sid TEXT DEFAULT NULL;
 
-COMMENT ON COLUMN whatsapp_message_templates.twilio_content_sid IS 'Twilio ContentSid for the Meta-approved WhatsApp template. NULL until registered in Phase 2.';
+    COMMENT ON COLUMN public.whatsapp_message_templates.twilio_content_sid IS
+      'Twilio ContentSid for the Meta-approved WhatsApp template. NULL until registered in Phase 2.';
+  END IF;
+END $$;
