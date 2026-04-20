@@ -127,7 +127,7 @@ const StudyPulseAdmin: React.FC = () => {
   const [weeklySummaries, setWeeklySummaries] = useState<WeeklySummary[]>([]);
   const [examTargets, setExamTargets] = useState<ExamTarget[]>([]);
 
-  const [adminTab, setAdminTab] = useState<'monitoring'|'members'|'requests'|'preview'>('monitoring');
+  const [adminTab, setAdminTab] = useState<'monitoring'|'members'|'requests'|'preview'|'cron-health'|'failed-messages'>('monitoring');
   const [filter, setFilter] = useState<'all'|'free'|'premium'>('all');
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -143,6 +143,31 @@ const StudyPulseAdmin: React.FC = () => {
   const [subscriptionStatusMap, setSubscriptionStatusMap] = useState<Record<string, StripeSubscriptionStatus>>({});
   const [syncingSubscriptionState, setSyncingSubscriptionState] = useState(false);
   const [disputeGateAcknowledged, setDisputeGateAcknowledged] = useState(false);
+
+  // Cron health + failed messages
+  interface CronLogRow {
+    id: string;
+    run_at: string;
+    job_type: string;
+    messages_queued?: number;
+    error_type?: string | null;
+    error_detail?: string | null;
+    duration_ms?: number | null;
+  }
+  interface FailedMessageRow {
+    id: string;
+    idempotency_key: string;
+    to_phone: string;
+    message_type: string;
+    context_label?: string | null;
+    last_error?: string | null;
+    attempts: number;
+    created_at: string;
+  }
+  const [cronLogRows, setCronLogRows] = useState<CronLogRow[]>([]);
+  const [failedMessages, setFailedMessages] = useState<FailedMessageRow[]>([]);
+  const [cronHealthLoading, setCronHealthLoading] = useState(false);
+  const [cronHealthRefreshKey, setCronHealthRefreshKey] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -248,12 +273,34 @@ const StudyPulseAdmin: React.FC = () => {
   const nonDisputeRequestActionsBlocked = openAccountDisputes > 0 && !disputeGateAcknowledged;
 
   useEffect(() => {
+    if (adminTab !== 'cron-health' && adminTab !== 'failed-messages') return;
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
+    setCronHealthLoading(true);
+    Promise.all([
+      fetch('/api/studypulse/admin-checkins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: 'cron_log', limit: 20 }),
+      }).then((r) => r.json()).catch(() => ({ ok: false, rows: [] })),
+      fetch('/api/studypulse/admin-checkins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ action: 'outbound_failed', limit: 50 }),
+      }).then((r) => r.json()).catch(() => ({ ok: false, rows: [] })),
+    ]).then(([logRes, failedRes]) => {
+      setCronLogRows(logRes.rows || []);
+      setFailedMessages(failedRes.rows || []);
+    }).finally(() => setCronHealthLoading(false));
+  // cronHealthRefreshKey is incremented by the refresh button to re-trigger this effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminTab, cronHealthRefreshKey]);
+
+  useEffect(() => {
     if (openAccountDisputes === 0 && disputeGateAcknowledged) {
       setDisputeGateAcknowledged(false);
     }
   }, [openAccountDisputes, disputeGateAcknowledged]);
-
-  // ── Monitoring analytics ──
   const todayStr = new Date().toISOString().split('T')[0];
   const allActivity = [...recentCheckins.map(c => ({ childId: c.child_id, date: c.checkin_date, status: c.status })), ...recentTasks.map(t => ({ childId: t.child_id, date: t.task_date, status: t.status }))];
   const todayActivity = allActivity.filter(a => a.date === todayStr);
@@ -633,17 +680,22 @@ const StudyPulseAdmin: React.FC = () => {
         </div>
 
         {/* ── Admin Tab Navigation ── */}
-        <nav className="mb-6 flex gap-2 border-b border-slate-200 pb-3">
+        <nav className="mb-6 flex gap-2 flex-wrap border-b border-slate-200 pb-3">
           {([
             { id: 'monitoring' as const, label: 'Monitoring', icon: Shield },
             { id: 'members' as const, label: 'Members', icon: Users },
             { id: 'requests' as const, label: 'Requests', icon: Zap },
             { id: 'preview' as const, label: 'Message Preview', icon: FileText },
+            { id: 'cron-health' as const, label: 'Cron Health', icon: BarChart3 },
+            { id: 'failed-messages' as const, label: 'Failed Messages', icon: AlertTriangle },
           ]).map((t) => (
             <button key={t.id} onClick={() => setAdminTab(t.id)} className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition ${adminTab === t.id ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
               <t.icon size={14} /> {t.label}
               {t.id === 'requests' && openAccountDisputes > 0 && (
                 <span className="ml-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-black text-white">{openAccountDisputes}</span>
+              )}
+              {t.id === 'failed-messages' && failedMessages.length > 0 && (
+                <span className="ml-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-black text-white">{failedMessages.length}</span>
               )}
             </button>
           ))}
@@ -1256,6 +1308,152 @@ const StudyPulseAdmin: React.FC = () => {
           ))}
         </div>
         </div>
+        )}
+
+        {/* ═══════════ CRON HEALTH TAB ═══════════ */}
+        {adminTab === 'cron-health' && (
+          <div className="space-y-5">
+            {cronHealthLoading ? (
+              <div className="flex items-center justify-center py-12 text-slate-400 text-sm">Loading cron log…</div>
+            ) : (
+              <>
+                {/* Staleness banner */}
+                {(() => {
+                  const lastRun = cronLogRows.find((r) => r.job_type === 'cron_run');
+                  if (!lastRun) {
+                    return (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+                        <p className="text-sm font-bold text-red-800">⚠️ Cron has never run</p>
+                        <p className="mt-1 text-xs text-red-700">No <code>cron_run</code> entry found in <code>sq_cron_log</code>. Ensure the GitHub Actions workflow is enabled and the Supabase secrets are set.</p>
+                      </div>
+                    );
+                  }
+                  const minutesSince = Math.floor((Date.now() - new Date(lastRun.run_at).getTime()) / 60000);
+                  if (minutesSince > 30) {
+                    return (
+                      <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+                        <p className="text-sm font-bold text-red-800">⚠️ Cron not running — last run {minutesSince} min ago</p>
+                        <p className="mt-1 text-xs text-red-700">Check GitHub Actions tab for failures. Expected cadence: every 15 minutes.</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+                      <p className="text-sm font-bold text-emerald-800">✅ Cron is running — last run {minutesSince} min ago</p>
+                    </div>
+                  );
+                })()}
+
+                {/* Log table */}
+                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                  <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-slate-700">Last 20 Cron Executions</h3>
+                    <button
+                      type="button"
+                      onClick={() => setCronHealthRefreshKey((k) => k + 1)}
+                      className="text-[11px] text-blue-600 hover:underline"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                  {cronLogRows.length === 0 ? (
+                    <p className="px-5 py-8 text-center text-sm text-slate-400">No cron log entries found. The <code>sq_cron_log</code> table may not exist yet — run the SQL migration first.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-100 bg-slate-50">
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Run at (UTC)</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Phase</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Queued</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Duration</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Status</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Error detail</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {cronLogRows.map((row) => (
+                            <tr
+                              key={row.id}
+                              className={`border-b border-slate-50 ${row.error_type ? 'bg-red-50' : 'hover:bg-slate-50'}`}
+                            >
+                              <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.run_at?.replace('T', ' ').slice(0, 19)}</td>
+                              <td className="px-4 py-2.5 text-xs font-mono font-semibold text-slate-700">{row.job_type}</td>
+                              <td className="px-4 py-2.5 text-xs text-slate-600">{row.messages_queued ?? '—'}</td>
+                              <td className="px-4 py-2.5 text-xs text-slate-500">{row.duration_ms != null ? `${row.duration_ms}ms` : '—'}</td>
+                              <td className="px-4 py-2.5">
+                                {row.error_type ? (
+                                  <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">{row.error_type}</span>
+                                ) : (
+                                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">ok</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2.5 text-xs text-red-600 max-w-xs truncate">{row.error_detail || '—'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════ FAILED MESSAGES TAB ═══════════ */}
+        {adminTab === 'failed-messages' && (
+          <div className="space-y-5">
+            {cronHealthLoading ? (
+              <div className="flex items-center justify-center py-12 text-slate-400 text-sm">Loading failed messages…</div>
+            ) : (
+              <>
+                {failedMessages.length === 0 ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-6 text-center">
+                    <p className="text-sm font-bold text-emerald-800">✅ No failed messages</p>
+                    <p className="mt-1 text-xs text-emerald-700">All outbound queue messages have been sent successfully.</p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-red-100 bg-white shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-red-700">
+                        ⚠️ {failedMessages.length} Failed Message{failedMessages.length === 1 ? '' : 's'}
+                      </h3>
+                      <p className="text-[11px] text-slate-500">3 attempts exhausted — manual retry required</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-100 bg-slate-50">
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Created (UTC)</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">To phone</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Type</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Context</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Attempts</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Last error</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Idempotency key</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {failedMessages.map((row) => (
+                            <tr key={row.id} className="border-b border-slate-50 bg-red-50 hover:bg-red-100/50">
+                              <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.created_at?.replace('T', ' ').slice(0, 19)}</td>
+                              <td className="px-4 py-2.5 text-xs font-mono text-slate-700">{row.to_phone}</td>
+                              <td className="px-4 py-2.5 text-xs text-slate-600">{row.message_type}</td>
+                              <td className="px-4 py-2.5 text-xs text-slate-600">{row.context_label || '—'}</td>
+                              <td className="px-4 py-2.5 text-xs font-bold text-red-700">{row.attempts}</td>
+                              <td className="px-4 py-2.5 text-xs text-red-600 max-w-xs truncate">{row.last_error || '—'}</td>
+                              <td className="px-4 py-2.5 text-xs font-mono text-slate-400 max-w-xs truncate">{row.idempotency_key}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         )}
       </main>
     </div>

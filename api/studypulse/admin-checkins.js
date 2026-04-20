@@ -66,38 +66,61 @@ export default async function handler(req, res) {
     const body = await readJsonBody(req);
     const action = typeof body.action === 'string' ? body.action : '';
 
-    if (action !== 'manual_send_checkin') {
-      return json(res, 400, { error: 'Unsupported action.' });
-    }
+    // ── Manual check-in trigger ──────────────────────────────────────────
+    if (action === 'manual_send_checkin') {
+      const childId = typeof body.childId === 'string' ? body.childId.trim() : '';
+      if (!childId) return json(res, 400, { error: 'childId is required.' });
 
-    const childId = typeof body.childId === 'string' ? body.childId.trim() : '';
-    if (!childId) return json(res, 400, { error: 'childId is required.' });
-
-    const response = await fetch(`${supabaseUrl}/functions/v1/studypulse-cron`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${serviceRoleKey}`,
-      },
-      body: JSON.stringify({
-        action: 'manual_send_checkin',
-        child_id: childId,
-      }),
-    });
-
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok || !payload?.success) {
-      return json(res, 400, {
-        ok: false,
-        error: payload?.error || 'Manual check-in trigger failed.',
-        details: payload,
+      const response = await fetch(`${supabaseUrl}/functions/v1/studypulse-cron`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({
+          action: 'manual_send_checkin',
+          child_id: childId,
+        }),
       });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload?.success) {
+        return json(res, 400, {
+          ok: false,
+          error: payload?.error || 'Manual check-in trigger failed.',
+          details: payload,
+        });
+      }
+
+      return json(res, 200, { ok: true, result: payload });
     }
 
-    return json(res, 200, {
-      ok: true,
-      result: payload,
-    });
+    // ── Cron execution log (last N rows) ─────────────────────────────────
+    if (action === 'cron_log') {
+      const limit = Math.min(Number(body.limit) || 20, 100);
+      const { data, error } = await admin
+        .from('sq_cron_log')
+        .select('*')
+        .order('run_at', { ascending: false })
+        .limit(limit);
+      if (error) return json(res, 500, { ok: false, error: error.message });
+      return json(res, 200, { ok: true, rows: data || [] });
+    }
+
+    // ── Failed outbound messages ──────────────────────────────────────────
+    if (action === 'outbound_failed') {
+      const limit = Math.min(Number(body.limit) || 50, 200);
+      const { data, error } = await admin
+        .from('sq_outbound_queue')
+        .select('id, idempotency_key, to_phone, message_type, context_label, last_error, attempts, created_at')
+        .eq('status', 'failed')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) return json(res, 500, { ok: false, error: error.message });
+      return json(res, 200, { ok: true, rows: data || [] });
+    }
+
+    return json(res, 400, { error: 'Unsupported action.' });
   } catch (error) {
     return json(res, 500, { error: error?.message || 'Unexpected error.' });
   }
