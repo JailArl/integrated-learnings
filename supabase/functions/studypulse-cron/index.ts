@@ -206,7 +206,7 @@ async function processOutboundQueue(sb) {
   const now = new Date().toISOString();
   const { data: pending, error: fetchErr } = await sb
     .from("sq_outbound_queue")
-    .select("id, idempotency_key, to_phone, message_type, template_name, variables, raw_body, attempts, context_label")
+    .select("id, idempotency_key, to_phone, message_type, template_name, content_sid, variables, raw_body, attempts, context_label")
     .eq("status", "pending")
     .lte("scheduled_for", now)
     .lt("attempts", 3)
