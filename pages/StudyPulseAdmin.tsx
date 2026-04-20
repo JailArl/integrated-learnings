@@ -167,6 +167,7 @@ const StudyPulseAdmin: React.FC = () => {
   const [cronLogRows, setCronLogRows] = useState<CronLogRow[]>([]);
   const [failedMessages, setFailedMessages] = useState<FailedMessageRow[]>([]);
   const [cronHealthLoading, setCronHealthLoading] = useState(false);
+  const [cronHealthRefreshKey, setCronHealthRefreshKey] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -273,25 +274,27 @@ const StudyPulseAdmin: React.FC = () => {
 
   useEffect(() => {
     if (adminTab !== 'cron-health' && adminTab !== 'failed-messages') return;
-    const adminToken = localStorage.getItem('adminToken');
-    if (!adminToken) return;
+    const token = localStorage.getItem('adminToken');
+    if (!token) return;
     setCronHealthLoading(true);
     Promise.all([
       fetch('/api/studypulse/admin-checkins', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: 'cron_log', limit: 20 }),
       }).then((r) => r.json()).catch(() => ({ ok: false, rows: [] })),
       fetch('/api/studypulse/admin-checkins', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ action: 'outbound_failed', limit: 50 }),
       }).then((r) => r.json()).catch(() => ({ ok: false, rows: [] })),
     ]).then(([logRes, failedRes]) => {
       setCronLogRows(logRes.rows || []);
       setFailedMessages(failedRes.rows || []);
     }).finally(() => setCronHealthLoading(false));
-  }, [adminTab]);
+  // cronHealthRefreshKey is incremented by the refresh button to re-trigger this effect.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminTab, cronHealthRefreshKey]);
 
   useEffect(() => {
     if (openAccountDisputes === 0 && disputeGateAcknowledged) {
@@ -676,6 +679,7 @@ const StudyPulseAdmin: React.FC = () => {
           ))}
         </div>
 
+        {/* ── Admin Tab Navigation ── */}
         <nav className="mb-6 flex gap-2 flex-wrap border-b border-slate-200 pb-3">
           {([
             { id: 'monitoring' as const, label: 'Monitoring', icon: Shield },
@@ -1346,7 +1350,7 @@ const StudyPulseAdmin: React.FC = () => {
                     <h3 className="text-sm font-bold text-slate-700">Last 20 Cron Executions</h3>
                     <button
                       type="button"
-                      onClick={() => setAdminTab('cron-health')}
+                      onClick={() => setCronHealthRefreshKey((k) => k + 1)}
                       className="text-[11px] text-blue-600 hover:underline"
                     >
                       Refresh

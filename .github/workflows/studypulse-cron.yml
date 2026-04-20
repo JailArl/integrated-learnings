@@ -35,6 +35,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
+    # Minimal permissions — this job only calls an external HTTP endpoint.
+    permissions:
+      contents: none
+
     steps:
       - name: Invoke studypulse-cron edge function
         env:

@@ -727,7 +727,6 @@ async function updateStreak(sb, childId) {
   if (!checkins || checkins.length === 0) return;
   let streak = 0;
   const today = new Date();
-  const todayStr = today.toISOString().split("T")[0];
   for(let i = 0; i < checkins.length; i++){
     const expected = new Date(today);
     expected.setDate(expected.getDate() - i);

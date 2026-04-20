@@ -221,7 +221,9 @@ async function processOutboundQueue(sb) {
 
   for (const item of pending) {
     try {
-      if (item.message_type === "template" && item.template_name) {
+      if (item.message_type === "content_sid" && item.content_sid) {
+        await sendWhatsApp(item.to_phone, item.content_sid, item.variables ?? undefined, undefined);
+      } else if (item.message_type === "template" && item.template_name) {
         await sendWhatsApp(item.to_phone, item.template_name, item.variables ?? undefined, undefined);
       } else {
         await sendWhatsApp(item.to_phone, undefined, undefined, item.raw_body ?? "");
