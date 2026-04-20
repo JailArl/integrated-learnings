@@ -439,7 +439,11 @@ serve(async (req)=>{
       }
       if (membership?.parent_phone && membership.parent_phone !== phone) {
         const pMsg = parentLang === "zh" ? ZH.checkin_partial(child.name, String(completedCount), String(targetQ), targetUnit, subject) : `📝 ${child.name}: ${completedCount}/${targetQ} ${formatUnitLabel(targetQ, targetUnit)} done today${subject ? ` (${subject})` : ""}. ` + (remaining > 0 ? `${remaining} left — encouraged to finish tomorrow.` : `Completed the full target!`);
-        await sendRaw(membership.parent_phone, pMsg);
+        await enqueueOutbound(sb, `parent-notify:${child.id}:${today}:partially`, membership.parent_phone, {
+          message_type: "raw",
+          raw_body: pMsg,
+          context_label: "parent-notify-partial-count"
+        });
       }
       return ok();
     }
@@ -488,7 +492,11 @@ serve(async (req)=>{
             } else {
               parentMsg = isDistress ? `💛 Heads up — ${child.name} said they're ${skipInfo.reason}. Might be worth a chat tonight.` : `${skipInfo.emoji} ${child.name} is taking a rest day (${skipInfo.reason}). They still checked in!`;
             }
-            await sendRaw(membership.parent_phone, parentMsg);
+            await enqueueOutbound(sb, `parent-notify:${child.id}:${today}:rest-reason`, membership.parent_phone, {
+              message_type: "raw",
+              raw_body: parentMsg,
+              context_label: "parent-notify-rest-reason"
+            });
           }
         } else {
           // Keep as not done with a non-excused reason
@@ -605,7 +613,11 @@ serve(async (req)=>{
           parentMsg = hasTargets ? `✅ ${child.name} completed the target: ${checkinTargetQty} ${formatUnitLabel(checkinTargetQty, todayTarget.target_unit)} of ${todayTarget.subject_name}!` : `✅ ${child.name} checked in — studied!`;
           if (parsed.status === "did_extra") parentMsg += " ⚡ Did extra!";
         }
-        await sendRaw(membership.parent_phone, parentMsg);
+        await enqueueOutbound(sb, `parent-notify:${child.id}:${today}:done`, membership.parent_phone, {
+          message_type: "raw",
+          raw_body: parentMsg,
+          context_label: "parent-notify-done"
+        });
       }
     // ── PARTIALLY ──
     } else if (parsed.status === "partially") {
@@ -622,13 +634,21 @@ serve(async (req)=>{
         await sendRaw(phone, `Better than nothing — if you can, just do extra tomorrow. 💪`);
         if (membership?.parent_phone && membership.parent_phone !== phone) {
           const pMsg = parentLang === "zh" ? ZH.checkin_partial_generic(child.name) : `📝 ${child.name} checked in — partially done. Encouraged to finish the rest tomorrow.`;
-          await sendRaw(membership.parent_phone, pMsg);
+          await enqueueOutbound(sb, `parent-notify:${child.id}:${today}:partially`, membership.parent_phone, {
+            message_type: "raw",
+            raw_body: pMsg,
+            context_label: "parent-notify-partial"
+          });
         }
       } else {
         await sendRaw(phone, `Good effort, ${child.name}! 📝 Try to finish the rest by tomorrow — small steps add up.`);
         if (membership?.parent_phone && membership.parent_phone !== phone) {
           const pMsg = parentLang === "zh" ? ZH.checkin_partial_generic(child.name) : `📝 ${child.name} checked in — partially done. Encouraged to finish the rest.`;
-          await sendRaw(membership.parent_phone, pMsg);
+          await enqueueOutbound(sb, `parent-notify:${child.id}:${today}:partially`, membership.parent_phone, {
+            message_type: "raw",
+            raw_body: pMsg,
+            context_label: "parent-notify-partial-notarget"
+          });
         }
       }
     // ── NO ──
@@ -636,7 +656,11 @@ serve(async (req)=>{
       await sendRaw(phone, `Thanks for being honest, ${child.name}. May I know what happened?\n\nYou can reply with *sick*, *tired*, or tell me in your own words.`);
       if (membership?.parent_phone && membership.parent_phone !== phone) {
         const pMsg = parentLang === "zh" ? ZH.checkin_no(child.name) : `📋 ${child.name} checked in — didn't study today. Checking in still counts as showing up.`;
-        await sendRaw(membership.parent_phone, pMsg);
+        await enqueueOutbound(sb, `parent-notify:${child.id}:${today}:no`, membership.parent_phone, {
+          message_type: "raw",
+          raw_body: pMsg,
+          context_label: "parent-notify-no"
+        });
       }
     // ── REST DAY (tired / sick / busy / family / stressed) ──
     } else if (parsed.status === "rest_day") {
@@ -651,7 +675,11 @@ serve(async (req)=>{
         } else {
           parentMsg = isDistress ? `💛 Heads up — ${child.name} said they're ${skipInfo.reason}. Might be worth a chat tonight.` : `${skipInfo.emoji} ${child.name} is taking a rest day (${skipInfo.reason}). They still checked in!`;
         }
-        await sendRaw(membership.parent_phone, parentMsg);
+        await enqueueOutbound(sb, `parent-notify:${child.id}:${today}:rest`, membership.parent_phone, {
+          message_type: "raw",
+          raw_body: parentMsg,
+          context_label: "parent-notify-rest"
+        });
       }
     }
     // ── STREAK ──
@@ -669,6 +697,28 @@ function ok() {
     }
   });
 }
+
+// ── OUTBOUND QUEUE HELPER ──
+// Inserts a business-initiated message into sq_outbound_queue.
+// The cron's processOutboundQueue() drains this table every 15 minutes.
+// UNIQUE(idempotency_key) ensures double-inserts are silently ignored.
+async function enqueueOutbound(sb, idempotencyKey, toPhone, options) {
+  const { message_type, template_name, variables, raw_body, context_label } = options;
+  const { error } = await sb.from("sq_outbound_queue").upsert({
+    idempotency_key: idempotencyKey,
+    to_phone: toPhone,
+    message_type: message_type || "raw",
+    template_name: template_name ?? null,
+    variables: variables ?? null,
+    raw_body: raw_body ?? null,
+    status: "pending",
+    context_label: context_label ?? null,
+  }, { onConflict: "idempotency_key", ignoreDuplicates: true });
+  if (error) {
+    console.error("enqueueOutbound failed", { key: idempotencyKey, error: error.message });
+  }
+}
+
 // ── STREAK HELPER ──
 async function updateStreak(sb, childId) {
   const { data: checkins } = await sb.from("sq_checkins").select("checkin_date, status").eq("child_id", childId).neq("status", "pending").order("checkin_date", {
@@ -677,6 +727,7 @@ async function updateStreak(sb, childId) {
   if (!checkins || checkins.length === 0) return;
   let streak = 0;
   const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
   for(let i = 0; i < checkins.length; i++){
     const expected = new Date(today);
     expected.setDate(expected.getDate() - i);
@@ -698,8 +749,12 @@ async function updateStreak(sb, childId) {
       const { data: m } = await sb.from("sq_memberships").select("parent_phone, preferred_language").eq("user_id", child.parent_id).single();
       if (m?.parent_phone) {
         const tpl = m.preferred_language === "zh" ? `${milestones[streak]}_zh` : milestones[streak];
-        await sendTemplate(m.parent_phone, tpl, {
-          child_name: child.name
+        // Streak milestone → business-initiated send to parent; route through queue.
+        await enqueueOutbound(sb, `streak:${childId}:${streak}`, m.parent_phone, {
+          message_type: "template",
+          template_name: tpl,
+          variables: { child_name: child.name },
+          context_label: "streak-milestone"
         });
       }
     }

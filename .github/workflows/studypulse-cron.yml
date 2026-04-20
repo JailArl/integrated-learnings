@@ -1,0 +1,66 @@
+# StudyPulse Cron Trigger — GitHub Actions
+#
+# IMPORTANT SCHEDULER NOTE
+# ─────────────────────────────────────────────────────────────────────────
+# GitHub Actions is the SOLE active scheduler for studypulse-cron.
+# Vercel cron (vercel.json "crons") is NOT used as a secondary trigger.
+#
+# If you ever need to enable a Vercel cron entry for this path, you MUST
+# disable (comment out) the `schedule` trigger in this file FIRST, or you
+# will get duplicate runs every 15 minutes.
+#
+# Manual / fallback invocation: POST to /api/studypulse/cron-trigger with
+# Authorization: Bearer <CRON_SECRET> (see api/studypulse/cron-trigger.js).
+# ─────────────────────────────────────────────────────────────────────────
+#
+# Required repository secrets (Settings → Secrets → Actions):
+#   SUPABASE_URL               — your project URL, e.g. https://xxx.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY  — service-role key (keep secret)
+#
+# Known limitation: GitHub scheduled workflows on repositories with no
+# recent activity can be delayed by up to several minutes. This is
+# acceptable because every cron run is idempotent — a delayed run will
+# simply send whatever is due at that moment and skip anything already sent.
+# ─────────────────────────────────────────────────────────────────────────
+
+name: StudyPulse Cron
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # every 15 minutes (SGT = UTC+8; schedule is in UTC)
+  workflow_dispatch: {}       # manual trigger from GitHub Actions UI
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Invoke studypulse-cron edge function
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          HTTP_STATUS=$(curl -s \
+            -o /tmp/cron_response.json \
+            -w "%{http_code}" \
+            -X POST "${SUPABASE_URL}/functions/v1/studypulse-cron" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}')
+
+          echo "HTTP status: ${HTTP_STATUS}"
+          echo "Response body:"
+          cat /tmp/cron_response.json
+
+          # Non-2xx → fail the job so it shows as red in GitHub Actions
+          if [ "${HTTP_STATUS}" -lt 200 ] || [ "${HTTP_STATUS}" -ge 300 ]; then
+            echo ""
+            echo "ERROR: studypulse-cron returned HTTP ${HTTP_STATUS}. Check Supabase function logs."
+            exit 1
+          fi
+
+          echo ""
+          echo "Cron run succeeded."
