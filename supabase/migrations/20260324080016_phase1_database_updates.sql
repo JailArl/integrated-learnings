@@ -56,7 +56,17 @@ CREATE POLICY "Admins can update all certificates"
 
 -- 5. Create index for faster queries
 CREATE INDEX IF NOT EXISTS idx_tutor_certificates_tutor_id ON tutor_certificates(tutor_id);
-CREATE INDEX IF NOT EXISTS idx_tutor_certificates_status ON tutor_certificates(verification_status);
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name   = 'tutor_certificates'
+      AND column_name  = 'verification_status'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_tutor_certificates_status ON tutor_certificates(verification_status)';
+  END IF;
+END $$;
 CREATE INDEX IF NOT EXISTS idx_tutor_profiles_ranking ON tutor_profiles(ranking_score DESC NULLS LAST);
 
 -- 6. Update existing tutors to have default onboarding status
