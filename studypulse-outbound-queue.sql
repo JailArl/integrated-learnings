@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS sq_outbound_queue (
   variables        JSONB,                     -- template variables
   raw_body         TEXT,                      -- for message_type = 'raw'
   status           TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'skipped')),
-  attempts         INT NOT NULL DEFAULT 0,
+  attempts         INT NOT NULL DEFAULT 0 CHECK (attempts >= 0),
   last_error       TEXT,
   scheduled_for    TIMESTAMPTZ NOT NULL DEFAULT now(),
   sent_at          TIMESTAMPTZ,
@@ -37,8 +37,13 @@ CREATE INDEX IF NOT EXISTS idx_sq_outbound_queue_failed
   ON sq_outbound_queue (status, created_at DESC)
   WHERE status = 'failed';
 
--- RLS: disable public access; only service_role can read/write.
-ALTER TABLE sq_outbound_queue DISABLE ROW LEVEL SECURITY;
+-- RLS: service_role only — no anon/authenticated access.
+ALTER TABLE sq_outbound_queue ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "sq_outbound_queue_service_role_only" ON sq_outbound_queue;
+CREATE POLICY "sq_outbound_queue_service_role_only" ON sq_outbound_queue
+  FOR ALL USING (auth.jwt()->>'role' = 'service_role')
+  WITH CHECK (auth.jwt()->>'role' = 'service_role');
 
 COMMENT ON TABLE sq_outbound_queue IS 'Centralised outbound WhatsApp message queue. The cron drains this table via processOutboundQueue() at the end of each run. Unique idempotency_key prevents duplicate sends.';
 

@@ -25,7 +25,12 @@ CREATE INDEX IF NOT EXISTS idx_sq_cron_log_run_at ON sq_cron_log (run_at DESC);
 -- Index for quickly finding the last successful cron run
 CREATE INDEX IF NOT EXISTS idx_sq_cron_log_job_type ON sq_cron_log (job_type, run_at DESC);
 
--- RLS: disable public access; only service_role can read/write.
-ALTER TABLE sq_cron_log DISABLE ROW LEVEL SECURITY;
+-- RLS: service_role only — no anon/authenticated access.
+ALTER TABLE sq_cron_log ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "sq_cron_log_service_role_only" ON sq_cron_log;
+CREATE POLICY "sq_cron_log_service_role_only" ON sq_cron_log
+  FOR ALL USING (auth.jwt()->>'role' = 'service_role')
+  WITH CHECK (auth.jwt()->>'role' = 'service_role');
 
 COMMENT ON TABLE sq_cron_log IS 'Persistent execution log for studypulse-cron phases. Used by admin health dashboard to detect missing or failed cron runs.';
