@@ -114,7 +114,9 @@ export default async function handler(req, res) {
       const msg = String(error.message || '').toLowerCase();
       const recoverable =
         msg.includes('uq_sq_memberships_parent_phone') ||
-        (msg.includes('column') && msg.includes('does not exist'));
+        (msg.includes('column') && msg.includes('does not exist')) ||
+        msg.includes('schema cache') ||
+        msg.includes('preferred_language');
       if (!recoverable) break;
     }
 
