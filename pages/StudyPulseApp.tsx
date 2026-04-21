@@ -2422,12 +2422,54 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     if (!whatsapp.trim()) { setError('WhatsApp number is required.'); return; }
     setError('');
     setSaving(true);
-    const ensuredMembership = await createMembership(userId, membership?.plan_type || 'free', {
+    let ensuredMembership = await createMembership(userId, membership?.plan_type || 'free', {
       name: fullName,
       email: membership?.parent_email || '',
       phone: normaliseSGPhone(whatsapp),
       language: parentLang,
     });
+
+    // Extra guardrail for production policy/config drift:
+    // try direct server bootstrap once more so users get a specific reason.
+    if (!ensuredMembership && supabase) {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (token) {
+          const bootstrap = await fetch('/api/studypulse/bootstrap-membership', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              userId,
+              planType: membership?.plan_type || 'free',
+              profile: {
+                name: fullName,
+                email: membership?.parent_email || '',
+                phone: normaliseSGPhone(whatsapp),
+                language: parentLang,
+              },
+            }),
+          });
+
+          const payload = await bootstrap.json().catch(() => ({}));
+          if (bootstrap.ok && payload?.ok) {
+            ensuredMembership = (await getMembership(userId)) || ({} as Membership);
+          } else {
+            setSaving(false);
+            setError(payload?.error || 'Could not initialize your parent profile. Please try again.');
+            return;
+          }
+        }
+      } catch (bootstrapErr: any) {
+        setSaving(false);
+        setError(bootstrapErr?.message || 'Could not initialize your parent profile. Please try again.');
+        return;
+      }
+    }
+
     if (!ensuredMembership) {
       setSaving(false);
       setError('Could not initialize your parent profile. Please try again.');
