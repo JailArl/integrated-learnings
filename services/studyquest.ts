@@ -160,15 +160,45 @@ export async function getMembership(userId: string): Promise<Membership | null> 
 
 export async function createMembership(userId: string, planType: PlanType = 'free', profile?: { name?: string; email?: string; phone?: string; language?: 'en' | 'zh' }): Promise<Membership | null> {
   if (!supabase) return null;
-  const { data } = await supabase.from('sq_memberships').upsert({
+
+  const basePayload = {
     user_id: userId,
     plan_type: planType,
     status: planType === 'free' ? 'free' : 'premium_active',
     ...(profile?.name && { parent_name: profile.name }),
     ...(profile?.email && { parent_email: profile.email }),
-    ...(profile?.phone && { parent_phone: profile.phone }),
     ...(profile?.language && { preferred_language: profile.language }),
-  }, { onConflict: 'user_id' }).select().single();
+  };
+
+  const fullPayload = {
+    ...basePayload,
+    ...(profile?.phone && { parent_phone: profile.phone }),
+  };
+
+  let { data, error } = await supabase
+    .from('sq_memberships')
+    .upsert(fullPayload, { onConflict: 'user_id' })
+    .select()
+    .single();
+
+  // If phone uniqueness blocks membership bootstrap, retry without phone.
+  // Phone is persisted in a later step with clearer user-facing conflict messaging.
+  if (error && profile?.phone && String(error.message || '').includes('uq_sq_memberships_parent_phone')) {
+    const retry = await supabase
+      .from('sq_memberships')
+      .upsert(basePayload, { onConflict: 'user_id' })
+      .select()
+      .single();
+
+    data = retry.data;
+    error = retry.error;
+  }
+
+  if (error) {
+    console.error('createMembership failed:', error);
+    return null;
+  }
+
   return data;
 }
 
