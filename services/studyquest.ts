@@ -202,13 +202,27 @@ export async function createMembership(userId: string, planType: PlanType = 'fre
     if (seen.has(key)) continue;
     seen.add(key);
 
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('sq_memberships')
-      .upsert(payload, { onConflict: 'user_id' })
-      .select()
-      .single();
+      .upsert(payload, { onConflict: 'user_id' });
 
-    if (!error) return data;
+    if (!error) {
+      // Best effort: return canonical DB row when SELECT policy allows it.
+      const refreshed = await getMembership(userId);
+      if (refreshed) return refreshed;
+
+      // If SELECT is blocked or schema drifts, still treat bootstrap as successful.
+      return {
+        id: '',
+        user_id: userId,
+        plan_type: planType,
+        status: planType === 'free' ? 'free' : 'premium_active',
+        ...(profile?.name ? { parent_name: profile.name } : {}),
+        ...(profile?.email ? { parent_email: profile.email } : {}),
+        ...(profile?.phone ? { parent_phone: profile.phone } : {}),
+        ...(profile?.language ? { preferred_language: profile.language } : {}),
+      } as Membership;
+    }
 
     lastError = error;
     const msg = String(error.message || '').toLowerCase();
