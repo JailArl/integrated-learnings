@@ -234,8 +234,56 @@ export async function createMembership(userId: string, planType: PlanType = 'fre
     if (!recoverable) break;
   }
 
-  console.error('createMembership failed:', lastError);
-  return null;
+  // Final fallback: bootstrap via server endpoint (service-role) to bypass RLS issues.
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) {
+      console.error('createMembership failed (no session token for server fallback):', lastError);
+      return null;
+    }
+
+    const response = await fetch('/api/studypulse/bootstrap-membership', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        userId,
+        planType,
+        profile: {
+          name: profile?.name,
+          email: profile?.email,
+          phone: profile?.phone,
+          language: profile?.language,
+        },
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload?.ok) {
+      console.error('createMembership server fallback failed:', payload?.error || payload, lastError);
+      return null;
+    }
+
+    const refreshed = await getMembership(userId);
+    if (refreshed) return refreshed;
+
+    return {
+      id: '',
+      user_id: userId,
+      plan_type: planType,
+      status: planType === 'free' ? 'free' : 'premium_active',
+      ...(profile?.name ? { parent_name: profile.name } : {}),
+      ...(profile?.email ? { parent_email: profile.email } : {}),
+      ...(profile?.phone ? { parent_phone: profile.phone } : {}),
+      ...(profile?.language ? { preferred_language: profile.language } : {}),
+    } as Membership;
+  } catch (fallbackError) {
+    console.error('createMembership failed:', lastError, fallbackError);
+    return null;
+  }
 }
 
 export async function upgradeMembership(userId: string, planType: PlanType): Promise<boolean> {
