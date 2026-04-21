@@ -43,13 +43,21 @@ async function getAuthenticatedUser(req) {
   return { user: data.user };
 }
 
+function isMissingSchemaEntityError(message) {
+  const msg = String(message || '').toLowerCase();
+  const missingRelation = msg.includes('relation') && msg.includes('does not exist');
+  const missingColumn = msg.includes('column') && msg.includes('does not exist');
+  const schemaCacheTableMiss = msg.includes('could not find the table') && msg.includes('schema cache');
+  const schemaCacheColumnMiss = msg.includes('could not find the') && msg.includes('column') && msg.includes('schema cache');
+  return missingRelation || missingColumn || schemaCacheTableMiss || schemaCacheColumnMiss;
+}
+
 async function safeDelete(table, column, value) {
   const { error } = await admin.from(table).delete().eq(column, value);
   if (!error) return;
 
   const msg = String(error.message || '');
-  const missingTable = msg.includes('relation') && msg.includes('does not exist');
-  if (missingTable) return;
+  if (isMissingSchemaEntityError(msg)) return;
 
   throw new Error(`Failed to delete from ${table}: ${msg}`);
 }
@@ -61,9 +69,7 @@ async function safeDeleteIn(table, column, values) {
   if (!error) return;
 
   const msg = String(error.message || '');
-  const missingTable = msg.includes('relation') && msg.includes('does not exist');
-  const missingColumn = msg.includes('column') && msg.includes('does not exist');
-  if (missingTable || missingColumn) return;
+  if (isMissingSchemaEntityError(msg)) return;
 
   throw new Error(`Failed to delete from ${table}: ${msg}`);
 }
@@ -136,8 +142,7 @@ export default async function handler(req, res) {
 
       if (outboundQueueError) {
         const msg = String(outboundQueueError.message || '');
-        const missingTable = msg.includes('relation') && msg.includes('does not exist');
-        if (!missingTable) {
+        if (!isMissingSchemaEntityError(msg)) {
           throw new Error(outboundQueueError.message || 'Could not clear pending outbound queue rows.');
         }
       }
