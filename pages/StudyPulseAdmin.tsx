@@ -109,6 +109,13 @@ const hasPaidAccess = (membership: MembershipRow): boolean => {
   return endsAt > Date.now();
 };
 
+const inferOutboundRole = (contextLabel?: string | null): 'parent' | 'child' | 'system' => {
+  const label = (contextLabel || '').toLowerCase();
+  if (label.includes('parent')) return 'parent';
+  if (label.includes('child')) return 'child';
+  return 'system';
+};
+
 /* ═══════════════════════════════════════════ */
 const StudyPulseAdmin: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -160,6 +167,9 @@ const StudyPulseAdmin: React.FC = () => {
     to_phone: string;
     message_type: string;
     context_label?: string | null;
+    status: 'pending' | 'sent' | 'failed' | 'skipped' | string;
+    scheduled_for?: string | null;
+    sent_at?: string | null;
     last_error?: string | null;
     attempts: number;
     created_at: string;
@@ -286,7 +296,7 @@ const StudyPulseAdmin: React.FC = () => {
       fetch('/api/studypulse/admin-checkins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ action: 'outbound_failed', limit: 50 }),
+        body: JSON.stringify({ action: 'outbound_recent', limit: 100 }),
       }).then((r) => r.json()).catch(() => ({ ok: false, rows: [] })),
     ]).then(([logRes, failedRes]) => {
       setCronLogRows(logRes.rows || []);
@@ -302,6 +312,7 @@ const StudyPulseAdmin: React.FC = () => {
     }
   }, [openAccountDisputes, disputeGateAcknowledged]);
   const todayStr = new Date().toISOString().split('T')[0];
+  const failedMessageCount = failedMessages.filter((row) => row.status === 'failed').length;
   const allActivity = [...recentCheckins.map(c => ({ childId: c.child_id, date: c.checkin_date, status: c.status })), ...recentTasks.map(t => ({ childId: t.child_id, date: t.task_date, status: t.status }))];
   const todayActivity = allActivity.filter(a => a.date === todayStr);
   const todayDone = todayActivity.filter(a => a.status === 'done' || a.status === 'did_extra' || a.status === 'yes').length;
@@ -687,15 +698,15 @@ const StudyPulseAdmin: React.FC = () => {
             { id: 'requests' as const, label: 'Requests', icon: Zap },
             { id: 'preview' as const, label: 'Message Preview', icon: FileText },
             { id: 'cron-health' as const, label: 'Cron Health', icon: BarChart3 },
-            { id: 'failed-messages' as const, label: 'Failed Messages', icon: AlertTriangle },
+            { id: 'failed-messages' as const, label: 'Outbound Queue', icon: AlertTriangle },
           ]).map((t) => (
             <button key={t.id} onClick={() => setAdminTab(t.id)} className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition ${adminTab === t.id ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
               <t.icon size={14} /> {t.label}
               {t.id === 'requests' && openAccountDisputes > 0 && (
                 <span className="ml-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-black text-white">{openAccountDisputes}</span>
               )}
-              {t.id === 'failed-messages' && failedMessages.length > 0 && (
-                <span className="ml-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-black text-white">{failedMessages.length}</span>
+              {t.id === 'failed-messages' && failedMessageCount > 0 && (
+                <span className="ml-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-black text-white">{failedMessageCount}</span>
               )}
             </button>
           ))}
@@ -1401,25 +1412,36 @@ const StudyPulseAdmin: React.FC = () => {
           </div>
         )}
 
-        {/* ═══════════ FAILED MESSAGES TAB ═══════════ */}
+        {/* ═══════════ OUTBOUND QUEUE TAB ═══════════ */}
         {adminTab === 'failed-messages' && (
           <div className="space-y-5">
             {cronHealthLoading ? (
-              <div className="flex items-center justify-center py-12 text-slate-400 text-sm">Loading failed messages…</div>
+              <div className="flex items-center justify-center py-12 text-slate-400 text-sm">Loading outbound queue…</div>
             ) : (
               <>
                 {failedMessages.length === 0 ? (
                   <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-6 text-center">
-                    <p className="text-sm font-bold text-emerald-800">✅ No failed messages</p>
-                    <p className="mt-1 text-xs text-emerald-700">All outbound queue messages have been sent successfully.</p>
+                    <p className="text-sm font-bold text-emerald-800">✅ No outbound rows found</p>
+                    <p className="mt-1 text-xs text-emerald-700">Recent outbound queue is empty for pending/sent/failed/skipped statuses.</p>
                   </div>
                 ) : (
-                  <div className="rounded-2xl border border-red-100 bg-white shadow-sm overflow-hidden">
-                    <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-red-700">
-                        ⚠️ {failedMessages.length} Failed Message{failedMessages.length === 1 ? '' : 's'}
-                      </h3>
-                      <p className="text-[11px] text-slate-500">3 attempts exhausted — manual retry required</p>
+                  <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100">
+                      <h3 className="text-sm font-bold text-slate-800">Recent Outbound Queue Activity</h3>
+                      <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-bold">
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
+                          pending {failedMessages.filter((r) => r.status === 'pending').length}
+                        </span>
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700">
+                          sent {failedMessages.filter((r) => r.status === 'sent').length}
+                        </span>
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700">
+                          failed {failedMessageCount}
+                        </span>
+                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">
+                          skipped {failedMessages.filter((r) => r.status === 'skipped').length}
+                        </span>
+                      </div>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-sm">
@@ -1427,8 +1449,12 @@ const StudyPulseAdmin: React.FC = () => {
                           <tr className="border-b border-slate-100 bg-slate-50">
                             <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Created (UTC)</th>
                             <th className="px-4 py-2.5 text-xs font-bold text-slate-500">To phone</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Role</th>
                             <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Type</th>
                             <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Context</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Scheduled</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Sent</th>
+                            <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Status</th>
                             <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Attempts</th>
                             <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Last error</th>
                             <th className="px-4 py-2.5 text-xs font-bold text-slate-500">Idempotency key</th>
@@ -1436,12 +1462,20 @@ const StudyPulseAdmin: React.FC = () => {
                         </thead>
                         <tbody>
                           {failedMessages.map((row) => (
-                            <tr key={row.id} className="border-b border-slate-50 bg-red-50 hover:bg-red-100/50">
+                            <tr key={row.id} className={`border-b border-slate-50 ${row.status === 'failed' ? 'bg-red-50 hover:bg-red-100/50' : 'hover:bg-slate-50'}`}>
                               <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.created_at?.replace('T', ' ').slice(0, 19)}</td>
                               <td className="px-4 py-2.5 text-xs font-mono text-slate-700">{row.to_phone}</td>
+                              <td className="px-4 py-2.5 text-xs text-slate-600">{inferOutboundRole(row.context_label)}</td>
                               <td className="px-4 py-2.5 text-xs text-slate-600">{row.message_type}</td>
                               <td className="px-4 py-2.5 text-xs text-slate-600">{row.context_label || '—'}</td>
-                              <td className="px-4 py-2.5 text-xs font-bold text-red-700">{row.attempts}</td>
+                              <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.scheduled_for ? row.scheduled_for.replace('T', ' ').slice(0, 19) : '—'}</td>
+                              <td className="px-4 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.sent_at ? row.sent_at.replace('T', ' ').slice(0, 19) : '—'}</td>
+                              <td className="px-4 py-2.5">
+                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${row.status === 'failed' ? 'bg-red-100 text-red-700' : row.status === 'sent' ? 'bg-emerald-100 text-emerald-700' : row.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>
+                                  {row.status}
+                                </span>
+                              </td>
+                              <td className={`px-4 py-2.5 text-xs font-bold ${row.status === 'failed' ? 'text-red-700' : 'text-slate-700'}`}>{row.attempts}</td>
                               <td className="px-4 py-2.5 text-xs text-red-600 max-w-xs truncate">{row.last_error || '—'}</td>
                               <td className="px-4 py-2.5 text-xs font-mono text-slate-400 max-w-xs truncate">{row.idempotency_key}</td>
                             </tr>
