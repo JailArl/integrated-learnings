@@ -327,7 +327,9 @@ serve(async (req)=>{
       const parentName = phoneMembership.parent_name || "Parent";
 
       if (isParentActivationIntent(body)) {
-        const ack = pLang === "zh" ? `✅ ${parentName}，家长周报已启用。之后我们会把每周总结发到这个号码。\n\n如果要启用孩子每日打卡，请让孩子用自己的手机发送孩子激活链接。` : `✅ Parent updates activated, ${parentName}. We'll send weekly summaries to this WhatsApp number.\n\nFor child daily check-ins, your child must send the child activation message from their own phone.`;
+        const ack = pLang === "zh"
+          ? `✅ ${parentName}，家长号码已确认并启用 StudyPulse。\n\n之后我们会把家长更新发到这个号码。\n\n如果您之前已启用，这里是确认：当前仍然已启用。\n\n如要启用孩子每日打卡，请让孩子用自己的手机发送孩子激活链接。`
+          : `✅ Parent number confirmed for StudyPulse, ${parentName}.\n\nWe will send parent updates to this WhatsApp number.\n\nIf you activated before, this is a confirmation that it is still active.\n\nFor child daily check-ins, your child must send the child activation message from their own phone.`;
         await sendRaw(phone, ack);
         return ok();
       }
@@ -350,6 +352,9 @@ serve(async (req)=>{
     }
 
     if (!child) {
+      if (isChildActivationIntent(body)) {
+        await sendRaw(phone, `We couldn't link this number to a child profile yet.\n\nPlease ask your parent to set your WhatsApp number in the StudyPulse dashboard, then send the child activation message again.`);
+      }
       return ok();
     }
     const state = child.conversation_state || "idle";
@@ -376,6 +381,14 @@ serve(async (req)=>{
     const { data: membership } = await sb.from("sq_memberships").select("parent_phone, parent_name, plan_type, preferred_language").eq("user_id", child.parent_id).single();
     const isPremium = membership?.plan_type !== "free";
     const parentLang = membership?.preferred_language || "en";
+
+    if (isChildActivationIntent(body)) {
+      const activationAck = isPremium
+        ? `✅ Your number is confirmed for StudyPulse, ${child.name}.\n\nWe'll send your study check-ins here on your study days.\n\nIf you activated before, this confirms it is still active.`
+        : `✅ Your number is confirmed for StudyPulse, ${child.name}.\n\nWe'll send your bundled StudyPulse check-ins here on Tue/Thu/Sat.\n\nIf you activated before, this confirms it is still active.`;
+      await sendRaw(phone, activationAck);
+      return ok();
+    }
     // ══════════════════════════════════════
     // STATE: SETTING TARGETS
     // ══════════════════════════════════════

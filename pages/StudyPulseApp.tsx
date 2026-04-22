@@ -398,13 +398,13 @@ const StudyPulseApp: React.FC = () => {
       const childIds = children.map((c) => c.id);
       const { data } = await supabase
         .from('sq_study_settings')
-        .select('child_id, check_completion_time')
+        .select('child_id, first_reminder_time')
         .in('child_id', childIds);
 
       const next: Record<string, string> = {};
       (data || []).forEach((row: any) => {
-        if (row?.child_id && row?.check_completion_time) {
-          next[row.child_id] = row.check_completion_time;
+        if (row?.child_id && row?.first_reminder_time) {
+          next[row.child_id] = row.first_reminder_time;
         }
       });
       setChildCheckTimes(next);
@@ -1687,9 +1687,9 @@ const StudyPulseApp: React.FC = () => {
                   </div>
 
                   <div className="mt-4">
-                    <p className="text-sm font-bold text-slate-700">Check-In Time</p>
+                    <p className="text-sm font-bold text-slate-700">First Reminder Time</p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Set what time {c.name} receives the WhatsApp check-in prompt.
+                      Set what time {c.name} receives the first WhatsApp reminder/check-in prompt.
                     </p>
                     <p className="mt-1 text-[11px] text-slate-400">
                       If you do not save a custom time, StudyPulse uses the level-based default timing automatically.
@@ -1709,9 +1709,9 @@ const StudyPulseApp: React.FC = () => {
                         onClick={async () => {
                           const selected = getEffectiveCheckinTimeValue(c, false);
                           setSavingCheckTimeId(c.id);
-                          await upsertStudySettings(c.id, { check_completion_time: selected });
+                          await upsertStudySettings(c.id, { first_reminder_time: selected });
                           setSavingCheckTimeId(null);
-                          setDashboardNotice({ type: 'success', text: `${c.name}'s check-in time updated to ${selected}.` });
+                          setDashboardNotice({ type: 'success', text: `${c.name}'s first reminder time updated to ${selected}.` });
                         }}
                         className="rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
                       >
@@ -2559,8 +2559,8 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     await upsertStudySettings(child.id, {
       commence_date: today(),
       study_days_per_week: 5,
-      first_reminder_time: '16:00',
-      check_completion_time: getLevelDefaultCheckTime(childLevel, false),
+      first_reminder_time: '18:30',
+      check_completion_time: '20:45',
     });
     setSaving(false);
     setStep(3);

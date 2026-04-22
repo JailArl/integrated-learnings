@@ -120,6 +120,22 @@ export default async function handler(req, res) {
       return json(res, 200, { ok: true, rows: data || [] });
     }
 
+    // ── Recent outbound queue rows (pending/sent/failed/skipped) ────────────
+    if (action === 'outbound_recent') {
+      const limit = Math.min(Number(body.limit) || 100, 300);
+      const statuses = Array.isArray(body.statuses)
+        ? body.statuses.filter((s) => typeof s === 'string')
+        : ['pending', 'sent', 'failed', 'skipped'];
+      const { data, error } = await admin
+        .from('sq_outbound_queue')
+        .select('id, idempotency_key, to_phone, message_type, context_label, status, scheduled_for, sent_at, last_error, attempts, created_at')
+        .in('status', statuses)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) return json(res, 500, { ok: false, error: error.message });
+      return json(res, 200, { ok: true, rows: data || [] });
+    }
+
     return json(res, 400, { error: 'Unsupported action.' });
   } catch (error) {
     return json(res, 500, { error: error?.message || 'Unexpected error.' });

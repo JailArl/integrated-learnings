@@ -105,6 +105,66 @@ const DAY_NAMES = [
   'Fri',
   'Sat'
 ];
+const STUDYPULSE_TIME_DEFAULTS = {
+  free: {
+    weekday: {
+      first: "18:30",
+      final: "20:45"
+    },
+    weekend: {
+      first: "16:30",
+      final: "20:00"
+    }
+  },
+  premium: {
+    weekday: {
+      first: "18:30",
+      final: "20:45"
+    },
+    weekdayCca: {
+      first: "20:00",
+      final: "21:30"
+    },
+    weekend: {
+      first: "16:30",
+      final: "20:00"
+    }
+  }
+};
+
+function asHHMM(value) {
+  if (!value) return "";
+  return String(value).slice(0, 5);
+}
+
+function getChildTimingWindow(isFreePlan, dayOfWeek, ccaDays, settings) {
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  const isCcaWeekday = !isWeekend && !isFreePlan && Array.isArray(ccaDays) && ccaDays.includes(dayOfWeek);
+
+  const firstFromSettings = asHHMM(settings?.first_reminder_time);
+  const finalFromSettings = asHHMM(settings?.check_completion_time);
+
+  const defaultFirst = isWeekend
+    ? (isFreePlan ? STUDYPULSE_TIME_DEFAULTS.free.weekend.first : STUDYPULSE_TIME_DEFAULTS.premium.weekend.first)
+    : isCcaWeekday
+      ? STUDYPULSE_TIME_DEFAULTS.premium.weekdayCca.first
+      : isFreePlan
+        ? STUDYPULSE_TIME_DEFAULTS.free.weekday.first
+        : STUDYPULSE_TIME_DEFAULTS.premium.weekday.first;
+
+  const defaultFinal = isWeekend
+    ? (isFreePlan ? STUDYPULSE_TIME_DEFAULTS.free.weekend.final : STUDYPULSE_TIME_DEFAULTS.premium.weekend.final)
+    : isCcaWeekday
+      ? STUDYPULSE_TIME_DEFAULTS.premium.weekdayCca.final
+      : isFreePlan
+        ? STUDYPULSE_TIME_DEFAULTS.free.weekday.final
+        : STUDYPULSE_TIME_DEFAULTS.premium.weekday.final;
+
+  return {
+    firstReminderTime: firstFromSettings || defaultFirst,
+    finalFollowupTime: finalFromSettings || defaultFinal
+  };
+}
 // Premium parent report days (cost-saving mode): no Tue/Thu mini-reports.
 // Parents still receive immediate daily updates via webhook queue and Sunday weekly summary.
 // Set to [0] (Sunday) so sendParentReports fires on Sundays alongside sendWeeklySummaries.
@@ -449,24 +509,16 @@ serve(async (req)=>{
     let totalSent = 0;
     let totalReminders = 0;
     for (const schedule of schedules){
-      const checkinTime = isWeekend ? schedule.weekend_kid_checkin : schedule.weekday_kid_checkin;
-      const followupTime = isWeekend ? addMinutes(schedule.weekend_kid_checkin, 45) : schedule.weekday_followup;
-      const autoCloseTime = isWeekend ? addMinutes(schedule.weekend_kid_checkin, 120) : addMinutes(schedule.weekday_kid_checkin, 120);
       const parentReportTime = isWeekend ? schedule.weekend_parent_report : schedule.weekday_parent_report;
       // ── SEND CHECK-IN PROMPTS ──
       // Always evaluate each run; sendCheckinPrompts enforces per-child timing window.
-      const sent = await runGuarded(`checkins:${schedule.level_group}`, ()=>sendCheckinPrompts(sb, schedule.level_group, today, dayOfWeek, currentTime, checkinTime));
+      const sent = await runGuarded(`checkins:${schedule.level_group}`, ()=>sendCheckinPrompts(sb, schedule.level_group, today, dayOfWeek, currentTime));
       totalSent += Number(sent || 0);
-      // ── SEND FOLLOW-UP REMINDERS (no reply after ~45 min) ──
-      // Runs on weekdays AND weekends
-      if (isWithinWindow(currentTime, followupTime, 7)) {
-        const reminded = await runGuarded(`followups:${schedule.level_group}`, ()=>sendFollowupReminders(sb, schedule.level_group, today));
-        totalReminders += Number(reminded || 0);
-      }
-      // ── AUTO-CLOSE STALE CHECK-INS (still pending 2h after prompt) ──
-      if (isWithinWindow(currentTime, autoCloseTime, 7)) {
-        await runGuarded(`autoclose:${schedule.level_group}`, ()=>autoCloseStaleCheckins(sb, schedule.level_group, today));
-      }
+      // ── SEND FINAL FOLLOW-UP REMINDERS (per-child final check time) ──
+      const reminded = await runGuarded(`followups:${schedule.level_group}`, ()=>sendFollowupReminders(sb, schedule.level_group, today, dayOfWeek, currentTime));
+      totalReminders += Number(reminded || 0);
+      // ── AUTO-CLOSE STALE CHECK-INS (after final follow-up window) ──
+      await runGuarded(`autoclose:${schedule.level_group}`, ()=>autoCloseStaleCheckins(sb, schedule.level_group, today, dayOfWeek, currentTime));
       // ── SEND PARENT REPORTS ──
       if (isWithinWindow(currentTime, parentReportTime, 7)) {
         await runGuarded(`parent-reports:${schedule.level_group}`, ()=>sendParentReports(sb, schedule.level_group, today, dayOfWeek));
@@ -529,7 +581,7 @@ serve(async (req)=>{
   }
 });
 // ── CORE FUNCTIONS ──
-async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime, levelDefaultCheckinTime) {
+async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime) {
   // Get all children in this level group
   const { data: children } = await sb.from("sq_children").select("id, name, level, whatsapp_number, parent_id, study_days, cca_days").not("whatsapp_number", "is", null);
   if (!children) return 0;
@@ -545,16 +597,16 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
     if (parentPhoneSet.has(normalizePhone(child.whatsapp_number))) continue;
     // Check plan
     const { data: membership } = await sb.from("sq_memberships").select("plan_type").eq("user_id", child.parent_id).single();
-    const { data: settings } = await sb.from("sq_study_settings").select("commence_date, check_completion_time").eq("child_id", child.id).single();
+    const { data: settings } = await sb.from("sq_study_settings").select("commence_date, first_reminder_time, check_completion_time").eq("child_id", child.id).single();
     if (settings?.commence_date && today < settings.commence_date) {
       continue; // Programme hasn't started yet for this child
     }
-    // Parent-selected check-in time takes priority over level defaults.
-    const preferredCheckinTime = settings?.check_completion_time || levelDefaultCheckinTime;
-    if (!isWithinWindow(currentTime, preferredCheckinTime, 12)) continue;
+    const isFreePlan = !membership || membership.plan_type === "free";
+    const savedCcaDays = Array.isArray(child.cca_days) ? child.cca_days.map((d)=>Number(d)).filter((d)=>Number.isInteger(d) && d >= 0 && d <= 6) : [];
+    const timingWindow = getChildTimingWindow(isFreePlan, dayOfWeek, savedCcaDays, settings);
+    if (!isWithinWindow(currentTime, timingWindow.firstReminderTime, 12)) continue;
     // Study days: parent-set days take priority, default Mon-Fri
     const savedStudyDays = Array.isArray(child.study_days) ? child.study_days.map((d)=>Number(d)).filter((d)=>Number.isInteger(d) && d >= 0 && d <= 6) : [];
-    const isFreePlan = !membership || membership.plan_type === "free";
     const childStudyDays = savedStudyDays.length > 0 ? savedStudyDays : [
       1,
       2,
@@ -563,7 +615,7 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
       5
     ]; // Mon-Fri default for both plans
     // Skip CCA days
-    const ccaDays = child.cca_days && child.cca_days.length > 0 ? child.cca_days : [];
+    const ccaDays = savedCcaDays;
     // Get today's target (if any)
     const weekStart = getWeekStart(today);
     const { data: targets } = await sb.from("sq_weekly_targets").select("subject_name, daily_quantity, target_unit, remaining_quantity").eq("child_id", child.id).eq("week_start", weekStart);
@@ -637,9 +689,9 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
         const firstTarget = targets[0];
         const firstQty = firstTarget.daily_quantity * coveredStudyDays.length;
         const unitLabel = formatUnitLabel(firstQty, firstTarget.target_unit);
-        message = `Hey ${child.name}! 📚 Study check-in time!\n\nYour target for ${coveredDayNames}:\n${targetLine}${examLine}\n\nHave you finished it?\n\nReply: *yes* / *partial* / *no*`;
+        message = `Hey ${child.name}! 📚 First reminder to check in for ${coveredDayNames}.\n\nYour target:\n${targetLine}${examLine}\n\nReply: *yes* / *partial* / *no*`;
       } else {
-        message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your study target for ${coveredDayNames}?${examLine}\n\nReply: *yes* / *partial* / *no*`;
+        message = `Hey ${child.name}! 📚 First reminder to check in for ${coveredDayNames}.\n\nHave you finished your study target?${examLine}\n\nReply: *yes* / *partial* / *no*`;
       }
       try {
         await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
@@ -693,9 +745,9 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
         const firstTarget = targets[0];
         const firstQty = firstTarget.daily_quantity;
         const unitLabel = formatUnitLabel(firstQty, firstTarget.target_unit);
-        message = targets.length === 1 ? `Hey ${child.name}! 📚 Study check-in time!\n\nToday's target:\n• ${firstTarget.subject_name}: *${firstQty} ${unitLabel}*${examLine}\n\nHave you finished it?\n\nReply: *yes* / *partial* / *no*` : `Hey ${child.name}! 📚 Study check-in time!\n\nToday's targets:${examLine}\n${targetLine}\n\nHave you finished them?\n\nReply: *yes* / *partial* / *no*`;
+        message = targets.length === 1 ? `Hey ${child.name}! 📚 First reminder for today.\n\nTarget:\n• ${firstTarget.subject_name}: *${firstQty} ${unitLabel}*${examLine}\n\nReply: *yes* / *partial* / *no*` : `Hey ${child.name}! 📚 First reminder for today.\n\nToday's targets:${examLine}\n${targetLine}\n\nReply: *yes* / *partial* / *no*`;
       } else {
-        message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your study target for today?${examLine}\n\nReply: *yes* / *partial* / *no*`;
+        message = `Hey ${child.name}! 📚 First reminder for today.\n\nHave you finished your study target?${examLine}\n\nReply: *yes* / *partial* / *no*`;
       }
       try {
         await sendWhatsApp(child.whatsapp_number, undefined, undefined, message);
@@ -715,7 +767,7 @@ async function sendCheckinPrompts(sb, levelGroup, today, dayOfWeek, currentTime,
   }
   return sent;
 }
-async function sendFollowupReminders(sb, levelGroup, today) {
+async function sendFollowupReminders(sb, levelGroup, today, dayOfWeek, currentTime) {
   // Find children who were prompted but haven't replied
   const { data: pending } = await sb.from("sq_checkins").select("id, child_id, prompt_sent_at, target_quantity, target_unit, subject_reported").eq("checkin_date", today).eq("status", "pending").not("prompt_sent_at", "is", null);
   if (!pending) return 0;
@@ -729,11 +781,17 @@ async function sendFollowupReminders(sb, levelGroup, today) {
     if (!child || getLevelGroup(child.level) !== levelGroup) continue;
     if (!child.whatsapp_number) continue;
     if (parentPhoneSet.has(normalizePhone(child.whatsapp_number))) continue;
+    const { data: membership } = await sb.from("sq_memberships").select("plan_type, parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
+    const isFreePlan = !membership || membership.plan_type === "free";
+    const { data: settings } = await sb.from("sq_study_settings").select("first_reminder_time, check_completion_time").eq("child_id", child.id).single();
+    const ccaDays = Array.isArray(child.cca_days) ? child.cca_days.map((d)=>Number(d)).filter((d)=>Number.isInteger(d) && d >= 0 && d <= 6) : [];
+    const timingWindow = getChildTimingWindow(isFreePlan, dayOfWeek, ccaDays, settings);
+    if (!isWithinWindow(currentTime, timingWindow.finalFollowupTime, 12)) continue;
     // Send a gentle nudge to the kid
     const qty = Number(checkin.target_quantity || 0);
     const unit = checkin.target_unit || "";
     const subject = checkin.subject_reported || "";
-    const reminderMsg = qty > 0 && unit && subject ? `Hey ${child.name}, quick reminder 😊\n\nYour target:\n• ${subject}: *${qty} ${formatUnitLabel(qty, unit)}*\n\nHave you finished it?\n\nReply: *yes* / *partial* / *no*.` : `Hey ${child.name}, just a friendly reminder! 😊\n\nHave you finished your study target for today?\n\nReply: *yes* / *partial* / *no*.`;
+    const reminderMsg = qty > 0 && unit && subject ? `Final reminder for today, ${child.name} ⏰\n\nYour target:\n• ${subject}: *${qty} ${formatUnitLabel(qty, unit)}*\n\nPlease reply now: *yes* / *partial* / *no*.` : `Final reminder for today, ${child.name} ⏰\n\nPlease reply now: *yes* / *partial* / *no*.`;
     const childKey = `followup:${child.id}:${today}`;
     const childQueued = await enqueueOutbound(sb, childKey, child.whatsapp_number, {
       message_type: "raw",
@@ -741,7 +799,6 @@ async function sendFollowupReminders(sb, levelGroup, today) {
       context_label: "followup-child"
     });
     // Also nudge parent
-    const { data: membership } = await sb.from("sq_memberships").select("parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
     let parentQueued = false;
     if (membership?.parent_phone) {
       const lang = membership.preferred_language || "en";
@@ -1174,6 +1231,11 @@ function isWithinWindow(current, target, marginMinutes) {
   const targetMins = th * 60 + tm;
   return Math.abs(currentMins - targetMins) <= marginMinutes;
 }
+function isTimeOnOrAfter(current, target) {
+  const [ch, cm] = current.split(":").map(Number);
+  const [th, tm] = target.split(":").map(Number);
+  return ch * 60 + cm >= th * 60 + tm;
+}
 function addMinutes(time, mins) {
   const [h, m] = time.split(":").map(Number);
   const total = h * 60 + m + mins;
@@ -1203,7 +1265,7 @@ function formatUnitLabel(quantity, rawUnit) {
   return unit.endsWith("s") ? unit : `${unit}s`;
 }
 // ── AUTO-CLOSE: mark check-ins still pending 2h after prompt as 'forgot' ──
-async function autoCloseStaleCheckins(sb, levelGroup, today) {
+async function autoCloseStaleCheckins(sb, levelGroup, today, dayOfWeek, currentTime) {
   const { data: stale } = await sb.from("sq_checkins").select("id, child_id").eq("checkin_date", today).eq("status", "pending");
   if (!stale) return;
   for (const checkin of stale){
@@ -1223,8 +1285,7 @@ async function autoCloseStaleCheckins(sb, levelGroup, today) {
 
     const { data: child } = await sb.from("sq_children").select("name, level, whatsapp_number, parent_id, study_days, cca_days").eq("id", checkin.child_id).single();
     if (!child || getLevelGroup(child.level) !== levelGroup) continue;
-    const sgNow = getSGTime();
-    const todayDow = sgNow.getUTCDay();
+    const todayDow = dayOfWeek;
     // Don't auto-close on CCA days
     const ccaDays = child.cca_days || [];
     if (ccaDays.includes(todayDow)) {
@@ -1234,6 +1295,9 @@ async function autoCloseStaleCheckins(sb, levelGroup, today) {
     // Determine plan so we only close on actual study days
     const { data: membership } = await sb.from("sq_memberships").select("plan_type, parent_phone, parent_name, preferred_language").eq("user_id", child.parent_id).single();
     const isFreePlan = !membership || membership.plan_type === "free";
+    const { data: settings } = await sb.from("sq_study_settings").select("first_reminder_time, check_completion_time").eq("child_id", child.id).single();
+    const timingWindow = getChildTimingWindow(isFreePlan, todayDow, ccaDays, settings);
+    if (!isTimeOnOrAfter(currentTime, addMinutes(timingWindow.finalFollowupTime, 30))) continue;
     // Free tier: only close on scheduled check-in days (Tue/Thu/Sat)
     if (isFreePlan && !FREE_CHECKIN_DAYS.includes(todayDow)) {
       await sb.from("sq_checkins").delete().eq("id", checkin.id);
