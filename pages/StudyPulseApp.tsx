@@ -99,6 +99,18 @@ function normaliseSGPhone(raw: string): string {
   return `+65${digits}`;
 }
 
+function toComparablePhone(raw?: string | null): string {
+  const digits = String(raw || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.length > 8 ? digits.slice(-8) : digits;
+}
+
+function isSameWhatsAppNumber(a?: string | null, b?: string | null): boolean {
+  const left = toComparablePhone(a);
+  const right = toComparablePhone(b);
+  return Boolean(left) && Boolean(right) && left === right;
+}
+
 async function persistParentProfile(userId: string, fullName: string, phone: string, email?: string): Promise<{ ok: boolean; message?: string; nameOk?: boolean; phoneOk?: boolean }> {
   if (!supabase) return { ok: false, message: 'Authentication service is not configured.' };
 
@@ -1563,7 +1575,31 @@ const StudyPulseApp: React.FC = () => {
                           if (!supabase) return;
                           setSavingChildWhatsapp(true);
                           const normChild = normaliseSGPhone(editChildWhatsapp);
-                          await supabase.from('sq_children').update({ whatsapp_number: normChild }).eq('id', c.id);
+
+                          const currentParentPhone = membership?.parent_phone || null;
+                          if (isSameWhatsAppNumber(normChild, currentParentPhone)) {
+                            setDashboardNotice({
+                              type: 'error',
+                              text: 'Parent and child WhatsApp numbers must be different. Please use separate numbers.',
+                            });
+                            setSavingChildWhatsapp(false);
+                            return;
+                          }
+
+                          const { error: childPhoneError } = await supabase
+                            .from('sq_children')
+                            .update({ whatsapp_number: normChild })
+                            .eq('id', c.id);
+
+                          if (childPhoneError) {
+                            setDashboardNotice({
+                              type: 'error',
+                              text: childPhoneError.message || 'Could not update child WhatsApp number yet. Please try again.',
+                            });
+                            setSavingChildWhatsapp(false);
+                            return;
+                          }
+
                           setChildren(prev => prev.map(ch => ch.id === c.id ? { ...ch, whatsapp_number: normChild } : ch));
                           setEditingChildId(null);
                           setSavingChildWhatsapp(false);
@@ -2216,6 +2252,18 @@ const StudyPulseApp: React.FC = () => {
                           return;
                         }
 
+                        const normalizedParentPhone = normaliseSGPhone(editProfilePhone);
+                        const sameAsChild = children.some((childRow) =>
+                          isSameWhatsAppNumber(normalizedParentPhone, childRow.whatsapp_number)
+                        );
+                        if (sameAsChild) {
+                          setProfileSaveMsg({
+                            type: 'error',
+                            text: 'Parent and child WhatsApp numbers must be different. Please use separate numbers.',
+                          });
+                          return;
+                        }
+
                         setSavingProfile(true);
                         const result = await persistParentProfile(userId, editProfileName, editProfilePhone, membership?.parent_email || undefined);
 
@@ -2491,9 +2539,17 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId, membership,
     if (!childName.trim()) { setError('Child name is required.'); return; }
     if (!childLevel) { setError('Select your child\'s level.'); return; }
     if (!childWhatsapp.trim()) { setError('Child WhatsApp number is required.'); return; }
+
+    const normalizedParentPhone = normaliseSGPhone(whatsapp);
+    const normalizedChildPhone = normaliseSGPhone(childWhatsapp);
+    if (isSameWhatsAppNumber(normalizedParentPhone, normalizedChildPhone)) {
+      setError('Parent and child WhatsApp numbers must be different. Please use separate numbers.');
+      return;
+    }
+
     setError('');
     setSaving(true);
-    const child = await createChild(userId, { name: childName, level: childLevel, whatsapp_number: normaliseSGPhone(childWhatsapp) });
+    const child = await createChild(userId, { name: childName, level: childLevel, whatsapp_number: normalizedChildPhone });
     if (!child) { setError('Child limit reached for your plan. Upgrade to Premium to add more children.'); setSaving(false); return; }
     setCreatedChildId(child.id);
     if (onboardCCADays.length > 0) {
