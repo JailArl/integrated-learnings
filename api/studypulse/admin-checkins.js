@@ -8,6 +8,27 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 const adminApiToken = process.env.ADMIN_API_TOKEN || process.env.VITE_ADMIN_PASSWORD || null;
 const functionBaseUrl = (supabaseUrl || '').replace(/\/$/, '');
 
+function getProjectRefFromUrl(url) {
+  try {
+    const host = new URL(url).hostname || '';
+    return host.split('.')[0] || null;
+  } catch {
+    return null;
+  }
+}
+
+function decodeJwtPayload(token) {
+  try {
+    const parts = String(token || '').split('.');
+    if (parts.length < 2) return null;
+    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    return JSON.parse(Buffer.from(padded, 'base64').toString('utf8'));
+  } catch {
+    return null;
+  }
+}
+
 const admin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 
 function json(res, status, payload) {
@@ -55,6 +76,25 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
   if (!admin || !supabaseUrl || !serviceRoleKey) {
     return json(res, 500, { error: 'StudyPulse admin controls are not configured.' });
+  }
+
+  const urlProjectRef = getProjectRefFromUrl(functionBaseUrl);
+  const keyPayload = decodeJwtPayload(serviceRoleKey);
+  const keyProjectRef = typeof keyPayload?.ref === 'string' ? keyPayload.ref : null;
+  const keyRole = typeof keyPayload?.role === 'string' ? keyPayload.role : null;
+  if (keyRole && keyRole !== 'service_role') {
+    return json(res, 500, {
+      error: `Invalid service role key role '${keyRole}'. Expected 'service_role'.`,
+    });
+  }
+  if (urlProjectRef && keyProjectRef && urlProjectRef !== keyProjectRef) {
+    return json(res, 500, {
+      error: 'Supabase URL and service role key point to different projects.',
+      details: {
+        url_project_ref: urlProjectRef,
+        key_project_ref: keyProjectRef,
+      },
+    });
   }
 
   const allowed = await verifyAdminToken(req);
