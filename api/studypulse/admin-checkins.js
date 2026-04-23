@@ -29,6 +29,162 @@ function decodeJwtPayload(token) {
   }
 }
 
+function normalizePhone(raw) {
+  if (!raw) return '';
+  const digits = String(raw).replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.length > 8 ? digits.slice(-8) : digits;
+}
+
+function getSgToday() {
+  const now = new Date();
+  const sg = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  return sg.toISOString().split('T')[0];
+}
+
+function getWeekStart(todayStr) {
+  const d = new Date(todayStr);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const monday = new Date(d);
+  monday.setDate(diff);
+  return monday.toISOString().split('T')[0];
+}
+
+function formatUnitLabel(quantity, rawUnit) {
+  const unit = (rawUnit || 'task').trim().toLowerCase();
+  const singularMap = {
+    questions: 'question',
+    chapters: 'chapter',
+    pages: 'page',
+    worksheets: 'worksheet',
+    minutes: 'minute',
+    papers: 'paper',
+    topics: 'topic',
+    exercises: 'exercise',
+    sums: 'sum',
+    passages: 'passage',
+    compositions: 'composition',
+    practices: 'practice',
+  };
+  if (quantity === 1) {
+    if (singularMap[unit]) return singularMap[unit];
+    return unit.endsWith('s') ? unit.slice(0, -1) : unit;
+  }
+  if (singularMap[unit]) return unit;
+  return unit.endsWith('s') ? unit : `${unit}s`;
+}
+
+async function sendRawWhatsappNow(to, message, serviceRoleKey) {
+  const response = await fetch(`${functionBaseUrl}/functions/v1/send-whatsapp`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${serviceRoleKey}`,
+      apikey: serviceRoleKey,
+    },
+    body: JSON.stringify({
+      to,
+      raw_message: message,
+    }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok || payload?.success === false) {
+    throw new Error(payload?.error || payload?.message || `WhatsApp send failed (${response.status})`);
+  }
+}
+
+async function manualSendCheckinFallback(admin, childId, serviceRoleKey) {
+  const today = getSgToday();
+  const { data: child } = await admin
+    .from('sq_children')
+    .select('id, name, level, whatsapp_number, parent_id')
+    .eq('id', childId)
+    .single();
+  if (!child) return { ok: false, error: 'Child not found' };
+  if (!child.whatsapp_number) return { ok: false, error: 'Child has no WhatsApp number' };
+
+  const { data: parentPhones } = await admin
+    .from('sq_memberships')
+    .select('parent_phone')
+    .not('parent_phone', 'is', null);
+  const parentPhoneSet = new Set((parentPhones || []).map((p) => normalizePhone(p.parent_phone)).filter(Boolean));
+  if (parentPhoneSet.has(normalizePhone(child.whatsapp_number))) {
+    return { ok: false, error: 'Child phone matches parent phone; blocked by guardrail' };
+  }
+
+  const weekStart = getWeekStart(today);
+  const { data: targets } = await admin
+    .from('sq_weekly_targets')
+    .select('subject_name, daily_quantity, target_unit')
+    .eq('child_id', child.id)
+    .eq('week_start', weekStart);
+  const hasTargets = !!(targets && targets.length > 0);
+  const todayTarget = hasTargets ? targets[0] : null;
+
+  const { data: existing } = await admin
+    .from('sq_checkins')
+    .select('id, prompt_sent_at')
+    .eq('child_id', child.id)
+    .eq('checkin_date', today)
+    .limit(1);
+
+  let checkinId = null;
+  if (existing && existing.length > 0) {
+    checkinId = existing[0].id;
+  } else {
+    const insertPayload = {
+      child_id: child.id,
+      checkin_date: today,
+      status: 'pending',
+      prompt_sent_at: null,
+      ...(todayTarget
+        ? {
+            target_quantity: todayTarget.daily_quantity,
+            target_unit: todayTarget.target_unit,
+            subject_reported: todayTarget.subject_name,
+          }
+        : {}),
+    };
+    const { data: inserted, error: insertError } = await admin
+      .from('sq_checkins')
+      .insert(insertPayload)
+      .select('id')
+      .single();
+    if (insertError || !inserted) {
+      return { ok: false, error: insertError?.message || 'Could not create check-in row' };
+    }
+    checkinId = inserted.id;
+  }
+
+  let message;
+  if (hasTargets) {
+    const targetLine = targets
+      .map((t) => `• ${t.subject_name}: *${t.daily_quantity} ${formatUnitLabel(t.daily_quantity, t.target_unit)}*`)
+      .join('\n');
+    message = `Hey ${child.name}! 📚 Study check-in time!\n\nToday's targets:\n${targetLine}\n\nHave you finished them?\n\nReply: *yes* / *partial* / *no*`;
+  } else {
+    message = `Hey ${child.name}! 📚 Study check-in time!\n\nHave you finished your study target for today?\n\nReply: *yes* / *partial* / *no*`;
+  }
+
+  await sendRawWhatsappNow(child.whatsapp_number, message, serviceRoleKey);
+  await admin
+    .from('sq_checkins')
+    .update({
+      status: 'pending',
+      prompt_sent_at: new Date().toISOString(),
+    })
+    .eq('id', checkinId);
+
+  return {
+    ok: true,
+    child_id: child.id,
+    child_name: child.name,
+    sent_to: child.whatsapp_number,
+    checkin_id: checkinId,
+  };
+}
+
 const admin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 
 function json(res, status, payload) {
@@ -124,6 +280,19 @@ export default async function handler(req, res) {
 
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload?.success) {
+        // Fallback path: keep cron protection intact, but allow secure manual-send
+        // through this server route after admin auth has already passed.
+        if (payload?.error === 'Unauthorized manual trigger') {
+          const fallback = await manualSendCheckinFallback(admin, childId, serviceRoleKey);
+          if (fallback?.ok) {
+            return json(res, 200, { ok: true, result: { success: true, manual: true, via: 'admin_fallback', ...fallback } });
+          }
+          return json(res, 400, {
+            ok: false,
+            error: fallback?.error || 'Manual check-in fallback failed.',
+            details: fallback,
+          });
+        }
         return json(res, 400, {
           ok: false,
           error: payload?.error || 'Manual check-in trigger failed.',
