@@ -24,6 +24,7 @@ const serviceRoleKey =
   process.env.SUPABASE_SERVICE_KEY ||
   process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 const cronSecret = process.env.CRON_SECRET || null;
+const functionBaseUrl = (supabaseUrl || '').replace(/\/$/, '');
 
 function json(res, status, payload) {
   res.statusCode = status;
@@ -48,11 +49,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`${supabaseUrl}/functions/v1/studypulse-cron`, {
+    const response = await fetch(`${functionBaseUrl}/functions/v1/studypulse-cron`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
       },
       body: JSON.stringify({}),
     });

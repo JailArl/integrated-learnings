@@ -4,11 +4,9 @@ const supabaseUrl =
   process.env.SUPABASE_URL ||
   process.env.VITE_SUPABASE_URL ||
   process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 const adminApiToken = process.env.ADMIN_API_TOKEN || process.env.VITE_ADMIN_PASSWORD || null;
+const functionBaseUrl = (supabaseUrl || '').replace(/\/$/, '');
 
 const admin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 
@@ -71,11 +69,12 @@ export default async function handler(req, res) {
       const childId = typeof body.childId === 'string' ? body.childId.trim() : '';
       if (!childId) return json(res, 400, { error: 'childId is required.' });
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/studypulse-cron`, {
+      const response = await fetch(`${functionBaseUrl}/functions/v1/studypulse-cron`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${serviceRoleKey}`,
+          apikey: serviceRoleKey,
         },
         body: JSON.stringify({
           action: 'manual_send_checkin',

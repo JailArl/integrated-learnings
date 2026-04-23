@@ -17,7 +17,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type"
 };
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
-const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const supabaseKey = (Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "").trim();
 // Singapore timezone offset (+8h)
 function getSGTime() {
   const now = new Date();
