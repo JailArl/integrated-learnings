@@ -316,8 +316,9 @@ async function processOutboundQueue(sb) {
 
 function isServiceRoleRequest(req) {
   const authHeader = req.headers.get("authorization") || "";
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
-  return !!token && token === supabaseKey;
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+  const apiKeyHeader = (req.headers.get("apikey") || req.headers.get("x-api-key") || "").trim();
+  return !!supabaseKey && (bearerToken === supabaseKey || apiKeyHeader === supabaseKey);
 }
 
 async function triggerManualCheckinNow(sb, childId, today) {
