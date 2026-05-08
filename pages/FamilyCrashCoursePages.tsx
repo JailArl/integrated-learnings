@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ChevronDown,
   Clock3,
+  MapPin,
   MessageCircle,
   ShieldCheck,
   Sparkles,
@@ -350,6 +351,64 @@ const BenefitsSection: React.FC<{ title: string; items: string[] }> = ({ title, 
   </section>
 );
 
+const LogisticsSection: React.FC<{ pageSlug: CrashCourseSlug; waLink: string }> = ({ pageSlug, waLink }) => (
+  <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <SectionHeading
+      kicker="Logistics"
+      title="Venue and lesson mode"
+      subtitle="Clear upfront logistics so parents can decide quickly and confidently."
+    />
+
+    <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+      <MapPin size={11} aria-hidden="true" /> North zone · Yishun / Woodlands area (exact venue confirmed before payment)
+    </div>
+
+    <div className="mt-1 grid gap-3 sm:grid-cols-2">
+      <article className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-4">
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-blue-700">Crash Course Mode</p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-700">
+          Crash-course sessions are conducted in booked classrooms for consistent small-group teaching, boardwork, and correction flow.
+        </p>
+      </article>
+
+      <article className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-4">
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-emerald-700">Home Tuition Option</p>
+        <p className="mt-2 text-sm leading-relaxed text-slate-700">
+          Home tuition is a separate 1-to-1 service (not the crash-course format). Parents who need home-based lessons can request this after fit check.
+        </p>
+      </article>
+    </div>
+
+    <ul className="mt-5 space-y-2 text-sm text-slate-700">
+      <li className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" /> Exact venue details are shared before payment confirmation.</li>
+      <li className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" /> We provide nearest MRT/bus guidance for North-side families.</li>
+      <li className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" /> Seat is only confirmed after payment and timetable confirmation on WhatsApp.</li>
+    </ul>
+
+    <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
+      <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-600">North-side travel planning (typical one-way estimates)</p>
+      <ul className="mt-2 space-y-1.5 text-sm text-slate-700">
+        <li>Woodlands: around 35 to 55 minutes</li>
+        <li>Yishun/Khatib: around 30 to 45 minutes</li>
+        <li>Sembawang/Canberra: around 35 to 50 minutes</li>
+      </ul>
+      <p className="mt-2 text-xs text-slate-500">Final travel time depends on the confirmed classroom location and peak-hour traffic. We send exact route guidance before payment.</p>
+    </div>
+
+    <div className="mt-5">
+      <a
+        href={waLink}
+        target="_blank"
+        rel="noreferrer"
+        onClick={() => trackCtaClick(pageSlug, 'logistics_whatsapp', waLink)}
+        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-5 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-100"
+      >
+        <MessageCircle size={14} aria-hidden="true" /> Ask for venue + transport details
+      </a>
+    </div>
+  </section>
+);
+
 const PricingSection: React.FC<{
   pageSlug: CrashCourseSlug;
   heading: string;
@@ -413,6 +472,16 @@ const PricingSection: React.FC<{
       <p>Promotions are not stackable. Students may choose either Early Bird or Friend Rate.</p>
     </div>
 
+    <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4">
+      <p className="text-sm font-black text-violet-800">Cancellation &amp; Makeup Policy</p>
+      <ul className="mt-2 space-y-1.5 text-sm text-violet-700">
+        <li className="flex items-start gap-2"><CheckCircle2 size={13} className="mt-0.5 shrink-0" aria-hidden="true" /> Full refund if you cancel within 24 hours of reservation and before the course starts.</li>
+        <li className="flex items-start gap-2"><CheckCircle2 size={13} className="mt-0.5 shrink-0" aria-hidden="true" /> No refund once the course has started, but a makeup slot is offered if we are notified at least 24 h before the missed session.</li>
+        <li className="flex items-start gap-2"><CheckCircle2 size={13} className="mt-0.5 shrink-0" aria-hidden="true" /> Makeup slots are subject to seat availability in the same or equivalent intake.</li>
+        <li className="flex items-start gap-2"><CheckCircle2 size={13} className="mt-0.5 shrink-0" aria-hidden="true" /> Medical absence with a valid MC will be prioritised for a makeup slot.</li>
+      </ul>
+    </div>
+
     <div className="mt-6 flex flex-col gap-3 sm:flex-row">
       <a href={reserveLink} target="_blank" rel="noreferrer" onClick={() => trackCtaClick(pageSlug, 'pricing_reserve', reserveLink)} className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-6 py-3 text-sm font-black text-slate-950 hover:bg-amber-400">
         Reserve a Seat
@@ -435,6 +504,66 @@ const WhySection: React.FC<{ heading: string; points: string[] }> = ({ heading, 
         </li>
       ))}
     </ul>
+  </section>
+);
+
+const TeacherProofSection: React.FC<{ levelLabel: string }> = ({ levelLabel }) => (
+  <section className="rounded-3xl border border-amber-200 bg-amber-50 p-6 shadow-sm sm:p-8">
+    <SectionHeading
+      kicker="Credibility"
+      title={`Parent checks that matter (${levelLabel})`}
+      subtitle="Short, practical indicators so parents can decide with more confidence."
+    />
+    <div className="mt-5 grid gap-3 sm:grid-cols-3">
+      <article className="rounded-2xl border border-amber-300 bg-white px-4 py-4">
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-amber-700">Teaching Experience</p>
+        <p className="mt-2 text-2xl font-black text-slate-900">10+ years</p>
+        <p className="mt-1 text-xs text-slate-600">Consistent Math and Science teaching support with exam-prep focus.</p>
+      </article>
+      <article className="rounded-2xl border border-amber-300 bg-white px-4 py-4">
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-amber-700">Small-Group Cap</p>
+        <p className="mt-2 text-2xl font-black text-slate-900">8 students</p>
+        <p className="mt-1 text-xs text-slate-600">Kept intentionally small for correction quality and feedback speed.</p>
+      </article>
+      <article className="rounded-2xl border border-amber-300 bg-white px-4 py-4">
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-amber-700">After-Class Follow-Through</p>
+        <p className="mt-2 text-2xl font-black text-slate-900">WhatsApp updates</p>
+        <p className="mt-1 text-xs text-slate-600">Parents get visibility on fit, attendance, and next-step advice.</p>
+      </article>
+    </div>
+  </section>
+);
+
+const StudyPulseBridgeSection: React.FC<{ waLink: string; pageSlug: CrashCourseSlug }> = ({ waLink, pageSlug }) => (
+  <section className="rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm sm:p-8">
+    <SectionHeading
+      kicker="After Bootcamp"
+      title="Keep momentum after June with StudyPulse"
+      subtitle="Crash course improves clarity quickly. StudyPulse keeps daily consistency so gains do not drop after holiday."
+    />
+    <ul className="mt-4 space-y-2 text-sm text-slate-700">
+      <li className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" /> Daily check-ins to reduce procrastination and last-minute panic.</li>
+      <li className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" /> Parent visibility on consistency trend and missed-day recovery.</li>
+      <li className="flex items-start gap-2"><CheckCircle2 size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" /> Smooth transition from holiday bootcamp to term-time discipline.</li>
+    </ul>
+    <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+      <Link
+        to="/studypulse"
+        onClick={() => trackCtaClick(pageSlug, 'studypulse_bridge_open', '/studypulse')}
+        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-black text-white hover:bg-emerald-700"
+      >
+        View StudyPulse
+      </Link>
+      <a
+        href={waLink}
+        target="_blank"
+        rel="noreferrer"
+        onClick={() => trackCtaClick(pageSlug, 'studypulse_bridge_whatsapp', waLink)}
+        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-5 py-2.5 text-sm font-bold text-emerald-700 hover:bg-emerald-50"
+      >
+        <MessageCircle size={14} aria-hidden="true" /> Ask about post-bootcamp plan
+      </a>
+    </div>
   </section>
 );
 
@@ -625,6 +754,7 @@ const CampaignLeadForm: React.FC<{
 
       <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-xs leading-relaxed text-slate-600">
         <p>We’ll reply with the timetable, package options, and fit-check steps.</p>
+        <p>Crash-course sessions run in booked classrooms; home tuition can be arranged separately as a 1-to-1 option.</p>
         <p>No hard selling.</p>
         <p>Parents can send latest results for a quick recommendation.</p>
       </div>
@@ -875,6 +1005,8 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
 
           <ScheduleSection entries={schedule} />
 
+          <LogisticsSection pageSlug="psle-june-intensive" waLink={waLink} />
+
           <BenefitsSection
             title="What students will walk away with"
             items={[
@@ -910,6 +1042,10 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
             ]}
           />
 
+          <TeacherProofSection levelLabel="PSLE" />
+
+          <StudyPulseBridgeSection waLink={waLink} pageSlug="psle-june-intensive" />
+
           <PromiseBlock
             heading="Right-Fit Promise"
             body="If after the first session the programme is clearly not the right fit, we will recommend the next best option and handle any unused portion according to our policy."
@@ -920,6 +1056,10 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
               {
                 question: 'Is this suitable for weak students?',
                 answer: 'Yes. The lessons are structured for students who need clearer guidance, more focused correction, and stronger fundamentals.',
+              },
+              {
+                question: 'Where are classes held, and is it convenient for North-side families?',
+                answer: 'After you enquire, we share the exact venue, nearest MRT/bus options, and timing so you can confirm travel convenience before payment.',
               },
               {
                 question: 'Can my child join only Math or only Science?',
@@ -934,12 +1074,20 @@ export const FamilyPSLEJuneIntensivePage: React.FC = () => {
                 answer: 'Yes. Small-group format is capped at 8 students for closer feedback and correction.',
               },
               {
+                question: 'What if my child misses one session?',
+                answer: 'Tell us early on WhatsApp and we will advise the best recovery option available for that topic block.',
+              },
+              {
                 question: 'What happens after I enquire?',
                 answer: 'We reply on WhatsApp with timetable details, package options, and fit-check steps before enrolment.',
               },
               {
                 question: 'Can I send my child’s latest results slip first?',
                 answer: 'Yes. You may send the latest results slip for a quick recommendation before deciding on a block or bundle.',
+              },
+              {
+                question: 'How is payment and seat confirmation handled?',
+                answer: 'Seat is confirmed only after payment. We will provide the payment steps and confirm your slot via WhatsApp.',
               },
             ]}
           />
@@ -1115,6 +1263,8 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
 
           <ScheduleSection entries={schedule} />
 
+          <LogisticsSection pageSlug="o-level-june-intensive" waLink={waLink} />
+
           <BenefitsSection
             title="What students will walk away with"
             items={[
@@ -1150,6 +1300,10 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
             ]}
           />
 
+          <TeacherProofSection levelLabel="O-Level" />
+
+          <StudyPulseBridgeSection waLink={waLink} pageSlug="o-level-june-intensive" />
+
           <PromiseBlock
             heading="Clarity Promise"
             body="Students leave with clearer feedback, marked correction, and a next-step weak-topic action plan."
@@ -1162,12 +1316,20 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
                 answer: 'Yes. Subject blocks are modular, so you can choose only what is needed.',
               },
               {
+                question: 'Where are classes held, and can North-side families plan transport easily?',
+                answer: 'Yes. We send full venue and transport details after enquiry so parents can confirm travel and timing before committing.',
+              },
+              {
                 question: 'Is this suitable for weaker students?',
                 answer: 'Yes. Sessions are structured to rebuild clarity and improve applied answering confidence.',
               },
               {
                 question: 'Will there be practice and correction?',
                 answer: 'Yes. Every block includes structured practice and guided correction.',
+              },
+              {
+                question: 'What if my child cannot attend one block?',
+                answer: 'Message us early and we will advise the most suitable recovery path based on the selected package and topic sequence.',
               },
               {
                 question: 'Are the clinic sessions included?',
@@ -1180,6 +1342,10 @@ export const FamilyOLevelJuneIntensivePage: React.FC = () => {
               {
                 question: 'Can I send my child’s latest results slip first?',
                 answer: 'Yes. You can send results first for a faster recommendation.',
+              },
+              {
+                question: 'When is the seat confirmed?',
+                answer: 'Seat confirmation is done after payment, and we confirm your selected block(s) on WhatsApp.',
               },
             ]}
           />

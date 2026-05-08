@@ -1,15 +1,10 @@
 
-import React, { Component, ErrorInfo, ReactNode, useEffect, useState } from 'react';
+import React, { Component, ErrorInfo, ReactNode, Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import MainLanding from './pages/MainLanding';
 import FamilyHome from './pages/FamilyHome';
 import EnrichmentHome from './pages/EnrichmentHome';
-import StudyPulseLanding from './pages/StudyPulseLanding';
-import { FamilyPSLEJuneIntensivePage, FamilyOLevelJuneIntensivePage } from './pages/FamilyCrashCoursePages';
-import StudyPulseApp from './pages/StudyPulseApp';
-import StudyPulseSetup from './pages/StudyPulseSetup';
-import StudyPulseAdmin from './pages/StudyPulseAdmin';
 import StudyPulseLogin from './pages/StudyPulseLogin';
 import TuitionRequestLanding from './pages/TuitionRequestLanding';
 import { RoadmapLanding, RoadmapDetail } from './pages/Roadmap';
@@ -35,6 +30,13 @@ import EnrichmentLogin from './pages/EnrichmentLogin';
 import EnrichmentGame from './pages/EnrichmentGame';
 import ClassroomAdmin from './pages/ClassroomAdmin';
 import { validateAdminSession } from './services/adminAuth';
+
+const StudyPulseLanding = lazy(() => import('./pages/StudyPulseLanding'));
+const StudyPulseApp = lazy(() => import('./pages/StudyPulseApp'));
+const StudyPulseSetup = lazy(() => import('./pages/StudyPulseSetup'));
+const StudyPulseAdmin = lazy(() => import('./pages/StudyPulseAdmin'));
+const FamilyPSLEJuneIntensivePage = lazy(() => import('./pages/FamilyCrashCoursePages').then((m) => ({ default: m.FamilyPSLEJuneIntensivePage })));
+const FamilyOLevelJuneIntensivePage = lazy(() => import('./pages/FamilyCrashCoursePages').then((m) => ({ default: m.FamilyOLevelJuneIntensivePage })));
 
 // Global Error Boundary — prevents white-screen crashes
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -82,6 +84,18 @@ const LegacyRoadmapRedirect: React.FC = () => {
 
   return <Navigate to={targetPath} replace />;
 };
+
+const RouteFallback: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+  </div>
+);
+
+const LazyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Suspense fallback={<RouteFallback />}>
+    {children}
+  </Suspense>
+);
 
 // Admin Protection Wrapper with Token Validation
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -184,13 +198,13 @@ const App: React.FC = () => {
           
           {/* Tuition Service Routes */}
           <Route path="/tuition" element={<FamilyHome />} />
-          <Route path="/family/crash-courses/psle-june-intensive" element={<FamilyPSLEJuneIntensivePage />} />
-          <Route path="/family/crash-courses/o-level-june-intensive" element={<FamilyOLevelJuneIntensivePage />} />
-          <Route path="/studypulse" element={<StudyPulseLanding />} />
+          <Route path="/family/crash-courses/psle-june-intensive" element={<LazyRoute><FamilyPSLEJuneIntensivePage /></LazyRoute>} />
+          <Route path="/family/crash-courses/o-level-june-intensive" element={<LazyRoute><FamilyOLevelJuneIntensivePage /></LazyRoute>} />
+          <Route path="/studypulse" element={<LazyRoute><StudyPulseLanding /></LazyRoute>} />
           <Route path="/studypulse/login" element={<StudyPulseLogin />} />
-          <Route path="/studypulse/app" element={<StudyPulseApp />} />
-          <Route path="/studypulse/setup" element={<StudyPulseSetup />} />
-          <Route path="/studypulse/admin" element={<AdminRoute><StudyPulseAdmin /></AdminRoute>} />
+          <Route path="/studypulse/app" element={<LazyRoute><StudyPulseApp /></LazyRoute>} />
+          <Route path="/studypulse/setup" element={<LazyRoute><StudyPulseSetup /></LazyRoute>} />
+          <Route path="/studypulse/admin" element={<AdminRoute><LazyRoute><StudyPulseAdmin /></LazyRoute></AdminRoute>} />
           {/* Legacy StudyQuest → StudyPulse redirects */}
           <Route path="/studyquest" element={<Navigate to="/studypulse" replace />} />
           <Route path="/studyquest/*" element={<Navigate to="/studypulse" replace />} />

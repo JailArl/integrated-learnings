@@ -1,12 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
+import {
+  getAdminApiToken,
+  getBearerToken,
+  getFunctionBaseUrl,
+  getServiceRoleKey,
+  getSupabaseUrl,
+  json,
+  readJsonBody,
+} from './_shared.js';
 
-const supabaseUrl =
-  process.env.SUPABASE_URL ||
-  process.env.VITE_SUPABASE_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-const adminApiToken = process.env.ADMIN_API_TOKEN || process.env.VITE_ADMIN_PASSWORD || null;
-const functionBaseUrl = (supabaseUrl || '').replace(/\/$/, '');
+const supabaseUrl = getSupabaseUrl();
+const serviceRoleKey = getServiceRoleKey({ trim: true });
+const adminApiToken = getAdminApiToken();
+const functionBaseUrl = getFunctionBaseUrl();
 
 function normalizePhone(raw) {
   if (!raw) return '';
@@ -166,23 +172,8 @@ async function manualSendCheckinFallback(admin, childId, serviceRoleKey) {
 
 const admin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 
-function json(res, status, payload) {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(payload));
-}
-
-async function readJsonBody(req) {
-  const chunks = [];
-  for await (const chunk of req) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  const raw = Buffer.concat(chunks).toString('utf8');
-  if (!raw) return {};
-  return JSON.parse(raw);
-}
-
 async function verifyAdminToken(req) {
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const token = getBearerToken(req);
   if (!token) return false;
 
   if (adminApiToken && token === adminApiToken) return true;

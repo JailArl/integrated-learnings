@@ -19,24 +19,18 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import {
+  getBearerToken,
+  getServiceRoleKey,
+  getSupabaseUrl,
+  json,
+} from './_shared.js';
 
-const supabaseUrl =
-  process.env.SUPABASE_URL ||
-  process.env.VITE_SUPABASE_URL ||
-  process.env.NEXT_PUBLIC_SUPABASE_URL;
-const serviceRoleKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = getSupabaseUrl();
+const serviceRoleKey = getServiceRoleKey();
 const cronSecret = process.env.CRON_SECRET || null;
 
 const sb = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
-
-function json(res, status, payload) {
-  res.statusCode = status;
-  res.setHeader('Content-Type', 'application/json');
-  res.end(JSON.stringify(payload));
-}
 
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -48,8 +42,7 @@ export default async function handler(req, res) {
   }
 
   // Auth: accept CRON_SECRET or service-role key
-  const authHeader = req.headers.authorization || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const token = getBearerToken(req);
   const isValid =
     (cronSecret && token === cronSecret) ||
     (serviceRoleKey && token === serviceRoleKey);
