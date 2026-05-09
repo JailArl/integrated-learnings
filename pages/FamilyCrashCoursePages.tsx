@@ -514,8 +514,88 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
   useEffect(() => setPageSeo(pageSeo.title, pageSeo.description, pageSeo.canonicalPath), [pageSeo.title, pageSeo.description, pageSeo.canonicalPath]);
 
-  const slotsLink = toWhatsApp('Hi Integrated Learnings, I want to check available home slots for the PSLE & O-Level final-lap home crash course.');
-  const fitCheckLink = toWhatsApp('Hi Integrated Learnings, I want to send my child’s latest result slip for a PSLE / O-Level fit check.');
+  const fitCheckMessage = isPsle
+    ? [
+        'Hi Integrated Learnings, I\'m interested in the PSLE Math & Science Home Crash Course.',
+        '',
+        'My child is in P6.',
+        '',
+        'Subject needed:',
+        'Latest score / result:',
+        'Weak topics:',
+        'Preferred lesson format:',
+        '1. Student\'s home',
+        '2. Tutor-hosted study space',
+        '3. Mini-group',
+        '',
+        'Preferred area:',
+        'Preferred timing:',
+        '',
+        'I can send the result slip / school paper for a free WhatsApp fit check.',
+      ].join('\n')
+    : isOLevel
+      ? [
+          'Hi Integrated Learnings, I\'m interested in the O-Level Math & Science Home Crash Course.',
+          '',
+          'My child is in Sec 4 / Sec 5.',
+          '',
+          'Subject needed:',
+          'E-Math / A-Math / Physics / Chemistry / Combined Science',
+          '',
+          'Latest score / result:',
+          'Weak chapters:',
+          'Preferred lesson format:',
+          '1. Student\'s home',
+          '2. Tutor-hosted study space',
+          '3. Mini-group',
+          '',
+          'Preferred area:',
+          'Preferred timing:',
+          '',
+          'I can send the result slip / school paper for a free WhatsApp fit check.',
+        ].join('\n')
+      : 'Hi Integrated Learnings, I\'m interested in the PSLE & O-Level Home Crash Course. I can send the result slip / school paper for a free WhatsApp fit check.';
+
+  const slotsMessage = isPsle
+    ? [
+        'Hi Integrated Learnings, I\'m checking available PSLE Home Crash Course slots.',
+        '',
+        'My child is in P6.',
+        '',
+        'Subject needed:',
+        'Preferred lesson format:',
+        '1. Student\'s home',
+        '2. Tutor-hosted study space',
+        '3. Mini-group',
+        '',
+        'Preferred area:',
+        'Preferred days/timing:',
+        '',
+        'Please advise the available slots and suitable package.',
+      ].join('\n')
+    : isOLevel
+      ? [
+          'Hi Integrated Learnings, I\'m checking available O-Level Home Crash Course slots.',
+          '',
+          'My child is in Sec 4 / Sec 5.',
+          '',
+          'Subject needed:',
+          'E-Math / A-Math / Physics / Chemistry / Combined Science',
+          '',
+          'Preferred lesson format:',
+          '1. Student\'s home',
+          '2. Tutor-hosted study space',
+          '3. Mini-group',
+          '',
+          'Preferred area:',
+          'Preferred days/timing:',
+          '',
+          'Please advise the available slots and suitable package.',
+        ].join('\n')
+      : 'Hi Integrated Learnings, I\'m checking available home crash course slots for PSLE / O-Level. Please advise the available slots and suitable package.';
+
+  const slotsLink = toWhatsApp(slotsMessage);
+  const fitCheckLink = toWhatsApp(fitCheckMessage);
   const friendGroupLink = toWhatsApp('Hi Integrated Learnings, I have 2-4 students and would like to form a friend-group home crash course.');
   const followThroughLink = toWhatsApp('Hi Integrated Learnings, please tell me about post-crash-course follow-through and StudyPulse options.');
   const mockInterestLink = toWhatsApp('Hi Integrated Learnings, I want to join the mock exam interest list for PSLE / O-Level.');
