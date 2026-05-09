@@ -16,12 +16,34 @@ import {
 } from 'lucide-react';
 
 const WA_NUMBER = '6598882675';
-const SEO_TITLE = 'PSLE & O-Level Home Crash Course | Integrated Learnings Singapore';
-const SEO_DESCRIPTION = 'Personalised home-based PSLE and O-Level final-lap crash courses in North Singapore. Diagnostic-based correction for Math, Science, E-Math, A-Math, Physics and Chemistry, with parent updates and StudyPulse follow-through.';
-const CANONICAL_PATH = '/family/crash-courses/psle-june-intensive';
 const PAGE_TAG = 'final-lap-home-crash-course';
+type CrashCourseVariant = 'combined' | 'psle' | 'olevel';
 
 const northAreas = ['Woodlands', 'Admiralty', 'Marsiling', 'Sembawang', 'Canberra', 'Yishun', 'Khatib'];
+
+const getPageSeo = (variant: CrashCourseVariant) => {
+  if (variant === 'psle') {
+    return {
+      title: 'PSLE Math & Science Home Crash Course | Integrated Learnings Singapore',
+      description: 'Personalised home-based PSLE Math and Science final-lap crash course in North Singapore. Diagnostic-based correction for weak topics, exam technique, and parent-visible progress.',
+      canonicalPath: '/family/crash-courses/psle-june-intensive',
+    };
+  }
+
+  if (variant === 'olevel') {
+    return {
+      title: 'O-Level Math & Science Home Crash Course | Integrated Learnings Singapore',
+      description: 'Personalised home-based O-Level E-Math, A-Math, Physics and Chemistry final-lap crash course in North Singapore. Diagnostic-based chapter rescue, paper strategy, and parent-visible progress.',
+      canonicalPath: '/family/crash-courses/o-level-june-intensive',
+    };
+  }
+
+  return {
+    title: 'PSLE & O-Level Home Crash Course | Integrated Learnings Singapore',
+    description: 'Personalised home-based PSLE and O-Level final-lap crash courses in North Singapore. Diagnostic-based correction for Math, Science, E-Math, A-Math, Physics and Chemistry, with parent updates and StudyPulse follow-through.',
+    canonicalPath: '/family/crash-courses/psle-june-intensive',
+  };
+};
 
 const toWhatsApp = (text: string) => `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(text)}`;
 
@@ -77,11 +99,21 @@ const setPageSeo = (title: string, description: string, canonicalPath: string) =
   };
 
   const origin = window.location.origin || 'https://www.integratedlearnings.com.sg';
+  const canonicalHref = `${origin}${canonicalPath}`;
   const ogTitle = setMeta('meta[property="og:title"]', 'property', 'og:title', title);
   const ogDescription = setMeta('meta[property="og:description"]', 'property', 'og:description', description);
-  const ogUrl = setMeta('meta[property="og:url"]', 'property', 'og:url', `${origin}${canonicalPath}`);
+  const ogUrl = setMeta('meta[property="og:url"]', 'property', 'og:url', canonicalHref);
   const twitterTitle = setMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title);
   const twitterDescription = setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description);
+
+  let canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  const previousCanonicalHref = canonicalLink?.getAttribute('href') ?? '';
+  if (!canonicalLink) {
+    canonicalLink = document.createElement('link');
+    canonicalLink.setAttribute('rel', 'canonical');
+    document.head.appendChild(canonicalLink);
+  }
+  canonicalLink.setAttribute('href', canonicalHref);
 
   return () => {
     document.title = previousTitle;
@@ -91,6 +123,13 @@ const setPageSeo = (title: string, description: string, canonicalPath: string) =
     ogUrl.el?.setAttribute('content', ogUrl.previous);
     twitterTitle.el?.setAttribute('content', twitterTitle.previous);
     twitterDescription.el?.setAttribute('content', twitterDescription.previous);
+    if (canonicalLink) {
+      if (previousCanonicalHref) {
+        canonicalLink.setAttribute('href', previousCanonicalHref);
+      } else {
+        canonicalLink.remove();
+      }
+    }
   };
 };
 
@@ -268,17 +307,212 @@ const ComparisonTable: React.FC = () => (
   </SectionCard>
 );
 
-const pageCopy = {
-  heroTitle: 'PSLE & O-Level Home Crash Course',
-  heroLocationTitle: 'North Singapore',
-  heroSubtitle: 'Diagnostic-based home crash course for PSLE and O-Level students who need targeted weak-topic correction, stronger exam technique, and clearer parent-visible progress.',
-  heroSupport: 'We first identify where marks are being lost, then focus on the highest-impact gaps before moving into timed exam-style practice.',
-  heroStrong: 'Not a mass revision class. A personalised intervention built around your child’s actual scoring gaps.',
-  locationLine: `Available first for North Singapore: ${northAreas.join(', ')} and nearby estates.`,
+const getPageCopy = (variant: CrashCourseVariant) => {
+  const isPsle = variant === 'psle';
+  const isOLevel = variant === 'olevel';
+
+  return {
+    heroTitle: isPsle
+      ? 'PSLE Math & Science Home Crash Course'
+      : isOLevel
+        ? 'O-Level Math & Science Home Crash Course'
+        : 'PSLE & O-Level Home Crash Course',
+    heroLocationTitle: 'North Singapore',
+    heroSubtitle: isPsle
+      ? 'Diagnostic-based home crash course for P6 students who need targeted Math and Science correction, stronger exam technique, and clearer parent-visible progress.'
+      : isOLevel
+        ? 'Diagnostic-based home crash course for Sec 4 and Sec 5 students who need targeted chapter rescue, stronger paper strategy, and clearer exam technique.'
+        : 'Diagnostic-based home crash course for PSLE and O-Level students who need targeted weak-topic correction, stronger exam technique, and clearer parent-visible progress.',
+    heroSupport: isPsle
+      ? 'We first identify where marks are being lost, then focus on the highest-impact PSLE gaps before moving into timed exam-style practice.'
+      : isOLevel
+        ? 'We first identify where marks are being lost, then focus on the highest-impact O-Level gaps before moving into timed exam-style practice.'
+        : 'We first identify where marks are being lost, then focus on the highest-impact gaps before moving into timed exam-style practice.',
+    heroStrong: isPsle
+      ? 'Led by experienced Math and Science educators focused on diagnostic correction, exam-style practice, and parent-visible lesson updates.'
+      : isOLevel
+        ? 'Led by experienced Math and Science educators focused on chapter rescue, paper strategy, exam-style correction, and parent-visible lesson updates.'
+        : 'Led by experienced Math and Science educators focused on diagnostic correction, exam-style practice, and parent-visible lesson updates.',
+    locationLine: `Available first for North Singapore: ${northAreas.join(', ')} and nearby estates.`,
+    heroBadges: isPsle
+      ? [
+          'PSLE Math & Science',
+          'P6 final-lap support',
+          'Home-based 1-to-1 or small friend group',
+          'North Singapore first',
+          'Parent updates after each session',
+          'StudyPulse follow-through available',
+        ]
+      : isOLevel
+        ? [
+            'E-Math, A-Math, Physics & Chemistry',
+            'Sec 4 / Sec 5 final-lap support',
+            'Home-based 1-to-1 or small friend group',
+            'North Singapore first',
+            'Parent updates after each session',
+            'StudyPulse follow-through available',
+          ]
+        : [
+            'Home-based 1-to-1 or small friend group',
+            'PSLE Math & Science',
+            'O-Level E-Math, A-Math, Physics & Chemistry',
+            'North Singapore first',
+            'Parent updates after each session',
+            'StudyPulse follow-through available',
+          ],
+    methodKicker: 'Method',
+    methodTitle: isPsle
+      ? 'Not Normal Tuition. A Targeted PSLE Final-Lap Intervention.'
+      : isOLevel
+        ? 'Not Normal Tuition. A Targeted O-Level Final-Lap Intervention.'
+        : 'Not Normal Tuition. A Targeted Final-Lap Intervention.',
+    methodSubtitle: isPsle
+      ? 'Normal tuition can be useful for weekly learning. This crash course serves a different purpose: diagnose the child’s current PSLE scoring gaps, fix the most urgent issues, then push into exam-style practice.'
+      : isOLevel
+        ? 'Normal tuition can be useful for weekly learning. This crash course serves a different purpose: diagnose the child’s current O-Level scoring gaps, fix the most urgent issues, then push into exam-style practice.'
+        : 'Normal tuition can be useful for weekly learning. This crash course serves a different purpose: diagnose the child’s current scoring gaps, fix the most urgent issues, then push into exam-style practice.',
+    methodCards: isPsle
+      ? [
+          {
+            title: 'Diagnose',
+            text: 'We review recent school papers, result slips, weak-topic lists, or practice work to identify where marks are being lost.',
+          },
+          {
+            title: 'Zero In',
+            text: 'We target PSLE weak chapters, careless-error patterns, answering structure, or time-management issues first.',
+          },
+          {
+            title: 'Rebuild',
+            text: 'We correct misconceptions, rebuild missing foundations, and teach clearer methods or answering frameworks.',
+          },
+          {
+            title: 'Push',
+            text: 'Once the key gaps are repaired, we move into timed PSLE-style questions so the student can apply skills under pressure.',
+          },
+        ]
+      : isOLevel
+        ? [
+            {
+              title: 'Diagnose',
+              text: 'We review recent school papers, result slips, weak-topic lists, or practice work to identify where marks are being lost.',
+            },
+            {
+              title: 'Zero In',
+              text: 'We target O-Level weak chapters, careless-error patterns, answering structure, or time-management issues first.',
+            },
+            {
+              title: 'Rebuild',
+              text: 'We correct misconceptions, rebuild missing foundations, and teach clearer methods or answering frameworks.',
+            },
+            {
+              title: 'Push',
+              text: 'Once the key gaps are repaired, we move into timed O-Level-style questions so the student can apply skills under pressure.',
+            },
+          ]
+        : [
+            {
+              title: 'Diagnose',
+              text: 'We review recent school papers, result slips, weak-topic lists, or practice work to identify where marks are being lost.',
+            },
+            {
+              title: 'Zero In',
+              text: 'We target the highest-impact gaps first, such as weak chapters, careless-error patterns, answering structure, or time-management issues.',
+            },
+            {
+              title: 'Rebuild',
+              text: 'We correct misconceptions, rebuild missing foundations, and teach clearer methods or answering frameworks.',
+            },
+            {
+              title: 'Push',
+              text: 'Once the key gaps are repaired, we move into timed exam-style questions so the student can apply skills under pressure.',
+            },
+          ],
+    differenceSubtitle: 'Normal tuition can be useful, but our crash course serves a different purpose. It is built around the student’s actual work, not a fixed weekly script.',
+    chooserTitle: 'Choose Your Level',
+    chooserSubtitle: 'Pick the level that matches your child’s final-lap pressure point.',
+    pslePackageTitle: 'PSLE Math & Science Home Crash Course',
+    pslePackageSubtitle: 'For P6 students who need targeted correction before the final stretch. The course can focus on Math, Science, or a Math + Science combination depending on the child’s current gaps.',
+    oLevelPackageTitle: 'O-Level Math & Science Home Crash Course',
+    oLevelPackageSubtitle: 'For Sec 4 and Sec 5 students who need focused chapter rescue, paper strategy, and exam-technique correction before the final stretch.',
+    friendGroupTitle: isPsle ? 'PSLE Friend-Group Home Crash Course' : isOLevel ? 'O-Level Friend-Group Home Crash Course' : 'Friend-Group Home Crash Course',
+    friendGroupSubtitle: isPsle
+      ? 'Have 2–4 P6 students from the same school, estate, class, or friend group? We can conduct a small PSLE crash course at one host home. This keeps the lesson focused while reducing cost per student.'
+      : isOLevel
+        ? 'Have 2–4 Sec 4 / Sec 5 students from the same school, estate, class, or friend group? We can conduct a small O-Level crash course at one host home. This keeps the lesson focused while reducing cost per student.'
+        : 'Have 2–4 students from the same school, estate, class, or friend group? We can conduct a small-group crash course at one host home. This keeps the lesson focused while reducing cost per student.',
+    friendGroupPricing1: isPsle ? 'PSLE friend-group option: From $45/student/hr' : isOLevel ? 'O-Level friend-group option: From $50/student/hr' : 'PSLE friend-group option: From $45/student/hr',
+    friendGroupPricing2: isPsle ? 'O-Level friend-group option: From $50/student/hr' : isOLevel ? 'PSLE friend-group option: From $45/student/hr' : 'O-Level friend-group option: From $50/student/hr',
+    friendGroupCta: 'Form a Friend Group',
+    afterCourseTitle: 'Keep the Momentum After the Crash Course',
+    afterCourseSubtitle: 'A crash course can correct urgent gaps, but students still need consistency after the session ends.',
+    logisticsTitle: 'Home-Based Convenience for North Singapore Families',
+    logisticsSubtitle: 'For home-based crash courses, lessons are conducted at the student’s home or a host family’s home. This removes the need for parents to send their child to an unfamiliar classroom and allows the course to start quickly once a suitable slot is confirmed.',
+    mockTitle: isPsle ? 'Coming Next: PSLE Mock Simulation Interest List' : isOLevel ? 'Coming Next: O-Level Mock Simulation Interest List' : 'Coming Next: Mock Exam Simulation Day',
+    mockSubtitle: isPsle
+      ? 'If enough students register interest, Integrated Learnings will open a North Singapore PSLE mock simulation. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations.'
+      : isOLevel
+        ? 'If enough students register interest, Integrated Learnings will open a North Singapore O-Level mock simulation. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations.'
+        : 'If enough students register interest, Integrated Learnings will open a North Singapore mock exam simulation for PSLE and O-Level students. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations.',
+    mockButtonLabel: isPsle ? 'Join PSLE Mock Interest List' : isOLevel ? 'Join O-Level Mock Interest List' : 'Join Mock Exam Interest List',
+    howToStartTitle: 'How to Start',
+    howToStartSubtitle: 'A clear process so parents know what happens before the first session starts.',
+    step2Title: 'We do a fit check',
+    step2Body: isPsle
+      ? 'We identify whether the student needs PSLE, 1-to-1, friend-group, or mock-simulation support.'
+      : isOLevel
+        ? 'We identify whether the student needs O-Level, 1-to-1, friend-group, or mock-simulation support.'
+        : 'We identify whether the student needs PSLE, O-Level, 1-to-1, friend-group, or mock-simulation support.',
+    suitableForTitle: 'Suitable For Students Who...',
+    suitableForItems: isPsle
+      ? [
+          'Students who keep losing marks despite studying',
+          'Students who are strong in some chapters but weak in others',
+          'Students who need help with Math problem-solving flow',
+          'Students who need help with Science open-ended answering',
+          'Students who struggle with PSLE chapter application',
+          'Students who repeat the same careless mistakes',
+          'Students who need focused correction before the final exam stretch',
+          'Students who need a clearer revision plan and parent-visible progress',
+        ]
+      : isOLevel
+        ? [
+            'Students who keep losing marks despite studying',
+            'Students who are strong in some chapters but weak in others',
+            'Students who need help with Math problem-solving flow',
+            'Students who need help with Science open-ended answering',
+            'Students who struggle with O-Level chapter application',
+            'Students who repeat the same careless mistakes',
+            'Students who need focused correction before the final exam stretch',
+            'Students who need a clearer revision plan and parent-visible progress',
+          ]
+        : [
+            'Students who keep losing marks despite studying',
+            'Students who are strong in some chapters but weak in others',
+            'Students who need help with Math problem-solving flow',
+            'Students who need help with Science open-ended answering',
+            'Students who struggle with O-Level chapter application',
+            'Students who repeat the same careless mistakes',
+            'Students who need focused correction before the final exam stretch',
+            'Students who need a clearer revision plan and parent-visible progress',
+          ],
+    fitCheckTitle: 'Before You Sign Up',
+    fitCheckSubtitle: 'This programme works best when the student is willing to attempt corrections and practise between sessions. It may not be the right fit if the family is looking for a full-year syllabus programme, a large lecture class, or guaranteed score claims.',
+    finalTitle: 'Ready to check if this fits your child?',
+    finalSubtitle: 'Send the latest result slip, weak-topic list, or a short description of your child’s situation. We’ll recommend whether the route-specific crash course, friend-group support, or another option fits best.',
+    finalNote: 'Final recommendation depends on subject, location, urgency, and student needs after fit check.',
+    oLevelCrossLink: 'Looking for O-Level support? View O-Level Home Crash Course.',
+    psleCrossLink: 'Looking for PSLE support? View PSLE Math & Science Home Crash Course.',
+  };
 };
 
-const CrashCourseLandingPage: React.FC = () => {
-  useEffect(() => setPageSeo(SEO_TITLE, SEO_DESCRIPTION, CANONICAL_PATH), []);
+const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ variant = 'combined' }) => {
+  const pageSeo = getPageSeo(variant);
+  const pageCopy = getPageCopy(variant);
+  const isPsle = variant === 'psle';
+  const isOLevel = variant === 'olevel';
+  const showCombined = variant === 'combined';
+
+  useEffect(() => setPageSeo(pageSeo.title, pageSeo.description, pageSeo.canonicalPath), [pageSeo.title, pageSeo.description, pageSeo.canonicalPath]);
 
   const slotsLink = toWhatsApp('Hi Integrated Learnings, I want to check available home slots for the PSLE & O-Level final-lap home crash course.');
   const fitCheckLink = toWhatsApp('Hi Integrated Learnings, I want to send my child’s latest result slip for a PSLE / O-Level fit check.');
@@ -478,37 +712,23 @@ const CrashCourseLandingPage: React.FC = () => {
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <ActionButton
-                  label="Check Available Home Slots"
-                  href={slotsLink}
-                  ctaName="hero_check_slots"
-                  icon={<Home size={15} aria-hidden="true" />}
-                  className="bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
-                />
-                <ActionButton
                   label="Send Result Slip for Fit Check"
                   href={fitCheckLink}
                   ctaName="hero_fit_check"
                   icon={<FileText size={15} aria-hidden="true" />}
-                  className="border border-white/20 bg-white/10 text-white hover:bg-white/15"
+                  className="bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
                 />
                 <ActionButton
-                  label="Form a Friend Group"
-                  href={friendGroupLink}
-                  ctaName="hero_friend_group"
-                  icon={<Users size={15} aria-hidden="true" />}
-                  className="border border-amber-300/40 bg-amber-300/10 text-amber-100 hover:bg-amber-300/20"
+                  label="Check Available Home Slots"
+                  href={slotsLink}
+                  ctaName="hero_check_slots"
+                  icon={<Home size={15} aria-hidden="true" />}
+                  className="border border-white/20 bg-white/10 text-white hover:bg-white/15"
                 />
               </div>
 
               <div className="mt-8 grid gap-2 sm:grid-cols-2">
-                {[
-                  'Home-based 1-to-1 or small friend group',
-                  'PSLE Math & Science',
-                  'O-Level E-Math, A-Math, Physics & Chemistry',
-                  'North Singapore first',
-                  'Parent updates after each session',
-                  'StudyPulse follow-through available',
-                ].map((badge) => (
+                {pageCopy.heroBadges.map((badge) => (
                   <div key={badge} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200 backdrop-blur-sm">
                     {badge}
                   </div>
@@ -554,9 +774,9 @@ const CrashCourseLandingPage: React.FC = () => {
       <main className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6 lg:py-12">
         <SectionCard>
           <SectionHeading
-            kicker="Method"
-            title="Not Normal Tuition. A Targeted Final-Lap Intervention."
-            subtitle="Normal tuition can be useful for weekly learning. This crash course serves a different purpose: diagnose the child’s current scoring gaps, fix the most urgent issues, then push into exam-style practice."
+            kicker={pageCopy.methodKicker}
+            title={pageCopy.methodTitle}
+            subtitle={pageCopy.methodSubtitle}
           />
           <p className="mt-4 text-sm leading-7 text-slate-600">
             Every student starts from a different point. Some are strong in one chapter but weak in another. Some know the content but struggle when questions become exam-style. Others lose marks through careless mistakes, weak answering structure, or poor time management.
@@ -565,24 +785,7 @@ const CrashCourseLandingPage: React.FC = () => {
             That is why the crash course starts with diagnosis first. We identify the gaps that matter most, fix them in order, then move the student into timed practice.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              {
-                title: 'Diagnose',
-                text: 'We review recent school papers, result slips, weak-topic lists, or practice work to identify where marks are being lost.',
-              },
-              {
-                title: 'Zero In',
-                text: 'We target the highest-impact gaps first, such as weak chapters, careless-error patterns, answering structure, or time-management issues.',
-              },
-              {
-                title: 'Rebuild',
-                text: 'We correct misconceptions, rebuild missing foundations, and teach clearer methods or answering frameworks.',
-              },
-              {
-                title: 'Push',
-                text: 'Once the key gaps are repaired, we move into timed exam-style questions so the student can apply skills under pressure.',
-              },
-            ].map((card) => (
+            {pageCopy.methodCards.map((card) => (
               <article key={card.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">{card.title}</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">{card.text}</p>
@@ -595,7 +798,7 @@ const CrashCourseLandingPage: React.FC = () => {
           <SectionHeading
             kicker="Difference"
             title="Why Integrated Learnings Is Different"
-            subtitle="Normal tuition can be useful, but our crash course serves a different purpose. It is built around the student’s actual work, not a fixed weekly script."
+            subtitle={pageCopy.differenceSubtitle}
           />
           <p className="mt-4 text-sm leading-7 text-slate-600">
             Most tuition programmes follow a fixed class structure, fixed worksheets, or a general revision schedule. That can be useful, but it may not solve the real reason a student is losing marks.
@@ -627,161 +830,181 @@ const CrashCourseLandingPage: React.FC = () => {
           </div>
         </SectionCard>
 
-        <SectionCard>
-          <SectionHeading
-            kicker="Programmes"
-            title="Choose Your Level"
-            subtitle="Pick the level that matches your child’s final-lap pressure point."
-          />
-          <div className="mt-6 grid gap-5 lg:grid-cols-2">
-            <LevelCard
-              title="PSLE Home Crash Course"
-              subtitle="For P6 students preparing for PSLE Math and Science."
-              focus={[
-                'Math problem sums and heuristics',
-                'Science open-ended answering',
-                'Careless mistake patterns',
-                'Weak topics and concept gaps',
-                'Timed PSLE-style practice',
-              ]}
-              href={pslePackageLink}
-              ctaLabel="View PSLE Options"
+        {showCombined && (
+          <SectionCard>
+            <SectionHeading
+              kicker="Programmes"
+              title={pageCopy.chooserTitle}
+              subtitle={pageCopy.chooserSubtitle}
             />
-            <LevelCard
-              title="O-Level Home Crash Course"
-              subtitle="For Sec 4 / Sec 5 students preparing for O-Level subjects."
-              focus={[
-                'E-Math and A-Math chapter rescue',
-                'Physics concept application and structured answers',
-                'Chemistry high-yield chapters and answering precision',
-                'Timed paper strategy',
-                'Weak-topic correction',
-              ]}
-              href={oLevelPackageLink}
-              ctaLabel="View O-Level Options"
+            <div className="mt-6 grid gap-5 lg:grid-cols-2">
+              <LevelCard
+                title="PSLE Home Crash Course"
+                subtitle="For P6 students preparing for PSLE Math and Science."
+                focus={[
+                  'Math problem sums and heuristics',
+                  'Science open-ended answering',
+                  'Careless mistake patterns',
+                  'Weak topics and concept gaps',
+                  'Timed PSLE-style practice',
+                ]}
+                href={pslePackageLink}
+                ctaLabel="View PSLE Options"
+              />
+              <LevelCard
+                title="O-Level Home Crash Course"
+                subtitle="For Sec 4 / Sec 5 students preparing for O-Level subjects."
+                focus={[
+                  'E-Math and A-Math chapter rescue',
+                  'Physics concept application and structured answers',
+                  'Chemistry high-yield chapters and answering precision',
+                  'Timed paper strategy',
+                  'Weak-topic correction',
+                ]}
+                href={oLevelPackageLink}
+                ctaLabel="View O-Level Options"
+              />
+            </div>
+          </SectionCard>
+        )}
+
+        {(showCombined || isPsle) && (
+          <SectionCard id="psle-packages">
+            <SectionHeading
+              kicker="PSLE"
+              title={pageCopy.pslePackageTitle}
+              subtitle={pageCopy.pslePackageSubtitle}
             />
-          </div>
-        </SectionCard>
+            <div className="mt-6 grid gap-5 xl:grid-cols-3">
+              {pslePackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
+            </div>
 
-        <SectionCard id="psle-packages">
-          <SectionHeading
-            kicker="PSLE"
-            title="PSLE Math & Science Home Crash Course"
-            subtitle="For P6 students who need targeted correction before the final stretch. The course can focus on Math, Science, or a Math + Science combination depending on the child’s current gaps."
-          />
-          <div className="mt-6 grid gap-5 xl:grid-cols-3">
-            {pslePackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
-          </div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <SectionCard className="border-slate-200 bg-slate-50">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">PSLE Math focus</p>
+                <BulletList
+                  items={[
+                    'Fractions, ratio, percentage',
+                    'Speed and rate',
+                    'Area, perimeter, volume',
+                    'Angles and geometry',
+                    'Pattern questions',
+                    'Problem sums and heuristics',
+                    'Careless-error tracking',
+                  ]}
+                />
+              </SectionCard>
+              <SectionCard className="border-slate-200 bg-slate-50">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">PSLE Science focus</p>
+                <BulletList
+                  items={[
+                    'Systems',
+                    'Cycles',
+                    'Interactions',
+                    'Energy',
+                    'Forces',
+                    'Experimental skills',
+                    'Graphs, tables, data-based questions',
+                    'Open-ended answering and keywords',
+                  ]}
+                />
+              </SectionCard>
+            </div>
+            {!showCombined && (
+              <p className="mt-5 text-xs text-slate-500">
+                <Link to="/family/crash-courses/o-level-june-intensive" className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500">
+                  {pageCopy.psleCrossLink}
+                </Link>
+              </p>
+            )}
+            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, location, urgency, and student needs after fit check.</p>
+          </SectionCard>
+        )}
 
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <SectionCard className="border-slate-200 bg-slate-50">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">PSLE Math focus</p>
-              <BulletList
-                items={[
-                  'Fractions, ratio, percentage',
-                  'Speed and rate',
-                  'Area, perimeter, volume',
-                  'Angles and geometry',
-                  'Pattern questions',
-                  'Problem sums and heuristics',
-                  'Careless-error tracking',
-                ]}
-              />
-            </SectionCard>
-            <SectionCard className="border-slate-200 bg-slate-50">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">PSLE Science focus</p>
-              <BulletList
-                items={[
-                  'Systems',
-                  'Cycles',
-                  'Interactions',
-                  'Energy',
-                  'Forces',
-                  'Experimental skills',
-                  'Graphs, tables, data-based questions',
-                  'Open-ended answering and keywords',
-                ]}
-              />
-            </SectionCard>
-          </div>
-          <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, location, urgency, and student needs after fit check.</p>
-        </SectionCard>
+        {(showCombined || isOLevel) && (
+          <SectionCard id="olevel-packages">
+            <SectionHeading
+              kicker="O-Level"
+              title={pageCopy.oLevelPackageTitle}
+              subtitle={pageCopy.oLevelPackageSubtitle}
+            />
+            <div className="mt-6 grid gap-5 xl:grid-cols-3">
+              {oLevelPackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
+            </div>
 
-        <SectionCard id="olevel-packages">
-          <SectionHeading
-            kicker="O-Level"
-            title="O-Level Math & Science Home Crash Course"
-            subtitle="For Sec 4 and Sec 5 students who need focused chapter rescue, paper strategy, and exam-technique correction before the final stretch."
-          />
-          <div className="mt-6 grid gap-5 xl:grid-cols-3">
-            {oLevelPackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <SectionCard className="border-slate-200 bg-slate-50">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">E-Math</p>
-              <BulletList
-                items={[
-                  'Algebra',
-                  'Geometry',
-                  'Graphs',
-                  'Mensuration',
-                  'Trigonometry',
-                  'Paper strategy',
-                  'Common scoring traps',
-                ]}
-              />
-            </SectionCard>
-            <SectionCard className="border-slate-200 bg-slate-50">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">A-Math</p>
-              <BulletList
-                items={[
-                  'Calculus',
-                  'Trigonometry',
-                  'Functions',
-                  'Logarithms',
-                  'Coordinate geometry',
-                  'Equation solving',
-                  'Exam question breakdown',
-                ]}
-              />
-            </SectionCard>
-            <SectionCard className="border-slate-200 bg-slate-50">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Physics</p>
-              <BulletList
-                items={[
-                  'Concept application',
-                  'Formula selection',
-                  'Structured answering',
-                  'Graph/data interpretation',
-                  'Practical-style skills',
-                  'Common misconception correction',
-                ]}
-              />
-            </SectionCard>
-            <SectionCard className="border-slate-200 bg-slate-50">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Chemistry</p>
-              <BulletList
-                items={[
-                  'Mole concept',
-                  'Chemical bonding',
-                  'Acids, bases and salts',
-                  'QA',
-                  'Electrolysis',
-                  'Organic chemistry',
-                  'Answer precision',
-                ]}
-              />
-            </SectionCard>
-          </div>
-          <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, location, urgency, and student needs after fit check.</p>
-        </SectionCard>
+            <div className="mt-6 grid gap-4 lg:grid-cols-2">
+              <SectionCard className="border-slate-200 bg-slate-50">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">E-Math</p>
+                <BulletList
+                  items={[
+                    'Algebra',
+                    'Geometry',
+                    'Graphs',
+                    'Mensuration',
+                    'Trigonometry',
+                    'Paper strategy',
+                    'Common scoring traps',
+                  ]}
+                />
+              </SectionCard>
+              <SectionCard className="border-slate-200 bg-slate-50">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">A-Math</p>
+                <BulletList
+                  items={[
+                    'Calculus',
+                    'Trigonometry',
+                    'Functions',
+                    'Logarithms',
+                    'Coordinate geometry',
+                    'Equation solving',
+                    'Exam question breakdown',
+                  ]}
+                />
+              </SectionCard>
+              <SectionCard className="border-slate-200 bg-slate-50">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Physics</p>
+                <BulletList
+                  items={[
+                    'Concept application',
+                    'Formula selection',
+                    'Structured answering',
+                    'Graph/data interpretation',
+                    'Practical-style skills',
+                    'Common misconception correction',
+                  ]}
+                />
+              </SectionCard>
+              <SectionCard className="border-slate-200 bg-slate-50">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Chemistry</p>
+                <BulletList
+                  items={[
+                    'Mole concept',
+                    'Chemical bonding',
+                    'Acids, bases and salts',
+                    'QA',
+                    'Electrolysis',
+                    'Organic chemistry',
+                    'Answer precision',
+                  ]}
+                />
+              </SectionCard>
+            </div>
+            {!showCombined && (
+              <p className="mt-5 text-xs text-slate-500">
+                <Link to="/family/crash-courses/psle-june-intensive" className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500">
+                  {pageCopy.oLevelCrossLink}
+                </Link>
+              </p>
+            )}
+            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, location, urgency, and student needs after fit check.</p>
+          </SectionCard>
+        )}
 
         <SectionCard>
           <SectionHeading
             kicker="Friend Group"
-            title="Friend-Group Home Crash Course"
-            subtitle="Have 2–4 students from the same school, estate, class, or friend group? We can conduct a small-group crash course at one host home. This keeps the lesson focused while reducing cost per student."
+            title={pageCopy.friendGroupTitle}
+            subtitle={pageCopy.friendGroupSubtitle}
           />
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
@@ -799,12 +1022,12 @@ const CrashCourseLandingPage: React.FC = () => {
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
               <p className="text-sm font-black text-emerald-800">Pricing display</p>
               <div className="mt-4 space-y-3 text-sm text-emerald-900">
-                <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3 font-semibold">PSLE friend-group option: From $45/student/hr</div>
-                <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3 font-semibold">O-Level friend-group option: From $50/student/hr</div>
+                <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3 font-semibold">{pageCopy.friendGroupPricing1}</div>
+                <div className="rounded-xl border border-emerald-200 bg-white px-4 py-3 font-semibold">{pageCopy.friendGroupPricing2}</div>
               </div>
               <div className="mt-5">
                 <ActionButton
-                  label="Form a Friend Group"
+                  label={pageCopy.friendGroupCta}
                   href={friendGroupLink}
                   ctaName="friend_group_cta"
                   icon={<Users size={15} aria-hidden="true" />}
@@ -818,8 +1041,8 @@ const CrashCourseLandingPage: React.FC = () => {
         <SectionCard>
           <SectionHeading
             kicker="After Course"
-            title="Keep the Momentum After the Crash Course"
-            subtitle="A crash course can correct urgent gaps, but students still need consistency after the session ends."
+            title={pageCopy.afterCourseTitle}
+            subtitle={pageCopy.afterCourseSubtitle}
           />
           <p className="mt-4 text-sm leading-7 text-slate-600">
             After the crash course, we provide a simple follow-through plan so parents know what the child should continue working on. For students who need more accountability, StudyPulse can be added to help track revision progress through check-ins and parent updates.
@@ -859,8 +1082,8 @@ const CrashCourseLandingPage: React.FC = () => {
         <SectionCard>
           <SectionHeading
             kicker="Logistics"
-            title="Home-Based Convenience for North Singapore Families"
-            subtitle="For home-based crash courses, lessons are conducted at the student’s home or a host family’s home. This removes the need for parents to send their child to an unfamiliar classroom and allows the course to start quickly once a suitable slot is confirmed."
+            title={pageCopy.logisticsTitle}
+            subtitle={pageCopy.logisticsSubtitle}
           />
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <BulletList
@@ -884,8 +1107,8 @@ const CrashCourseLandingPage: React.FC = () => {
         <SectionCard>
           <SectionHeading
             kicker="Mock Exam"
-            title="Coming Next: Mock Exam Simulation Day"
-            subtitle="If enough students register interest, Integrated Learnings will open a North Singapore mock exam simulation for PSLE and O-Level students. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations."
+            title={pageCopy.mockTitle}
+            subtitle={pageCopy.mockSubtitle}
           />
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <BulletList
@@ -903,7 +1126,7 @@ const CrashCourseLandingPage: React.FC = () => {
               <p className="mt-2">Mock simulation will be opened when there is enough demand, usually around 20 or more interested students for a suitable level/subject group.</p>
               <div className="mt-5">
                 <ActionButton
-                  label="Join Mock Exam Interest List"
+                  label={pageCopy.mockButtonLabel}
                   href={mockInterestLink}
                   ctaName="mock_interest_cta"
                   icon={<Clock3 size={15} aria-hidden="true" />}
@@ -917,13 +1140,13 @@ const CrashCourseLandingPage: React.FC = () => {
         <SectionCard>
           <SectionHeading
             kicker="How It Works"
-            title="How to Start"
-            subtitle="A clear process so parents know what happens before the first session starts."
+            title={pageCopy.howToStartTitle}
+            subtitle={pageCopy.howToStartSubtitle}
           />
           <div className="mt-6 grid gap-4 md:grid-cols-5">
             {[
               { step: '1', title: 'Send result slip or weak-topic list', body: 'Parent sends the latest school paper, result slip, or a simple list of weak topics.' },
-              { step: '2', title: 'We do a fit check', body: 'We identify whether the student needs PSLE, O-Level, 1-to-1, friend-group, or mock-simulation support.' },
+              { step: '2', title: pageCopy.step2Title, body: pageCopy.step2Body },
               { step: '3', title: 'Choose the crash-course format', body: 'We recommend the suitable package and timing based on urgency, subject, and student needs.' },
               { step: '4', title: 'Start targeted correction', body: 'The course begins with diagnosis, then zeroes in on the most important scoring gaps.' },
               { step: '5', title: 'Receive parent updates', body: 'Parents receive clear updates after lessons, including what was covered, what was observed, and what to do next.' },
@@ -949,20 +1172,11 @@ const CrashCourseLandingPage: React.FC = () => {
         <SectionCard>
           <SectionHeading
             kicker="Suitable For"
-            title="Suitable For Students Who..."
+            title={pageCopy.suitableForTitle}
           />
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <BulletList
-              items={[
-                'Students who keep losing marks despite studying',
-                'Students who are strong in some chapters but weak in others',
-                'Students who need help with Math problem-solving flow',
-                'Students who need help with Science open-ended answering',
-                'Students who struggle with O-Level chapter application',
-                'Students who repeat the same careless mistakes',
-                'Students who need focused correction before the final exam stretch',
-                'Students who need a clearer revision plan and parent-visible progress',
-              ]}
+              items={pageCopy.suitableForItems}
             />
           </div>
         </SectionCard>
@@ -970,8 +1184,8 @@ const CrashCourseLandingPage: React.FC = () => {
         <SectionCard>
           <SectionHeading
             kicker="Fit Check"
-            title="Before You Sign Up"
-            subtitle="This programme works best when the student is willing to attempt corrections and practise between sessions. It may not be the right fit if the family is looking for a full-year syllabus programme, a large lecture class, or guaranteed score claims."
+            title={pageCopy.fitCheckTitle}
+            subtitle={pageCopy.fitCheckSubtitle}
           />
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <BulletList
@@ -991,8 +1205,8 @@ const CrashCourseLandingPage: React.FC = () => {
         <SectionCard className="border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50">
           <SectionHeading
             kicker="FINAL STEP"
-            title="Ready to check if this fits your child?"
-            subtitle="Send the latest result slip, weak-topic list, or a short description of your child's situation. We'll recommend whether PSLE/O-Level home crash course, friend-group support, or another option fits best."
+            title={pageCopy.finalTitle}
+            subtitle={pageCopy.finalSubtitle}
           />
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <ActionButton
@@ -1011,7 +1225,7 @@ const CrashCourseLandingPage: React.FC = () => {
             />
           </div>
           <p className="mt-4 text-xs text-slate-600">
-            Final recommendation depends on subject, location, urgency, and student needs after fit check.
+            {pageCopy.finalNote}
           </p>
         </SectionCard>
       </main>
@@ -1042,5 +1256,5 @@ const CrashCourseLandingPage: React.FC = () => {
   );
 };
 
-export const FamilyPSLEJuneIntensivePage: React.FC = CrashCourseLandingPage;
-export const FamilyOLevelJuneIntensivePage: React.FC = CrashCourseLandingPage;
+export const FamilyPSLEJuneIntensivePage: React.FC = () => <CrashCourseLandingPage variant="psle" />;
+export const FamilyOLevelJuneIntensivePage: React.FC = () => <CrashCourseLandingPage variant="olevel" />;
