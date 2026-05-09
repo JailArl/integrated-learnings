@@ -990,46 +990,30 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard className="border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50">
           <SectionHeading
-            kicker="Final CTA"
-            title="Ready to check fit?"
-            subtitle="Send the latest result slip, ask about slots, or form a friend group if you already have 2–4 students."
+            kicker="FINAL STEP"
+            title="Ready to check if this fits your child?"
+            subtitle="Send the latest result slip, weak-topic list, or a short description of your child's situation. We'll recommend whether PSLE/O-Level home crash course, friend-group support, or another option fits best."
           />
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <ActionButton
-              label="Check Available Home Slots"
-              href={slotsLink}
-              ctaName="final_slots"
-              icon={<Home size={15} aria-hidden="true" />}
-              className="bg-amber-500 text-slate-950 hover:bg-amber-400"
-            />
             <ActionButton
               label="Send Result Slip for Fit Check"
               href={fitCheckLink}
               ctaName="final_fit_check"
               icon={<FileText size={15} aria-hidden="true" />}
-              className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+              className="bg-amber-500 text-slate-950 hover:bg-amber-400"
             />
             <ActionButton
-              label="Form a Friend Group"
-              href={friendGroupLink}
-              ctaName="final_friend_group"
-              icon={<Users size={15} aria-hidden="true" />}
-              className="border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+              label="Check Available Home Slots"
+              href={slotsLink}
+              ctaName="final_slots"
+              icon={<Home size={15} aria-hidden="true" />}
+              className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
             />
           </div>
           <p className="mt-4 text-xs text-slate-600">
             Final recommendation depends on subject, location, urgency, and student needs after fit check.
           </p>
         </SectionCard>
-
-        <nav className="flex flex-col gap-3 sm:flex-row">
-          <Link to="/tuition" className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-            Back to Family Tuition
-          </Link>
-          <a href={toWhatsApp('Hi Integrated Learnings, I want to enquire about the PSLE & O-Level home crash course.')} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-black text-white hover:bg-slate-800">
-            Enquire on WhatsApp <MessageCircle size={15} aria-hidden="true" />
-          </a>
-        </nav>
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-3 py-2 backdrop-blur-sm md:hidden [padding-bottom:calc(0.5rem+env(safe-area-inset-bottom))]">
