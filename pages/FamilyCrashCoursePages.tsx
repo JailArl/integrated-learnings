@@ -240,7 +240,7 @@ const LevelCard: React.FC<{
 
 const ComparisonTable: React.FC = () => (
   <SectionCard>
-    <SectionHeading title="Normal tuition teaches weekly. Our crash course diagnoses urgently, fixes strategically, and pushes exam readiness." />
+    <SectionHeading title="Normal tuition supports weekly learning. Our crash course targets urgent scoring gaps before the final lap." />
     <div className="mt-5 overflow-x-auto">
       <table className="min-w-full border-separate border-spacing-y-3 text-left text-sm">
         <thead>
@@ -269,8 +269,8 @@ const ComparisonTable: React.FC = () => (
 );
 
 const pageCopy = {
-  heroTitle: 'PSLE & O-Level Final-Lap Home Crash Course',
-  heroSubtitle: 'Personalised home-based crash course for PSLE and O-Level students who need targeted correction, stronger exam technique, and clearer final-lap direction.',
+  heroTitle: 'PSLE & O-Level Home Crash Course — North Singapore',
+  heroSubtitle: 'Diagnostic-based final-lap correction at home for students who need clearer weak-topic support, stronger exam technique, and parent-visible progress.',
   heroSupport: 'This is not normal weekly tuition and not a worksheet-drilling class. We first diagnose the student’s scoring gaps, then focus on the weak chapters, careless errors, answering issues, and time pressure that are costing marks. Once the urgent gaps are repaired, we move into timed exam-style practice.',
   heroStrong: 'Not a mass revision class. A personalised intervention built around your child’s actual scoring gaps.',
   locationLine: `Available first for North Singapore: ${northAreas.join(', ')} and nearby estates.`,
@@ -450,7 +450,7 @@ const CrashCourseLandingPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-stone-50 text-slate-900">
+    <div className="min-h-screen bg-stone-50 pb-24 text-slate-900 [word-break:normal] [overflow-wrap:break-word] md:pb-0">
       <section className="relative overflow-hidden bg-[linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0b3b2e_100%)] px-4 pb-20 pt-20 text-white sm:px-6 lg:px-8">
         <div className="absolute inset-0 opacity-50" aria-hidden="true">
           <div className="absolute left-[-10%] top-8 h-64 w-64 rounded-full bg-amber-300/20 blur-3xl" />
@@ -464,8 +464,8 @@ const CrashCourseLandingPage: React.FC = () => {
               <Pill className="border-white/15 bg-white/10 text-amber-200">
                 <Sparkles size={12} className="mr-2" aria-hidden="true" /> Find the gap. Fix the gap. Push the final lap.
               </Pill>
-              <h1 className="mt-4 text-4xl font-black leading-tight sm:text-5xl lg:text-6xl">{pageCopy.heroTitle}</h1>
-              <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-200">{pageCopy.heroSubtitle}</p>
+              <h1 className="mt-4 text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">{pageCopy.heroTitle}</h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">{pageCopy.heroSubtitle}</p>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">{pageCopy.heroSupport}</p>
               <p className="mt-4 max-w-2xl rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-amber-100">
                 {pageCopy.heroStrong}
@@ -550,7 +550,7 @@ const CrashCourseLandingPage: React.FC = () => {
       <main className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6 lg:py-12">
         <SectionCard>
           <SectionHeading
-            kicker="Section 1"
+            kicker="Method"
             title="Not Normal Tuition. A Targeted Final-Lap Intervention."
             subtitle="Normal tuition can be useful for weekly learning. This crash course serves a different purpose: diagnose the child’s current scoring gaps, fix the most urgent issues, then push into exam-style practice."
           />
@@ -589,7 +589,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 2"
+            kicker="Difference"
             title="Why Integrated Learnings Is Different"
             subtitle="Normal tuition can be useful, but our crash course serves a different purpose. It is built around the student’s actual work, not a fixed weekly script."
           />
@@ -617,7 +617,7 @@ const CrashCourseLandingPage: React.FC = () => {
             <SectionCard className="h-full border-slate-200 bg-slate-50">
               <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Final note</p>
               <p className="mt-3 text-lg font-bold leading-8 text-slate-900">
-                Normal tuition teaches weekly. Our crash course diagnoses urgently, fixes strategically, and pushes exam readiness.
+                Normal tuition supports weekly learning. Our crash course targets urgent scoring gaps before the final lap.
               </p>
             </SectionCard>
           </div>
@@ -625,7 +625,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 3"
+            kicker="Programmes"
             title="Choose Your Level"
             subtitle="Pick the level that matches your child’s final-lap pressure point."
           />
@@ -661,7 +661,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard id="psle-packages">
           <SectionHeading
-            kicker="Section 4"
+            kicker="PSLE"
             title="PSLE Math & Science Home Crash Course"
             subtitle="For P6 students who need targeted correction before the final stretch. The course can focus on Math, Science, or a Math + Science combination depending on the child’s current gaps."
           />
@@ -705,7 +705,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard id="olevel-packages">
           <SectionHeading
-            kicker="Section 5"
+            kicker="O-Level"
             title="O-Level Math & Science Home Crash Course"
             subtitle="For Sec 4 and Sec 5 students who need focused chapter rescue, paper strategy, and exam-technique correction before the final stretch."
           />
@@ -775,7 +775,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 6"
+            kicker="Friend Group"
             title="Friend-Group Home Crash Course"
             subtitle="Have 2–4 students from the same school, estate, class, or friend group? We can conduct a small-group crash course at one host home. This keeps the lesson focused while reducing cost per student."
           />
@@ -813,7 +813,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 7"
+            kicker="After Course"
             title="Keep the Momentum After the Crash Course"
             subtitle="A crash course can correct urgent gaps, but students still need consistency after the session ends."
           />
@@ -854,7 +854,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 8"
+            kicker="Logistics"
             title="Home-Based Convenience for North Singapore Families"
             subtitle="For home-based crash courses, lessons are conducted at the student’s home or a host family’s home. This removes the need for parents to send their child to an unfamiliar classroom and allows the course to start quickly once a suitable slot is confirmed."
           />
@@ -879,7 +879,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 9"
+            kicker="Mock Exam"
             title="Coming Next: Mock Exam Simulation Day"
             subtitle="If enough students register interest, Integrated Learnings will open a North-side mock exam simulation for PSLE and O-Level students. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations."
           />
@@ -912,7 +912,7 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 10"
+            kicker="How It Works"
             title="How to Start"
             subtitle="A clear process so parents know what happens before the first session starts."
           />
@@ -944,20 +944,20 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 11"
+            kicker="Suitable For"
             title="Suitable For Students Who..."
           />
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <BulletList
               items={[
-                'keep losing marks despite studying',
-                'are strong in some chapters but weak in others',
-                'need help with Math problem-solving flow',
-                'need help with Science open-ended answering',
-                'struggle with O-Level chapter application',
-                'repeat the same careless mistakes',
-                'need focused correction before the final exam stretch',
-                'need a clearer revision plan and parent-visible progress',
+                'Students who keep losing marks despite studying',
+                'Students who are strong in some chapters but weak in others',
+                'Students who need help with Math problem-solving flow',
+                'Students who need help with Science open-ended answering',
+                'Students who struggle with O-Level chapter application',
+                'Students who repeat the same careless mistakes',
+                'Students who need focused correction before the final exam stretch',
+                'Students who need a clearer revision plan and parent-visible progress',
               ]}
             />
           </div>
@@ -965,17 +965,17 @@ const CrashCourseLandingPage: React.FC = () => {
 
         <SectionCard>
           <SectionHeading
-            kicker="Section 12"
-            title="Not Suitable If..."
-            subtitle="We do not promise guaranteed grades. The aim is to identify and fix the highest-impact gaps, then guide the student into better exam preparation habits."
+            kicker="Fit Check"
+            title="Before You Sign Up"
+            subtitle="This programme works best when the student is willing to attempt corrections and practise between sessions. It may not be the right fit if the family is looking for a full-year syllabus programme, a large lecture class, or guaranteed score claims."
           />
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <BulletList
               items={[
-                'the student is looking for a full-year syllabus teaching programme only',
-                'the parent wants a guaranteed score improvement claim',
-                'the student is unwilling to complete assigned corrections',
-                'the family wants a large generic lecture class',
+                'Families seeking only a full-year syllabus teaching programme',
+                'Parents asking for guaranteed score improvement claims',
+                'Students unwilling to complete assigned corrections between sessions',
+                'Families looking for a large generic lecture class',
               ]}
               iconClassName="text-rose-600"
             />
@@ -1027,6 +1027,29 @@ const CrashCourseLandingPage: React.FC = () => {
           </a>
         </nav>
       </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-3 py-2 backdrop-blur-sm md:hidden [padding-bottom:calc(0.5rem+env(safe-area-inset-bottom))]">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2">
+          <a
+            href={slotsLink}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackCtaClick('mobile_sticky_slots', slotsLink)}
+            className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-3 py-3 text-xs font-black text-slate-950 transition hover:bg-amber-400"
+          >
+            Check Home Slots
+          </a>
+          <a
+            href={fitCheckLink}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackCtaClick('mobile_sticky_fit_check', fitCheckLink)}
+            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-3 text-xs font-black text-slate-700 transition hover:bg-slate-50"
+          >
+            Send Result Slip
+          </a>
+        </div>
+      </div>
     </div>
   );
 };
