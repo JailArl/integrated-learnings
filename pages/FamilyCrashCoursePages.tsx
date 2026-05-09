@@ -269,9 +269,10 @@ const ComparisonTable: React.FC = () => (
 );
 
 const pageCopy = {
-  heroTitle: 'PSLE & O-Level Home Crash Course — North Singapore',
-  heroSubtitle: 'Diagnostic-based final-lap correction at home for students who need clearer weak-topic support, stronger exam technique, and parent-visible progress.',
-  heroSupport: 'This is not normal weekly tuition and not a worksheet-drilling class. We first diagnose the student’s scoring gaps, then focus on the weak chapters, careless errors, answering issues, and time pressure that are costing marks. Once the urgent gaps are repaired, we move into timed exam-style practice.',
+  heroTitle: 'PSLE & O-Level Home Crash Course',
+  heroLocationTitle: 'North Singapore',
+  heroSubtitle: 'Diagnostic-based home crash course for PSLE and O-Level students who need targeted weak-topic correction, stronger exam technique, and clearer parent-visible progress.',
+  heroSupport: 'We first identify where marks are being lost, then focus on the highest-impact gaps before moving into timed exam-style practice.',
   heroStrong: 'Not a mass revision class. A personalised intervention built around your child’s actual scoring gaps.',
   locationLine: `Available first for North Singapore: ${northAreas.join(', ')} and nearby estates.`,
 };
@@ -450,7 +451,7 @@ const CrashCourseLandingPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-stone-50 pb-24 text-slate-900 [word-break:normal] [overflow-wrap:break-word] md:pb-0">
+    <div className="min-h-screen bg-stone-50 pb-24 text-left text-slate-900 [letter-spacing:normal] [word-spacing:normal] [word-break:normal] [overflow-wrap:normal] [hyphens:none] md:pb-0">
       <section className="relative overflow-hidden bg-[linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0b3b2e_100%)] px-4 pb-20 pt-20 text-white sm:px-6 lg:px-8">
         <div className="absolute inset-0 opacity-50" aria-hidden="true">
           <div className="absolute left-[-10%] top-8 h-64 w-64 rounded-full bg-amber-300/20 blur-3xl" />
@@ -464,7 +465,10 @@ const CrashCourseLandingPage: React.FC = () => {
               <Pill className="border-white/15 bg-white/10 text-amber-200">
                 <Sparkles size={12} className="mr-2" aria-hidden="true" /> Find the gap. Fix the gap. Push the final lap.
               </Pill>
-              <h1 className="mt-4 text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">{pageCopy.heroTitle}</h1>
+              <h1 className="mt-4 text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">
+                <span className="block">{pageCopy.heroTitle}</span>
+                <span className="mt-1 block text-amber-300">{pageCopy.heroLocationTitle}</span>
+              </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">{pageCopy.heroSubtitle}</p>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">{pageCopy.heroSupport}</p>
               <p className="mt-4 max-w-2xl rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-amber-100">
@@ -539,7 +543,7 @@ const CrashCourseLandingPage: React.FC = () => {
                   ))}
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-slate-300">
-                  Lessons can be conducted at the student’s home or a host family’s home. For future mock events, a North-side venue will be arranged near MRT/bus access where possible when enough demand is formed.
+                  Lessons can be conducted at the student’s home or a host family’s home. For future mock events, a North Singapore venue will be arranged near MRT/bus access where possible when enough demand is formed.
                 </p>
               </SectionCard>
             </div>
@@ -881,7 +885,7 @@ const CrashCourseLandingPage: React.FC = () => {
           <SectionHeading
             kicker="Mock Exam"
             title="Coming Next: Mock Exam Simulation Day"
-            subtitle="If enough students register interest, Integrated Learnings will open a North-side mock exam simulation for PSLE and O-Level students. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations."
+            subtitle="If enough students register interest, Integrated Learnings will open a North Singapore mock exam simulation for PSLE and O-Level students. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations."
           />
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <BulletList
