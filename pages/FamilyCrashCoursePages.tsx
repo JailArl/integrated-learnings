@@ -431,9 +431,9 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     chooserTitle: 'Choose Your Level',
     chooserSubtitle: 'Pick the level that matches your child’s final-lap pressure point.',
     pslePackageTitle: 'PSLE Math & Science Home Crash Course',
-    pslePackageSubtitle: 'For P6 students who need targeted correction before the final stretch. The course can focus on Math, Science, or a Math + Science combination depending on the child’s current gaps.',
+    pslePackageSubtitle: 'Built as a short intensive model: 3 focused correction blocks + 1 final revision block (4 blocks × 3h = 12h), typically completed over 1–2 weeks depending on schedule and stamina.',
     oLevelPackageTitle: 'O-Level Math & Science Home Crash Course',
-    oLevelPackageSubtitle: 'For Sec 4 and Sec 5 students who need focused chapter rescue, paper strategy, and exam-technique correction before the final stretch.',
+    oLevelPackageSubtitle: 'Built as a short intensive model: 3 focused correction blocks + 1 final revision / paper strategy block (4 blocks × 3h = 12h), typically completed over 1–2 weeks depending on schedule and stamina.',
     friendGroupTitle: isPsle ? 'PSLE Friend-Group Home Crash Course' : isOLevel ? 'O-Level Friend-Group Home Crash Course' : 'Friend-Group Home Crash Course',
     friendGroupSubtitle: isPsle
       ? 'Have 2–4 P6 students from the same school, estate, class, or friend group? Mini-groups can be conducted at one host family\'s home or selected tutor-hosted study space slots. This keeps the lesson focused while reducing cost per student.'
@@ -627,92 +627,70 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
   const pslePackages = [
     {
-      title: 'PSLE Mini Rescue',
-      duration: '2 sessions × 1.5h',
-      bestFor: 'quick diagnosis and urgent correction',
+      title: 'PSLE 4-Block Final-Lap Intensive',
+      duration: '4 blocks × 3h = 12h',
+      bestFor: 'serious PSLE Math or Science final-lap preparation',
       format: "student's home or tutor-hosted study space, subject to schedule",
-      price: 'From $240 total',
+      price: 'See pricing by format',
       includes: [
-        'Review of recent work or weak topics',
-        'Targeted correction on key scoring leaks',
-        'Parent update after each session',
-        'Short follow-up plan',
-      ],
-    },
-    {
-      title: 'PSLE 3-Session Intensive',
-      duration: '3 sessions × 1.5h',
-      bestFor: 'focused short-term improvement',
-      format: "student's home or tutor-hosted study space, subject to schedule",
-      price: 'From $360 total',
-      includes: [
-        'Diagnostic review',
-        'Weak-topic correction',
+        '3 focused correction blocks',
+        '1 final revision block',
+        'Weak-topic mapping',
         'Exam-style guided practice',
-        'Parent update after every session',
-        'Free 7-day StudyPulse follow-through option',
+        'Timed mini-practice',
+        'Parent updates and next-step plan',
+        'StudyPulse follow-through option',
       ],
       popular: true,
     },
     {
-      title: 'PSLE 6-Session Final-Lap Programme',
-      duration: '6 sessions × 1.5h',
-      bestFor: 'structured final-lap preparation',
-      format: "student's home or tutor-hosted study space, subject to schedule",
-      price: 'From $720 total',
+      title: 'PSLE Mini-Group 4-Block Intensive',
+      duration: '4 blocks × 3h = 12h',
+      bestFor: '2–4 students of similar level and subject needs',
+      format: "host family's home or tutor-hosted study space, subject to schedule",
+      price: 'See pricing by format',
       includes: [
-        'Weak-topic mapping',
-        'Progressive correction plan',
-        'Math/Science exam-style practice',
-        'Timed mini-paper practice',
-        'Parent updates',
-        '14-day StudyPulse follow-through option',
+        'Small-group diagnostic review',
+        'Targeted correction based on group needs',
+        'Exam-style guided practice',
+        'Final revision block',
+        'Parent updates where suitable',
+        'Group size kept to 2–4 students',
       ],
     },
   ];
 
   const oLevelPackages = [
     {
-      title: 'O-Level Mini Rescue',
-      duration: '2 sessions × 2h',
-      bestFor: 'urgent weak-chapter correction',
+      title: 'O-Level 4-Block Subject Intensive',
+      duration: '4 blocks × 3h = 12h',
+      bestFor: 'serious O-Level subject final-lap preparation',
       format: "student's home or tutor-hosted study space, subject to schedule",
-      price: 'From $320 total',
+      price: 'See pricing by format',
       includes: [
-        'Paper/result review',
-        'Weak chapter diagnosis',
-        'Targeted chapter correction',
-        'Exam-style drilling',
-        'Parent/student next-step summary',
-      ],
-    },
-    {
-      title: 'O-Level 4-Session Intensive',
-      duration: '4 sessions × 2h',
-      bestFor: 'one-subject final-lap improvement',
-      format: "student's home or tutor-hosted study space, subject to schedule",
-      price: 'From $640 total',
-      includes: [
-        'Diagnostic review',
-        'Two major weak-chapter corrections',
+        '3 focused subject correction blocks',
+        '1 final revision / paper strategy block',
+        'Weak-chapter mapping',
         'Timed section practice',
-        'Exam strategy and correction plan',
+        'Paper strategy and correction plan',
+        'Parent/student next-step summary',
+        'StudyPulse follow-through option',
       ],
       popular: true,
     },
     {
-      title: 'O-Level 8-Session Final-Lap Programme',
-      duration: '8 sessions × 2h',
-      bestFor: 'serious structured preparation',
-      format: "student's home or tutor-hosted study space, subject to schedule",
-      price: 'From $1,280 total',
+      title: 'O-Level Mini-Group 4-Block Intensive',
+      duration: '4 blocks × 3h = 12h',
+      bestFor: '2–4 students of similar level and subject needs',
+      format: "host family's home or tutor-hosted study space, subject to schedule",
+      price: 'See pricing by format',
       includes: [
-        'Diagnostic paper review',
-        'Foundation gap repair',
-        'High-weightage topic correction',
-        'Timed practice',
-        'Paper strategy',
-        'Final correction plan',
+        'Small-group diagnostic review',
+        'Targeted chapter correction based on group needs',
+        'Timed exam-style practice',
+        'Final revision / paper strategy block',
+        'Parent/student updates where suitable',
+        'Group size kept to 2–4 students',
       ],
     },
   ];
@@ -763,6 +741,59 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       answer: 'No responsible educator should guarantee grades. What we provide is targeted diagnosis, structured correction, exam-style practice, and clear parent updates.',
     },
   ];
+
+  const [openPricingPanels, setOpenPricingPanels] = useState<Record<string, boolean>>(() => ({
+    tutor_hosted: true,
+    student_home: false,
+    mini_group: false,
+  }));
+
+  const togglePricingPanel = (panelId: string) => {
+    setOpenPricingPanels((prev) => ({ ...prev, [panelId]: !prev[panelId] }));
+  };
+
+  const pricingRows = {
+    studentHome: isOLevel
+      ? [
+          { name: '1-Day Chapter Rescue', detail: '1 × 3h', price: 'From $255' },
+          { name: '4-Block Subject Intensive', detail: '4 × 3h = 12h', price: 'From $1,020 total' },
+        ]
+      : [
+          { name: '1-Day Targeted Correction', detail: '1 × 3h', price: 'From $240' },
+          { name: '4-Block Final-Lap Intensive', detail: '4 × 3h = 12h', price: 'From $960 total' },
+        ],
+    tutorHosted: isOLevel
+      ? [
+          { name: '1-Day Chapter Rescue', detail: '1 × 3h', price: 'From $225' },
+          { name: '4-Block Subject Intensive', detail: '4 × 3h = 12h', price: 'From $900 total' },
+        ]
+      : [
+          { name: '1-Day Targeted Correction', detail: '1 × 3h', price: 'From $210' },
+          { name: '4-Block Final-Lap Intensive', detail: '4 × 3h = 12h', price: 'From $840 total' },
+        ],
+    miniGroupTutorHosted: isOLevel
+      ? [
+          '2 students | From $60/student/hr',
+          '3 students | From $55/student/hr',
+          '4 students | From $50/student/hr',
+        ]
+      : [
+          '2 students | From $55/student/hr',
+          '3 students | From $50/student/hr',
+          '4 students | From $45/student/hr',
+        ],
+    miniGroupHostFamily: isOLevel
+      ? [
+          '2 students | From $65/student/hr',
+          '3 students | From $60/student/hr',
+          '4 students | From $55/student/hr',
+        ]
+      : [
+          '2 students | From $60/student/hr',
+          '3 students | From $55/student/hr',
+          '4 students | From $50/student/hr',
+        ],
+  };
 
   return (
     <div className="min-h-screen bg-stone-50 pb-24 text-left text-slate-900 [letter-spacing:normal] [word-spacing:normal] [word-break:normal] [overflow-wrap:normal] [hyphens:none] md:pb-0">
@@ -976,6 +1007,110 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           </p>
         </SectionCard>
 
+        <SectionCard>
+          <SectionHeading
+            kicker="PRICING BY FORMAT"
+            title="View Pricing by Lesson Format"
+            subtitle="Choose the format that fits your family. You can open more than one option to compare pricing. Final recommendation depends on subject, lesson location, group size, urgency, and student needs after the free WhatsApp fit check."
+          />
+
+          <div className="mt-6 space-y-3">
+            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <h3>
+                <button
+                  type="button"
+                  aria-expanded={openPricingPanels.student_home}
+                  onClick={() => togglePricingPanel('student_home')}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                >
+                  <span>
+                    <span className="block text-sm font-black text-slate-900">Tutor Travels to Student’s Home</span>
+                    <span className="mt-1 block text-xs font-semibold text-slate-500">Best for families who want maximum convenience and focused 1-to-1 support at home. Home-visit pricing includes tutor travel time and scheduling buffer.</span>
+                  </span>
+                  <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.student_home ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+              </h3>
+              {!openPricingPanels.student_home ? null : (
+                <div className="border-t border-slate-200 px-5 py-4">
+                  <div className="space-y-2 text-sm">
+                    {pricingRows.studentHome.map((row) => (
+                      <div key={row.name} className="flex flex-col justify-between gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 sm:flex-row sm:items-center">
+                        <p className="font-semibold text-slate-900">{row.name}</p>
+                        <p className="text-slate-600">{row.detail} | {row.price}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </article>
+
+            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <h3>
+                <button
+                  type="button"
+                  aria-expanded={openPricingPanels.tutor_hosted}
+                  onClick={() => togglePricingPanel('tutor_hosted')}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                >
+                  <span>
+                    <span className="block text-sm font-black text-slate-900">Tutor-Hosted Study Space</span>
+                    <span className="mt-1 block text-xs font-semibold text-slate-500">Best for students who can travel to us and want longer, more focused sessions at better value. Better value because there is no tutor travel time.</span>
+                  </span>
+                  <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.tutor_hosted ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+              </h3>
+              {!openPricingPanels.tutor_hosted ? null : (
+                <div className="border-t border-slate-200 px-5 py-4">
+                  <div className="space-y-2 text-sm">
+                    {pricingRows.tutorHosted.map((row) => (
+                      <div key={row.name} className="flex flex-col justify-between gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 sm:flex-row sm:items-center">
+                        <p className="font-semibold text-slate-900">{row.name}</p>
+                        <p className="text-slate-600">{row.detail} | {row.price}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </article>
+
+            <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+              <h3>
+                <button
+                  type="button"
+                  aria-expanded={openPricingPanels.mini_group}
+                  onClick={() => togglePricingPanel('mini_group')}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                >
+                  <span>
+                    <span className="block text-sm font-black text-slate-900">Mini-Group Crash Course</span>
+                    <span className="mt-1 block text-xs font-semibold text-slate-500">Best for 2–4 students of similar level. Mini-groups lower the cost per student while keeping the group small and targeted.</span>
+                  </span>
+                  <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.mini_group ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+              </h3>
+              {!openPricingPanels.mini_group ? null : (
+                <div className="border-t border-slate-200 px-5 py-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
+                      <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Tutor-hosted mini-group</p>
+                      <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                        {pricingRows.miniGroupTutorHosted.map((line) => <li key={line}>{line}</li>)}
+                      </ul>
+                    </div>
+                    <div className="rounded-xl border border-slate-200 bg-white p-3">
+                      <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Host-family mini-group</p>
+                      <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                        {pricingRows.miniGroupHostFamily.map((line) => <li key={line}>{line}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-slate-600">Mini-groups are subject to student fit, similar level/subject needs, and suitable scheduling. Group size is kept to 2–4 students.</p>
+                </div>
+              )}
+            </article>
+          </div>
+        </SectionCard>
+
         {(showCombined || isPsle) && (
           <SectionCard id="psle-packages">
             <SectionHeading
@@ -988,16 +1123,17 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
-                title="PSLE First Targeted Correction Session"
-                duration="1 session × 1.5h"
-                bestFor="first paid lesson after the free WhatsApp fit check"
+                title="PSLE 1-Day Targeted Correction"
+                duration="1 block × 3h"
+                bestFor="urgent correction on one major weak area before deciding on the full intensive"
                 format="student's home or tutor-hosted study space, subject to schedule"
-                price="From $120"
+                price="See pricing by format"
                 includes={[
                   'Quick review of recent work or weak topics',
                   'Targeted correction on one urgent scoring gap',
+                  'Guided PSLE-style practice',
                   'Parent update after session',
-                  'Recommendation on whether a package is needed',
+                  'Recommendation on whether the full intensive is needed',
                 ]}
               />
               {pslePackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
@@ -1041,7 +1177,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, lesson location format, urgency, and student needs after fit check. Tutor-hosted sessions may allow longer blocks or better-value arrangements because no travel time is needed.</p>
+            <p className="mt-5 text-xs text-slate-500">Package prices vary by lesson format. Open the pricing panels above to compare student-home, tutor-hosted, and mini-group options. Tutor-hosted sessions may allow longer blocks or better-value arrangements because no travel time is needed.</p>
           </SectionCard>
         )}
 
@@ -1057,16 +1193,17 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
-                title="O-Level First Targeted Correction Session"
-                duration="1 session × 2h"
-                bestFor="first paid lesson after the free WhatsApp fit check"
+                title="O-Level 1-Day Chapter Rescue"
+                duration="1 block × 3h"
+                bestFor="urgent correction on one weak chapter, question type, or paper section"
                 format="student's home or tutor-hosted study space, subject to schedule"
-                price="From $160"
+                price="See pricing by format"
                 includes={[
                   'Paper/result review',
-                  'Targeted weak-chapter correction',
+                  'Targeted correction on one urgent weak chapter or question type',
+                  'Guided exam-style drilling',
                   'Parent/student next-step summary',
-                  'Recommendation on whether a package is needed',
+                  'Recommendation on whether the full intensive is needed',
                 ]}
               />
               {oLevelPackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
@@ -1136,7 +1273,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, lesson location format, urgency, and student needs after fit check. Tutor-hosted sessions may allow longer blocks or better-value arrangements because no travel time is needed.</p>
+            <p className="mt-5 text-xs text-slate-500">Package prices vary by lesson format. Open the pricing panels above to compare student-home, tutor-hosted, and mini-group options. Tutor-hosted sessions may allow longer blocks or better-value arrangements because no travel time is needed.</p>
           </SectionCard>
         )}
 
@@ -1281,24 +1418,32 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         <SectionCard>
           <SectionHeading
             kicker="How It Works"
-            title={pageCopy.howToStartTitle}
-            subtitle={pageCopy.howToStartSubtitle}
+            title="How the 4-Block Crash Course Works"
+            subtitle="The crash course is designed as a short intensive block, not weekly tuition. Instead of spreading correction across many weeks, we compress the work into four focused sessions: three correction blocks and one final revision block."
           />
-          <div className="mt-6 grid gap-4 md:grid-cols-5">
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
             {[
-              { step: '1', title: 'Send result slip or weak-topic list', body: 'Parent sends the latest school paper, result slip, or a simple list of weak topics.' },
-              { step: '2', title: pageCopy.step2Title, body: pageCopy.step2Body },
-              { step: '3', title: 'Choose the crash-course format', body: 'We recommend the suitable package and timing based on urgency, subject, and student needs.' },
-              { step: '4', title: 'Start targeted correction', body: 'The course begins with diagnosis, then zeroes in on the most important scoring gaps.' },
-              { step: '5', title: 'Receive parent updates', body: 'Parents receive clear updates after lessons, including what was covered, what was observed, and what to do next.' },
+              { step: '1', title: 'Block 1: Diagnose & Prioritise', body: 'We review recent work, identify the main scoring gaps, and decide what must be fixed first.' },
+              { step: '2', title: 'Block 2: Targeted Correction', body: 'We focus on the weak topics, repeated mistakes, or question types that are costing the most marks.' },
+              { step: '3', title: 'Block 3: Exam-Style Application', body: 'The student applies the corrected methods to exam-style questions under guided or timed conditions.' },
+              { step: '4', title: 'Block 4: Final Revision & Next-Step Plan', body: 'We review remaining errors, consolidate key strategies, and give parents a clear follow-up direction.' },
             ].map((item) => (
               <article key={item.step} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Step {item.step}</p>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">{item.step}</p>
                 <p className="mt-2 text-sm font-black text-slate-900">{item.title}</p>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
               </article>
             ))}
           </div>
+          <p className="mt-6 text-sm leading-7 text-slate-600">
+            Each block is longer than a normal tuition lesson so there is enough time to review mistakes, teach the correction method, practise exam-style questions, and correct the work immediately.
+          </p>
+          <p className="mt-2 text-sm leading-7 text-slate-600">
+            Designed to be completed over 1–2 weeks during holidays or urgent exam-prep periods, depending on schedule and student stamina.
+          </p>
+          <p className="mt-2 text-xs text-slate-500">
+            Each block is 3 hours. For younger students, short breaks can be included where needed.
+          </p>
           <div className="mt-6">
             <ActionButton
               label="Send Result Slip for Fit Check"
