@@ -436,10 +436,10 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     oLevelPackageSubtitle: 'For Sec 4 and Sec 5 students who need focused chapter rescue, paper strategy, and exam-technique correction before the final stretch.',
     friendGroupTitle: isPsle ? 'PSLE Friend-Group Home Crash Course' : isOLevel ? 'O-Level Friend-Group Home Crash Course' : 'Friend-Group Home Crash Course',
     friendGroupSubtitle: isPsle
-      ? 'Have 2–4 P6 students from the same school, estate, class, or friend group? We can conduct a small PSLE crash course at one host family\'s home. One host family provides the venue, and we travel to the lesson. This keeps the lesson focused while reducing cost per student.'
+      ? 'Have 2–4 P6 students from the same school, estate, class, or friend group? Mini-groups can be conducted at one host family\'s home or selected tutor-hosted study space slots. This keeps the lesson focused while reducing cost per student.'
       : isOLevel
-        ? 'Have 2–4 Sec 4 / Sec 5 students from the same school, estate, class, or friend group? We can conduct a small O-Level crash course at one host family\'s home. One host family provides the venue, and we travel to the lesson. This keeps the lesson focused while reducing cost per student.'
-        : 'Have 2–4 students from the same school, estate, class, or friend group? We can conduct a small-group crash course at one host family\'s home. One host family provides the venue, and we travel to the lesson. This keeps the lesson focused while reducing cost per student.',
+        ? 'Have 2–4 Sec 4 / Sec 5 students from the same school, estate, class, or friend group? Mini-groups can be conducted at one host family\'s home or selected tutor-hosted study space slots. This keeps the lesson focused while reducing cost per student.'
+        : 'Have 2–4 students from the same school, estate, class, or friend group? Mini-groups can be conducted at one host family\'s home or selected tutor-hosted study space slots. This keeps the lesson focused while reducing cost per student.',
     friendGroupPricing1: isPsle ? 'PSLE friend-group option: From $45/student/hr' : isOLevel ? 'O-Level friend-group option: From $50/student/hr' : 'PSLE friend-group option: From $45/student/hr',
     friendGroupPricing2: isPsle ? 'O-Level friend-group option: From $50/student/hr' : isOLevel ? 'PSLE friend-group option: From $45/student/hr' : 'O-Level friend-group option: From $50/student/hr',
     friendGroupCta: 'Form a Friend Group',
@@ -550,7 +550,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       title: 'PSLE Mini Rescue',
       duration: '2 sessions × 1.5h',
       bestFor: 'quick diagnosis and urgent correction',
-      format: '1-to-1 home',
+      format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'From $240 total',
       includes: [
         'Review of recent work or weak topics',
@@ -563,7 +563,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       title: 'PSLE 3-Session Intensive',
       duration: '3 sessions × 1.5h',
       bestFor: 'focused short-term improvement',
-      format: '1-to-1 home',
+      format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'From $360 total',
       includes: [
         'Diagnostic review',
@@ -578,7 +578,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       title: 'PSLE 6-Session Final-Lap Programme',
       duration: '6 sessions × 1.5h',
       bestFor: 'structured final-lap preparation',
-      format: '1-to-1 home',
+      format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'From $720 total',
       includes: [
         'Weak-topic mapping',
@@ -596,7 +596,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       title: 'O-Level Mini Rescue',
       duration: '2 sessions × 2h',
       bestFor: 'urgent weak-chapter correction',
-      format: '1-to-1 home',
+      format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'From $320 total',
       includes: [
         'Paper/result review',
@@ -610,7 +610,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       title: 'O-Level 4-Session Intensive',
       duration: '4 sessions × 2h',
       bestFor: 'one-subject final-lap improvement',
-      format: '1-to-1 home',
+      format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'From $640 total',
       includes: [
         'Diagnostic review',
@@ -624,7 +624,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       title: 'O-Level 8-Session Final-Lap Programme',
       duration: '8 sessions × 2h',
       bestFor: 'serious structured preparation',
-      format: '1-to-1 home',
+      format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'From $1,280 total',
       includes: [
         'Diagnostic paper review',
@@ -868,6 +868,34 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           </SectionCard>
         )}
 
+        <SectionCard>
+          <SectionHeading
+            kicker="LESSON FORMAT"
+            title="Choose the Lesson Format That Fits"
+            subtitle="Different families need different arrangements. We can recommend the most suitable format after the free WhatsApp fit check, based on the student’s needs, location, schedule, and whether the child learns better alone or in a small group."
+          />
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <p className="text-sm font-black text-slate-900">Tutor Travels to Student’s Home</p>
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: maximum convenience and focused 1-to-1 support</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">We travel to the student’s home within North Singapore where scheduling allows. This is suitable for families who prefer the lesson to happen at home.</p>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <p className="text-sm font-black text-slate-900">Tutor-Hosted Study Space</p>
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer focused sessions and better-value arrangements</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Selected sessions can be conducted at a small tutor-hosted study space. Because there is no travel time, this format may allow longer lesson blocks or better-value arrangements.</p>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <p className="text-sm font-black text-slate-900">Mini-Group Format</p>
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2–4 students of similar level</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Students can form a small group at one host family’s home or selected tutor-hosted study space slots. This lowers cost per student while keeping the lesson targeted and manageable.</p>
+            </article>
+          </div>
+          <p className="mt-5 text-xs text-slate-500">
+            Final recommendation depends on subject, lesson location format, group size, urgency, and student needs after the free WhatsApp fit check.
+          </p>
+        </SectionCard>
+
         {(showCombined || isPsle) && (
           <SectionCard id="psle-packages">
             <SectionHeading
@@ -883,7 +911,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 title="PSLE First Targeted Correction Session"
                 duration="1 session × 1.5h"
                 bestFor="first paid lesson after the free WhatsApp fit check"
-                format="student's home / tutor-hosted study space"
+                format="student's home or tutor-hosted study space, subject to schedule"
                 price="From $120"
                 includes={[
                   'Quick review of recent work or weak topics',
@@ -933,7 +961,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, lesson location format, urgency, and student needs after fit check.</p>
+            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, lesson location format, urgency, and student needs after fit check. Tutor-hosted sessions may allow longer blocks or better-value arrangements because no travel time is needed.</p>
           </SectionCard>
         )}
 
@@ -952,7 +980,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 title="O-Level First Targeted Correction Session"
                 duration="1 session × 2h"
                 bestFor="first paid lesson after the free WhatsApp fit check"
-                format="student's home / tutor-hosted study space"
+                format="student's home or tutor-hosted study space, subject to schedule"
                 price="From $160"
                 includes={[
                   'Paper/result review',
@@ -1028,7 +1056,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, lesson location format, urgency, and student needs after fit check.</p>
+            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, lesson location format, urgency, and student needs after fit check. Tutor-hosted sessions may allow longer blocks or better-value arrangements because no travel time is needed.</p>
           </SectionCard>
         )}
 
@@ -1121,21 +1149,18 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <BulletList
               items={[
-                'We travel to the student\'s home within North Singapore first',
+                'We travel to the student\'s home within North Singapore where scheduling allows',
                 'Student learns in a familiar environment',
-                'Suitable for North Singapore families',
-                'Friend-group classes are conducted at one host family\'s home',
-                'Selected mini-group sessions may be held at a small tutor-hosted study space',
-                'For future mock simulation events, venues will be selected near MRT/bus access where possible',
+                'Friend-group classes can be conducted at one host family\'s home',
+                'Selected mini-group sessions may use a small tutor-hosted study space',
+                'Future mock exam events may use a separate North-side venue near MRT/bus access',
               ]}
             />
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
               <p className="font-bold text-slate-900">Quality-control note</p>
-              <p className="mt-2">Tutor-hosted sessions are kept small and are not positioned as a mass-group format.</p>
-              <p className="font-bold text-slate-900">Meal note</p>
-              <p className="mt-2">Meals are not provided for normal crash-course sessions conducted at the student\'s home or host family\'s home because sessions are kept focused and usually last 1.5–2 hours. For longer friend-group sessions, students may prepare their own snacks if needed.</p>
+              <p className="mt-2">Tutor-hosted sessions are kept small and are not positioned as a mass-group format. Details will be shared before confirmation.</p>
               <p className="mt-4 font-bold text-slate-900">Future event note</p>
-              <p className="mt-2">For future mock exam simulation events, light refreshments may be arranged depending on duration and venue. Lunch will only be considered for longer event formats. No fixed public venue is currently promised.</p>
+              <p className="mt-2">For future mock exam simulation events, venues will be selected near MRT/bus access where possible. Light refreshments may be arranged depending on duration and venue.</p>
             </div>
           </div>
         </SectionCard>
