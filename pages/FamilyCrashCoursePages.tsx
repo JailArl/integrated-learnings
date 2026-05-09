@@ -338,7 +338,7 @@ const getPageCopy = (variant: CrashCourseVariant) => {
       ? [
           'PSLE Math & Science',
           'P6 final-lap support',
-          'Home-based 1-to-1 or small friend group',
+          'Student\'s home / host family / tutor-hosted study space',
           'North Singapore first',
           'Parent updates after each session',
           'StudyPulse follow-through available',
@@ -347,13 +347,13 @@ const getPageCopy = (variant: CrashCourseVariant) => {
         ? [
             'E-Math, A-Math, Physics & Chemistry',
             'Sec 4 / Sec 5 final-lap support',
-            'Home-based 1-to-1 or small friend group',
+            'Student\'s home / host family / tutor-hosted study space',
             'North Singapore first',
             'Parent updates after each session',
             'StudyPulse follow-through available',
           ]
         : [
-            'Home-based 1-to-1 or small friend group',
+            'Student\'s home / host family / tutor-hosted study space',
             'PSLE Math & Science',
             'O-Level E-Math, A-Math, Physics & Chemistry',
             'North Singapore first',
@@ -436,17 +436,17 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     oLevelPackageSubtitle: 'For Sec 4 and Sec 5 students who need focused chapter rescue, paper strategy, and exam-technique correction before the final stretch.',
     friendGroupTitle: isPsle ? 'PSLE Friend-Group Home Crash Course' : isOLevel ? 'O-Level Friend-Group Home Crash Course' : 'Friend-Group Home Crash Course',
     friendGroupSubtitle: isPsle
-      ? 'Have 2–4 P6 students from the same school, estate, class, or friend group? We can conduct a small PSLE crash course at one host home. This keeps the lesson focused while reducing cost per student.'
+      ? 'Have 2–4 P6 students from the same school, estate, class, or friend group? We can conduct a small PSLE crash course at one host family\'s home. One host family provides the venue, and we travel to the lesson. This keeps the lesson focused while reducing cost per student.'
       : isOLevel
-        ? 'Have 2–4 Sec 4 / Sec 5 students from the same school, estate, class, or friend group? We can conduct a small O-Level crash course at one host home. This keeps the lesson focused while reducing cost per student.'
-        : 'Have 2–4 students from the same school, estate, class, or friend group? We can conduct a small-group crash course at one host home. This keeps the lesson focused while reducing cost per student.',
+        ? 'Have 2–4 Sec 4 / Sec 5 students from the same school, estate, class, or friend group? We can conduct a small O-Level crash course at one host family\'s home. One host family provides the venue, and we travel to the lesson. This keeps the lesson focused while reducing cost per student.'
+        : 'Have 2–4 students from the same school, estate, class, or friend group? We can conduct a small-group crash course at one host family\'s home. One host family provides the venue, and we travel to the lesson. This keeps the lesson focused while reducing cost per student.',
     friendGroupPricing1: isPsle ? 'PSLE friend-group option: From $45/student/hr' : isOLevel ? 'O-Level friend-group option: From $50/student/hr' : 'PSLE friend-group option: From $45/student/hr',
     friendGroupPricing2: isPsle ? 'O-Level friend-group option: From $50/student/hr' : isOLevel ? 'PSLE friend-group option: From $45/student/hr' : 'O-Level friend-group option: From $50/student/hr',
     friendGroupCta: 'Form a Friend Group',
     afterCourseTitle: 'Keep the Momentum After the Crash Course',
     afterCourseSubtitle: 'A crash course can correct urgent gaps, but students still need consistency after the session ends.',
-    logisticsTitle: 'Home-Based Convenience for North Singapore Families',
-    logisticsSubtitle: 'For home-based crash courses, lessons are conducted at the student’s home or a host family’s home. This removes the need for parents to send their child to an unfamiliar classroom and allows the course to start quickly once a suitable slot is confirmed.',
+    logisticsTitle: 'Flexible Home-Based Options for North Singapore Families',
+    logisticsSubtitle: 'Lessons can be conducted at the student\'s home within North Singapore. For friend-group sessions, one host family may provide the venue. Selected mini-group sessions may also be conducted at a small tutor-hosted study space, with details shared before confirmation.',
     mockTitle: isPsle ? 'Coming Next: PSLE Mock Simulation Interest List' : isOLevel ? 'Coming Next: O-Level Mock Simulation Interest List' : 'Coming Next: Mock Exam Simulation Day',
     mockSubtitle: isPsle
       ? 'If enough students register interest, Integrated Learnings will open a North Singapore PSLE mock simulation. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations.'
@@ -499,7 +499,7 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     fitCheckSubtitle: 'This programme works best when the student is willing to attempt corrections and practise between sessions. It may not be the right fit if the family is looking for a full-year syllabus programme, a large lecture class, or guaranteed score claims.',
     finalTitle: 'Ready to check if this fits your child?',
     finalSubtitle: 'Send the latest result slip, weak-topic list, or a short description of your child’s situation. We’ll recommend whether the route-specific crash course, friend-group support, or another option fits best.',
-    finalNote: 'Final recommendation depends on subject, location, urgency, and student needs after fit check.',
+    finalNote: 'Final recommendation depends on subject, location, urgency, student needs, and suitable lesson format after fit check.',
     oLevelCrossLink: 'Looking for O-Level support? View O-Level Home Crash Course.',
     psleCrossLink: 'Looking for PSLE support? View PSLE Math & Science Home Crash Course.',
   };
@@ -551,7 +551,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '2 sessions × 1.5h',
       bestFor: 'quick diagnosis and urgent correction',
       format: '1-to-1 home',
-      price: 'From $240',
+      price: 'From $240 total',
       includes: [
         'Review of recent work or weak topics',
         'Targeted correction on key scoring leaks',
@@ -564,7 +564,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '3 sessions × 1.5h',
       bestFor: 'focused short-term improvement',
       format: '1-to-1 home',
-      price: 'From $360',
+      price: 'From $360 total',
       includes: [
         'Diagnostic review',
         'Weak-topic correction',
@@ -579,7 +579,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '6 sessions × 1.5h',
       bestFor: 'structured final-lap preparation',
       format: '1-to-1 home',
-      price: 'From $720',
+      price: 'From $720 total',
       includes: [
         'Weak-topic mapping',
         'Progressive correction plan',
@@ -597,7 +597,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '2 sessions × 2h',
       bestFor: 'urgent weak-chapter correction',
       format: '1-to-1 home',
-      price: 'From $320',
+      price: 'From $320 total',
       includes: [
         'Paper/result review',
         'Weak chapter diagnosis',
@@ -611,7 +611,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '4 sessions × 2h',
       bestFor: 'one-subject final-lap improvement',
       format: '1-to-1 home',
-      price: 'From $640',
+      price: 'From $640 total',
       includes: [
         'Diagnostic review',
         'Two major weak-chapter corrections',
@@ -625,7 +625,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '8 sessions × 2h',
       bestFor: 'serious structured preparation',
       format: '1-to-1 home',
-      price: 'From $1,280',
+      price: 'From $1,280 total',
       includes: [
         'Diagnostic paper review',
         'Foundation gap repair',
@@ -647,8 +647,8 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       answer: 'Parents can send the latest result slip, school paper, marked work, or weak-topic list. We use this to identify the main scoring leaks before recommending the course structure.',
     },
     {
-      question: 'Can this be done at my home?',
-      answer: 'Yes. The main format is home-based 1-to-1. For 2–4 students, a friend-group class can be conducted at one host home.',
+      question: 'Where are lessons conducted?',
+      answer: 'Most lessons are conducted at the student\'s home within North Singapore. Friend-group sessions can be held at one host family\'s home. Selected mini-group sessions may be conducted at a small tutor-hosted study space, capped at a small group size. Details will be shared before confirmation.',
     },
     {
       question: 'Which areas do you cover?',
@@ -664,11 +664,11 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
     },
     {
       question: 'Are meals provided?',
-      answer: 'Meals are not provided for normal home-based crash-course sessions because sessions are kept focused and usually last 1.5–2 hours. For longer future mock simulation events, light refreshments may be arranged depending on duration and venue.',
+      answer: 'Meals are not provided for normal crash-course sessions conducted at the student\'s home or host family\'s home because sessions are kept focused and usually last 1.5–2 hours. For longer future mock simulation events, light refreshments may be arranged depending on duration and venue.',
     },
     {
       question: 'Is transport provided?',
-      answer: 'Transport is not needed for home-based lessons because the session is conducted at the student’s home or host family’s home. For future mock simulation events, we will aim to choose venues near MRT/bus access where possible.',
+      answer: 'Transport is not needed for these lessons because we conduct the session at the student\'s home or at one host family\'s home for friend-group sessions. For future mock simulation events, we will aim to choose venues near MRT/bus access where possible.',
     },
     {
       question: 'What happens after the crash course?',
@@ -763,7 +763,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   ))}
                 </div>
                 <p className="mt-4 text-sm leading-relaxed text-slate-300">
-                  Lessons can be conducted at the student’s home or a host family’s home. For future mock events, a North Singapore venue will be arranged near MRT/bus access where possible when enough demand is formed.
+                  Lessons can be conducted at the student\'s home within North Singapore. For friend-group sessions, one host family may provide the venue. Selected mini-group sessions may also be conducted at a small tutor-hosted study space, with details shared before confirmation.
                 </p>
               </SectionCard>
             </div>
@@ -875,7 +875,23 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               title={pageCopy.pslePackageTitle}
               subtitle={pageCopy.pslePackageSubtitle}
             />
+            <p className="mt-4 text-sm leading-7 text-slate-600">
+              Not sure which package fits? Start with a free WhatsApp fit check. Send the latest result slip, school paper, or weak-topic list. We’ll recommend whether your child should start with a one-off targeted correction session, a short rescue package, or a longer final-lap programme.
+            </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
+              <PackageCard
+                title="PSLE First Targeted Correction Session"
+                duration="1 session × 1.5h"
+                bestFor="first paid lesson after the free WhatsApp fit check"
+                format="student's home / tutor-hosted study space"
+                price="From $120"
+                includes={[
+                  'Quick review of recent work or weak topics',
+                  'Targeted correction on one urgent scoring gap',
+                  'Parent update after session',
+                  'Recommendation on whether a package is needed',
+                ]}
+              />
               {pslePackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
             </div>
 
@@ -917,7 +933,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, location, urgency, and student needs after fit check.</p>
+            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, lesson location format, urgency, and student needs after fit check.</p>
           </SectionCard>
         )}
 
@@ -928,7 +944,23 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               title={pageCopy.oLevelPackageTitle}
               subtitle={pageCopy.oLevelPackageSubtitle}
             />
+            <p className="mt-4 text-sm leading-7 text-slate-600">
+              Not sure which package fits? Start with a free WhatsApp fit check. Send the latest result slip, school paper, or weak-topic list. We’ll recommend whether the student should start with a one-off targeted correction session, a short rescue package, or a longer final-lap programme.
+            </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
+              <PackageCard
+                title="O-Level First Targeted Correction Session"
+                duration="1 session × 2h"
+                bestFor="first paid lesson after the free WhatsApp fit check"
+                format="student's home / tutor-hosted study space"
+                price="From $160"
+                includes={[
+                  'Paper/result review',
+                  'Targeted weak-chapter correction',
+                  'Parent/student next-step summary',
+                  'Recommendation on whether a package is needed',
+                ]}
+              />
               {oLevelPackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
             </div>
 
@@ -996,7 +1028,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, location, urgency, and student needs after fit check.</p>
+            <p className="mt-5 text-xs text-slate-500">Final recommendation depends on subject, lesson location format, urgency, and student needs after fit check.</p>
           </SectionCard>
         )}
 
@@ -1012,12 +1044,13 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 items={[
                   'Best group size: 2–4 students',
                   'One host family provides the venue',
+                  'Lessons are conducted at the host family\'s home for the group',
                   'Suitable for classmates, neighbours, siblings, or friends',
                   'Same level and similar subject needs recommended',
                   'Host family may receive a small discount when 3 or more students join',
                 ]}
               />
-              <p className="mt-4 text-xs text-slate-500">For quality control, home friend-groups are kept small. If there are more than 4–5 students, we may recommend a separate classroom or mock simulation format.</p>
+              <p className="mt-4 text-xs text-slate-500">For quality control, home friend-groups are kept small. If there are more than 4–5 students, we may recommend a separate mini-group slot or mock simulation format.</p>
             </div>
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
               <p className="text-sm font-black text-emerald-800">Pricing display</p>
@@ -1088,18 +1121,21 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
             <BulletList
               items={[
-                'No transport arrangement needed for home-based lessons',
+                'We travel to the student\'s home within North Singapore first',
                 'Student learns in a familiar environment',
                 'Suitable for North Singapore families',
-                'Friend-group classes can be conducted at one host home',
+                'Friend-group classes are conducted at one host family\'s home',
+                'Selected mini-group sessions may be held at a small tutor-hosted study space',
                 'For future mock simulation events, venues will be selected near MRT/bus access where possible',
               ]}
             />
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm leading-7 text-slate-600">
+              <p className="font-bold text-slate-900">Quality-control note</p>
+              <p className="mt-2">Tutor-hosted sessions are kept small and are not positioned as a mass-group format.</p>
               <p className="font-bold text-slate-900">Meal note</p>
-              <p className="mt-2">Meals are not provided for normal home-based crash-course sessions because sessions are kept focused and usually last 1.5–2 hours. For longer friend-group sessions, students may prepare their own snacks if needed.</p>
+              <p className="mt-2">Meals are not provided for normal crash-course sessions conducted at the student\'s home or host family\'s home because sessions are kept focused and usually last 1.5–2 hours. For longer friend-group sessions, students may prepare their own snacks if needed.</p>
               <p className="mt-4 font-bold text-slate-900">Future event note</p>
-              <p className="mt-2">For future mock exam simulation events, light refreshments may be arranged depending on duration and venue. Lunch will only be considered for longer event formats. No fixed classroom venue is currently promised.</p>
+              <p className="mt-2">For future mock exam simulation events, light refreshments may be arranged depending on duration and venue. Lunch will only be considered for longer event formats. No fixed public venue is currently promised.</p>
             </div>
           </div>
         </SectionCard>
