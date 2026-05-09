@@ -279,7 +279,7 @@ const LevelCard: React.FC<{
 
 const ComparisonTable: React.FC = () => (
   <SectionCard>
-    <SectionHeading title="Normal tuition supports weekly learning. Our crash course targets urgent scoring gaps before the final lap." />
+    <SectionHeading title="Normal tuition supports weekly learning. This crash course targets urgent correction in a short period." />
     <div className="mt-5 overflow-x-auto">
       <table className="min-w-full border-separate border-spacing-y-3 text-left text-sm">
         <thead>
@@ -290,11 +290,11 @@ const ComparisonTable: React.FC = () => (
         </thead>
         <tbody>
           {[
-            ['Usually follows a fixed weekly pace', 'Starts with diagnosis and weak-gap mapping'],
-            ['Often covers topics broadly', 'Targets the highest-impact scoring gaps first'],
-            ['Same materials for many students', 'Uses the student’s actual papers, errors, and weak areas'],
-            ['Parent may only know that the lesson happened', 'Parent receives clear lesson updates and next steps'],
-            ['Ends after the lesson/package', 'Offers follow-through through revision targets, StudyPulse, or weekly correction support'],
+            ['Fixed weekly pace', 'Diagnosis first, then focused correction'],
+            ['Broad topic coverage', 'High-impact weak topics first'],
+            ['Shared materials', 'Student-specific papers and errors'],
+            ['General parent visibility', 'Clear parent updates and next steps'],
+            ['Ends after lessons', 'Optional follow-through support'],
           ].map(([left, right]) => (
             <tr key={left} className="align-top">
               <td className="rounded-l-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-slate-700">{left}</td>
@@ -313,10 +313,10 @@ const getPageCopy = (variant: CrashCourseVariant) => {
 
   return {
     heroTitle: isPsle
-      ? 'PSLE Math & Science Home Crash Course'
+      ? 'PSLE Math & Science Final-Lap Crash Course'
       : isOLevel
-        ? 'O-Level Math & Science Home Crash Course'
-        : 'PSLE & O-Level Home Crash Course',
+        ? 'O-Level Math & Science Final-Lap Crash Course'
+        : 'PSLE & O-Level Final-Lap Crash Course',
     heroLocationTitle: 'North Singapore',
     heroSubtitle: isPsle
       ? 'Diagnostic-based home crash course for P6 students who need targeted Math and Science correction, stronger exam technique, and clearer parent-visible progress.'
@@ -360,17 +360,9 @@ const getPageCopy = (variant: CrashCourseVariant) => {
             'Parent updates after each session',
             'StudyPulse follow-through available',
           ],
-    methodKicker: 'Method',
-    methodTitle: isPsle
-      ? 'Not Normal Tuition. A Targeted PSLE Final-Lap Intervention.'
-      : isOLevel
-        ? 'Not Normal Tuition. A Targeted O-Level Final-Lap Intervention.'
-        : 'Not Normal Tuition. A Targeted Final-Lap Intervention.',
-    methodSubtitle: isPsle
-      ? 'Normal tuition can be useful for weekly learning. This crash course serves a different purpose: diagnose the child’s current PSLE scoring gaps, fix the most urgent issues, then push into exam-style practice.'
-      : isOLevel
-        ? 'Normal tuition can be useful for weekly learning. This crash course serves a different purpose: diagnose the child’s current O-Level scoring gaps, fix the most urgent issues, then push into exam-style practice.'
-        : 'Normal tuition can be useful for weekly learning. This crash course serves a different purpose: diagnose the child’s current scoring gaps, fix the most urgent issues, then push into exam-style practice.',
+    methodKicker: 'Crash Course',
+    methodTitle: 'What Is a Crash Course?',
+    methodSubtitle: 'A crash course is not a full-year tuition replacement. It is a short intensive block designed to fix urgent scoring gaps before the exam.',
     methodCards: isPsle
       ? [
           {
@@ -427,12 +419,12 @@ const getPageCopy = (variant: CrashCourseVariant) => {
               text: 'Once the key gaps are repaired, we move into timed exam-style questions so the student can apply skills under pressure.',
             },
           ],
-    differenceSubtitle: 'Normal tuition can be useful, but our crash course serves a different purpose. It is built around the student’s actual work, not a fixed weekly script.',
+    differenceSubtitle: 'Normal tuition supports weekly learning. This crash course focuses on urgent correction in a short period.',
     chooserTitle: 'Choose Your Level',
     chooserSubtitle: 'Pick the level that matches your child’s final-lap pressure point.',
-    pslePackageTitle: 'PSLE Math & Science Home Crash Course',
+    pslePackageTitle: 'PSLE Math & Science Crash Course',
     pslePackageSubtitle: 'Built as a short intensive model: 3 focused correction blocks + 1 final revision block (4 blocks × 3h = 12h), typically completed over 1–2 weeks depending on schedule and stamina.',
-    oLevelPackageTitle: 'O-Level Math & Science Home Crash Course',
+    oLevelPackageTitle: 'O-Level Math & Science Crash Course',
     oLevelPackageSubtitle: 'Built as a short intensive model: 3 focused correction blocks + 1 final revision / paper strategy block (4 blocks × 3h = 12h), typically completed over 1–2 weeks depending on schedule and stamina.',
     friendGroupTitle: isPsle ? 'PSLE Friend-Group Home Crash Course' : isOLevel ? 'O-Level Friend-Group Home Crash Course' : 'Friend-Group Home Crash Course',
     friendGroupSubtitle: isPsle
@@ -500,8 +492,8 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     finalTitle: 'Ready to check if this fits your child?',
     finalSubtitle: 'Send the latest result slip, weak-topic list, or a short description of your child’s situation. We’ll recommend whether the route-specific crash course, friend-group support, or another option fits best.',
     finalNote: 'Final recommendation depends on subject, location, urgency, student needs, and suitable lesson format after fit check.',
-    oLevelCrossLink: 'Looking for O-Level support? View O-Level Home Crash Course.',
-    psleCrossLink: 'Looking for PSLE support? View PSLE Math & Science Home Crash Course.',
+    oLevelCrossLink: 'Looking for O-Level support? View O-Level Math & Science Crash Course.',
+    psleCrossLink: 'Looking for PSLE support? View PSLE Math & Science Crash Course.',
   };
 };
 
@@ -697,48 +689,32 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
   const faqItems = [
     {
-      question: 'Is this the same as normal 1-to-1 tuition?',
-      answer: 'No. Normal tuition usually follows a weekly teaching pace. This is a short, focused crash course that starts with diagnosis, targets the student’s scoring gaps, and moves into exam-style practice.',
+      question: 'Is this normal tuition?',
+      answer: 'No. Normal tuition usually runs weekly. This is a short intensive focused on urgent correction before the exam.',
     },
     {
       question: 'How do you know what my child needs?',
-      answer: 'Parents can send the latest result slip, school paper, marked work, or weak-topic list. We use this to identify the main scoring leaks before recommending the course structure.',
+      answer: 'Parents can send recent papers, result slips, or weak-topic lists. We use these to identify priority issues before recommending the format and plan.',
     },
     {
       question: 'Where are lessons conducted?',
-      answer: 'Most lessons are conducted at the student\'s home within North Singapore. Friend-group sessions can be held at one host family\'s home. Selected mini-group sessions may be conducted at a small tutor-hosted study space, capped at a small group size. Details will be shared before confirmation.',
+      answer: 'Most sessions are at the student\'s home within North Singapore. Friend-group sessions can run at one host family\'s home.',
     },
     {
-      question: 'Which areas do you cover?',
-      answer: `We are focusing on North Singapore first, including ${northAreas.join(', ')} and nearby estates. Other areas can be considered depending on schedule.`,
+      question: 'Can my child come to tutor-hosted study space?',
+      answer: 'Yes, selected sessions are available at a small tutor-hosted study space, subject to schedule and student fit.',
     },
     {
-      question: 'Can friends or siblings join?',
-      answer: 'Yes, if they are at a similar level and need similar subject support. For quality, home groups are usually kept to 2–4 students.',
-    },
-    {
-      question: 'Do you provide materials?',
-      answer: 'Yes. Materials may include targeted worksheets, exam-style questions, correction tasks, and practice plans. Students can also use their school papers or existing work for diagnosis.',
-    },
-    {
-      question: 'Are meals provided?',
-      answer: 'Meals are not provided for normal crash-course sessions conducted at the student\'s home or host family\'s home because sessions are kept focused and usually last 1.5–2 hours. For longer future mock simulation events, light refreshments may be arranged depending on duration and venue.',
-    },
-    {
-      question: 'Is transport provided?',
-      answer: 'Transport is not needed for these lessons because we conduct the session at the student\'s home or at one host family\'s home for friend-group sessions. For future mock simulation events, we will aim to choose venues near MRT/bus access where possible.',
-    },
-    {
-      question: 'What happens after the crash course?',
-      answer: 'Parents may continue with weekly support, StudyPulse follow-through, or future mock exam simulation events.',
-    },
-    {
-      question: 'Will there be a mock exam?',
-      answer: 'Mock exam simulation will be opened if there is enough interest, usually around 20 or more students for a suitable level/subject group.',
+      question: 'Can friends join?',
+      answer: 'Yes. Small groups are usually 2–4 students with similar level and subject needs.',
     },
     {
       question: 'Do you guarantee improvement?',
-      answer: 'No responsible educator should guarantee grades. What we provide is targeted diagnosis, structured correction, exam-style practice, and clear parent updates.',
+      answer: 'No responsible educator should guarantee grades. We provide clear diagnosis, structured correction, and parent updates.',
+    },
+    {
+      question: 'What happens after the crash course?',
+      answer: 'You can continue with follow-through options such as StudyPulse tracking or weekly correction support if needed.',
     },
   ];
 
@@ -890,10 +866,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             subtitle={pageCopy.methodSubtitle}
           />
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Every student starts from a different point. Some are strong in one chapter but weak in another. Some know the content but struggle when questions become exam-style. Others lose marks through careless mistakes, weak answering structure, or poor time management.
-          </p>
-          <p className="mt-3 text-sm leading-7 text-slate-600">
-            That is why the crash course starts with diagnosis first. We identify the gaps that matter most, fix them in order, then move the student into timed practice.
+            We first identify where marks are being lost, then focus on high-impact weak topics, answering technique, and exam-style practice. The aim is to use limited holiday time more effectively, not to rush through the whole syllabus blindly.
           </p>
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {pageCopy.methodCards.map((card) => (
@@ -912,13 +885,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             subtitle={pageCopy.differenceSubtitle}
           />
           <p className="mt-4 text-sm leading-7 text-slate-600">
-            Most tuition programmes follow a fixed class structure, fixed worksheets, or a general revision schedule. That can be useful, but it may not solve the real reason a student is losing marks.
-          </p>
-          <p className="mt-3 text-sm leading-7 text-slate-600">
-            At Integrated Learnings, we start with the student’s actual work. We look at recent papers, weak topics, careless-error patterns, answering structure, and exam habits. From there, we design the crash-course focus around the gaps that are costing the most marks.
-          </p>
-          <p className="mt-3 text-sm leading-7 text-slate-600">
-            The aim is not to cover everything for the sake of covering. The aim is to identify what matters most now, fix the urgent gaps, and push the student into exam-style application.
+            We use the student’s recent work to decide what to fix first, then run focused correction in a short window.
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -935,7 +902,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             <SectionCard className="h-full border-slate-200 bg-slate-50">
               <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Final note</p>
               <p className="mt-3 text-lg font-bold leading-8 text-slate-900">
-                Normal tuition supports weekly learning. Our crash course targets urgent scoring gaps before the final lap.
+                Normal tuition supports weekly learning. This crash course is built for urgent correction over a short period.
               </p>
             </SectionCard>
           </div>
@@ -989,17 +956,17 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm font-black text-slate-900">Tutor Travels to Student’s Home</p>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: maximum convenience and focused 1-to-1 support</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">We travel to the student’s home within North Singapore where scheduling allows. This is suitable for families who prefer the lesson to happen at home.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">We conduct lessons at home within North Singapore where schedules allow.</p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm font-black text-slate-900">Tutor-Hosted Study Space</p>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer focused sessions and better-value arrangements</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Selected sessions can be conducted at a small tutor-hosted study space. Because there is no travel time, this format may allow longer lesson blocks or better-value arrangements.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Selected sessions run at a small tutor-hosted study space, often at better value due to no travel time.</p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm font-black text-slate-900">Mini-Group Format</p>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2–4 students of similar level</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Students can form a small group at one host family’s home or selected tutor-hosted study space slots. This lowers cost per student while keeping the lesson targeted and manageable.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Small groups can meet at a host family’s home or selected tutor-hosted slots to reduce per-student cost.</p>
             </article>
           </div>
           <p className="mt-5 text-xs text-slate-500">
@@ -1119,7 +1086,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               subtitle={pageCopy.pslePackageSubtitle}
             />
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Not sure which package fits? Start with a free WhatsApp fit check. Send the latest result slip, school paper, or weak-topic list. We’ll recommend whether your child should start with a one-off targeted correction session, a short rescue package, or a longer final-lap programme.
+              Not sure which package fits? Start with a free WhatsApp fit check. We’ll review recent results and recommend the right option.
             </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
@@ -1189,7 +1156,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               subtitle={pageCopy.oLevelPackageSubtitle}
             />
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Not sure which package fits? Start with a free WhatsApp fit check. Send the latest result slip, school paper, or weak-topic list. We’ll recommend whether the student should start with a one-off targeted correction session, a short rescue package, or a longer final-lap programme.
+              Not sure which package fits? Start with a free WhatsApp fit check. We’ll review recent results and recommend the right option.
             </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
@@ -1418,15 +1385,15 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         <SectionCard>
           <SectionHeading
             kicker="How It Works"
-            title="How the 4-Block Crash Course Works"
-            subtitle="The crash course is designed as a short intensive block, not weekly tuition. Instead of spreading correction across many weeks, we compress the work into four focused sessions: three correction blocks and one final revision block."
+            title="How the 4-Block Intensive Works"
+            subtitle="The programme is built around 3 focused correction blocks + 1 final revision block. Each block is longer than normal tuition so there is time to review mistakes, teach correction methods, practise exam-style questions, and correct immediately."
           />
           <div className="mt-6 grid gap-4 md:grid-cols-4">
             {[
-              { step: '1', title: 'Block 1: Diagnose & Prioritise', body: 'We review recent work, identify the main scoring gaps, and decide what must be fixed first.' },
-              { step: '2', title: 'Block 2: Targeted Correction', body: 'We focus on the weak topics, repeated mistakes, or question types that are costing the most marks.' },
-              { step: '3', title: 'Block 3: Exam-Style Application', body: 'The student applies the corrected methods to exam-style questions under guided or timed conditions.' },
-              { step: '4', title: 'Block 4: Final Revision & Next-Step Plan', body: 'We review remaining errors, consolidate key strategies, and give parents a clear follow-up direction.' },
+              { step: '1', title: 'Diagnose & Prioritise', body: 'Identify key scoring gaps from recent work.' },
+              { step: '2', title: 'Targeted Correction', body: 'Fix weak topics, repeated mistakes, and answering issues.' },
+              { step: '3', title: 'Exam-Style Application', body: 'Practise under guided or timed conditions.' },
+              { step: '4', title: 'Final Revision Plan', body: 'Consolidate strategies and give parents the next-step plan.' },
             ].map((item) => (
               <article key={item.step} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">{item.step}</p>
@@ -1435,11 +1402,8 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               </article>
             ))}
           </div>
-          <p className="mt-6 text-sm leading-7 text-slate-600">
-            Each block is longer than a normal tuition lesson so there is enough time to review mistakes, teach the correction method, practise exam-style questions, and correct the work immediately.
-          </p>
           <p className="mt-2 text-sm leading-7 text-slate-600">
-            Designed to be completed over 1–2 weeks during holidays or urgent exam-prep periods, depending on schedule and student stamina.
+            School holidays offer more flexible time and less school-day pressure, making it easier to complete a focused intensive block over 1–2 weeks.
           </p>
           <p className="mt-2 text-xs text-slate-500">
             Each block is 3 hours. For younger students, short breaks can be included where needed.
