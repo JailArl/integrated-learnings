@@ -280,7 +280,24 @@ const LevelCard: React.FC<{
 const ComparisonTable: React.FC = () => (
   <SectionCard>
     <SectionHeading title="Normal tuition supports weekly learning. This crash course targets urgent correction in a short period." />
-    <div className="mt-5 overflow-x-auto">
+    <div className="mt-5 space-y-3 md:hidden">
+      {[
+        ['Fixed weekly pace', 'Diagnosis first, then focused correction'],
+        ['Broad topic coverage', 'High-impact weak topics first'],
+        ['Shared materials', 'Student-specific papers and errors'],
+        ['General parent visibility', 'Clear parent updates and next steps'],
+        ['Ends after lessons', 'Optional follow-through support'],
+      ].map(([left, right]) => (
+        <article key={left} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Typical option</p>
+          <p className="mt-1 text-sm font-semibold text-slate-700">{left}</p>
+          <p className="mt-3 text-[11px] font-black uppercase tracking-[0.12em] text-emerald-700">Integrated Learnings</p>
+          <p className="mt-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-slate-700">{right}</p>
+        </article>
+      ))}
+    </div>
+
+    <div className="mt-5 hidden overflow-x-auto md:block">
       <table className="min-w-full border-separate border-spacing-y-3 text-left text-sm">
         <thead>
           <tr>
@@ -796,6 +813,21 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 {pageCopy.heroStrong}
               </p>
               <p className="mt-4 max-w-2xl text-sm font-semibold text-slate-300">{pageCopy.locationLine}</p>
+
+              <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-200">Parent clarity</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-100">Free fit check before recommendation</p>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-200">Progress visibility</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-100">Parent updates after each session</p>
+                </div>
+                <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
+                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-200">Flexible venue</p>
+                  <p className="mt-1 text-sm font-semibold text-slate-100">Home, host family, or tutor-hosted option</p>
+                </div>
+              </div>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <ActionButton

@@ -23,6 +23,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const isActive = (path: string) => location.pathname === path;
   const isAdminPage = location.pathname.startsWith('/admin');
+  const isCrashCoursePage = location.pathname.startsWith('/family/crash-courses');
   
   // Determine current section
   const isTuitionSection = location.pathname.startsWith('/tuition');
@@ -244,7 +245,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </footer>
 
       {/* Floating WhatsApp - Only show for tuition section */}
-      {isTuitionSection && (
+      {isTuitionSection && !isCrashCoursePage && (
         <a 
           href="https://wa.me/98882675" 
           target="_blank" 
