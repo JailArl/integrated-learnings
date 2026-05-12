@@ -37,6 +37,7 @@ const StudyPulseSetup = lazy(() => import('./pages/StudyPulseSetup'));
 const StudyPulseAdmin = lazy(() => import('./pages/StudyPulseAdmin'));
 const FamilyPSLEJuneIntensivePage = lazy(() => import('./pages/FamilyCrashCoursePages').then((m) => ({ default: m.FamilyPSLEJuneIntensivePage })));
 const FamilyOLevelJuneIntensivePage = lazy(() => import('./pages/FamilyCrashCoursePages').then((m) => ({ default: m.FamilyOLevelJuneIntensivePage })));
+const FutureChoicesWorkshop = lazy(() => import('./pages/FutureChoicesWorkshop'));
 
 // Global Error Boundary — prevents white-screen crashes
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
@@ -200,6 +201,7 @@ const App: React.FC = () => {
           <Route path="/tuition" element={<FamilyHome />} />
           <Route path="/family/crash-courses/psle-june-intensive" element={<LazyRoute><FamilyPSLEJuneIntensivePage /></LazyRoute>} />
           <Route path="/family/crash-courses/o-level-june-intensive" element={<LazyRoute><FamilyOLevelJuneIntensivePage /></LazyRoute>} />
+          <Route path="/family/programmes/future-choices-workshop" element={<LazyRoute><FutureChoicesWorkshop /></LazyRoute>} />
           <Route path="/studypulse" element={<LazyRoute><StudyPulseLanding /></LazyRoute>} />
           <Route path="/studypulse/login" element={<StudyPulseLogin />} />
           <Route path="/studypulse/app" element={<LazyRoute><StudyPulseApp /></LazyRoute>} />

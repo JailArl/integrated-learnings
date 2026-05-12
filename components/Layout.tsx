@@ -24,6 +24,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isActive = (path: string) => location.pathname === path;
   const isAdminPage = location.pathname.startsWith('/admin');
   const isCrashCoursePage = location.pathname.startsWith('/family/crash-courses');
+  const isFutureChoicesPage = location.pathname.startsWith('/family/programmes/future-choices-workshop');
   
   // Determine current section
   const isTuitionSection = location.pathname.startsWith('/tuition');
@@ -45,6 +46,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Chinese pages have their own navbar and footer
   const isChinesePage = location.pathname.startsWith('/zh') || location.pathname === '/international' || location.pathname === '/personality';
   if (isChinesePage) {
+    return <>{children}</>;
+  }
+
+  if (isFutureChoicesPage) {
     return <>{children}</>;
   }
   

@@ -41,6 +41,16 @@ const MainLanding: React.FC = () => {
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
               </Link>
             </div>
+
+            <div className="mt-4 flex justify-center">
+              <Link
+                to="/family/programmes/future-choices-workshop"
+                className="inline-flex items-center justify-center gap-2 rounded-full border border-cyan-300/50 bg-cyan-400/10 px-5 py-2.5 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-400/20"
+              >
+                June Holiday Programme: Future Choices Workshop
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>

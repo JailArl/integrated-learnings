@@ -5,7 +5,6 @@ import {
   BarChart3,
   BookOpenCheck,
   CheckCircle,
-  ClipboardCheck,
   Flame,
   MessageCircle,
   Search,
@@ -32,7 +31,7 @@ const FamilyHome: React.FC = () => {
     <div className="min-h-screen bg-stone-50 text-slate-900">
 
       {/* ═══════════ URGENCY BANNER ═══════════ */}
-      <div className="sticky top-0 z-50 flex items-center justify-center gap-3 bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 px-4 py-2.5 text-white shadow-lg sm:gap-6">
+      <div className="sticky top-0 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 px-3 py-2.5 text-white shadow-lg sm:gap-6 sm:px-4">
         <Timer size={15} className="shrink-0" />
         <p className="text-xs font-bold sm:text-sm">
           🔥 June Holiday Crash Course — Early Bird closes in&nbsp;
@@ -43,14 +42,14 @@ const FamilyHome: React.FC = () => {
         <a
           href="https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20to%20find%20out%20more%20about%20the%20June%20Holiday%20Crash%20Course"
           target="_blank" rel="noopener noreferrer"
-          className="shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-black text-orange-600 shadow transition hover:bg-orange-50"
+          className="hidden shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-black text-orange-600 shadow transition hover:bg-orange-50 sm:inline-flex"
         >
           Reserve Now →
         </a>
       </div>
 
       {/* ═══════════ HERO ═══════════ */}
-      <section className="relative overflow-hidden bg-[linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0b3b2e_100%)] px-4 pb-20 pt-20h text-white sm:px-6 lg:px-8">
+      <section className="relative overflow-hidden bg-[linear-gradient(160deg,#0f172a_0%,#1e293b_55%,#0b3b2e_100%)] px-4 pb-20 pt-20 text-white sm:px-6 lg:px-8">
         <div className="absolute inset-0 opacity-50" aria-hidden="true">
           <div className="absolute left-[-10%] top-8 h-64 w-64 rounded-full bg-amber-300/20 blur-3xl" />
           <div className="absolute right-[-6%] top-16 h-72 w-72 rounded-full bg-sky-400/20 blur-3xl" />
@@ -167,120 +166,118 @@ const FamilyHome: React.FC = () => {
         </div>
       </section>
 
-      {/* ═══════════ SERVICES GRID (3 cards) ═══════════ */}
+      {/* ═══════════ DECISION FLOW ═══════════ */}
       <section className="px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="mx-auto max-w-6xl">
-          <p className="text-center text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">What We Offer</p>
-          <h2 className="mt-3 text-center text-3xl font-black text-slate-900 sm:text-4xl">Three Ways We Help Your Family</h2>
+          <p className="text-center text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Start Here</p>
+          <h2 className="mt-3 text-center text-3xl font-black text-slate-900 sm:text-4xl">What are you looking for?</h2>
+          <p className="mx-auto mt-3 max-w-3xl text-center text-sm leading-7 text-slate-600 sm:text-base">
+            Choose a pathway based on what your family needs now. StudyPulse remains our flagship for day-to-day study consistency, while holiday options are grouped for June planning.
+          </p>
 
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Card 1 — StudyPulse */}
-            <article className="group rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm transition hover:shadow-md lg:p-8">
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                <BarChart3 size={24} />
+          <div className="mt-10 grid gap-6 lg:grid-cols-2">
+            <article className="rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm sm:p-7">
+              <div className="inline-flex items-center rounded-full border border-amber-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-amber-700">
+                Pathway 1: Academic Support
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest text-amber-600">Most Popular</p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900">Study Monitoring</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Your child checks in daily via WhatsApp. You see their consistency on a dashboard. Streaks build, habits form, and you stay in the loop — without nagging.
+              <h3 className="mt-4 text-2xl font-black text-slate-900">Keep daily learning consistent</h3>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                Start with StudyPulse for daily accountability. Add tutor matching when you need stronger subject support.
               </p>
-              <ul className="mt-4 space-y-2">
-                {['Daily WhatsApp check-ins', 'Streaks & consistency tracking', 'Weekly progress reports'].map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
-                    <CheckCircle size={15} className="mt-0.5 shrink-0 text-amber-600" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                to="/studypulse"
-                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-400"
-              >
-                Start Free
-                <ArrowRight size={16} className="ml-2" />
-              </Link>
-            </article>
 
-            {/* Card 2 — Crash Courses */}
-            <article className="group relative rounded-3xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 to-white p-6 shadow-md transition hover:shadow-lg lg:p-8">
-              {/* Hot badge */}
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-red-500 px-4 py-1 text-[11px] font-black text-white shadow">
-                🔥 June Holidays — Spots Filling Fast
-              </div>
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-orange-700">
-                <Flame size={24} />
-              </div>
-              <p className="text-xs font-bold uppercase tracking-widest text-orange-600">Exam Prep · June 2026</p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900">Holiday Crash Courses</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Intensive last-2-weeks-of-holidays revision — timed perfectly so students return to school sharp and exam-ready.
-              </p>
-              <div className="mt-4 space-y-2">
-                <div className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2.5">
-                  <p className="text-xs font-bold text-sky-700">PSLE (P6) · 16-25 Jun</p>
-                  <p className="mt-0.5 text-xs text-slate-600">Morning track 10am-1pm · Math/Science alternating daily</p>
+              <div className="mt-5 grid gap-4">
+                <div className="rounded-2xl border border-amber-200 bg-white p-5">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                    <BarChart3 size={20} />
+                  </div>
+                  <p className="mt-3 text-xs font-bold uppercase tracking-[0.15em] text-amber-700">Primary Recommendation</p>
+                  <h4 className="mt-1 text-lg font-black text-slate-900">StudyPulse</h4>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Daily WhatsApp check-ins, streak tracking, and parent visibility without nagging.</p>
+                  <Link
+                    to="/studypulse"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-amber-400"
+                  >
+                    Try StudyPulse
+                    <ArrowRight size={15} className="ml-2" />
+                  </Link>
                 </div>
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2.5">
-                  <p className="text-xs font-bold text-emerald-700">O-Level (Sec 4/5) · 16-25 Jun</p>
-                  <p className="mt-0.5 text-xs text-slate-600">Afternoon track 2pm-5pm · topic-based subject sprints + clinic</p>
+
+                <div className="rounded-2xl border border-sky-200 bg-sky-50 p-5">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-100 text-sky-700">
+                    <Search size={20} />
+                  </div>
+                  <h4 className="mt-3 text-lg font-black text-slate-900">Need subject support too?</h4>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Use our tutor request flow for a matched educator based on level, subject, and goals.</p>
+                  <Link
+                    to="/tuition/request"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-sky-300 bg-white px-4 py-2.5 text-sm font-bold text-sky-700 transition hover:bg-sky-100"
+                  >
+                    Find a Tutor
+                    <ArrowRight size={15} className="ml-2" />
+                  </Link>
                 </div>
               </div>
-              <ul className="mt-4 space-y-2">
-                {['All materials provided — zero prep for parents', 'Crash-course sessions are conducted in booked classrooms (small-group cap: 8 students)', 'Need home-based lessons instead? 1-to-1 home tuition is available as a separate service', 'Founding June Intake pricing: PSLE Bundle S$488 (Early Bird S$428) · O-Level Final Review Bundle S$638 (Early Bird S$568)'].map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
-                    <CheckCircle size={15} className="mt-0.5 shrink-0 text-orange-500" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-6 grid grid-cols-2 gap-2">
-                <Link
-                  to="/family/crash-courses/psle-june-intensive"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-3 text-sm font-bold text-white shadow transition hover:bg-sky-700"
-                >
-                  PSLE Details <ArrowRight size={14} />
-                </Link>
-                <Link
-                  to="/family/crash-courses/o-level-june-intensive"
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow transition hover:bg-emerald-700"
-                >
-                  O-Level Details <ArrowRight size={14} />
-                </Link>
-              </div>
-              <a
-                href="https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20to%20find%20out%20more%20about%20the%20June%20Holiday%20Crash%20Course"
-                target="_blank" rel="noopener noreferrer"
-                className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-orange-200 bg-white px-5 py-2.5 text-sm font-semibold text-orange-600 transition hover:bg-orange-50"
-              >
-                <MessageCircle size={14} /> Enquire on WhatsApp
-              </a>
             </article>
 
-            {/* Card 3 — Become a Tutor */}
-            <article className="group rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6 shadow-sm transition hover:shadow-md lg:p-8">
-              <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
-                <UserPlus size={24} />
+            <article className="rounded-3xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-white p-6 shadow-sm sm:p-7">
+              <div className="inline-flex items-center rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-indigo-700">
+                Pathway 2: Holiday Programmes
               </div>
-              <p className="text-xs font-bold uppercase tracking-widest text-emerald-600">For Tutors</p>
-              <h3 className="mt-2 text-2xl font-black text-slate-900">Become a Tutor</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                Join our network of vetted tutors in Singapore. Set your own rates, choose your students, and grow your teaching practice on your own terms.
+              <h3 className="mt-4 text-2xl font-black text-slate-900">Use June holidays meaningfully</h3>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                Choose between exam-focused crash courses or a practical enrichment workshop for real-world thinking.
               </p>
-              <ul className="mt-4 space-y-2">
-                {['Set your own rates', 'Choose your students', 'No commission on first 3 months'].map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-slate-700">
-                    <CheckCircle size={15} className="mt-0.5 shrink-0 text-emerald-600" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <Link
-                to="/tutor-signup"
-                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700"
-              >
-                Apply Now
-              </Link>
+
+              <div className="mt-5 grid gap-4">
+                <div className="rounded-2xl border border-orange-200 bg-orange-50 p-5">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100 text-orange-700">
+                    <Flame size={20} />
+                  </div>
+                  <h4 className="mt-3 text-lg font-black text-slate-900">Crash Courses (PSLE/O-Level)</h4>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Intensive revision tracks for students preparing for major exams this year.</p>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <Link
+                      to="/family/crash-courses/psle-june-intensive"
+                      className="inline-flex items-center justify-center rounded-xl bg-sky-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-sky-700"
+                    >
+                      PSLE
+                    </Link>
+                    <Link
+                      to="/family/crash-courses/o-level-june-intensive"
+                      className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700"
+                    >
+                      O-Level
+                    </Link>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-indigo-200 bg-white p-5">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-700">
+                    <BookOpenCheck size={20} />
+                  </div>
+                  <h4 className="mt-3 text-lg font-black text-slate-900">Holiday Enrichment: Future Choices</h4>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">For Sec 1-3 students exploring money, choices, consequences, and adulthood through guided simulations.</p>
+                  <Link
+                    to="/family/programmes/future-choices-workshop"
+                    className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-indigo-700"
+                  >
+                    View Workshop
+                    <ArrowRight size={15} className="ml-2" />
+                  </Link>
+                </div>
+              </div>
             </article>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800 sm:px-6">
+            <p className="font-semibold">For Educators: looking to teach with us instead?</p>
+            <div className="mt-2 flex flex-wrap items-center gap-3">
+              <p className="text-emerald-700">Join our tutor network with flexible schedules and student matching support.</p>
+              <Link to="/tutor-signup" className="inline-flex items-center rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-emerald-700">
+                Become a Tutor
+                <UserPlus size={13} className="ml-1.5" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
