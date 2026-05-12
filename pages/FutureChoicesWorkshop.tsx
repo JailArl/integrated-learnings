@@ -288,14 +288,14 @@ const FutureChoicesWorkshop: React.FC = () => {
                   Future Choices Simulation Workshop
                 </h1>
                 <p className={`mt-5 max-w-2xl ${desktopLeadClass}`}>
-                  A hands-on June holiday workshop for Singapore secondary school students that helps teens think about money, choices, consequences, and adulthood through realistic simulations and guided discussion.
+                  Theme: <span className="font-bold text-sky-700">Making the Right Choice at the Right Time.</span> A hands-on June holiday workshop for Singapore secondary school students using realistic life simulations and guided discussion.
                 </p>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base lg:text-lg lg:leading-8">
-                  Designed for students who are growing up fast, but rarely get a real chance to think through how life decisions actually work.
+                  Students experience how study decisions, money habits, and timing affect long-term outcomes, so they understand why effort in school now creates better options later.
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-2">
-                  {['Practical', 'Interactive', 'Real-world', 'Small-group format'].map((item) => (
+                  {['Theme-driven', 'Interactive game', 'Real SG scenarios', 'Small-group format'].map((item) => (
                     <span key={item} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
                       {item}
                     </span>
@@ -327,10 +327,10 @@ const FutureChoicesWorkshop: React.FC = () => {
 
                     <div className="mt-6 grid grid-cols-2 gap-3">
                       {[
+                        ['Age 17->65', 'Life simulation arc'],
                         ['Sg Sec 1-3', 'Target audience'],
-                        ['1 or 2 days', 'Flexible format'],
-                        ['Hands-on', 'Simulation-led'],
-                        ['Future-ready', 'Practical thinking'],
+                        ['CPF + tax + housing', 'Real SG systems'],
+                        ['Choices + timing', 'Core learning goal'],
                       ].map(([value, label]) => (
                         <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                           <p className="text-xl font-black text-white">{value}</p>
@@ -340,7 +340,7 @@ const FutureChoicesWorkshop: React.FC = () => {
                     </div>
 
                     <div className="mt-6 rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-7 text-sky-50">
-                      Premium-but-approachable, structured for parents who want something meaningful, engaging, and useful for the holidays.
+                      More than theory: students play, decide, win, lose, and reflect. They feel the consequences of choices and timing in a safe learning environment.
                     </div>
                   </div>
                 </Card>
@@ -418,17 +418,17 @@ const FutureChoicesWorkshop: React.FC = () => {
         <div className={sectionClass}>
           <SectionHeading
             kicker="What students will experience"
-            title="What happens in the workshop"
-            subtitle="Interactive, thoughtful, and built to feel like a real-world simulation rather than a finance lecture."
+            title="What happens during the game experience"
+            subtitle="Fast-paced, decision-based, and discussion-led. Students play through life stages and learn why the right choice at the right time matters."
           />
 
           <div className="mt-6 grid gap-4 lg:grid-cols-5">
             {[
-              ['01', 'Realistic life and money scenarios', 'Students respond to situations that mirror choices they will face as they grow up.'],
-              ['02', 'Decision-making under different situations', 'They compare options when money, time, and responsibility pull in different directions.'],
-              ['03', 'Group discussion and guided reflection', 'Facilitators help students articulate how and why they chose a path.'],
-              ['04', 'Consequences and trade-offs from different choices', 'The workshop makes outcomes visible instead of abstract.'],
-              ['05', 'Practical insights into adulthood and responsibility', 'Students leave with a clearer sense of what real-life decisions can involve.'],
+              ['01', 'Start at age 17 with limited cash', 'Students begin with realistic constraints and set early study/work pathways.'],
+              ['02', 'Make high-stakes choices every stage', 'Education, spending, investments, side gigs, and career decisions shape their progress.'],
+              ['03', 'Handle Singapore reality checks', 'They navigate CPF, inflation, taxes, housing, loans, and unexpected events.'],
+              ['04', 'Feel consequences immediately', 'Good timing creates momentum; poor timing causes debt, stress, or missed opportunities.'],
+              ['05', 'Debrief and lock in lessons', 'Facilitators connect game outcomes back to current study habits and future readiness.'],
             ].map(([index, title, text]) => (
               <Card key={index} className="p-5">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-sky-700">Step {index}</p>
@@ -437,6 +437,40 @@ const FutureChoicesWorkshop: React.FC = () => {
               </Card>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="py-8 sm:py-12">
+        <div className={sectionClass}>
+          <SectionHeading
+            kicker="Inside the financial literacy game"
+            title="What your child will actually play through"
+            subtitle="Built from our Life Choices Singapore simulator. Students don't just listen - they make decisions and see outcomes unfold."
+          />
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[
+              ['Age 17 to 65 life arc', 'Students experience long-term consequences, not one-off quiz answers.'],
+              ['Education pathways', 'ITE, Poly, JC, Uni, and part-time routes with realistic cost and duration trade-offs.'],
+              ['Career progression', 'Different industries with salary growth, promotion windows, and satisfaction impact.'],
+              ['Singapore money systems', 'CPF contribution, tax brackets, loan interest, and inflation are integrated into decisions.'],
+              ['Major life goals', 'Housing, car, marriage, and retirement planning are simulated with local constraints.'],
+              ['Risk and resilience', 'Students face retrenchment, scams, market shocks, and learn how good literacy reduces losses.'],
+            ].map(([title, text]) => (
+              <Card key={title} className="p-5">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Game highlight</p>
+                <h3 className="mt-2 text-base font-black text-slate-950">{title}</h3>
+                <p className="mt-2 text-sm leading-7 text-slate-600">{text}</p>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="mt-5 border-emerald-200 bg-emerald-50 p-5 sm:p-6">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Parent outcome focus</p>
+            <p className="mt-2 text-sm leading-7 text-emerald-900 sm:text-base">
+              The workshop links every game decision back to one core message: <span className="font-bold">study discipline today creates better choices tomorrow.</span> Students leave with clearer motivation, not just financial terms.
+            </p>
+          </Card>
         </div>
       </section>
 
@@ -643,24 +677,6 @@ const FutureChoicesWorkshop: React.FC = () => {
               <p className="mt-3 text-xs leading-6 text-slate-500">We usually reply as quickly as possible during operating hours.</p>
             </Card>
           </div>
-        </div>
-      </section>
-
-      <section className="pb-10 pt-6 sm:pb-16 sm:pt-10">
-        <div className={sectionClass}>
-          <Card className="overflow-hidden bg-slate-950 text-white">
-            <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-sky-200">Final CTA</p>
-                <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-4xl">Give your teen a more meaningful June holiday.</h2>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">A practical, engaging workshop for Sec 1–3 students to explore money, choices, and the real world more thoughtfully.</p>
-              </div>
-              <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
-                <PrimaryButton href="#reserve-seat" variant="ghost">Reserve a Seat</PrimaryButton>
-                <PrimaryButton href={toWhatsApp(heroWhatsAppText)}>Get Workshop Details on WhatsApp</PrimaryButton>
-              </div>
-            </div>
-          </Card>
         </div>
       </section>
 
