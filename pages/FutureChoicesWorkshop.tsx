@@ -1,17 +1,8 @@
 import React, { useEffect, useId, useState } from 'react';
 import { CheckCircle2, ChevronDown, Clock3, MessageCircle, ShieldCheck, Sparkles, Target, Users } from 'lucide-react';
-import { submitFutureChoicesEnquiry } from '../services/futureChoicesEnquiries';
 
 const WA_NUMBER = '6598882675';
 const PAGE_PATH = '/family/programmes/future-choices-workshop';
-
-const workshopOptions = [
-  'Part 1 only - Future Choices Simulation Workshop',
-  'Part 2 only - Economics for Real Life',
-  '2-Day Future Choices Bundle',
-];
-
-const studentLevels = ['Secondary 1', 'Secondary 2', 'Secondary 3'];
 
 const faqItems = [
   {
@@ -79,8 +70,6 @@ const pricingPlans = [
     cta: 'Ask About the 2-Day Bundle',
   },
 ];
-
-const inputClass = 'w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100';
 
 const setPageSeo = (title: string, description: string, canonicalPath: string) => {
   const previousTitle = document.title;
@@ -261,23 +250,7 @@ const FaqAccordion: React.FC = () => {
   );
 };
 
-const Field: React.FC<{ label: string; htmlFor: string; children: React.ReactNode }> = ({ label, htmlFor, children }) => (
-  <label htmlFor={htmlFor} className="block">
-    <span className="mb-2 block text-sm font-semibold text-slate-700">{label}</span>
-    {children}
-  </label>
-);
-
 const FutureChoicesWorkshop: React.FC = () => {
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [parentName, setParentName] = useState('');
-  const [contactNumber, setContactNumber] = useState('');
-  const [studentLevel, setStudentLevel] = useState('Secondary 1');
-  const [workshopOption, setWorkshopOption] = useState(workshopOptions[0]);
-  const [additionalNotes, setAdditionalNotes] = useState('');
-
   useEffect(() => {
     const cleanup = setPageSeo(
       'Singapore Sec 1–3 Future Choices Simulation Workshop | Integrated Learnings',
@@ -289,47 +262,6 @@ const FutureChoicesWorkshop: React.FC = () => {
   }, []);
 
   const heroWhatsAppText = 'Hi, I would like the workshop details for the Future Choices Simulation Workshop. Please share the available options and pricing.';
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setError('');
-
-    const cleanedPhone = contactNumber.replace(/\s/g, '');
-    if (!parentName.trim()) {
-      setError('Please enter your name.');
-      return;
-    }
-    if (!cleanedPhone || !/^[89]\d{7}$/.test(cleanedPhone)) {
-      setError('Please enter a valid Singapore mobile number.');
-      return;
-    }
-    if (!studentLevel) {
-      setError('Please select the student level.');
-      return;
-    }
-    if (!workshopOption) {
-      setError('Please select a workshop option.');
-      return;
-    }
-
-    setLoading(true);
-    const result = await submitFutureChoicesEnquiry({
-      parent_name: parentName.trim(),
-      contact_number: cleanedPhone,
-      student_level: studentLevel,
-      workshop_option: workshopOption,
-      additional_notes: additionalNotes.trim(),
-      source_path: PAGE_PATH,
-    });
-    setLoading(false);
-
-    if (!result.success) {
-      setError(result.error || 'We could not submit your enquiry. Please try WhatsApp instead.');
-      return;
-    }
-
-    setSubmitted(true);
-  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(15,23,42,0.14),_transparent_24%),linear-gradient(180deg,#f8fbff_0%,#f5f7fb_26%,#eef3f9_100%)] text-slate-900">
@@ -675,65 +607,40 @@ const FutureChoicesWorkshop: React.FC = () => {
 
       <section id="reserve-seat" className="py-8 sm:py-12">
         <div className={sectionClass}>
-          <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+          <div className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
             <div>
               <SectionHeading
                 kicker="Reserve a Seat"
-                title="Reserve a Seat"
-                subtitle="We’ll reply with the workshop details, pricing, and next steps. No hard selling."
+                title="WhatsApp Us Directly"
+                subtitle="No form needed. Message us directly and we’ll reply with workshop schedule, pricing, and registration steps."
               />
               <Card className="mt-6 p-6">
-                <p className="text-sm leading-7 text-slate-600">This enquiry form is for parents who want a clear response without having to WhatsApp first. If you prefer, you can still message us directly using the WhatsApp button.</p>
-                <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-600">After submission, your details are stored securely in our enquiry dashboard/database and our team is alerted immediately for follow-up.</p>
+                <p className="text-sm leading-7 text-slate-600">This page now uses direct WhatsApp enquiries only, so you can get a faster response and ask follow-up questions immediately.</p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <PrimaryButton href={toWhatsApp(heroWhatsAppText)} variant="ghost">Get Workshop Details on WhatsApp</PrimaryButton>
+                  <PrimaryButton href={toWhatsApp(heroWhatsAppText)}>Message on WhatsApp</PrimaryButton>
+                  <PrimaryButton href="#pricing" variant="ghost">Review Pricing First</PrimaryButton>
                 </div>
+                <p className="mt-4 text-xs leading-6 text-slate-500">Tip: Include your child’s level and preferred workshop option in your first message for quicker support.</p>
               </Card>
             </div>
 
             <Card className="p-6 sm:p-7">
-              {submitted ? (
-                <div className="rounded-3xl border border-emerald-200 bg-emerald-50 p-6">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-emerald-700">Enquiry received</p>
-                  <h3 className="mt-3 text-2xl font-black text-slate-950">Thanks - we’ve received your details.</h3>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">We’ll reply with the workshop details, pricing, and the next steps shortly. If you want faster follow-up, you can also WhatsApp us now.</p>
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                    <PrimaryButton href={toWhatsApp(heroWhatsAppText)}>Get Workshop Details on WhatsApp</PrimaryButton>
-                    <PrimaryButton href="#pricing" variant="ghost">Review Pricing</PrimaryButton>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <Field label="Parent name" htmlFor="parent-name">
-                      <input id="parent-name" value={parentName} onChange={(e) => setParentName(e.target.value)} autoComplete="name" className={inputClass} placeholder="Your name" />
-                    </Field>
-                    <Field label="Mobile / WhatsApp number" htmlFor="contact-number">
-                      <input id="contact-number" value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} autoComplete="tel" inputMode="tel" className={inputClass} placeholder="9123 4567" />
-                    </Field>
-                    <Field label="Student level" htmlFor="student-level">
-                      <select id="student-level" value={studentLevel} onChange={(e) => setStudentLevel(e.target.value)} className={inputClass}>
-                        {studentLevels.map((level) => <option key={level} value={level}>{level}</option>)}
-                      </select>
-                    </Field>
-                    <Field label="Workshop option interested in" htmlFor="workshop-option">
-                      <select id="workshop-option" value={workshopOption} onChange={(e) => setWorkshopOption(e.target.value)} className={inputClass}>
-                        {workshopOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                      </select>
-                    </Field>
-                  </div>
-                  <Field label="Any question or note" htmlFor="notes">
-                    <textarea id="notes" value={additionalNotes} onChange={(e) => setAdditionalNotes(e.target.value)} rows={5} className={inputClass} placeholder="Let us know anything you'd like us to note." />
-                  </Field>
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-700">Quick Message Template</p>
+              <h3 className="mt-3 text-2xl font-black text-slate-950">Copy-and-send in one tap</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">Tap the button below to open WhatsApp with a pre-filled message. Edit anything before sending.</p>
 
-                  {error && <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p>}
+              <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
+                Hi, I would like details for the Future Choices Simulation Workshop.\n\nChild level: Secondary __\nInterested in: Part 1 / Part 2 / 2-Day Bundle\nQuestions: __
+              </div>
 
-                  <PrimaryButton type="submit" variant="dark" className="w-full">
-                    {loading ? 'Submitting...' : 'Reserve My Seat'}
-                  </PrimaryButton>
-                  <p className="text-xs leading-6 text-slate-500">We’ll reply with the workshop details, pricing, and next steps. No hard selling.</p>
-                </form>
-              )}
+              <PrimaryButton
+                href={toWhatsApp('Hi, I would like details for the Future Choices Simulation Workshop. Child level: Secondary __. Interested in: Part 1 / Part 2 / 2-Day Bundle. Questions: __')}
+                variant="dark"
+                className="mt-6 w-full"
+              >
+                Open WhatsApp Now
+              </PrimaryButton>
+              <p className="mt-3 text-xs leading-6 text-slate-500">We usually reply as quickly as possible during operating hours.</p>
             </Card>
           </div>
         </div>
