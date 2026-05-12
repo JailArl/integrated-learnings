@@ -172,6 +172,8 @@ const trackCtaClick = (ctaName: string, destination: string) => {
 
 const sectionClass = 'mx-auto max-w-6xl px-4 sm:px-6 lg:px-8';
 
+const desktopLeadClass = 'text-base leading-8 text-slate-600 sm:text-lg lg:text-xl lg:leading-9';
+
 const PrimaryButton: React.FC<{
   children: React.ReactNode;
   href?: string;
@@ -278,8 +280,8 @@ const FutureChoicesWorkshop: React.FC = () => {
 
   useEffect(() => {
     const cleanup = setPageSeo(
-      'Sec 1–3 Future Choices Simulation Workshop | Integrated Learnings',
-      'A hands-on June holiday workshop for Sec 1–3 students to explore money, choices, consequences, and real-life decision-making through realistic simulations and guided discussion.',
+      'Singapore Sec 1–3 Future Choices Simulation Workshop | Integrated Learnings',
+      'A hands-on June holiday workshop for Singapore secondary school students (Sec 1–3) to explore money, choices, consequences, and real-life decision-making through realistic simulations and guided discussion.',
       PAGE_PATH,
     );
 
@@ -338,7 +340,7 @@ const FutureChoicesWorkshop: React.FC = () => {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="inline-flex items-center rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-sky-700 shadow-sm">
-                  June Holiday Programme for Sec 1–3
+                  Singapore Secondary School Programme (Sec 1-3)
                 </p>
                 <p className="mt-3 text-sm font-semibold text-slate-600">Integrated Learnings</p>
               </div>
@@ -350,13 +352,13 @@ const FutureChoicesWorkshop: React.FC = () => {
 
             <div className="mt-8 grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
               <div>
-                <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
+                <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-7xl lg:leading-[1.02]">
                   Future Choices Simulation Workshop
                 </h1>
-                <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-                  A hands-on June holiday workshop that helps teens think about money, choices, consequences, and adulthood through realistic simulations and guided discussion.
+                <p className={`mt-5 max-w-2xl ${desktopLeadClass}`}>
+                  A hands-on June holiday workshop for Singapore secondary school students that helps teens think about money, choices, consequences, and adulthood through realistic simulations and guided discussion.
                 </p>
-                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base">
+                <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base lg:text-lg lg:leading-8">
                   Designed for students who are growing up fast, but rarely get a real chance to think through how life decisions actually work.
                 </p>
 
@@ -393,7 +395,7 @@ const FutureChoicesWorkshop: React.FC = () => {
 
                     <div className="mt-6 grid grid-cols-2 gap-3">
                       {[
-                        ['Sec 1–3', 'Target audience'],
+                        ['Sg Sec 1-3', 'Target audience'],
                         ['1 or 2 days', 'Flexible format'],
                         ['Hands-on', 'Simulation-led'],
                         ['Future-ready', 'Practical thinking'],
@@ -442,14 +444,14 @@ const FutureChoicesWorkshop: React.FC = () => {
           <SectionHeading
             kicker="Who it is for"
             title="Who this workshop is for"
-            subtitle="Built for parents who want the June holidays to be useful, not wasted, and for students who are ready for more than a passive class."
+            subtitle="Built for Singapore parents who want the June holidays to be useful, not wasted, and for secondary school students who are ready for more than a passive class."
           />
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
             <Card className="p-6 sm:p-7">
               <ul className="space-y-4">
                 {[
-                  'Sec 1 to Sec 3 students',
+                  'Singapore secondary school students (Sec 1 to Sec 3)',
                   'Students who are curious, thoughtful, or need stronger real-world exposure',
                   'Students who enjoy activities, scenarios, and discussion more than passive lectures',
                   'Parents who want the June holidays to be useful, not wasted',
@@ -682,6 +684,7 @@ const FutureChoicesWorkshop: React.FC = () => {
               />
               <Card className="mt-6 p-6">
                 <p className="text-sm leading-7 text-slate-600">This enquiry form is for parents who want a clear response without having to WhatsApp first. If you prefer, you can still message us directly using the WhatsApp button.</p>
+                <p className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-600">After submission, your details are stored securely in our enquiry dashboard/database and our team is alerted immediately for follow-up.</p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <PrimaryButton href={toWhatsApp(heroWhatsAppText)} variant="ghost">Get Workshop Details on WhatsApp</PrimaryButton>
                 </div>
