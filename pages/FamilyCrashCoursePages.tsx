@@ -746,14 +746,14 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         ],
     tutorHosted: isOLevel
       ? [
-          { name: 'Focused Boost', displayPrice: 'From S$210/session', detail: '1 × 4h | Total from S$210/student', note: 'Longer focused block with break and refreshments.' },
-          { name: 'Targeted Rescue', displayPrice: 'From S$200/session', detail: '2 × 4h | Total from S$400/student', note: 'Multi-session intensive support at better value.' },
-          { name: 'Intensive Rescue', displayPrice: 'From S$190/session', detail: '4 × 4h | Total from S$760/student', note: 'Comprehensive path to exam readiness.' },
+          { name: 'Focused Boost', displayPrice: 'From S$52.50/hr', detail: '1 × 4h | Total from S$210/student', note: 'Longer focused block with break and refreshments.' },
+          { name: 'Targeted Rescue', displayPrice: 'From S$50/hr', detail: '2 × 4h | Total from S$400/student', note: 'Multi-session intensive support at better value.' },
+          { name: 'Intensive Rescue', displayPrice: 'From S$47.50/hr', detail: '4 × 4h | Total from S$760/student', note: 'Comprehensive path to exam readiness.' },
         ]
       : [
-          { name: 'Focused Boost', displayPrice: 'From S$190/session', detail: '1 × 4h | Total from S$190/student', note: 'Longer focused block with break and refreshments.' },
-          { name: 'Targeted Rescue', displayPrice: 'From S$180/session', detail: '2 × 4h | Total from S$360/student', note: 'Multi-session intensive support at better value.' },
-          { name: 'Intensive Rescue', displayPrice: 'From S$170/session', detail: '4 × 4h | Total from S$680/student', note: 'Comprehensive path to exam readiness.' },
+          { name: 'Focused Boost', displayPrice: 'From S$47.50/hr', detail: '1 × 4h | Total from S$190/student', note: 'Longer focused block with break and refreshments.' },
+          { name: 'Targeted Rescue', displayPrice: 'From S$45/hr', detail: '2 × 4h | Total from S$360/student', note: 'Multi-session intensive support at better value.' },
+          { name: 'Intensive Rescue', displayPrice: 'From S$42.50/hr', detail: '4 × 4h | Total from S$680/student', note: 'Comprehensive path to exam readiness.' },
         ],
     miniGroupHostFamily: isOLevel
       ? [
@@ -999,6 +999,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                       </div>
                     ))}
                   </div>
+                  <p className="mt-4 text-xs text-slate-600">Tutor-hosted pricing is per student and is designed to offer better value than home visits while still keeping sessions focused and structured.</p>
                 </div>
               )}
             </article>
