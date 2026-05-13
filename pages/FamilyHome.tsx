@@ -6,6 +6,7 @@ import {
   BookOpenCheck,
   CheckCircle,
   Flame,
+  MessageCircle,
   Search,
   Timer,
   UserPlus,
@@ -16,11 +17,145 @@ const EARLY_BIRD_DEADLINE = new Date('2026-05-20T23:59:59+08:00').getTime();
 
 type OptionKey = 'consistency' | 'tutor' | 'holiday' | 'enrichment';
 
+type FamilyContext = {
+  badge: string;
+  heroLead: string;
+  heroAccent: string;
+  intro: string;
+  bannerText: string;
+  bannerCta: string;
+  bannerHref: string;
+  assistantTitle: string;
+  assistantBody: string;
+  question: string;
+  subtitle: string;
+  resultLead: string;
+  resultHint: string;
+  guideLabel: string;
+};
+
+const getSingaporeDateParts = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat('en-SG', {
+    timeZone: 'Asia/Singapore',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(date);
+
+  return {
+    year: Number(parts.find((part) => part.type === 'year')?.value ?? date.getFullYear()),
+    month: Number(parts.find((part) => part.type === 'month')?.value ?? date.getMonth() + 1),
+    day: Number(parts.find((part) => part.type === 'day')?.value ?? date.getDate()),
+  };
+};
+
+const getFamilyContext = (date = new Date()): FamilyContext => {
+  const { month } = getSingaporeDateParts(date);
+
+  if (month >= 5 && month <= 6) {
+    return {
+      badge: 'WA2 / mid-year reset',
+      heroLead: 'WA2 just wrapped',
+      heroAccent: 'what should your family do next?',
+      intro:
+        'If the results are worrying, we will help you decide the next step without wasting time browsing.',
+      bannerText: 'WA2 is over and many parents are worried about results. Let us help you choose the next move.',
+      bannerCta: 'Talk to us',
+      bannerHref: 'https://wa.me/6598882675?text=Hi%2C%20WA2%20just%20finished%20and%20I%27d%20like%20help%20choosing%20the%20next%20step%20for%20my%20child.',
+      assistantTitle: 'Right after WA2, clarity matters',
+      assistantBody: 'Pick the problem that feels most urgent and we will guide you to the best fix.',
+      question: 'What are you trying to solve after WA2?',
+      subtitle: 'Parents usually want one of four things here: stability, a tutor, holiday revision, or enrichment.',
+      resultLead: 'Here is the most practical next step',
+      resultHint: 'Scroll down for the matched option and next steps.',
+      guideLabel: 'Mid-year guidance',
+    };
+  }
+
+  if (month === 7 || month === 8) {
+    return {
+      badge: 'Holiday support',
+      heroLead: 'June break is here',
+      heroAccent: 'keep learning from slipping away',
+      intro:
+        'A good holiday plan should feel light, useful, and realistic. We will point you to the right mix of support.',
+      bannerText: 'The holiday window is short. Keep momentum with a plan that suits your child.',
+      bannerCta: 'Reserve now',
+      bannerHref: 'https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20help%20planning%20my%20child%27s%20June%20holiday%20support.',
+      assistantTitle: 'A better holiday than random revision',
+      assistantBody: 'Choose the kind of support you want and we will match it to the right path.',
+      question: 'What should your child focus on this break?',
+      subtitle: 'Pick the closest fit and we will recommend the most useful holiday option.',
+      resultLead: 'This is the best holiday fit',
+      resultHint: 'Scroll down for the matched option and next steps.',
+      guideLabel: 'Holiday planning',
+    };
+  }
+
+  if (month >= 9 && month <= 10) {
+    return {
+      badge: 'Exam sprint',
+      heroLead: 'The exam run-up is real',
+      heroAccent: 'what needs the fastest repair?',
+      intro:
+        'This is the season for focused correction, not noise. We help families choose the shortest path to confidence.',
+      bannerText: 'Parents are moving from concern to action. A focused plan now saves a lot of stress later.',
+      bannerCta: 'Get focused help',
+      bannerHref: 'https://wa.me/6598882675?text=Hi%2C%20I%20need%20help%20with%20exam%20prep%20for%20my%20child%20and%20want%20the%20best%20next%20step.',
+      assistantTitle: 'Fast help, without the guesswork',
+      assistantBody: 'Select the area that needs the most repair and we will point you to the right support.',
+      question: 'What needs the fastest improvement?',
+      subtitle: 'Choose one option and we will suggest the most practical next move.',
+      resultLead: 'This is the strongest next move',
+      resultHint: 'Scroll down for the matched option and next steps.',
+      guideLabel: 'Exam season support',
+    };
+  }
+
+  if (month >= 11 || month === 1) {
+    return {
+      badge: 'Results and reset',
+      heroLead: 'Results are out or on the way',
+      heroAccent: 'what should happen next?',
+      intro:
+        'When the year winds down, families need calm next steps, not rushed promises. We help you choose with confidence.',
+      bannerText: 'If the results are mixed, do not panic. Start with a clear, calm plan.',
+      bannerCta: 'Plan the next step',
+      bannerHref: 'https://wa.me/6598882675?text=Hi%2C%20I%20would%20like%20help%20planning%20the%20next%20step%20after%20my%20child%27s%20results.',
+      assistantTitle: 'A calm plan beats a rushed decision',
+      assistantBody: 'Pick the area that needs attention and we will guide you to the right path.',
+      question: 'What does your child need most now?',
+      subtitle: 'Choose the closest fit and we will recommend the most sensible next step.',
+      resultLead: 'Here is the clearest next step',
+      resultHint: 'Scroll down for the matched option and next steps.',
+      guideLabel: 'Results and planning',
+    };
+  }
+
+  return {
+    badge: 'New term reset',
+    heroLead: 'How can we help',
+    heroAccent: 'your family today?',
+    intro:
+      'A focused start works better than a rushed search. Tell us the situation and we will point you to the right support.',
+    bannerText: 'If you want the right kind of help, start with the problem you are trying to solve.',
+    bannerCta: 'Start here',
+    bannerHref: 'https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20help%20choosing%20the%20right%20option%20for%20my%20child.',
+    assistantTitle: 'Guided family assistant',
+    assistantBody: 'Choose the closest fit. No browsing needed.',
+    question: "What's on your mind today?",
+    subtitle: 'Tap the option that fits best and we will point you to the right next step.',
+    resultLead: 'Here is the most relevant option',
+    resultHint: 'Scroll down for the matched option and next steps.',
+    guideLabel: 'Quick guidance',
+  };
+};
+
 const GUIDE_STEPS = [
   {
     id: 'root',
     question: "What's on your mind today?",
-    subtitle: 'Pick the one that fits best — we\'ll point you in the right direction.',
+    subtitle: 'Tap the option that fits best and we\'ll point you to the right next step.',
     options: [
       {
         key: 'consistency' as OptionKey,
@@ -181,14 +316,11 @@ const RECOMMENDATIONS: Record<OptionKey, React.ReactNode> = {
 };
 
 const FamilyHome: React.FC = () => {
-  const [timeLeft, setTimeLeft] = useState(() => Math.max(0, EARLY_BIRD_DEADLINE - Date.now()));
   const [selected, setSelected] = useState<OptionKey | null>(null);
+  const [flashId, setFlashId] = useState(0);
   const resultRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const id = setInterval(() => setTimeLeft(Math.max(0, EARLY_BIRD_DEADLINE - Date.now())), 1000);
-    return () => clearInterval(id);
-  }, []);
+  const activeOption = GUIDE_STEPS[0].options.find((opt) => opt.key === selected) ?? null;
+  const familyContext = getFamilyContext();
 
   useEffect(() => {
     if (selected && resultRef.current) {
@@ -196,30 +328,21 @@ const FamilyHome: React.FC = () => {
     }
   }, [selected]);
 
-  const days = Math.floor(timeLeft / 86400000);
-  const hours = Math.floor((timeLeft % 86400000) / 3600000);
-  const mins = Math.floor((timeLeft % 3600000) / 60000);
-  const secs = Math.floor((timeLeft % 60000) / 1000);
-  const pad = (n: number) => String(n).padStart(2, '0');
-
   return (
     <div className="min-h-screen bg-stone-50 text-slate-900">
 
       {/* ═══════════ URGENCY BANNER ═══════════ */}
-      <div className="sticky top-0 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 px-3 py-2.5 text-white shadow-lg sm:gap-6 sm:px-4">
+      <div className="sticky top-0 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-slate-900 via-sky-800 to-emerald-700 px-3 py-2.5 text-white shadow-lg sm:gap-6 sm:px-4">
         <Timer size={15} className="shrink-0" />
         <p className="text-xs font-bold sm:text-sm">
-          🔥 June Holiday Crash Course — Early Bird closes in&nbsp;
-          <span className="font-black tabular-nums">
-            {pad(days)}d {pad(hours)}h {pad(mins)}m {pad(secs)}s
-          </span>
+          Parent sign-up discount is available for the crash course. {familyContext.bannerText}
         </p>
         <a
-          href="https://wa.me/6598882675?text=Hi%2C%20I%27d%20like%20to%20find%20out%20more%20about%20the%20June%20Holiday%20Crash%20Course"
+          href={familyContext.bannerHref}
           target="_blank" rel="noopener noreferrer"
           className="hidden shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-black text-orange-600 shadow transition hover:bg-orange-50 sm:inline-flex"
         >
-          Reserve Now →
+          {familyContext.bannerCta} →
         </a>
       </div>
 
@@ -231,17 +354,75 @@ const FamilyHome: React.FC = () => {
           <div className="absolute bottom-[-8%] left-1/3 h-64 w-64 rounded-full bg-emerald-300/10 blur-3xl" />
         </div>
 
-        <div className="relative z-10 mx-auto max-w-3xl text-center">
-          <p className="mb-4 inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-200">
-            For Singapore Families
-          </p>
-          <h1 className="font-sans text-4xl font-black leading-tight sm:text-5xl">
-            How can we help
-            <span className="block text-sky-300">your family today?</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-300">
-            Tell us what you&rsquo;re dealing with and we&rsquo;ll guide you to the right option — no browsing required.
-          </p>
+        <div className="relative z-10 mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div className="text-center lg:text-left">
+            <p className="mb-4 inline-flex items-center rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-sky-200">
+              {familyContext.badge}
+            </p>
+            <h1 className="font-sans text-4xl font-black leading-tight sm:text-5xl">
+              {familyContext.heroLead}
+              <span className="block text-sky-300">{familyContext.heroAccent}</span>
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-slate-300 lg:mx-0">
+              {familyContext.intro}
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl shadow-slate-950/25 backdrop-blur sm:p-6">
+            <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-400/20 text-sky-200">
+                <MessageCircle size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">{familyContext.assistantTitle}</p>
+                <p className="text-xs text-slate-300">{familyContext.assistantBody}</p>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <div className="max-w-[90%] rounded-2xl rounded-bl-md bg-white px-4 py-3 text-sm leading-6 text-slate-800 shadow-sm">
+                {familyContext.question}
+              </div>
+              <div className="max-w-[90%] rounded-2xl rounded-br-md bg-sky-500/15 px-4 py-3 text-sm leading-6 text-sky-50 ring-1 ring-inset ring-sky-300/20">
+                {familyContext.subtitle}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              {GUIDE_STEPS[0].options.map((opt) => {
+                const isActive = selected === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => {
+                      setSelected(opt.key);
+                      setFlashId((value) => value + 1);
+                    }}
+                    className={`relative flex items-start gap-3 overflow-hidden rounded-2xl border px-4 py-3 text-left transition ${
+                      isActive
+                        ? 'border-sky-300 bg-sky-400/20 shadow-lg shadow-sky-950/10'
+                        : 'border-white/15 bg-white/5 hover:border-sky-300/40 hover:bg-white/10'
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    {isActive && <span key={`${opt.key}-${flashId}`} className="pointer-events-none absolute inset-0 rounded-2xl animate-family-flash" aria-hidden="true" />}
+                    <span className="text-xl leading-none">{opt.emoji}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold leading-snug text-white">{opt.label}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-300">{opt.desc}</p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {activeOption && (
+              <div key={`${selected ?? 'none'}-${flashId}`} ref={resultRef} className="mt-4 rounded-2xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-50 animate-family-flash">
+                <span className="font-bold">{familyContext.resultLead}:</span> {activeOption.label}
+                <span className="block text-xs text-emerald-100/80">{familyContext.resultHint}</span>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
@@ -251,8 +432,8 @@ const FamilyHome: React.FC = () => {
 
           {/* Question */}
           <div className="mb-6 text-center">
-            <h2 className="text-xl font-black text-slate-900 sm:text-2xl">{GUIDE_STEPS[0].question}</h2>
-            <p className="mt-2 text-sm text-slate-500">{GUIDE_STEPS[0].subtitle}</p>
+            <h2 className="text-xl font-black text-slate-900 sm:text-2xl">{familyContext.question}</h2>
+            <p className="mt-2 text-sm text-slate-500">{familyContext.subtitle}</p>
           </div>
 
           {/* Option cards */}

@@ -19,7 +19,60 @@ const WA_NUMBER = '6598882675';
 const PAGE_TAG = 'final-lap-home-crash-course';
 type CrashCourseVariant = 'combined' | 'psle' | 'olevel';
 
+const EXAM_COUNTDOWN_TARGETS = {
+  psleMath: new Date('2026-09-25T08:15:00+08:00').getTime(),
+  oLevelMath: new Date('2026-10-21T14:00:00+08:00').getTime(),
+} as const;
+
 const northAreas = ['Woodlands', 'Admiralty', 'Marsiling', 'Sembawang', 'Canberra', 'Yishun', 'Khatib'];
+
+const getTimeLeft = (targetTime: number, now: number) => Math.max(0, targetTime - now);
+
+const formatCountdown = (timeLeft: number) => {
+  const days = Math.floor(timeLeft / 86400000);
+  const hours = Math.floor((timeLeft % 86400000) / 3600000);
+  const mins = Math.floor((timeLeft % 3600000) / 60000);
+  const secs = Math.floor((timeLeft % 60000) / 1000);
+  const pad = (value: number) => String(value).padStart(2, '0');
+
+  return {
+    days: pad(days),
+    hours: pad(hours),
+    mins: pad(mins),
+    secs: pad(secs),
+  };
+};
+
+const CountdownCard: React.FC<{
+  title: string;
+  subtitle: string;
+  timeLeft: number;
+}> = ({ title, subtitle, timeLeft }) => {
+  const parts = formatCountdown(timeLeft);
+
+  return (
+    <div className="rounded-2xl border border-white/15 bg-black/15 px-4 py-4 shadow-lg shadow-black/10 backdrop-blur-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-200">{title}</p>
+      <div className="mt-3 flex items-center gap-2 text-white">
+        <span className="h-2.5 w-2.5 rounded-full bg-amber-300 shadow-[0_0_0_0_rgba(252,211,77,0.55)] animate-pulse" aria-hidden="true" />
+        <span className="text-xs font-semibold text-slate-200">{subtitle}</span>
+      </div>
+      <div className="mt-3 grid grid-cols-4 gap-2 text-center">
+        {[
+          { label: 'Days', value: parts.days },
+          { label: 'Hrs', value: parts.hours },
+          { label: 'Mins', value: parts.mins },
+          { label: 'Secs', value: parts.secs },
+        ].map((item) => (
+          <div key={item.label} className="rounded-xl border border-white/10 bg-white/10 px-2 py-2">
+            <div className="text-lg font-black tabular-nums text-white">{item.value}</div>
+            <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-300">{item.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const getPageSeo = (variant: CrashCourseVariant) => {
   if (variant === 'psle') {
@@ -520,8 +573,17 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
   const isPsle = variant === 'psle';
   const isOLevel = variant === 'olevel';
   const showCombined = variant === 'combined';
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => setPageSeo(pageSeo.title, pageSeo.description, pageSeo.canonicalPath), [pageSeo.title, pageSeo.description, pageSeo.canonicalPath]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const psleCountdown = getTimeLeft(EXAM_COUNTDOWN_TARGETS.psleMath, now);
+  const oLevelCountdown = getTimeLeft(EXAM_COUNTDOWN_TARGETS.oLevelMath, now);
 
   const fitCheckMessage = isPsle
     ? [
@@ -856,6 +918,41 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             </div>
 
             <div className="grid gap-4">
+              <SectionCard className="border-white/10 bg-white/5 p-5 text-white backdrop-blur-sm">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">Official 2026 SEAB exam countdown</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
+                  This is the real exam clock parents are feeling. Keep the focus on the subject that matters most now.
+                </p>
+                <div className={`mt-4 grid gap-3 ${showCombined ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
+                  {showCombined ? (
+                    <>
+                      <CountdownCard
+                        title="PSLE Math starts in"
+                        subtitle="25 Sep 2026, 8:15 am"
+                        timeLeft={psleCountdown}
+                      />
+                      <CountdownCard
+                        title="O-Level Math starts in"
+                        subtitle="21 Oct 2026, 2:00 pm"
+                        timeLeft={oLevelCountdown}
+                      />
+                    </>
+                  ) : isPsle ? (
+                    <CountdownCard
+                      title="PSLE Math starts in"
+                      subtitle="25 Sep 2026, 8:15 am"
+                      timeLeft={psleCountdown}
+                    />
+                  ) : (
+                    <CountdownCard
+                      title="O-Level Math starts in"
+                      subtitle="21 Oct 2026, 2:00 pm"
+                      timeLeft={oLevelCountdown}
+                    />
+                  )}
+                </div>
+              </SectionCard>
+
               <SectionCard className="border-white/10 bg-white/5 p-5 text-white backdrop-blur-sm">
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">Home-based correction flow</p>
                 <div className="mt-4 space-y-3">

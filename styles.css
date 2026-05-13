@@ -26,3 +26,25 @@ body {
 #root {
     background-color: #0f172a;
 }
+
+@keyframes family-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35), 0 0 28px rgba(56, 189, 248, 0.18);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.01);
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  }
+}
+
+.animate-family-flash {
+  animation: family-flash 720ms ease-out;
+}
