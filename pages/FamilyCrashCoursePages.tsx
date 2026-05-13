@@ -1247,7 +1247,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           </SectionCard>
         )}
 
-        {!isPsle && (
+        {showCombined && (
         <SectionCard>
           <SectionHeading
             kicker="Friend Group"
@@ -1288,7 +1288,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         </SectionCard>
         )}
 
-        {!isPsle && (
+        {showCombined && (
         <SectionCard>
           <SectionHeading
             kicker="After Course"
@@ -1331,7 +1331,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         </SectionCard>
         )}
 
-        {!isPsle && (
+        {showCombined && (
         <SectionCard>
           <SectionHeading
             kicker="Logistics"
@@ -1358,7 +1358,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         </SectionCard>
         )}
 
-        {!isPsle && (
+        {showCombined && (
         <SectionCard>
           <SectionHeading
             kicker="Mock Exam"
@@ -1393,7 +1393,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         </SectionCard>
         )}
 
-        {!isPsle && (
+        {showCombined && (
         <SectionCard>
           <SectionHeading
             kicker="How It Works"
@@ -1432,7 +1432,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         </SectionCard>
         )}
 
-        {!isPsle && (
+        {showCombined && (
         <SectionCard>
           <SectionHeading
             kicker="Suitable For"
@@ -1446,7 +1446,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         </SectionCard>
         )}
 
-        {!isPsle && (
+        {showCombined && (
         <SectionCard>
           <SectionHeading
             kicker="Fit Check"
