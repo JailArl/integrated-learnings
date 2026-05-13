@@ -849,6 +849,27 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 />
               </div>
 
+              <p className="mt-3 text-xs font-semibold text-slate-300">
+                North Singapore coverage: Woodlands, Admiralty, Marsiling, Sembawang, Canberra, Yishun, and nearby.
+              </p>
+
+              {isPsle && (
+                <p className="mt-2 text-xs text-slate-300">
+                  Need O-Level support instead?{' '}
+                  <Link to="/family/crash-courses/o-level-june-intensive" className="font-semibold text-amber-200 underline decoration-amber-200/70 underline-offset-2 hover:text-amber-100">
+                    Switch to O-Level crash course
+                  </Link>
+                </p>
+              )}
+              {isOLevel && (
+                <p className="mt-2 text-xs text-slate-300">
+                  Need PSLE support instead?{' '}
+                  <Link to="/family/crash-courses/psle-june-intensive" className="font-semibold text-amber-200 underline decoration-amber-200/70 underline-offset-2 hover:text-amber-100">
+                    Switch to PSLE crash course
+                  </Link>
+                </p>
+              )}
+
               <div className="mt-7 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-300">What we deliver</p>
                 <div className="mt-3 space-y-2">
