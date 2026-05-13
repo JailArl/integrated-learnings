@@ -507,7 +507,7 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     fitCheckSubtitle: 'This programme works best when the student is willing to attempt corrections and practise between sessions. It may not be the right fit if the family is looking for a full-year syllabus programme, a large lecture class, or guaranteed score claims.',
     finalTitle: 'Ready to check if this fits your child?',
     finalSubtitle: 'Send the latest result slip, weak-topic list, or a short description of your child’s situation. We’ll recommend whether the route-specific crash course, friend-group support, or another option fits best.',
-    finalNote: 'Final recommendation depends on subject, location, urgency, student needs, and suitable lesson format after fit check.',
+    finalNote: 'Best recommendation depends on subject, location, urgency, student needs, and suitable lesson format after fit check.',
     oLevelCrossLink: 'Looking for O-Level support? View O-Level Math & Science Crash Course.',
     psleCrossLink: 'Looking for PSLE support? View PSLE Math & Science Crash Course.',
   };
@@ -929,27 +929,27 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <SectionHeading
             kicker="LESSON FORMAT"
             title="Choose the Lesson Format That Fits"
-            subtitle="Different families need different arrangements. We can recommend the most suitable format after the free WhatsApp fit check, based on the student’s needs, location, schedule, and whether the child learns better alone or in a small group."
+            subtitle="Pick the format that matches your schedule and your child’s learning style. We’ll recommend the best one during fit check."
           />
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm font-black text-slate-900">Tutor Travels to Student’s Home</p>
-              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: maximum convenience and focused 1-to-1 support</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">We conduct lessons at home within North Singapore where schedules allow.</p>
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: convenience + focused 1-to-1 support</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">We teach at your home in North Singapore where schedules allow.</p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm font-black text-slate-900">Tutor-Hosted Study Space</p>
-              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer focused sessions and better-value arrangements</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Selected sessions run at a small tutor-hosted study space, often at better value due to no travel time.</p>
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer focused sessions at better value</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Selected slots are available at our small tutor-hosted study space.</p>
             </article>
             <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-sm font-black text-slate-900">Mini-Group Format</p>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2–4 students of similar level</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Small groups can meet at a host family’s home or selected tutor-hosted slots to reduce per-student cost.</p>
+              <p className="mt-3 text-sm leading-6 text-slate-600">Study with friends at a host home or selected tutor-hosted slots to reduce cost per student.</p>
             </article>
           </div>
           <p className="mt-5 text-xs text-slate-500">
-            Final recommendation depends on subject, lesson location format, group size, urgency, and student needs after the free WhatsApp fit check.
+            Best format depends on subject, location, group size, urgency, and student needs after the free WhatsApp fit check.
           </p>
         </SectionCard>
 
@@ -957,7 +957,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <SectionHeading
             kicker="PRICING BY FORMAT"
             title="View Pricing by Lesson Format"
-            subtitle="Choose the format that fits your family. You can open more than one option to compare pricing. Final recommendation depends on subject, lesson location, group size, urgency, and student needs after the free WhatsApp fit check."
+            subtitle="Open each format to compare pricing. Best fit depends on subject, location, group size, urgency, and student needs after fit check."
           />
 
           <div className="mt-6 space-y-3">
@@ -1429,7 +1429,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
         <SectionCard className="border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50">
           <SectionHeading
-            kicker="FINAL STEP"
+            kicker="NEXT STEP"
             title={pageCopy.finalTitle}
             subtitle={pageCopy.finalSubtitle}
           />
