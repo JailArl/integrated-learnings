@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 const WA_NUMBER = '6598882675';
-const PAGE_TAG = 'final-lap-home-crash-course';
+const PAGE_TAG = 'exam-rescue-home-crash-course';
 type CrashCourseVariant = 'combined' | 'psle' | 'olevel';
 
 const EXAM_COUNTDOWN_TARGETS = {
@@ -336,49 +336,49 @@ const getPageCopy = (variant: CrashCourseVariant) => {
   const inExamSprint = ['Sep', 'Oct'].includes(currentMonth);
 
   const seasonalNote = inWa2Season
-    ? 'WA2 results just came in. If your child did not hit target, we can help you fix urgent gaps quickly before exam pressure builds.'
+    ? '⚠️ WA2 results just revealed the weak topics. Parents are telling us their kids feel overwhelmed. We rescue grades by fixing urgent gaps in just 2-4 weeks before PSLE pressure builds.'
     : inMidYearSeason
-      ? 'Mid-year results reveal the real weak topics. Most students need targeted correction now, not another generic weekly routine.'
+      ? '⚠️ Mid-year results are painful. Your child\'s weak topics are now crystal clear. This is exactly when focused rescue makes the biggest difference—don\'t wait.'
       : inExamSprint
-        ? 'Exam window is near. This crash course focuses only on the scoring gaps that matter most right now.'
-        : 'If recent results are below expectations, we focus on urgent correction first so your child can recover faster.';
+        ? '⚠️ Exam is close. Every weak chapter costs marks. Our exam rescue course targets only the urgent scoring gaps that matter most right now.'
+        : '⚠️ Recent results are below target? We rescue your child\'s score by sprinting on urgent gaps first, not generic weekly learning.';
 
   return {
     heroTitle: isPsle
-      ? 'PSLE Math & Science Final-Lap Crash Course'
+      ? 'PSLE Math & Science Exam Rescue Course'
       : isOLevel
-        ? 'O-Level Math & Science Final-Lap Crash Course'
-        : 'PSLE & O-Level Final-Lap Crash Course',
+        ? 'O-Level Math & Science Exam Rescue Course'
+        : 'PSLE & O-Level Exam Rescue Course',
     heroLocationTitle: 'North Singapore',
     heroSubtitle: isPsle
-      ? 'Your child\'s WA2 result may not be where you hoped. We focus on fast, targeted correction before PSLE.'
+      ? 'WA2 results just came in and they\'re stressful. We diagnose weak topics fast and focus on real score recovery before PSLE.'
       : isOLevel
-        ? 'Mid-year results can feel stressful. We target the exact weak chapters and paper skills your child needs now.'
-        : 'If results are below expectations, we run focused correction on the biggest scoring gaps first.',
+        ? 'Mid-year results are painful. We rescue the exact weak chapters and paper skills your child needs now, before it\'s too late.'
+        : 'If recent results missed the mark, we rescue your scores by fixing the biggest gaps first in a focused sprint.',
     seasonalNote,
     promiseItems: isPsle
       ? [
-          'Diagnostic review from WA2 papers or recent school work',
-          'Targeted weak-topic correction in a short 1-2 week sprint',
-          'Parent updates after each session so you can track progress',
-          'Exam-style practice focused on real scoring improvement',
+          '✓ Rapid diagnosis: Identify the 2-3 weak topics causing most mark loss within 1 session',
+          '✓ Urgent rescue: Focused 1-2 week sprint on highest-impact gaps only (not broad review)',
+          '✓ Parent visibility: Real-time updates after each session so you track progress daily',
+          '✓ Exam-ready: Prove methods and timing under timed PSLE-style questions before the real exam',
         ]
       : isOLevel
         ? [
-            'Fast chapter-level diagnosis from recent tests or papers',
-            'Targeted rescue on the most costly weak chapters first',
-            'Parent updates after each session with next-step focus',
-            'Timed paper strategy and exam-style correction support',
+            '✓ Chapter-level rescue: Diagnose and fix the most costly O-Level chapters in 1-2 sessions',
+            '✓ Paper strategy: Focused practice on time management and high-scoring section tactics',
+            '✓ Parent visibility: Real-time updates after each session so you track progress daily',
+            '✓ Exam-ready: Timed practice in exam conditions—no surprises on the real day',
           ]
         : [
-            'Fast diagnosis from recent tests, papers, and weak-topic lists',
-            'Targeted correction on highest-impact scoring gaps first',
-            'Parent updates after each session with clear next steps',
-            'Exam-style practice that builds results under time pressure',
+            '✓ Rapid diagnosis: Identify the 2-3 urgent gaps causing most mark loss in your first session',
+            '✓ Focused rescue: Sprint on highest-impact topics only—not broad, slow review',
+            '✓ Parent visibility: Real-time updates after each session so you track progress daily',
+            '✓ Exam-ready: Timed practice under exam conditions to build confidence before test day',
           ],
-    methodKicker: 'Crash Course',
-    methodTitle: 'What Is a Crash Course?',
-    methodSubtitle: 'A crash course is not a full-year tuition replacement. It is a short intensive block designed to fix urgent scoring gaps before the exam.',
+    methodKicker: 'Exam Rescue',
+    methodTitle: 'How Our Exam Rescue Works',
+    methodSubtitle: 'Forget slow, broad tuition. Exam rescue is an emergency intensive: diagnose the worst gaps fast, fix them first, then prove readiness before exam day.',
     methodCards: isPsle
       ? [
           {
@@ -437,12 +437,12 @@ const getPageCopy = (variant: CrashCourseVariant) => {
           ],
     differenceSubtitle: 'Normal tuition supports weekly learning. This crash course focuses on urgent correction in a short period.',
     chooserTitle: 'Choose Your Level',
-    chooserSubtitle: 'Pick the level that matches your child’s final-lap pressure point.',
-    pslePackageTitle: 'PSLE Math & Science Crash Course',
-    pslePackageSubtitle: 'Short intensive format for urgent correction before PSLE.',
-    oLevelPackageTitle: 'O-Level Math & Science Crash Course',
-    oLevelPackageSubtitle: 'Short intensive format for urgent chapter rescue before O-Levels.',
-    friendGroupTitle: isPsle ? 'PSLE Friend-Group Home Crash Course' : isOLevel ? 'O-Level Friend-Group Home Crash Course' : 'Friend-Group Home Crash Course',
+    chooserSubtitle: 'Pick the level based on your child age and exam timeline.',
+    pslePackageTitle: 'PSLE Math & Science Exam Rescue Course',
+    pslePackageSubtitle: 'Emergency 2-4 week intensive to rescue weak topics before PSLE.',
+    oLevelPackageTitle: 'O-Level Math & Science Exam Rescue Course',
+    oLevelPackageSubtitle: 'Emergency 2-4 week intensive to rescue weak chapters before O-Levels.',
+    friendGroupTitle: isPsle ? 'PSLE Friend-Group Home Exam Rescue' : isOLevel ? 'O-Level Friend-Group Home Exam Rescue' : 'Friend-Group Home Exam Rescue',
     friendGroupSubtitle: isPsle
       ? 'Have 2–4 P6 students from the same school, estate, class, or friend group? Mini-groups can be conducted at one host family\'s home or selected tutor-hosted study space slots. This keeps the lesson focused while reducing cost per student.'
       : isOLevel
@@ -451,25 +451,25 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     friendGroupPricing1: isPsle ? 'PSLE friend-group option: From $45/student/hr' : isOLevel ? 'O-Level friend-group option: From $50/student/hr' : 'PSLE friend-group option: From $45/student/hr',
     friendGroupPricing2: isPsle ? 'O-Level friend-group option: From $50/student/hr' : isOLevel ? 'PSLE friend-group option: From $45/student/hr' : 'O-Level friend-group option: From $50/student/hr',
     friendGroupCta: 'Form a Friend Group',
-    afterCourseTitle: 'Keep the Momentum After the Crash Course',
-    afterCourseSubtitle: 'A crash course can correct urgent gaps, but students still need consistency after the session ends.',
+    afterCourseTitle: 'Keep the Rescue Momentum After the Exam Course',
+    afterCourseSubtitle: 'After we rescue urgent gaps, students need accountability and consistency to lock in the improvements.',
     logisticsTitle: 'Flexible Home-Based Options for North Singapore Families',
     logisticsSubtitle: 'Lessons can be conducted at the student\'s home within North Singapore. For friend-group sessions, one host family may provide the venue. Selected mini-group sessions may also be conducted at a small tutor-hosted study space, with details shared before confirmation.',
-    mockTitle: isPsle ? 'Coming Next: PSLE Mock Simulation Interest List' : isOLevel ? 'Coming Next: O-Level Mock Simulation Interest List' : 'Coming Next: Mock Exam Simulation Day',
+    mockTitle: isPsle ? 'Optional: PSLE Full-Length Mock Before Real Exam' : isOLevel ? 'Optional: O-Level Full-Length Mock Before Real Exam' : 'Optional: Full-Length Mock Exam Before Test Day',
     mockSubtitle: isPsle
-      ? 'If enough students register interest, Integrated Learnings will open a North Singapore PSLE mock simulation. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations.'
+      ? 'After your exam rescue course, prove readiness with a timed PSLE mock under real exam conditions. Spot any last-minute panic points before the actual exam date.'
       : isOLevel
-        ? 'If enough students register interest, Integrated Learnings will open a North Singapore O-Level mock simulation. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations.'
-        : 'If enough students register interest, Integrated Learnings will open a North Singapore mock exam simulation for PSLE and O-Level students. Students will sit for a timed paper under exam-style conditions, followed by correction, diagnosis, and next-step recommendations.',
-    mockButtonLabel: isPsle ? 'Join PSLE Mock Interest List' : isOLevel ? 'Join O-Level Mock Interest List' : 'Join Mock Exam Interest List',
+        ? 'After your exam rescue course, confirm readiness with a timed O-Level mock under real exam conditions. Remove final worries before the real papers.'
+        : 'After your exam rescue course, test readiness with a full timed mock under real exam conditions. Spot any final weak points before test day.',
+    mockButtonLabel: isPsle ? 'Secure PSLE Mock Spot' : isOLevel ? 'Secure O-Level Mock Spot' : 'Secure Mock Exam Spot',
     howToStartTitle: 'How to Start',
     howToStartSubtitle: 'A clear process so parents know what happens before the first session starts.',
     step2Title: 'We do a fit check',
     step2Body: isPsle
-      ? 'We identify whether the student needs PSLE, 1-to-1, friend-group, or mock-simulation support.'
+      ? 'We diagnose whether your child needs 1-to-1 exam rescue, friend-group support, or a mock exam before the real thing.'
       : isOLevel
-        ? 'We identify whether the student needs O-Level, 1-to-1, friend-group, or mock-simulation support.'
-        : 'We identify whether the student needs PSLE, O-Level, 1-to-1, friend-group, or mock-simulation support.',
+        ? 'We diagnose whether your child needs 1-to-1 exam rescue, friend-group support, or a mock exam before the real papers.'
+        : 'We diagnose whether your child needs 1-to-1 exam rescue, friend-group support, or a mock exam practice run.',
     suitableForTitle: 'Suitable For Students Who...',
     suitableForItems: isPsle
       ? [
@@ -503,13 +503,13 @@ const getPageCopy = (variant: CrashCourseVariant) => {
             'Students who need focused correction before the final exam stretch',
             'Students who need a clearer revision plan and parent-visible progress',
           ],
-    fitCheckTitle: 'Before You Sign Up',
-    fitCheckSubtitle: 'This programme works best when the student is willing to attempt corrections and practise between sessions. It may not be the right fit if the family is looking for a full-year syllabus programme, a large lecture class, or guaranteed score claims.',
-    finalTitle: 'Ready to check if this fits your child?',
-    finalSubtitle: 'Send the latest result slip, weak-topic list, or a short description of your child’s situation. We’ll recommend whether the route-specific crash course, friend-group support, or another option fits best.',
-    finalNote: 'Best recommendation depends on subject, location, urgency, student needs, and suitable lesson format after fit check.',
-    oLevelCrossLink: 'Looking for O-Level support? View O-Level Math & Science Crash Course.',
-    psleCrossLink: 'Looking for PSLE support? View PSLE Math & Science Crash Course.',
+    fitCheckTitle: 'Before We Rescue Your Child',
+    fitCheckSubtitle: 'Exam rescue works best when the student is willing to correct mistakes and practise between sessions. We focus on confidence and results, not stress and false promises. This programme is NOT suitable if you need guaranteed score jumps or full-year syllabus coverage.',
+    finalTitle: 'Let us rescue your child\'s score. Start here.',
+    finalSubtitle: 'Send us the latest result slip, weak-topic list, or just tell us your child\'s situation. We\'ll diagnose in 1 WhatsApp fit check and confirm if exam rescue is right for your family. No long intake forms. No hard selling. Just honest, fast advice.',
+    finalNote: '✓ Focused diagnosis | ✓ Real score improvement | ✓ Parent-visible progress | ✓ Stress-aware instruction',
+    oLevelCrossLink: 'Looking for O-Level support? View O-Level Math & Science Exam Rescue Course.',
+    psleCrossLink: 'Looking for PSLE support? View PSLE Math & Science Exam Rescue Course.',
   };
 };
 
@@ -621,60 +621,60 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
   const pslePackages = [
     {
-      title: 'PSLE 4-Block Final-Lap Intensive',
+      title: 'PSLE 4-Block Exam Rescue Intensive',
       duration: '4 blocks × 3h = 12h',
-      bestFor: 'main PSLE weak-topic correction before exam sprint',
+      bestFor: 'main PSLE weak-topic rescue before exam sprint',
       format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'See pricing by format',
       includes: [
-        '3 correction blocks + 1 final revision block',
-        'Weak-topic mapping and scoring-gap focus',
-        'Exam-style guided and timed practice',
-        'Parent update with next-step plan',
+        '3 urgent-gap rescue blocks + 1 final readiness check',
+        'Weak-topic diagnosis and scoring-gap prioritization',
+        'Exam-style practice under real time pressure',
+        'Parent update with confidence-building plan',
       ],
       popular: true,
     },
     {
-      title: 'PSLE Mini-Group 4-Block Intensive',
+      title: 'PSLE Mini-Group 4-Block Exam Rescue',
       duration: '4 blocks × 3h = 12h',
-      bestFor: '2–4 students of similar level and subject needs',
+      bestFor: '2–4 students with same weak topics needing rescue',
       format: "host family's home or tutor-hosted study space, subject to schedule",
       price: 'See pricing by format',
       includes: [
-        'Small-group diagnostic review and weak-topic targeting',
-        'Exam-style guided practice + final revision block',
-        'Parent updates where suitable',
-        'Group size kept to 2-4 students',
+        'Small-group diagnostic and urgent-gap targeting',
+        'Exam-style guided practice + final readiness block',
+        'Parent updates tracking visible improvement',
+        'Group size kept to 2-4 students for focus',
       ],
     },
   ];
 
   const oLevelPackages = [
     {
-      title: 'O-Level 4-Block Subject Intensive',
+      title: 'O-Level 4-Block Exam Rescue Intensive',
       duration: '4 blocks × 3h = 12h',
-      bestFor: 'urgent chapter rescue before O-Level papers',
+      bestFor: 'urgent chapter rescue before O-Level exams',
       format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'See pricing by format',
       includes: [
-        '3 correction blocks + 1 final paper-strategy block',
-        'Weak-chapter mapping and chapter rescue focus',
-        'Timed section practice with correction plan',
-        'Parent/student next-step summary',
+        '3 urgent-chapter rescue blocks + 1 paper-strategy block',
+        'Costly-chapter prioritization and rapid fixing',
+        'Timed exam-style practice with real pressure',
+        'Parent/student confidence-building summary',
       ],
       popular: true,
     },
     {
-      title: 'O-Level Mini-Group 4-Block Intensive',
+      title: 'O-Level Mini-Group 4-Block Exam Rescue',
       duration: '4 blocks × 3h = 12h',
-      bestFor: '2–4 students of similar level and subject needs',
+      bestFor: '2–4 students with same weak chapters needing rescue',
       format: "host family's home or tutor-hosted study space, subject to schedule",
       price: 'See pricing by format',
       includes: [
-        'Small-group diagnostic review and chapter targeting',
+        'Small-group diagnosis and urgent-chapter targeting',
         'Timed exam-style practice + paper strategy block',
-        'Parent/student updates where suitable',
-        'Group size kept to 2-4 students',
+        'Parent/student updates showing visible improvement',
+        'Group size kept to 2-4 students for focus',
       ],
     },
   ];
@@ -821,7 +821,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
             <div className="order-2 lg:order-1">
               <Pill className="border-white/15 bg-white/10 text-amber-200">
-                <Sparkles size={12} className="mr-2" aria-hidden="true" /> Find the gap. Fix the gap. Push the final lap.
+                <Sparkles size={12} className="mr-2" aria-hidden="true" /> Find the gap. Rescue the score. Prove it before exam day.
               </Pill>
               <h1 className="mt-4 text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">
                 <span className="block">{pageCopy.heroTitle}</span>
@@ -834,14 +834,14 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <ActionButton
-                  label="Send Result Slip for Fit Check"
+                  label="Secure Your Child's Spot"
                   href={fitCheckLink}
                   ctaName="hero_fit_check"
                   icon={<FileText size={15} aria-hidden="true" />}
                   className="bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
                 />
                 <ActionButton
-                  label="Check Available Home Slots"
+                  label="Check Available Slots"
                   href={slotsLink}
                   ctaName="hero_check_slots"
                   icon={<Home size={15} aria-hidden="true" />}
