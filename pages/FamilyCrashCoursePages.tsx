@@ -1066,37 +1066,44 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               {pslePackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
             </div>
 
+            <div className="mt-10">
+              <h3 className="text-xl font-black text-slate-900">We don't teach everything. We fix the highest-impact gaps first.</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">Crash courses work best when they are targeted. We review the student's latest paper, identify the chapters and question types causing the biggest mark loss, then focus the lesson blocks on the most recoverable gaps first.</p>
+            </div>
+
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <SectionCard className="border-slate-200 bg-slate-50">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">PSLE Math focus</p>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">PSLE Math Rescue Focus</p>
                 <BulletList
                   items={[
-                    'Fractions, ratio, percentage',
-                    'Speed and rate',
-                    'Area, perimeter, volume',
-                    'Angles and geometry',
-                    'Pattern questions',
-                    'Problem sums and heuristics',
-                    'Careless-error tracking',
+                    'Fractions, ratio and percentage',
+                    'Whole-number / decimal calculation accuracy',
+                    'Area, perimeter and volume',
+                    'Angles, geometry and visual reasoning',
+                    'Patterns and number rules',
+                    'Problem sums and model drawing',
+                    'Data, tables and graph interpretation',
+                    'Careless-error tracking and checking routines',
                   ]}
                 />
               </SectionCard>
               <SectionCard className="border-slate-200 bg-slate-50">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">PSLE Science focus</p>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">PSLE Science Rescue Focus</p>
                 <BulletList
                   items={[
-                    'Systems',
-                    'Cycles',
-                    'Interactions',
-                    'Energy',
-                    'Forces',
-                    'Experimental skills',
-                    'Graphs, tables, data-based questions',
-                    'Open-ended answering and keywords',
+                    'Systems, cycles, interactions and energy',
+                    'Forces and simple application questions',
+                    'Experimental skills and fair-test questions',
+                    'Graphs, tables and data-based questions',
+                    'Open-ended answering structure',
+                    'Keywords, comparison and explanation precision',
+                    'Common misconception correction',
+                    'MCQ elimination and OEQ mark-scoring habits',
                   ]}
                 />
               </SectionCard>
             </div>
+            <p className="mt-5 text-xs text-slate-600 font-medium">Final topic selection is customised after reviewing the student's latest paper or result slip.</p>
             {!showCombined && (
               <p className="mt-5 text-xs text-slate-500">
                 <Link to="/family/crash-courses/o-level-june-intensive" className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500">
@@ -1134,63 +1141,92 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               {oLevelPackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
             </div>
 
+            <div className="mt-10">
+              <h3 className="text-xl font-black text-slate-900">We don't teach everything. We fix the highest-impact gaps first.</h3>
+              <p className="mt-3 text-sm leading-7 text-slate-600">Crash courses work best when they are targeted. We review the student's latest paper, identify the chapters and question types causing the biggest mark loss, then focus the lesson blocks on the most recoverable gaps first.</p>
+            </div>
+
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
               <SectionCard className="border-slate-200 bg-slate-50">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">E-Math</p>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">E Math Rescue Focus</p>
                 <BulletList
                   items={[
-                    'Algebra',
-                    'Geometry',
-                    'Graphs',
-                    'Mensuration',
-                    'Trigonometry',
-                    'Paper strategy',
-                    'Common scoring traps',
+                    'Algebra manipulation and equation solving',
+                    'Graphs, functions and coordinate geometry',
+                    'Vectors and area-ratio questions',
+                    'Trigonometry, bearings and 3D problems',
+                    'Geometry, angles and similarity',
+                    'Mensuration, units and composite figures',
+                    'Statistics and probability',
+                    'Paper strategy, time allocation and method-mark recovery',
                   ]}
                 />
               </SectionCard>
               <SectionCard className="border-slate-200 bg-slate-50">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">A-Math</p>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">A Math Rescue Focus</p>
                 <BulletList
                   items={[
-                    'Calculus',
-                    'Trigonometry',
-                    'Functions',
-                    'Logarithms',
-                    'Coordinate geometry',
-                    'Equation solving',
-                    'Exam question breakdown',
+                    'Algebra, indices, surds and logarithms',
+                    'Quadratic equations and inequalities',
+                    'Functions and graph transformations',
+                    'Coordinate geometry and linear law',
+                    'Trigonometry identities and equations',
+                    'Differentiation and applications',
+                    'Integration and area under curve',
+                    'Exam-question breakdown and method flow',
                   ]}
                 />
               </SectionCard>
               <SectionCard className="border-slate-200 bg-slate-50">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Physics</p>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Pure Physics Rescue Focus</p>
                 <BulletList
                   items={[
-                    'Concept application',
-                    'Formula selection',
-                    'Structured answering',
-                    'Graph/data interpretation',
-                    'Practical-style skills',
-                    'Common misconception correction',
+                    'Kinematics and motion graphs',
+                    'Forces, moments and pressure',
+                    'Energy, work and power',
+                    'Thermal physics and heat transfer',
+                    'Electricity and circuits',
+                    'Waves, light and sound',
+                    'Electromagnetism and induction',
+                    'Formula selection, units and structured-answer phrasing',
                   ]}
                 />
               </SectionCard>
               <SectionCard className="border-slate-200 bg-slate-50">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Chemistry</p>
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Pure Chemistry Rescue Focus</p>
                 <BulletList
                   items={[
-                    'Mole concept',
-                    'Chemical bonding',
+                    'Mole concept and chemical calculations',
                     'Acids, bases and salts',
-                    'QA',
+                    'Chemical bonding and structure-property links',
+                    'Qualitative analysis',
                     'Electrolysis',
-                    'Organic chemistry',
-                    'Answer precision',
+                    'Redox and reactivity series',
+                    'Organic chemistry basics',
+                    'Answer precision, keywords and practical planning',
                   ]}
                 />
               </SectionCard>
             </div>
+
+            <div className="mt-4 grid gap-4">
+              <SectionCard className="border-slate-200 bg-slate-50">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">Combined Science Physics/Chemistry Rescue Focus</p>
+                <BulletList
+                  items={[
+                    'Physics: kinematics, forces and motion graphs',
+                    'Physics: electricity, circuits and formula selection',
+                    'Physics: heat transfer, waves and light basics',
+                    'Chemistry: mole concept and equation balancing',
+                    'Chemistry: acids, bases, salts and QA',
+                    'Chemistry: electrolysis, reactivity and redox',
+                    'Practical skills: tables, graphs, sources of error and improvements',
+                    'Answering skills: keywords, units and structured explanations',
+                  ]}
+                />
+              </SectionCard>
+            </div>
+            <p className="mt-5 text-xs text-slate-600 font-medium">Final topic selection is customised after reviewing the student's latest paper or result slip.</p>
             {!showCombined && (
               <p className="mt-5 text-xs text-slate-500">
                 <Link to="/family/crash-courses/psle-june-intensive" className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition hover:text-slate-900 hover:decoration-slate-500">
