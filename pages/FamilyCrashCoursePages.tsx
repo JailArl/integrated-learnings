@@ -735,36 +735,36 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
   const pricingRows = {
     studentHome: isOLevel
       ? [
-          { name: 'Light Boost', detail: '1 × 3h', price: 'From $255' },
-          { name: 'Targeted Rescue', detail: '2 × 3h', price: 'From $500 total' },
-          { name: 'Intensive Rescue', detail: '4 × 3h', price: 'From $980 total' },
+          { name: 'Light Boost', detail: '1 × 3h', price: 'From S$255', note: 'Best for focused confidence reset on one urgent area.' },
+          { name: 'Targeted Rescue', detail: '2 × 3h', price: 'From S$500 total', note: 'Best for students needing structured correction across key weak chapters.' },
+          { name: 'Intensive Rescue', detail: '4 × 3h', price: 'From S$960 total', note: 'Best for deeper rescue before exam sprint when multiple gaps exist.' },
         ]
       : [
-          { name: 'Light Boost', detail: '1 × 3h', price: 'From $240' },
-          { name: 'Targeted Rescue', detail: '2 × 3h', price: 'From $470 total' },
-          { name: 'Intensive Rescue', detail: '4 × 3h', price: 'From $920 total' },
+          { name: 'Light Boost', detail: '1 × 3h', price: 'From S$240', note: 'Best for focused confidence reset on one urgent area.' },
+          { name: 'Targeted Rescue', detail: '2 × 3h', price: 'From S$470 total', note: 'Best for students needing structured correction across key weak topics.' },
+          { name: 'Intensive Rescue', detail: '4 × 3h', price: 'From S$920 total', note: 'Best for deeper rescue before exam sprint when multiple gaps exist.' },
         ],
     tutorHosted: isOLevel
       ? [
-          { name: 'Focused Boost (Refreshments Included)', detail: '1 × 4h', price: 'From $250' },
-          { name: 'Targeted Rescue (Refreshments Included)', detail: '2 × 4h', price: 'From $490 total' },
-          { name: 'Intensive Rescue (Refreshments Included)', detail: '4 × 4h', price: 'From $960 total' },
+          { name: 'Focused Boost', detail: '1 × 4h', price: 'From S$260', note: 'Longer focused block with a short break and refreshments.' },
+          { name: 'Targeted Rescue', detail: '2 × 4h', price: 'From S$500 total', note: 'Better-value structured support for meaningful score recovery.' },
+          { name: 'Intensive Rescue', detail: '4 × 4h', price: 'From S$960 total', note: 'Comprehensive support path for stronger exam readiness.' },
         ]
       : [
-          { name: 'Focused Boost (Refreshments Included)', detail: '1 × 4h', price: 'From $250' },
-          { name: 'Targeted Rescue (Refreshments Included)', detail: '2 × 4h', price: 'From $480 total' },
-          { name: 'Intensive Rescue (Refreshments Included)', detail: '4 × 4h', price: 'From $940 total' },
+          { name: 'Focused Boost', detail: '1 × 4h', price: 'From S$250', note: 'Longer focused block with a short break and refreshments.' },
+          { name: 'Targeted Rescue', detail: '2 × 4h', price: 'From S$480 total', note: 'Better-value structured support for meaningful score recovery.' },
+          { name: 'Intensive Rescue', detail: '4 × 4h', price: 'From S$940 total', note: 'Comprehensive support path for stronger exam readiness.' },
         ],
     miniGroupHostFamily: isOLevel
       ? [
-          '2 students | From $65/student/hr',
-          '3 students | From $60/student/hr',
-          '4 students | From $55/student/hr',
+          '2 students | From S$60/student/hr',
+          '3 students | From S$55/student/hr',
+          '4 students | From S$50/student/hr',
         ]
       : [
-          '2 students | From $60/student/hr',
-          '3 students | From $55/student/hr',
-          '4 students | From $50/student/hr',
+          '2 students | From S$55/student/hr',
+          '3 students | From S$50/student/hr',
+          '4 students | From S$45/student/hr',
         ],
   };
 
@@ -939,9 +939,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 >
                   <span>
                     <span className="block text-sm font-black text-slate-900">Tutor Travels to Student’s Home</span>
-                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: convenient 1-to-1 support</span>
+                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: convenient 1-to-1 support at home</span>
                     <span className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
-                      Includes complimentary diagnostic + action plan (worth $80)
+                      Includes complimentary diagnostic + action plan.
                     </span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.student_home ? 'rotate-180' : ''}`} aria-hidden="true" />
@@ -949,15 +949,19 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               </h3>
               {!openPricingPanels.student_home ? null : (
                 <div className="border-t border-slate-200 px-5 py-4">
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">{isOLevel ? 'O-Level starting rates' : 'PSLE starting rates'}</p>
                   <div className="space-y-2 text-sm">
                     {pricingRows.studentHome.map((row) => (
-                      <div key={row.name} className="flex flex-col justify-between gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2">
-                        <p className="font-semibold text-slate-900">{row.name}</p>
-                        <p className="text-slate-600">{row.detail} | {row.price}</p>
+                      <div key={row.name} className="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-sm font-black text-slate-900">{row.name}</p>
+                          <p className="text-sm font-semibold text-slate-700">{row.detail} | {row.price}</p>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">{row.note}</p>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-3 text-xs text-slate-600">Recommended after fit check: light boost, targeted rescue, or intensive repair.</p>
+                  <p className="mt-3 text-xs text-slate-600">Recommended after fit check: Light Boost, Targeted Rescue, or Intensive Rescue.</p>
                 </div>
               )}
             </article>
@@ -973,22 +977,25 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   <span>
                     <span className="block text-sm font-black text-slate-900">Tutor-Hosted Study Space</span>
                     <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer sessions at better value</span>
-                    <span className="mt-2 block text-xs font-semibold text-slate-600">Starts from 1 student. Mini-group is optional.</span>
+                    <span className="mt-2 block text-xs font-semibold text-slate-600">Starts from 1 student. Mini-group is optional. Each 4-hour block includes a short break and refreshments.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.tutor_hosted ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
               </h3>
               {!openPricingPanels.tutor_hosted ? null : (
                 <div className="border-t border-slate-200 px-5 py-4">
+                  <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">{isOLevel ? 'O-Level starting rates' : 'PSLE starting rates'}</p>
                   <div className="space-y-2 text-sm">
                     {pricingRows.tutorHosted.map((row) => (
-                      <div key={row.name} className="flex flex-col justify-between gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2">
-                        <p className="font-semibold text-slate-900">{row.name}</p>
-                        <p className="text-slate-600">{row.detail} | {row.price}</p>
+                      <div key={row.name} className="rounded-xl border border-slate-200 bg-white px-3 py-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-sm font-black text-slate-900">{row.name}</p>
+                          <p className="text-sm font-semibold text-slate-700">{row.detail} | {row.price}</p>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-500">{row.note}</p>
                       </div>
                     ))}
                   </div>
-                  <p className="mt-3 text-xs text-slate-600">Each 4-hour block includes a short break and refreshments.</p>
                 </div>
               )}
             </article>
@@ -1004,26 +1011,34 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   <span>
                     <span className="block text-sm font-black text-slate-900">Mini-Group (Host-Family Only)</span>
                     <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2-4 students with similar needs</span>
-                    <span className="mt-2 block text-xs font-semibold text-slate-600">Runs at one host-family home only.</span>
+                    <span className="mt-2 block text-xs font-semibold text-slate-600">Runs at one host-family home only. Group stays small for focus and quality.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.mini_group ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
               </h3>
               {!openPricingPanels.mini_group ? null : (
                 <div className="border-t border-slate-200 px-5 py-4">
-                  <div className="rounded-xl border border-slate-200 bg-white p-3">
-                    <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Host-family mini-group pricing</p>
-                    <ul className="mt-2 space-y-1 text-sm text-slate-700">
-                      {pricingRows.miniGroupHostFamily.map((line) => <li key={line}>{line}</li>)}
-                    </ul>
+                  <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                    <div className="grid grid-cols-2 border-b border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
+                      <span>Group Size</span>
+                      <span>Starting Rate</span>
+                    </div>
+                    {pricingRows.miniGroupHostFamily.map((line) => {
+                      const [groupSize, rate] = line.split(' | ');
+                      return (
+                        <div key={line} className="grid grid-cols-2 border-b border-slate-100 px-3 py-2 text-sm text-slate-700 last:border-b-0">
+                          <span className="font-semibold text-slate-900">{groupSize}</span>
+                          <span>{rate}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <p className="mt-3 text-xs text-slate-600">Group size stays at 2-4 for focus and quality.</p>
                 </div>
               )}
             </article>
           </div>
           <p className="mt-5 text-xs text-slate-500">
-            Best format depends on subject, location, urgency, and student needs after the free WhatsApp fit check.
+            Prices shown are starting rates. Final recommendation depends on subject level, travel, and fit after a quick diagnostic check.
           </p>
         </SectionCard>
 
