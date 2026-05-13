@@ -926,7 +926,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <SectionHeading
             kicker="LESSON FORMAT"
             title="Choose the Lesson Format That Fits"
-            subtitle="Tap each format to open its pricing table. Choose based on your child’s gap severity, timeline, and budget comfort."
+            subtitle="Tap a format to view pricing. We recommend based on your child’s gaps, timeline, and budget."
           />
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
@@ -939,7 +939,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 >
                   <span>
                     <span className="block text-sm font-black text-slate-900">Tutor Travels to Student’s Home</span>
-                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: convenience + focused 1-to-1 support</span>
+                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: convenient 1-to-1 support</span>
                     <span className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
                       Includes complimentary diagnostic + action plan (worth $80)
                     </span>
@@ -957,7 +957,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                       </div>
                     ))}
                   </div>
-                  <p className="mt-3 text-xs text-slate-600">Recommended after fit check based on whether your child needs light enhancement, targeted rescue, or intensive repair.</p>
+                  <p className="mt-3 text-xs text-slate-600">Recommended after fit check: light boost, targeted rescue, or intensive repair.</p>
                 </div>
               )}
             </article>
@@ -972,8 +972,8 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 >
                   <span>
                     <span className="block text-sm font-black text-slate-900">Tutor-Hosted Study Space</span>
-                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer focused sessions at stronger value</span>
-                    <span className="mt-2 block text-xs font-semibold text-slate-600">Starts from 1 student. Mini-group is optional, not required.</span>
+                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer sessions at better value</span>
+                    <span className="mt-2 block text-xs font-semibold text-slate-600">Starts from 1 student. Mini-group is optional.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.tutor_hosted ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
@@ -1003,8 +1003,8 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 >
                   <span>
                     <span className="block text-sm font-black text-slate-900">Mini-Group (Host-Family Only)</span>
-                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2-4 students with similar level and needs</span>
-                    <span className="mt-2 block text-xs font-semibold text-slate-600">This format runs at one host family home. No tutor-hosted mini-group pricing here.</span>
+                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2-4 students with similar needs</span>
+                    <span className="mt-2 block text-xs font-semibold text-slate-600">Runs at one host-family home only.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.mini_group ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
@@ -1017,13 +1017,13 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                       {pricingRows.miniGroupHostFamily.map((line) => <li key={line}>{line}</li>)}
                     </ul>
                   </div>
-                  <p className="mt-3 text-xs text-slate-600">Group size is kept to 2-4 students for quality control and focus.</p>
+                  <p className="mt-3 text-xs text-slate-600">Group size stays at 2-4 for focus and quality.</p>
                 </div>
               )}
             </article>
           </div>
           <p className="mt-5 text-xs text-slate-500">
-            Best format depends on subject, location, group size, urgency, and student needs after the free WhatsApp fit check.
+            Best format depends on subject, location, urgency, and student needs after the free WhatsApp fit check.
           </p>
         </SectionCard>
 
@@ -1035,7 +1035,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               subtitle={pageCopy.pslePackageSubtitle}
             />
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Send your child’s latest paper for a free WhatsApp fit check. We’ll recommend the right package.
+              Send your child’s latest paper for a free WhatsApp fit check. We’ll recommend the best package.
             </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
@@ -1091,7 +1091,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Package prices vary by lesson format. Open the lesson format cards above to compare student-home, tutor-hosted, and mini-group options.</p>
+            <p className="mt-5 text-xs text-slate-500">Package prices vary by format. Open the lesson-format cards above to compare options.</p>
           </SectionCard>
         )}
 
@@ -1103,7 +1103,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               subtitle={pageCopy.oLevelPackageSubtitle}
             />
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Send your child’s latest paper for a free WhatsApp fit check. We’ll recommend the right package.
+              Send your child’s latest paper for a free WhatsApp fit check. We’ll recommend the best package.
             </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
