@@ -638,7 +638,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       title: 'PSLE Mini-Group 4-Block Exam Rescue',
       duration: '4 blocks × 3h = 12h',
       bestFor: '2–4 students with same weak topics needing rescue',
-      format: "host family's home or tutor-hosted study space, subject to schedule",
+      format: "host family's home only",
       price: 'See pricing by format',
       includes: [
         'Small-group diagnostic and urgent-gap targeting',
@@ -668,7 +668,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       title: 'O-Level Mini-Group 4-Block Exam Rescue',
       duration: '4 blocks × 3h = 12h',
       bestFor: '2–4 students with same weak chapters needing rescue',
-      format: "host family's home or tutor-hosted study space, subject to schedule",
+      format: "host family's home only",
       price: 'See pricing by format',
       includes: [
         'Small-group diagnosis and urgent-chapter targeting',
@@ -719,57 +719,41 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
   ];
 
   const [openPricingPanels, setOpenPricingPanels] = useState<Record<string, boolean>>(() => ({
-    tutor_hosted: true,
+    tutor_hosted: false,
     student_home: false,
     mini_group: false,
   }));
 
-  const openPricingFromFormat = (panelId: 'student_home' | 'tutor_hosted' | 'mini_group') => {
-    setOpenPricingPanels({
-      student_home: panelId === 'student_home',
-      tutor_hosted: panelId === 'tutor_hosted',
-      mini_group: panelId === 'mini_group',
-    });
-
-    const pricingSection = document.getElementById('pricing-by-format');
-    if (pricingSection) {
-      pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  };
-
-  const togglePricingPanel = (panelId: string) => {
-    setOpenPricingPanels((prev) => ({ ...prev, [panelId]: !prev[panelId] }));
+  const togglePricingPanel = (panelId: 'student_home' | 'tutor_hosted' | 'mini_group') => {
+    setOpenPricingPanels((prev) => ({
+      student_home: panelId === 'student_home' ? !prev.student_home : false,
+      tutor_hosted: panelId === 'tutor_hosted' ? !prev.tutor_hosted : false,
+      mini_group: panelId === 'mini_group' ? !prev.mini_group : false,
+    }));
   };
 
   const pricingRows = {
     studentHome: isOLevel
       ? [
-          { name: '1-Day Chapter Rescue', detail: '1 × 3h', price: 'From $255' },
-          { name: '4-Block Subject Intensive', detail: '4 × 3h = 12h', price: 'From $1,020 total' },
+          { name: 'Light Boost', detail: '1 × 3h', price: 'From $255' },
+          { name: 'Targeted Rescue', detail: '2 × 3h', price: 'From $500 total' },
+          { name: 'Intensive Rescue', detail: '4 × 3h', price: 'From $980 total' },
         ]
       : [
-          { name: '1-Day Targeted Correction', detail: '1 × 3h', price: 'From $240' },
-          { name: '4-Block Final-Lap Intensive', detail: '4 × 3h = 12h', price: 'From $960 total' },
+          { name: 'Light Boost', detail: '1 × 3h', price: 'From $240' },
+          { name: 'Targeted Rescue', detail: '2 × 3h', price: 'From $470 total' },
+          { name: 'Intensive Rescue', detail: '4 × 3h', price: 'From $920 total' },
         ],
     tutorHosted: isOLevel
       ? [
-          { name: '1-Day Chapter Rescue', detail: '1 × 3h', price: 'From $225' },
-          { name: '4-Block Subject Intensive', detail: '4 × 3h = 12h', price: 'From $900 total' },
+          { name: 'Focused Boost (Refreshments Included)', detail: '1 × 4h', price: 'From $250' },
+          { name: 'Targeted Rescue (Refreshments Included)', detail: '2 × 4h', price: 'From $490 total' },
+          { name: 'Intensive Rescue (Refreshments Included)', detail: '4 × 4h', price: 'From $960 total' },
         ]
       : [
-          { name: '1-Day Targeted Correction', detail: '1 × 3h', price: 'From $210' },
-          { name: '4-Block Final-Lap Intensive', detail: '4 × 3h = 12h', price: 'From $840 total' },
-        ],
-    miniGroupTutorHosted: isOLevel
-      ? [
-          '2 students | From $60/student/hr',
-          '3 students | From $55/student/hr',
-          '4 students | From $50/student/hr',
-        ]
-      : [
-          '2 students | From $55/student/hr',
-          '3 students | From $50/student/hr',
-          '4 students | From $45/student/hr',
+          { name: 'Focused Boost (Refreshments Included)', detail: '1 × 4h', price: 'From $250' },
+          { name: 'Targeted Rescue (Refreshments Included)', detail: '2 × 4h', price: 'From $480 total' },
+          { name: 'Intensive Rescue (Refreshments Included)', detail: '4 × 4h', price: 'From $940 total' },
         ],
     miniGroupHostFamily: isOLevel
       ? [
@@ -942,53 +926,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <SectionHeading
             kicker="LESSON FORMAT"
             title="Choose the Lesson Format That Fits"
-            subtitle="Pick the format that matches your schedule and your child’s learning style. We’ll recommend the best one during fit check."
+            subtitle="Tap each format to open its pricing table. Choose based on your child’s gap severity, timeline, and budget comfort."
           />
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <button
-              type="button"
-              onClick={() => openPricingFromFormat('student_home')}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-slate-300 hover:bg-white"
-            >
-              <p className="text-sm font-black text-slate-900">Tutor Travels to Student’s Home</p>
-              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: convenience + focused 1-to-1 support</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">We teach at your home in North Singapore where schedules allow.</p>
-              <p className="mt-3 text-xs font-semibold text-blue-600">Tap to view this format pricing</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => openPricingFromFormat('tutor_hosted')}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-slate-300 hover:bg-white"
-            >
-              <p className="text-sm font-black text-slate-900">Tutor-Hosted Study Space</p>
-              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer focused sessions at better value</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Selected slots are available at our small tutor-hosted study space.</p>
-              <p className="mt-3 text-xs font-semibold text-blue-600">Tap to view this format pricing</p>
-            </button>
-            <button
-              type="button"
-              onClick={() => openPricingFromFormat('mini_group')}
-              className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-slate-300 hover:bg-white"
-            >
-              <p className="text-sm font-black text-slate-900">Mini-Group Format</p>
-              <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2–4 students of similar level</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">Study with friends at a host home or selected tutor-hosted slots to reduce cost per student.</p>
-              <p className="mt-3 text-xs font-semibold text-blue-600">Tap to view this format pricing</p>
-            </button>
-          </div>
-          <p className="mt-5 text-xs text-slate-500">
-            Best format depends on subject, location, group size, urgency, and student needs after the free WhatsApp fit check.
-          </p>
-        </SectionCard>
-
-        <SectionCard id="pricing-by-format">
-          <SectionHeading
-            kicker="PRICING BY FORMAT"
-            title="View Pricing by Lesson Format"
-            subtitle="Open each format to compare pricing. Best fit depends on subject, location, group size, urgency, and student needs after fit check."
-          />
-
-          <div className="mt-6 space-y-3">
             <article className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
               <h3>
                 <button
@@ -999,7 +939,10 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 >
                   <span>
                     <span className="block text-sm font-black text-slate-900">Tutor Travels to Student’s Home</span>
-                    <span className="mt-1 block text-xs font-semibold text-slate-500">Best for families who want maximum convenience and focused 1-to-1 support at home. Home-visit pricing includes tutor travel time and scheduling buffer.</span>
+                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: convenience + focused 1-to-1 support</span>
+                    <span className="mt-3 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-700">
+                      Includes complimentary diagnostic + action plan (worth $80)
+                    </span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.student_home ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
@@ -1008,12 +951,13 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 <div className="border-t border-slate-200 px-5 py-4">
                   <div className="space-y-2 text-sm">
                     {pricingRows.studentHome.map((row) => (
-                      <div key={row.name} className="flex flex-col justify-between gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 sm:flex-row sm:items-center">
+                      <div key={row.name} className="flex flex-col justify-between gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <p className="font-semibold text-slate-900">{row.name}</p>
                         <p className="text-slate-600">{row.detail} | {row.price}</p>
                       </div>
                     ))}
                   </div>
+                  <p className="mt-3 text-xs text-slate-600">Recommended after fit check based on whether your child needs light enhancement, targeted rescue, or intensive repair.</p>
                 </div>
               )}
             </article>
@@ -1028,7 +972,8 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 >
                   <span>
                     <span className="block text-sm font-black text-slate-900">Tutor-Hosted Study Space</span>
-                    <span className="mt-1 block text-xs font-semibold text-slate-500">Best for students who can travel to us and want longer, more focused sessions at better value. Better value because there is no tutor travel time.</span>
+                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer focused sessions at stronger value</span>
+                    <span className="mt-2 block text-xs font-semibold text-slate-600">Starts from 1 student. Mini-group is optional, not required.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.tutor_hosted ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
@@ -1037,12 +982,13 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 <div className="border-t border-slate-200 px-5 py-4">
                   <div className="space-y-2 text-sm">
                     {pricingRows.tutorHosted.map((row) => (
-                      <div key={row.name} className="flex flex-col justify-between gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2 sm:flex-row sm:items-center">
+                      <div key={row.name} className="flex flex-col justify-between gap-1 rounded-xl border border-slate-200 bg-white px-3 py-2">
                         <p className="font-semibold text-slate-900">{row.name}</p>
                         <p className="text-slate-600">{row.detail} | {row.price}</p>
                       </div>
                     ))}
                   </div>
+                  <p className="mt-3 text-xs text-slate-600">Each 4-hour block includes a short break and refreshments.</p>
                 </div>
               )}
             </article>
@@ -1056,33 +1002,29 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
                 >
                   <span>
-                    <span className="block text-sm font-black text-slate-900">Mini-Group Crash Course</span>
-                    <span className="mt-1 block text-xs font-semibold text-slate-500">Best for 2–4 students of similar level. Mini-groups lower the cost per student while keeping the group small and targeted.</span>
+                    <span className="block text-sm font-black text-slate-900">Mini-Group (Host-Family Only)</span>
+                    <span className="mt-1 block text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2-4 students with similar level and needs</span>
+                    <span className="mt-2 block text-xs font-semibold text-slate-600">This format runs at one host family home. No tutor-hosted mini-group pricing here.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.mini_group ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
               </h3>
               {!openPricingPanels.mini_group ? null : (
                 <div className="border-t border-slate-200 px-5 py-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
-                      <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Tutor-hosted mini-group</p>
-                      <ul className="mt-2 space-y-1 text-sm text-slate-700">
-                        {pricingRows.miniGroupTutorHosted.map((line) => <li key={line}>{line}</li>)}
-                      </ul>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-white p-3">
-                      <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Host-family mini-group</p>
-                      <ul className="mt-2 space-y-1 text-sm text-slate-700">
-                        {pricingRows.miniGroupHostFamily.map((line) => <li key={line}>{line}</li>)}
-                      </ul>
-                    </div>
+                  <div className="rounded-xl border border-slate-200 bg-white p-3">
+                    <p className="text-xs font-black uppercase tracking-[0.12em] text-slate-500">Host-family mini-group pricing</p>
+                    <ul className="mt-2 space-y-1 text-sm text-slate-700">
+                      {pricingRows.miniGroupHostFamily.map((line) => <li key={line}>{line}</li>)}
+                    </ul>
                   </div>
-                  <p className="mt-3 text-xs text-slate-600">Mini-groups are subject to student fit, similar level/subject needs, and suitable scheduling. Group size is kept to 2–4 students.</p>
+                  <p className="mt-3 text-xs text-slate-600">Group size is kept to 2-4 students for quality control and focus.</p>
                 </div>
               )}
             </article>
           </div>
+          <p className="mt-5 text-xs text-slate-500">
+            Best format depends on subject, location, group size, urgency, and student needs after the free WhatsApp fit check.
+          </p>
         </SectionCard>
 
         {(showCombined || isPsle) && (
@@ -1149,7 +1091,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Package prices vary by lesson format. Open the pricing panels above to compare student-home, tutor-hosted, and mini-group options. Tutor-hosted sessions may allow longer blocks or better-value arrangements because no travel time is needed.</p>
+            <p className="mt-5 text-xs text-slate-500">Package prices vary by lesson format. Open the lesson format cards above to compare student-home, tutor-hosted, and mini-group options.</p>
           </SectionCard>
         )}
 
@@ -1243,7 +1185,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 </Link>
               </p>
             )}
-            <p className="mt-5 text-xs text-slate-500">Package prices vary by lesson format. Open the pricing panels above to compare student-home, tutor-hosted, and mini-group options. Tutor-hosted sessions may allow longer blocks or better-value arrangements because no travel time is needed.</p>
+            <p className="mt-5 text-xs text-slate-500">Package prices vary by lesson format. Open the lesson format cards above to compare student-home, tutor-hosted, and mini-group options.</p>
           </SectionCard>
         )}
 
