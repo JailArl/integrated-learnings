@@ -7,11 +7,8 @@ import {
   Clock3,
   FileText,
   Home,
-  MapPin,
   MessageCircle,
-  ShieldCheck,
   Sparkles,
-  Target,
   Users,
 } from 'lucide-react';
 
@@ -330,56 +327,21 @@ const LevelCard: React.FC<{
   </SectionCard>
 );
 
-const ComparisonTable: React.FC = () => (
-  <SectionCard>
-    <SectionHeading title="Normal tuition supports weekly learning. This crash course targets urgent correction in a short period." />
-    <div className="mt-5 space-y-3 md:hidden">
-      {[
-        ['Fixed weekly pace', 'Diagnosis first, then focused correction'],
-        ['Broad topic coverage', 'High-impact weak topics first'],
-        ['Shared materials', 'Student-specific papers and errors'],
-        ['General parent visibility', 'Clear parent updates and next steps'],
-        ['Ends after lessons', 'Optional follow-through support'],
-      ].map(([left, right]) => (
-        <article key={left} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Typical option</p>
-          <p className="mt-1 text-sm font-semibold text-slate-700">{left}</p>
-          <p className="mt-3 text-[11px] font-black uppercase tracking-[0.12em] text-emerald-700">Integrated Learnings</p>
-          <p className="mt-1 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-slate-700">{right}</p>
-        </article>
-      ))}
-    </div>
-
-    <div className="mt-5 hidden overflow-x-auto md:block">
-      <table className="min-w-full border-separate border-spacing-y-3 text-left text-sm">
-        <thead>
-          <tr>
-            <th className="w-1/2 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500">Normal Tuition / Generic Crash Course</th>
-            <th className="w-1/2 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500">Integrated Learnings Home Crash Course</th>
-          </tr>
-        </thead>
-        <tbody>
-          {[
-            ['Fixed weekly pace', 'Diagnosis first, then focused correction'],
-            ['Broad topic coverage', 'High-impact weak topics first'],
-            ['Shared materials', 'Student-specific papers and errors'],
-            ['General parent visibility', 'Clear parent updates and next steps'],
-            ['Ends after lessons', 'Optional follow-through support'],
-          ].map(([left, right]) => (
-            <tr key={left} className="align-top">
-              <td className="rounded-l-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-slate-700">{left}</td>
-              <td className="rounded-r-2xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-slate-700">{right}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </SectionCard>
-);
-
 const getPageCopy = (variant: CrashCourseVariant) => {
   const isPsle = variant === 'psle';
   const isOLevel = variant === 'olevel';
+  const currentMonth = new Date().toLocaleString('en-US', { timeZone: 'Asia/Singapore', month: 'short' });
+  const inWa2Season = ['May', 'Jun'].includes(currentMonth);
+  const inMidYearSeason = ['Jul', 'Aug'].includes(currentMonth);
+  const inExamSprint = ['Sep', 'Oct'].includes(currentMonth);
+
+  const seasonalNote = inWa2Season
+    ? 'WA2 results just came in. If your child did not hit target, we can help you fix urgent gaps quickly before exam pressure builds.'
+    : inMidYearSeason
+      ? 'Mid-year results reveal the real weak topics. Most students need targeted correction now, not another generic weekly routine.'
+      : inExamSprint
+        ? 'Exam window is near. This crash course focuses only on the scoring gaps that matter most right now.'
+        : 'If recent results are below expectations, we focus on urgent correction first so your child can recover faster.';
 
   return {
     heroTitle: isPsle
@@ -389,46 +351,30 @@ const getPageCopy = (variant: CrashCourseVariant) => {
         : 'PSLE & O-Level Final-Lap Crash Course',
     heroLocationTitle: 'North Singapore',
     heroSubtitle: isPsle
-      ? 'Diagnostic-based home crash course for P6 students who need targeted Math and Science correction, stronger exam technique, and clearer parent-visible progress.'
+      ? 'Your child\'s WA2 result may not be where you hoped. We focus on fast, targeted correction before PSLE.'
       : isOLevel
-        ? 'Diagnostic-based home crash course for Sec 4 and Sec 5 students who need targeted chapter rescue, stronger paper strategy, and clearer exam technique.'
-        : 'Diagnostic-based home crash course for PSLE and O-Level students who need targeted weak-topic correction, stronger exam technique, and clearer parent-visible progress.',
-    heroSupport: isPsle
-      ? 'We first identify where marks are being lost, then focus on the highest-impact PSLE gaps before moving into timed exam-style practice.'
-      : isOLevel
-        ? 'We first identify where marks are being lost, then focus on the highest-impact O-Level gaps before moving into timed exam-style practice.'
-        : 'We first identify where marks are being lost, then focus on the highest-impact gaps before moving into timed exam-style practice.',
-    heroStrong: isPsle
-      ? 'Led by experienced Math and Science educators focused on diagnostic correction, exam-style practice, and parent-visible lesson updates.'
-      : isOLevel
-        ? 'Led by experienced Math and Science educators focused on chapter rescue, paper strategy, exam-style correction, and parent-visible lesson updates.'
-        : 'Led by experienced Math and Science educators focused on diagnostic correction, exam-style practice, and parent-visible lesson updates.',
-    locationLine: `Available first for North Singapore: ${northAreas.join(', ')} and nearby estates.`,
-    heroBadges: isPsle
+        ? 'Mid-year results can feel stressful. We target the exact weak chapters and paper skills your child needs now.'
+        : 'If results are below expectations, we run focused correction on the biggest scoring gaps first.',
+    seasonalNote,
+    promiseItems: isPsle
       ? [
-          'PSLE Math & Science',
-          'P6 final-lap support',
-          'Student\'s home / host family / tutor-hosted study space',
-          'North Singapore first',
-          'Parent updates after each session',
-          'StudyPulse follow-through available',
+          'Diagnostic review from WA2 papers or recent school work',
+          'Targeted weak-topic correction in a short 1-2 week sprint',
+          'Parent updates after each session so you can track progress',
+          'Exam-style practice focused on real scoring improvement',
         ]
       : isOLevel
         ? [
-            'E-Math, A-Math, Physics & Chemistry',
-            'Sec 4 / Sec 5 final-lap support',
-            'Student\'s home / host family / tutor-hosted study space',
-            'North Singapore first',
-            'Parent updates after each session',
-            'StudyPulse follow-through available',
+            'Fast chapter-level diagnosis from recent tests or papers',
+            'Targeted rescue on the most costly weak chapters first',
+            'Parent updates after each session with next-step focus',
+            'Timed paper strategy and exam-style correction support',
           ]
         : [
-            'Student\'s home / host family / tutor-hosted study space',
-            'PSLE Math & Science',
-            'O-Level E-Math, A-Math, Physics & Chemistry',
-            'North Singapore first',
-            'Parent updates after each session',
-            'StudyPulse follow-through available',
+            'Fast diagnosis from recent tests, papers, and weak-topic lists',
+            'Targeted correction on highest-impact scoring gaps first',
+            'Parent updates after each session with clear next steps',
+            'Exam-style practice that builds results under time pressure',
           ],
     methodKicker: 'Crash Course',
     methodTitle: 'What Is a Crash Course?',
@@ -493,9 +439,9 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     chooserTitle: 'Choose Your Level',
     chooserSubtitle: 'Pick the level that matches your child’s final-lap pressure point.',
     pslePackageTitle: 'PSLE Math & Science Crash Course',
-    pslePackageSubtitle: 'Built as a short intensive model: 3 focused correction blocks + 1 final revision block (4 blocks × 3h = 12h), typically completed over 1–2 weeks depending on schedule and stamina.',
+    pslePackageSubtitle: 'Short intensive format for urgent correction before PSLE.',
     oLevelPackageTitle: 'O-Level Math & Science Crash Course',
-    oLevelPackageSubtitle: 'Built as a short intensive model: 3 focused correction blocks + 1 final revision / paper strategy block (4 blocks × 3h = 12h), typically completed over 1–2 weeks depending on schedule and stamina.',
+    oLevelPackageSubtitle: 'Short intensive format for urgent chapter rescue before O-Levels.',
     friendGroupTitle: isPsle ? 'PSLE Friend-Group Home Crash Course' : isOLevel ? 'O-Level Friend-Group Home Crash Course' : 'Friend-Group Home Crash Course',
     friendGroupSubtitle: isPsle
       ? 'Have 2–4 P6 students from the same school, estate, class, or friend group? Mini-groups can be conducted at one host family\'s home or selected tutor-hosted study space slots. This keeps the lesson focused while reducing cost per student.'
@@ -673,44 +619,18 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
   const pslePackageLink = '#psle-packages';
   const oLevelPackageLink = '#olevel-packages';
 
-  const uspCards = [
-    {
-      title: 'Diagnostic First, Not Worksheet First',
-      body: 'We begin by reviewing the student’s current performance, recent papers, or weak-topic list before deciding what to focus on.',
-    },
-    {
-      title: 'Personalised Final-Lap Plan',
-      body: 'Each crash course is adjusted based on the student’s actual gaps instead of forcing every child through the same lesson sequence.',
-    },
-    {
-      title: 'Exam-Style Correction',
-      body: 'We focus on how marks are lost in real questions, including careless mistakes, missing keywords, weak explanation, poor problem-solving flow, and time pressure.',
-    },
-    {
-      title: 'Parent-Visible Progress',
-      body: 'Parents receive updates after sessions so they know what was covered, what was observed, and what the student should work on next.',
-    },
-    {
-      title: 'Follow-Through After the Crash Course',
-      body: 'Students receive a post-course revision direction. StudyPulse or weekly correction support can be added if the student needs accountability after the crash course.',
-    },
-  ];
-
   const pslePackages = [
     {
       title: 'PSLE 4-Block Final-Lap Intensive',
       duration: '4 blocks × 3h = 12h',
-      bestFor: 'serious PSLE Math or Science final-lap preparation',
+      bestFor: 'main PSLE weak-topic correction before exam sprint',
       format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'See pricing by format',
       includes: [
-        '3 focused correction blocks',
-        '1 final revision block',
-        'Weak-topic mapping',
-        'Exam-style guided practice',
-        'Timed mini-practice',
-        'Parent updates and next-step plan',
-        'StudyPulse follow-through option',
+        '3 correction blocks + 1 final revision block',
+        'Weak-topic mapping and scoring-gap focus',
+        'Exam-style guided and timed practice',
+        'Parent update with next-step plan',
       ],
       popular: true,
     },
@@ -721,12 +641,10 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       format: "host family's home or tutor-hosted study space, subject to schedule",
       price: 'See pricing by format',
       includes: [
-        'Small-group diagnostic review',
-        'Targeted correction based on group needs',
-        'Exam-style guided practice',
-        'Final revision block',
+        'Small-group diagnostic review and weak-topic targeting',
+        'Exam-style guided practice + final revision block',
         'Parent updates where suitable',
-        'Group size kept to 2–4 students',
+        'Group size kept to 2-4 students',
       ],
     },
   ];
@@ -735,17 +653,14 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
     {
       title: 'O-Level 4-Block Subject Intensive',
       duration: '4 blocks × 3h = 12h',
-      bestFor: 'serious O-Level subject final-lap preparation',
+      bestFor: 'urgent chapter rescue before O-Level papers',
       format: "student's home or tutor-hosted study space, subject to schedule",
       price: 'See pricing by format',
       includes: [
-        '3 focused subject correction blocks',
-        '1 final revision / paper strategy block',
-        'Weak-chapter mapping',
-        'Timed section practice',
-        'Paper strategy and correction plan',
+        '3 correction blocks + 1 final paper-strategy block',
+        'Weak-chapter mapping and chapter rescue focus',
+        'Timed section practice with correction plan',
         'Parent/student next-step summary',
-        'StudyPulse follow-through option',
       ],
       popular: true,
     },
@@ -756,44 +671,50 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       format: "host family's home or tutor-hosted study space, subject to schedule",
       price: 'See pricing by format',
       includes: [
-        'Small-group diagnostic review',
-        'Targeted chapter correction based on group needs',
-        'Timed exam-style practice',
-        'Final revision / paper strategy block',
+        'Small-group diagnostic review and chapter targeting',
+        'Timed exam-style practice + paper strategy block',
         'Parent/student updates where suitable',
-        'Group size kept to 2–4 students',
+        'Group size kept to 2-4 students',
       ],
     },
   ];
 
   const faqItems = [
     {
-      question: 'Is this normal tuition?',
-      answer: 'No. Normal tuition usually runs weekly. This is a short intensive focused on urgent correction before the exam.',
+      question: 'My child just finished WA2 / mid-year and the results are low. Is this the right timing?',
+      answer: 'Yes. This is exactly when many parents come to us. We review recent papers quickly, identify urgent weak topics, and focus on high-impact correction first.',
+    },
+    {
+      question: 'How fast can we see improvement?',
+      answer: 'Many students show clearer methods and fewer repeated mistakes within 2-3 sessions. Score movement depends on baseline, effort, and exam timeline.',
     },
     {
       question: 'How do you know what my child needs?',
-      answer: 'Parents can send recent papers, result slips, or weak-topic lists. We use these to identify priority issues before recommending the format and plan.',
+      answer: 'Send us recent papers, result slips, or weak-topic lists. We diagnose mark-loss patterns first, then recommend the most suitable crash-course route.',
     },
     {
-      question: 'Where are lessons conducted?',
-      answer: 'Most sessions are at the student\'s home within North Singapore. Friend-group sessions can run at one host family\'s home.',
+      question: 'What exactly happens in this crash course?',
+      answer: 'Simple flow: diagnose weak topics, correct the highest-impact gaps, then move into guided or timed exam-style practice.',
     },
     {
-      question: 'Can my child come to tutor-hosted study space?',
-      answer: 'Yes, selected sessions are available at a small tutor-hosted study space, subject to schedule and student fit.',
+      question: 'Where can lessons be conducted?',
+      answer: 'Most sessions are at the student\'s home in North Singapore. We also have selected tutor-hosted slots and small friend-group arrangements.',
     },
     {
-      question: 'Can friends join?',
-      answer: 'Yes. Small groups are usually 2–4 students with similar level and subject needs.',
+      question: 'Can friends join as a mini-group?',
+      answer: 'Yes. Mini-groups are usually 2-4 students with similar level and subject needs. This can reduce cost per student while keeping the group focused.',
     },
     {
-      question: 'Do you guarantee improvement?',
-      answer: 'No responsible educator should guarantee grades. We provide clear diagnosis, structured correction, and parent updates.',
+      question: 'Do you guarantee score jumps?',
+      answer: 'No responsible educator should guarantee grades. We promise clear diagnosis, focused correction, and parent-visible updates after each session.',
     },
     {
-      question: 'What happens after the crash course?',
-      answer: 'You can continue with follow-through options such as StudyPulse tracking or weekly correction support if needed.',
+      question: 'What is the difference from normal weekly tuition?',
+      answer: 'Normal tuition is broad and ongoing. This crash course is short and urgent: fix the biggest scoring gaps first, then apply in exam-style questions.',
+    },
+    {
+      question: 'What happens after the crash course ends?',
+      answer: 'We provide a follow-through plan. If needed, families can continue with StudyPulse or weekly correction support for accountability.',
     },
   ];
 
@@ -861,67 +782,11 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
         <div className="relative z-10 mx-auto max-w-6xl">
           <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <div>
-              <Pill className="border-white/15 bg-white/10 text-amber-200">
-                <Sparkles size={12} className="mr-2" aria-hidden="true" /> Find the gap. Fix the gap. Push the final lap.
-              </Pill>
-              <h1 className="mt-4 text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">
-                <span className="block">{pageCopy.heroTitle}</span>
-                <span className="mt-1 block text-amber-300">{pageCopy.heroLocationTitle}</span>
-              </h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">{pageCopy.heroSubtitle}</p>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300">{pageCopy.heroSupport}</p>
-              <p className="mt-4 max-w-2xl rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-semibold text-amber-100">
-                {pageCopy.heroStrong}
-              </p>
-              <p className="mt-4 max-w-2xl text-sm font-semibold text-slate-300">{pageCopy.locationLine}</p>
-
-              <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-200">Parent clarity</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-100">Free fit check before recommendation</p>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-200">Progress visibility</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-100">Parent updates after each session</p>
-                </div>
-                <div className="rounded-2xl border border-white/15 bg-white/10 px-3 py-3 backdrop-blur-sm">
-                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-200">Flexible venue</p>
-                  <p className="mt-1 text-sm font-semibold text-slate-100">Home, host family, or tutor-hosted option</p>
-                </div>
-              </div>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <ActionButton
-                  label="Send Result Slip for Fit Check"
-                  href={fitCheckLink}
-                  ctaName="hero_fit_check"
-                  icon={<FileText size={15} aria-hidden="true" />}
-                  className="bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
-                />
-                <ActionButton
-                  label="Check Available Home Slots"
-                  href={slotsLink}
-                  ctaName="hero_check_slots"
-                  icon={<Home size={15} aria-hidden="true" />}
-                  className="border border-white/20 bg-white/10 text-white hover:bg-white/15"
-                />
-              </div>
-
-              <div className="mt-8 grid gap-2 sm:grid-cols-2">
-                {pageCopy.heroBadges.map((badge) => (
-                  <div key={badge} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-slate-200 backdrop-blur-sm">
-                    {badge}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid gap-4">
+            <div className="order-1 lg:order-2 grid gap-4">
               <SectionCard className="border-white/10 bg-white/5 p-5 text-white backdrop-blur-sm">
                 <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">Official 2026 SEAB exam countdown</p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-300">
-                  This is the real exam clock parents are feeling. Keep the focus on the subject that matters most now.
+                  Real exam clock. Focus on the subject with the biggest scoring gap first.
                 </p>
                 <div className={`mt-4 grid gap-3 ${showCombined ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
                   {showCombined ? (
@@ -952,91 +817,55 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   )}
                 </div>
               </SectionCard>
+            </div>
 
-              <SectionCard className="border-white/10 bg-white/5 p-5 text-white backdrop-blur-sm">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-amber-300">Home-based correction flow</p>
-                <div className="mt-4 space-y-3">
-                  {[
-                    'Diagnostic review using school work, result slips, or weak-topic lists',
-                    'Targeted correction on the highest-impact scoring gaps first',
-                    'Timed exam-style practice once foundations are repaired',
-                  ].map((line) => (
-                    <div key={line} className="flex items-start gap-3 rounded-2xl border border-white/10 bg-black/10 px-4 py-3">
-                      <Target size={16} className="mt-0.5 shrink-0 text-amber-300" aria-hidden="true" />
-                      <p className="text-sm leading-relaxed text-slate-200">{line}</p>
+            <div className="order-2 lg:order-1">
+              <Pill className="border-white/15 bg-white/10 text-amber-200">
+                <Sparkles size={12} className="mr-2" aria-hidden="true" /> Find the gap. Fix the gap. Push the final lap.
+              </Pill>
+              <h1 className="mt-4 text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">
+                <span className="block">{pageCopy.heroTitle}</span>
+                <span className="mt-1 block text-amber-300">{pageCopy.heroLocationTitle}</span>
+              </h1>
+              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">{pageCopy.heroSubtitle}</p>
+              <p className="mt-4 max-w-2xl rounded-2xl border border-amber-300/30 bg-amber-100/10 px-4 py-3 text-sm font-semibold text-amber-100">
+                {pageCopy.seasonalNote}
+              </p>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <ActionButton
+                  label="Send Result Slip for Fit Check"
+                  href={fitCheckLink}
+                  ctaName="hero_fit_check"
+                  icon={<FileText size={15} aria-hidden="true" />}
+                  className="bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
+                />
+                <ActionButton
+                  label="Check Available Home Slots"
+                  href={slotsLink}
+                  ctaName="hero_check_slots"
+                  icon={<Home size={15} aria-hidden="true" />}
+                  className="border border-white/20 bg-white/10 text-white hover:bg-white/15"
+                />
+              </div>
+
+              <div className="mt-7 rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-300">What we deliver</p>
+                <div className="mt-3 space-y-2">
+                  {pageCopy.promiseItems.map((item) => (
+                    <div key={item} className="flex items-start gap-2 text-sm text-slate-200">
+                      <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-emerald-300" aria-hidden="true" />
+                      <p>{item}</p>
                     </div>
                   ))}
                 </div>
-              </SectionCard>
-
-              <SectionCard className="border-white/10 bg-white/5 p-5 text-white backdrop-blur-sm">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-300">North Singapore focus</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {northAreas.map((area) => (
-                    <Pill key={area} className="border-white/15 bg-white/10 text-slate-100">
-                      {area}
-                    </Pill>
-                  ))}
-                </div>
-                <p className="mt-4 text-sm leading-relaxed text-slate-300">
-                  Lessons can be conducted at the student\'s home within North Singapore. For friend-group sessions, one host family may provide the venue. Selected mini-group sessions may also be conducted at a small tutor-hosted study space, with details shared before confirmation.
-                </p>
-              </SectionCard>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <main className="mx-auto max-w-6xl space-y-8 px-4 py-10 sm:px-6 lg:py-12">
-        <SectionCard>
-          <SectionHeading
-            kicker={pageCopy.methodKicker}
-            title={pageCopy.methodTitle}
-            subtitle={pageCopy.methodSubtitle}
-          />
-          <p className="mt-4 text-sm leading-7 text-slate-600">
-            We first identify where marks are being lost, then focus on high-impact weak topics, answering technique, and exam-style practice. The aim is to use limited holiday time more effectively, not to rush through the whole syllabus blindly.
-          </p>
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {pageCopy.methodCards.map((card) => (
-              <article key={card.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-blue-600">{card.title}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-700">{card.text}</p>
-              </article>
-            ))}
-          </div>
-        </SectionCard>
-
-        <SectionCard>
-          <SectionHeading
-            kicker="Difference"
-            title="Why Integrated Learnings Is Different"
-            subtitle={pageCopy.differenceSubtitle}
-          />
-          <p className="mt-4 text-sm leading-7 text-slate-600">
-            We use the student’s recent work to decide what to fix first, then run focused correction in a short window.
-          </p>
-
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-            {uspCards.map((item) => (
-              <article key={item.title} className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-sm font-black text-slate-900">{item.title}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-            <ComparisonTable />
-            <SectionCard className="h-full border-slate-200 bg-slate-50">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Final note</p>
-              <p className="mt-3 text-lg font-bold leading-8 text-slate-900">
-                Normal tuition supports weekly learning. This crash course is built for urgent correction over a short period.
-              </p>
-            </SectionCard>
-          </div>
-        </SectionCard>
-
         {showCombined && (
           <SectionCard>
             <SectionHeading
@@ -1215,21 +1044,19 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               subtitle={pageCopy.pslePackageSubtitle}
             />
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Not sure which package fits? Start with a free WhatsApp fit check. We’ll review recent results and recommend the right option.
+              Send your child’s latest paper for a free WhatsApp fit check. We’ll recommend the right package.
             </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
                 title="PSLE 1-Day Targeted Correction"
                 duration="1 block × 3h"
-                bestFor="urgent correction on one major weak area before deciding on the full intensive"
+                bestFor="quick rescue on one major weak topic"
                 format="student's home or tutor-hosted study space, subject to schedule"
                 price="See pricing by format"
                 includes={[
-                  'Quick review of recent work or weak topics',
+                  'Quick diagnostic from recent work',
                   'Targeted correction on one urgent scoring gap',
-                  'Guided PSLE-style practice',
-                  'Parent update after session',
-                  'Recommendation on whether the full intensive is needed',
+                  'Guided PSLE-style practice + parent update',
                 ]}
               />
               {pslePackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
@@ -1285,21 +1112,19 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               subtitle={pageCopy.oLevelPackageSubtitle}
             />
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Not sure which package fits? Start with a free WhatsApp fit check. We’ll review recent results and recommend the right option.
+              Send your child’s latest paper for a free WhatsApp fit check. We’ll recommend the right package.
             </p>
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
                 title="O-Level 1-Day Chapter Rescue"
                 duration="1 block × 3h"
-                bestFor="urgent correction on one weak chapter, question type, or paper section"
+                bestFor="quick rescue on one weak chapter or paper section"
                 format="student's home or tutor-hosted study space, subject to schedule"
                 price="See pricing by format"
                 includes={[
-                  'Paper/result review',
-                  'Targeted correction on one urgent weak chapter or question type',
-                  'Guided exam-style drilling',
-                  'Parent/student next-step summary',
-                  'Recommendation on whether the full intensive is needed',
+                  'Quick paper/result diagnostic',
+                  'Targeted correction on one urgent weak chapter',
+                  'Guided exam-style drilling + next-step summary',
                 ]}
               />
               {oLevelPackages.map((pkg) => <PackageCard key={pkg.title} {...pkg} />)}
