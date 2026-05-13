@@ -277,7 +277,7 @@ const PackageCard: React.FC<{
   duration: string;
   bestFor: string;
   format: string;
-  price: string;
+  price?: string;
   includes: string[];
   popular?: boolean;
 }> = ({ title, duration, bestFor, format, price, includes, popular }) => (
@@ -295,7 +295,7 @@ const PackageCard: React.FC<{
       <span>•</span>
       <span>{format}</span>
     </div>
-    <p className="mt-4 text-2xl font-black text-slate-900">{price}</p>
+    {price ? <p className="mt-4 text-2xl font-black text-slate-900">{price}</p> : null}
     <ul className="mt-4 space-y-2">
       {includes.map((item) => (
         <li key={item} className="flex items-start gap-2 text-sm text-slate-700">
@@ -625,7 +625,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '4 blocks × 3h = 12h',
       bestFor: 'main PSLE weak-topic rescue before exam sprint',
       format: "student's home or tutor-hosted study space, subject to schedule",
-      price: 'See pricing by format',
+      price: '',
       includes: [
         '3 urgent-gap rescue blocks + 1 final readiness check',
         'Weak-topic diagnosis and scoring-gap prioritization',
@@ -639,7 +639,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '4 blocks × 3h = 12h',
       bestFor: '2–4 students with same weak topics needing rescue',
       format: "host family's home only",
-      price: 'See pricing by format',
+      price: '',
       includes: [
         'Small-group diagnostic and urgent-gap targeting',
         'Exam-style guided practice + final readiness block',
@@ -655,7 +655,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '4 blocks × 3h = 12h',
       bestFor: 'urgent chapter rescue before O-Level exams',
       format: "student's home or tutor-hosted study space, subject to schedule",
-      price: 'See pricing by format',
+      price: '',
       includes: [
         '3 urgent-chapter rescue blocks + 1 paper-strategy block',
         'Costly-chapter prioritization and rapid fixing',
@@ -669,7 +669,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
       duration: '4 blocks × 3h = 12h',
       bestFor: '2–4 students with same weak chapters needing rescue',
       format: "host family's home only",
-      price: 'See pricing by format',
+      price: '',
       includes: [
         'Small-group diagnosis and urgent-chapter targeting',
         'Timed exam-style practice + paper strategy block',
