@@ -724,6 +724,19 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
     mini_group: false,
   }));
 
+  const openPricingFromFormat = (panelId: 'student_home' | 'tutor_hosted' | 'mini_group') => {
+    setOpenPricingPanels({
+      student_home: panelId === 'student_home',
+      tutor_hosted: panelId === 'tutor_hosted',
+      mini_group: panelId === 'mini_group',
+    });
+
+    const pricingSection = document.getElementById('pricing-by-format');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const togglePricingPanel = (panelId: string) => {
     setOpenPricingPanels((prev) => ({ ...prev, [panelId]: !prev[panelId] }));
   };
@@ -932,28 +945,43 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             subtitle="Pick the format that matches your schedule and your child’s learning style. We’ll recommend the best one during fit check."
           />
           <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+            <button
+              type="button"
+              onClick={() => openPricingFromFormat('student_home')}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-slate-300 hover:bg-white"
+            >
               <p className="text-sm font-black text-slate-900">Tutor Travels to Student’s Home</p>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: convenience + focused 1-to-1 support</p>
               <p className="mt-3 text-sm leading-6 text-slate-600">We teach at your home in North Singapore where schedules allow.</p>
-            </article>
-            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <p className="mt-3 text-xs font-semibold text-blue-600">Tap to view this format pricing</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => openPricingFromFormat('tutor_hosted')}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-slate-300 hover:bg-white"
+            >
               <p className="text-sm font-black text-slate-900">Tutor-Hosted Study Space</p>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: longer focused sessions at better value</p>
               <p className="mt-3 text-sm leading-6 text-slate-600">Selected slots are available at our small tutor-hosted study space.</p>
-            </article>
-            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <p className="mt-3 text-xs font-semibold text-blue-600">Tap to view this format pricing</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => openPricingFromFormat('mini_group')}
+              className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition hover:border-slate-300 hover:bg-white"
+            >
               <p className="text-sm font-black text-slate-900">Mini-Group Format</p>
               <p className="mt-2 text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Best for: 2–4 students of similar level</p>
               <p className="mt-3 text-sm leading-6 text-slate-600">Study with friends at a host home or selected tutor-hosted slots to reduce cost per student.</p>
-            </article>
+              <p className="mt-3 text-xs font-semibold text-blue-600">Tap to view this format pricing</p>
+            </button>
           </div>
           <p className="mt-5 text-xs text-slate-500">
             Best format depends on subject, location, group size, urgency, and student needs after the free WhatsApp fit check.
           </p>
         </SectionCard>
 
-        <SectionCard>
+        <SectionCard id="pricing-by-format">
           <SectionHeading
             kicker="PRICING BY FORMAT"
             title="View Pricing by Lesson Format"
@@ -1219,6 +1247,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           </SectionCard>
         )}
 
+        {!isPsle && (
         <SectionCard>
           <SectionHeading
             kicker="Friend Group"
@@ -1257,7 +1286,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             </div>
           </div>
         </SectionCard>
+        )}
 
+        {!isPsle && (
         <SectionCard>
           <SectionHeading
             kicker="After Course"
@@ -1298,7 +1329,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             />
           </div>
         </SectionCard>
+        )}
 
+        {!isPsle && (
         <SectionCard>
           <SectionHeading
             kicker="Logistics"
@@ -1323,7 +1356,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             </div>
           </div>
         </SectionCard>
+        )}
 
+        {!isPsle && (
         <SectionCard>
           <SectionHeading
             kicker="Mock Exam"
@@ -1356,7 +1391,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             </div>
           </div>
         </SectionCard>
+        )}
 
+        {!isPsle && (
         <SectionCard>
           <SectionHeading
             kicker="How It Works"
@@ -1393,7 +1430,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             />
           </div>
         </SectionCard>
+        )}
 
+        {!isPsle && (
         <SectionCard>
           <SectionHeading
             kicker="Suitable For"
@@ -1405,7 +1444,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             />
           </div>
         </SectionCard>
+        )}
 
+        {!isPsle && (
         <SectionCard>
           <SectionHeading
             kicker="Fit Check"
@@ -1424,6 +1465,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             />
           </div>
         </SectionCard>
+        )}
 
         <FaqAccordion items={faqItems} />
 
