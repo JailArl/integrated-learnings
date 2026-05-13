@@ -417,7 +417,7 @@ const FamilyHome: React.FC = () => {
             </div>
 
             {activeOption && (
-              <div key={`${selected ?? 'none'}-${flashId}`} ref={resultRef} className="mt-4 rounded-2xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-50 animate-family-flash">
+              <div key={`${selected ?? 'none'}-${flashId}`} className="mt-4 rounded-2xl border border-emerald-300/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-50 animate-family-flash">
                 <span className="font-bold">{familyContext.resultLead}:</span> {activeOption.label}
                 <span className="block text-xs text-emerald-100/80">{familyContext.resultHint}</span>
               </div>
@@ -429,43 +429,9 @@ const FamilyHome: React.FC = () => {
       {/* ═══════════ INTERACTIVE GUIDE ═══════════ */}
       <section className="px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
-
-          {/* Question */}
           <div className="mb-6 text-center">
-            <h2 className="text-xl font-black text-slate-900 sm:text-2xl">{familyContext.question}</h2>
-            <p className="mt-2 text-sm text-slate-500">{familyContext.subtitle}</p>
-          </div>
-
-          {/* Option cards */}
-          <div className="grid gap-3 sm:grid-cols-2">
-            {GUIDE_STEPS[0].options.map((opt) => {
-              const isActive = selected === opt.key;
-              return (
-                <button
-                  key={opt.key}
-                  onClick={() => setSelected(opt.key)}
-                  className={`group flex items-start gap-4 rounded-2xl border p-4 text-left transition-all sm:p-5 ${
-                    isActive
-                      ? 'border-sky-500 bg-sky-50 shadow-md shadow-sky-100 ring-2 ring-sky-400'
-                      : 'border-slate-200 bg-white shadow-sm hover:border-sky-300 hover:bg-sky-50/50 hover:shadow-md'
-                  }`}
-                  aria-pressed={isActive}
-                >
-                  <span className="mt-0.5 text-2xl leading-none">{opt.emoji}</span>
-                  <div className="flex-1">
-                    <p className={`text-sm font-bold leading-snug ${isActive ? 'text-sky-800' : 'text-slate-800 group-hover:text-sky-800'}`}>
-                      {opt.label}
-                    </p>
-                    <p className="mt-1 text-xs leading-5 text-slate-500">{opt.desc}</p>
-                  </div>
-                  {isActive && (
-                    <span className="ml-1 mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white">
-                      <CheckCircle size={12} />
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+            <h2 className="text-xl font-black text-slate-900 sm:text-2xl">Recommended next step</h2>
+            <p className="mt-2 text-sm text-slate-500">We use your selection above and map it to the most practical path for your child.</p>
           </div>
 
           {/* Result */}
@@ -481,8 +447,18 @@ const FamilyHome: React.FC = () => {
                 onClick={() => setSelected(null)}
                 className="mt-4 text-xs text-slate-400 underline-offset-2 hover:text-slate-600 hover:underline"
               >
-                ← Choose a different option
+                ← Change selection in the guided assistant above
               </button>
+            </div>
+          )}
+
+          {!selected && (
+            <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+              <p className="text-sm text-slate-600">Choose one option in the guided assistant above to see a personalised recommendation here.</p>
+              <a href="#parent-inquiry" className="mt-4 inline-flex items-center rounded-xl bg-sky-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-sky-700">
+                Skip to Request Form
+                <ArrowRight size={14} className="ml-2" />
+              </a>
             </div>
           )}
 
