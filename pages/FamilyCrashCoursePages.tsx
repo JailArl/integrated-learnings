@@ -1043,7 +1043,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 duration="1 block × 3h"
                 bestFor="quick rescue on one major weak topic"
                 format="student's home or tutor-hosted study space, subject to schedule"
-                price="See pricing by format"
+                price=""
                 includes={[
                   'Quick diagnostic from recent work',
                   'Targeted correction on one urgent scoring gap',
@@ -1111,7 +1111,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 duration="1 block × 3h"
                 bestFor="quick rescue on one weak chapter or paper section"
                 format="student's home or tutor-hosted study space, subject to schedule"
-                price="See pricing by format"
+                price=""
                 includes={[
                   'Quick paper/result diagnostic',
                   'Targeted correction on one urgent weak chapter',
