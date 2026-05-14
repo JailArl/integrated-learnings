@@ -53,8 +53,11 @@ async function verifyAdminToken(req) {
 function buildMembershipPayload(targetPlan, currentPeriodEnd) {
   const nowIso = new Date().toISOString();
   if (targetPlan === 'premium') {
-    const currentPeriodEndIso = currentPeriodEnd && !Number.isNaN(new Date(currentPeriodEnd).getTime())
-      ? currentPeriodEnd
+    const parsedCurrentPeriodEnd = currentPeriodEnd && !Number.isNaN(new Date(currentPeriodEnd).getTime())
+      ? new Date(currentPeriodEnd)
+      : null;
+    const currentPeriodEndIso = parsedCurrentPeriodEnd && parsedCurrentPeriodEnd.getTime() > Date.now()
+      ? parsedCurrentPeriodEnd.toISOString()
       : null;
     const defaultPremiumEndIso = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     return {
