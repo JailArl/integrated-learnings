@@ -274,13 +274,14 @@ const FaqAccordion: React.FC<{ items: { question: string; answer: string }[] }> 
 
 const PackageCard: React.FC<{
   title: string;
+  scheduleNote?: string;
   duration: string;
   bestFor: string;
   format: string;
   price?: string;
   includes: string[];
   popular?: boolean;
-}> = ({ title, duration, bestFor, format, price, includes, popular }) => (
+}> = ({ title, scheduleNote, duration, bestFor, format, price, includes, popular }) => (
   <article className={`relative rounded-2xl border p-5 ${popular ? 'border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 ring-1 ring-amber-200' : 'border-slate-200 bg-slate-50'}`}>
     {popular && (
       <span className="absolute right-4 top-4 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-slate-900">
@@ -288,6 +289,7 @@ const PackageCard: React.FC<{
       </span>
     )}
     <h3 className="pr-24 text-lg font-black text-slate-900">{title}</h3>
+    {scheduleNote ? <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-800">{scheduleNote}</p> : null}
     <div className="mt-2 flex flex-wrap gap-2 text-xs font-semibold text-slate-500">
       <span>{duration}</span>
       <span>•</span>
@@ -335,13 +337,17 @@ const getPageCopy = (variant: CrashCourseVariant) => {
   const inMidYearSeason = ['Jul', 'Aug'].includes(currentMonth);
   const inExamSprint = ['Sep', 'Oct'].includes(currentMonth);
 
-  const seasonalNote = inWa2Season
-    ? '⚠️ WA2 results just revealed the weak topics. Parents are telling us their kids feel overwhelmed. We rescue grades by fixing urgent gaps in just 2-4 weeks before PSLE pressure builds.'
-    : inMidYearSeason
-      ? '⚠️ Mid-year results are painful. Your child\'s weak topics are now crystal clear. This is exactly when focused rescue makes the biggest difference—don\'t wait.'
-      : inExamSprint
-        ? '⚠️ Exam is close. Every weak chapter costs marks. Our exam rescue course targets only the urgent scoring gaps that matter most right now.'
-        : '⚠️ Recent results are below target? We rescue your child\'s score by sprinting on urgent gaps first, not generic weekly learning.';
+  const seasonalNote = isPsle
+    ? '⚠️ WA2 results just revealed the weak topics. Our June Holiday Rescue Intake starts 15 June 2026, focusing on urgent gaps before Term 3 begins.'
+    : isOLevel
+      ? '⚠️ WA2 / mid-year results just exposed the weak chapters. Our June Holiday Rescue Intake starts 15 June 2026, focusing on urgent Math and Science gaps before Term 3 begins.'
+    : inWa2Season
+      ? '⚠️ WA2 results just revealed the weak topics. Parents are telling us their kids feel overwhelmed. We rescue grades by fixing urgent gaps in just 2-4 weeks before PSLE pressure builds.'
+      : inMidYearSeason
+        ? '⚠️ Mid-year results are painful. Your child\'s weak topics are now crystal clear. This is exactly when focused rescue makes the biggest difference—don\'t wait.'
+        : inExamSprint
+          ? '⚠️ Exam is close. Every weak chapter costs marks. Our exam rescue course targets only the urgent scoring gaps that matter most right now.'
+          : '⚠️ Recent results are below target? We rescue your child\'s score by sprinting on urgent gaps first, not generic weekly learning.';
 
   return {
     heroTitle: isPsle
@@ -622,6 +628,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
   const pslePackages = [
     {
       title: 'PSLE 4-Block Exam Rescue Intensive',
+      scheduleNote: 'Recommended intake: 15–28 June. 4 focused sessions over 1–2 weeks before Term 3 resumes.',
       duration: '4 blocks × 3h = 12h',
       bestFor: 'main PSLE weak-topic rescue before exam sprint',
       format: "student's home or tutor-hosted study space, subject to schedule",
@@ -636,6 +643,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
     },
     {
       title: 'PSLE Mini-Group 4-Block Exam Rescue',
+      scheduleNote: 'Group runs from week of 15 June. Subject to matching students with similar weak topics.',
       duration: '4 blocks × 3h = 12h',
       bestFor: '2–4 students with same weak topics needing rescue',
       format: "host family's home only",
@@ -652,6 +660,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
   const oLevelPackages = [
     {
       title: 'O-Level 4-Block Exam Rescue Intensive',
+      scheduleNote: 'Recommended intake: 15–28 June. 4 focused sessions over 1–2 weeks to fix costly chapters before Term 3.',
       duration: '4 blocks × 3h = 12h',
       bestFor: 'urgent chapter rescue before O-Level exams',
       format: "student's home or tutor-hosted study space, subject to schedule",
@@ -666,6 +675,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
     },
     {
       title: 'O-Level Mini-Group 4-Block Exam Rescue',
+      scheduleNote: 'Group runs from week of 15 June. Best for students with similar subject gaps needing focused exam practice.',
       duration: '4 blocks × 3h = 12h',
       bestFor: '2–4 students with same weak chapters needing rescue',
       format: "host family's home only",
@@ -682,11 +692,57 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
   const faqItems = [
     {
       question: 'My child just finished WA2 / mid-year and the results are low. Is this the right timing?',
-      answer: 'Yes. This is exactly when many parents come to us. We review recent papers quickly, identify urgent weak topics, and focus on high-impact correction first.',
+      answer: isPsle
+        ? 'Yes. This is one of the best times to act because WA2 / mid-year results usually reveal the exact weak topics before the PSLE pressure period builds. Our June Holiday Rescue Intake starts from 15 June 2026, giving your child time to fix urgent gaps before Term 3 begins on 29 June 2026.'
+        : isOLevel
+          ? 'Yes. WA2 / mid-year results usually reveal the chapters and paper skills that are costing the most marks. Our June Holiday Rescue Intake starts from 15 June 2026, giving your child time to fix urgent gaps before Term 3, prelim pressure, and the final O-Level written papers.'
+        : 'Yes. This is exactly when many parents come to us. We review recent papers quickly, identify urgent weak topics, and focus on high-impact correction first.',
     },
+    ...(isPsle
+      ? [
+          {
+            question: 'Why does the June Rescue Intake start from 15 June?',
+            answer: 'Many families travel during the first part of the June holidays. Starting from 15 June allows students to use the second half of the holiday for focused rescue work before school reopens. It also keeps the learning fresh before Term 3.',
+          },
+          {
+            question: 'Can my child still join after 15 June?',
+            answer: 'Yes, subject to tutor availability. For students joining later, we may recommend a shorter targeted correction session or a compressed 4-block rescue plan, depending on the child\'s weak topics and schedule.',
+          },
+          {
+            question: 'What if we are travelling during part of June?',
+            answer: 'That is okay. Send us your child\'s result slip or weak-topic list first. We will recommend whether your child should do a 1-day targeted correction, a 4-block intensive, or a mini-group option based on the remaining available dates.',
+          },
+          {
+            question: 'Do I need to book the full 15–28 June period?',
+            answer: 'No. The 15–28 June period is the rescue window, not a compulsory full-time course. The actual number of sessions depends on your child\'s needs. Some students only need one focused correction session, while others benefit more from a 4-block rescue plan.',
+          },
+        ]
+      : []),
+    ...(isOLevel
+      ? [
+          {
+            question: 'Why does the O-Level June Rescue Intake start from 15 June?',
+            answer: 'Many families travel during the first part of June. Starting from 15 June uses the second half of the holiday for focused repair work, while keeping the learning fresh before school reopens.',
+          },
+          {
+            question: 'Can my child join after 15 June?',
+            answer: 'Yes, subject to tutor availability. For later joiners, we may recommend a 1-day chapter rescue or a compressed 4-block plan depending on the subject and weak chapters.',
+          },
+          {
+            question: 'What subjects can this cover?',
+            answer: 'We can support E Math, A Math, Pure Physics, Pure Chemistry, and Combined Science. The final recommendation depends on your child\'s latest paper, result slip, or weak-topic list.',
+          },
+          {
+            question: 'Do I need to book the full 15–28 June period?',
+            answer: 'No. The 15–28 June period is the rescue window. Your child may only need one focused session, or may benefit from a 4-block intensive if there are multiple weak chapters.',
+          },
+        ]
+      : []),
     {
       question: 'How fast can we see improvement?',
-      answer: 'Many students show clearer methods and fewer repeated mistakes within 2-3 sessions. Score movement depends on baseline, effort, and exam timeline.',
+      answer: isPsle
+        ? 'Most students should feel clearer after the first session because we focus only on the highest-impact gaps. The goal is not to reteach everything, but to fix the topics and question types causing the biggest mark loss before Term 3 begins.'
+        : 'Many students show clearer methods and fewer repeated mistakes within 2-3 sessions. Score movement depends on baseline, effort, and exam timeline.',
     },
     {
       question: 'How do you know what my child needs?',
@@ -710,7 +766,11 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
     },
     {
       question: 'What is the difference from normal weekly tuition?',
-      answer: 'Normal tuition is broad and ongoing. This crash course is short and urgent: fix the biggest scoring gaps first, then apply in exam-style questions.',
+      answer: isPsle
+        ? 'Normal weekly tuition is usually long-term and chapter-by-chapter. This rescue course is short, targeted, and exam-focused. We use recent work, WA2 / mid-year results, or weak-topic lists to identify what is costing the most marks, then fix those gaps first.'
+        : isOLevel
+          ? 'Normal weekly tuition is usually long-term and chapter-by-chapter. This rescue course is short, targeted, and exam-focused. We identify the chapters and paper skills causing the biggest mark loss, then fix those first.'
+        : 'Normal tuition is broad and ongoing. This crash course is short and urgent: fix the biggest scoring gaps first, then apply in exam-style questions.',
     },
     {
       question: 'What happens after the crash course ends?',
@@ -825,20 +885,32 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                 <span className="mt-1 block text-amber-300">{pageCopy.heroLocationTitle}</span>
               </h1>
               <p className="mt-5 max-w-2xl text-base leading-7 text-slate-200 sm:text-lg sm:leading-8">{pageCopy.heroSubtitle}</p>
+              {(isPsle || isOLevel) && (
+                <>
+                  <p className="mt-3 inline-flex items-center rounded-full border border-amber-200/50 bg-amber-200/10 px-4 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-amber-200">
+                    June Holiday Rescue Intake: Starts 15 June 2026
+                  </p>
+                  <p className="mt-3 max-w-2xl text-sm font-semibold leading-6 text-amber-100 sm:text-base">
+                    {isPsle
+                      ? 'Designed for students who need urgent Math & Science gap-closing before Term 3 and PSLE preparation intensifies.'
+                      : 'For students who need to repair weak chapters before Term 3, prelim pressure, and the final O-Level written papers. June is the first serious rescue window before Term 3, prelim pressure, and the final O-Level written papers.'}
+                  </p>
+                </>
+              )}
               <p className="mt-4 max-w-2xl rounded-2xl border border-amber-300/30 bg-amber-100/10 px-4 py-3 text-sm font-semibold text-amber-100">
                 {pageCopy.seasonalNote}
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <ActionButton
-                  label="Secure Your Child's Spot"
+                  label={isPsle || isOLevel ? 'Reserve June Rescue Slot' : "Secure Your Child's Spot"}
                   href={fitCheckLink}
                   ctaName="hero_fit_check"
                   icon={<FileText size={15} aria-hidden="true" />}
                   className="bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
                 />
                 <ActionButton
-                  label="Check Available Slots"
+                  label={isPsle || isOLevel ? 'Check 15–28 June Availability' : 'Check Available Slots'}
                   href={slotsLink}
                   ctaName="hero_check_slots"
                   icon={<Home size={15} aria-hidden="true" />}
@@ -940,6 +1012,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   <span className="flex-1">
                     <span className="block text-sm font-black text-slate-900">Tutor Travels to Student’s Home</span>
                     <span className="mt-1 inline-block rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-700">Premium Convenience</span>
+                    {(isPsle || isOLevel) && <span className="mt-2 inline-block rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-800">June slots: 15–28 June</span>}
                     <span className="mt-2 block text-xs font-semibold text-slate-600">Convenient 1-to-1 support at home. Includes complimentary diagnostic + action plan.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.student_home ? 'rotate-180' : ''}`} aria-hidden="true" />
@@ -977,6 +1050,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   <span className="flex-1">
                     <span className="block text-sm font-black text-slate-900">Tutor-Hosted Study Space</span>
                     <span className="mt-1 inline-block rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">Better Value</span>
+                    {(isPsle || isOLevel) && <span className="mt-2 inline-block rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-800">June slots: 15–28 June</span>}
                     <span className="mt-2 block text-xs font-semibold text-slate-600">Students who want longer focused sessions without the higher cost of home visits. Starts from 1 student. Each 4-hour session includes a short break and refreshments.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.tutor_hosted ? 'rotate-180' : ''}`} aria-hidden="true" />
@@ -1015,6 +1089,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   <span className="flex-1">
                     <span className="block text-sm font-black text-slate-900">Mini-Group (Host-Family Only)</span>
                     <span className="mt-1 inline-block rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-blue-700">Shared Cost</span>
+                    {(isPsle || isOLevel) && <span className="mt-2 inline-block rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-amber-800">Group intake: Week of 15 June</span>}
                     <span className="mt-2 block text-xs font-semibold text-slate-600">2–4 students with similar needs. Runs at one host-family home only. Group stays small for focus and quality.</span>
                   </span>
                   <ChevronDown size={16} className={`shrink-0 text-slate-500 transition-transform ${openPricingPanels.mini_group ? 'rotate-180' : ''}`} aria-hidden="true" />
@@ -1040,6 +1115,74 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           </p>
         </SectionCard>
 
+        {isPsle && (
+          <SectionCard>
+            <SectionHeading
+              kicker="Schedule"
+              title="June Holiday Rescue Window"
+              subtitle="Plan your intensive around the two-week holiday sprint before Term 3 resumes on 29 June 2026."
+            />
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  window: '15–21 June',
+                  body: 'Diagnose weak topics + start urgent correction',
+                },
+                {
+                  window: '22–28 June',
+                  body: 'Exam-style practice + readiness check',
+                },
+                {
+                  window: 'Before 29 June',
+                  body: 'Parent update + next-step recommendation',
+                },
+              ].map((item) => (
+                <article key={item.window} className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5">
+                  <p className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-800">{item.window}</p>
+                  <p className="mt-3 text-sm font-semibold leading-6 text-slate-800">{item.body}</p>
+                </article>
+              ))}
+            </div>
+            <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+              Exact lesson timing depends on tutor availability, student location, and subject needs. Send us your child’s latest paper or result slip and we will recommend the best slot.
+            </p>
+          </SectionCard>
+        )}
+
+        {isOLevel && (
+          <SectionCard>
+            <SectionHeading
+              kicker="Schedule"
+              title="June Holiday O-Level Rescue Window"
+              subtitle="Use the second half of June to repair costly chapters before Term 3 resumes on 29 June 2026."
+            />
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  window: '15–21 June',
+                  body: 'Diagnose weak chapters + start urgent fixing',
+                },
+                {
+                  window: '22–28 June',
+                  body: 'Timed practice + paper strategy',
+                },
+                {
+                  window: 'Before Term 3',
+                  body: 'Parent update + next-step plan',
+                },
+              ].map((item) => (
+                <article key={item.window} className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5">
+                  <p className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-800">{item.window}</p>
+                  <p className="mt-3 text-sm font-semibold leading-6 text-slate-800">{item.body}</p>
+                </article>
+              ))}
+            </div>
+            <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+              Exact lesson timing depends on subject, tutor availability, student location, and whether your child needs E Math, A Math, Physics, Chemistry, or Combined Science support.
+            </p>
+          </SectionCard>
+        )}
+
         {(showCombined || isPsle) && (
           <SectionCard id="psle-packages">
             <SectionHeading
@@ -1053,6 +1196,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
                 title="PSLE 1-Day Targeted Correction"
+                scheduleNote="Available from 15 June onwards. Suitable for one urgent weak topic or careless-error correction."
                 duration="1 block × 3h"
                 bestFor="quick rescue on one major weak topic"
                 format="student's home or tutor-hosted study space, subject to schedule"
@@ -1128,6 +1272,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             <div className="mt-6 grid gap-5 xl:grid-cols-3">
               <PackageCard
                 title="O-Level 1-Day Chapter Rescue"
+                scheduleNote="Available from 15 June onwards. Best for one urgent weak chapter or paper section."
                 duration="1 block × 3h"
                 bestFor="quick rescue on one weak chapter or paper section"
                 format="student's home or tutor-hosted study space, subject to schedule"
@@ -1464,11 +1609,11 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <SectionHeading
             kicker="NEXT STEP"
             title={pageCopy.finalTitle}
-            subtitle={pageCopy.finalSubtitle}
+            subtitle={isPsle || isOLevel ? 'We will review your child’s latest WA2 / mid-year result and recommend whether a 1-day, 4-block, or mini-group rescue plan is most suitable.' : pageCopy.finalSubtitle}
           />
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <ActionButton
-              label="Send Result Slip for Fit Check"
+              label={isPsle || isOLevel ? 'Send Result Slip for Free Fit Check' : 'Send Result Slip for Fit Check'}
               href={fitCheckLink}
               ctaName="final_fit_check"
               icon={<FileText size={15} aria-hidden="true" />}
@@ -1497,7 +1642,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             onClick={() => trackCtaClick('mobile_sticky_slots', slotsLink)}
             className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-3 py-3 text-xs font-black text-slate-950 transition hover:bg-amber-400"
           >
-            Check Home Slots
+            {isPsle || isOLevel ? 'Check 15–28 June' : 'Check Home Slots'}
           </a>
           <a
             href={fitCheckLink}
@@ -1506,7 +1651,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             onClick={() => trackCtaClick('mobile_sticky_fit_check', fitCheckLink)}
             className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-3 text-xs font-black text-slate-700 transition hover:bg-slate-50"
           >
-            Send Result Slip
+            {isPsle || isOLevel ? 'Free Fit Check' : 'Send Result Slip'}
           </a>
         </div>
       </div>

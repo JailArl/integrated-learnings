@@ -59,9 +59,9 @@ const getFamilyContext = (date = new Date()): FamilyContext => {
       heroAccent: 'what should your family do next?',
       intro:
         'If the results are worrying, we will help you decide the next step without wasting time browsing.',
-      bannerText: 'WA2 is over and many parents are worried about results. Let us help you choose the next move.',
-      bannerCta: 'Talk to us',
-      bannerHref: 'https://wa.me/6598882675?text=Hi%2C%20WA2%20just%20finished%20and%20I%27d%20like%20help%20choosing%20the%20next%20step%20for%20my%20child.',
+      bannerText: 'June Holiday Exam Rescue starts 15 June for PSLE & O-Level — send your child\'s latest results for a free fit check.',
+      bannerCta: 'Check June Slots',
+      bannerHref: '/family/crash-courses/psle-june-intensive',
       assistantTitle: 'Right after WA2, clarity matters',
       assistantBody: 'Pick the problem that feels most urgent and we will guide you to the best fix.',
       question: 'What are you trying to solve after WA2?',
@@ -335,15 +335,24 @@ const FamilyHome: React.FC = () => {
       <div className="sticky top-0 z-50 flex items-center justify-center gap-2 bg-gradient-to-r from-slate-900 via-sky-800 to-emerald-700 px-3 py-2.5 text-white shadow-lg sm:gap-6 sm:px-4">
         <Timer size={15} className="shrink-0" />
         <p className="text-xs font-bold sm:text-sm">
-          Parent sign-up discount is available for the crash course. {familyContext.bannerText}
+          {familyContext.bannerText}
         </p>
-        <a
-          href={familyContext.bannerHref}
-          target="_blank" rel="noopener noreferrer"
-          className="hidden shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-black text-orange-600 shadow transition hover:bg-orange-50 sm:inline-flex"
-        >
-          {familyContext.bannerCta} →
-        </a>
+        {familyContext.bannerHref.startsWith('/') ? (
+          <Link
+            to={familyContext.bannerHref}
+            className="hidden shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-black text-orange-600 shadow transition hover:bg-orange-50 sm:inline-flex"
+          >
+            {familyContext.bannerCta} →
+          </Link>
+        ) : (
+          <a
+            href={familyContext.bannerHref}
+            target="_blank" rel="noopener noreferrer"
+            className="hidden shrink-0 rounded-full bg-white px-3 py-1 text-[11px] font-black text-orange-600 shadow transition hover:bg-orange-50 sm:inline-flex"
+          >
+            {familyContext.bannerCta} →
+          </a>
+        )}
       </div>
 
       {/* ═══════════ GUIDED HERO ═══════════ */}
