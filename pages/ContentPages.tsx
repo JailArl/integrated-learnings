@@ -744,174 +744,358 @@ export const CourseworkSupport: React.FC = () => (
   </>
 );
 
-export const Contact: React.FC = () => (
-  <>
-    <PageHeader title="Get Learning Guidance" subtitle="Professional advisory to help your child find the right learning pathway." />
-    
-    <Section>
-      {/* Hero - Dual Audience Cards */}
-      <div className="grid md:grid-cols-2 gap-8 mb-16">
-        <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-10 rounded-2xl shadow-xl relative overflow-hidden group hover:shadow-2xl transition h-full flex flex-col">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative z-10 flex flex-col h-full">
-            <div className="text-4xl mb-4">👨‍👩‍👧</div>
-            <h2 className="text-2xl font-bold mb-3">For Parents</h2>
-            <p className="text-blue-100 mb-6 leading-relaxed">
-              Request a tutor and we’ll run a diagnostic to match the right educator quickly—no trial and error.
+const toWhatsApp = (message: string): string => {
+  const encoded = encodeURIComponent(message);
+  return `https://wa.me/6598882675?text=${encoded}`;
+};
+
+export const Contact: React.FC = () => {
+  const crashCourseMsg = `Hi, I would like to check the June crash course intakes.
+
+Child level: PSLE / O-Level
+Subject: Math / Science / E Math / A Math / Physics / Chemistry / Combined Science
+Latest result / concern:
+Preferred programme: 1-Day / 4-Block / Mini-Group
+Questions:`;
+
+  const futureChoicesMsg = `Hi, I would like details for the Future Choices Simulation Workshop.
+
+Child level: Secondary __
+Preferred mode: Zoom / Physical / Private group
+Preferred date: 10 Jun Zoom / 17 Jun Zoom / 20 Jun Physical / 24 Jun Zoom / 27 Jun Physical
+Interested in: Part 1 / Part 2 / 2-Day Bundle
+Questions:`;
+
+  const tutorMatchingMsg = `Hi, I would like help finding suitable learning support for my child.
+
+Child level:
+Subject:
+Current concern:
+Preferred format: Online / Home tuition / Tutor-hosted / Mini-group
+Location:
+Questions:`;
+
+  const educatorMsg = `Hi, I would like to apply to join Integrated Learnings as an educator.
+
+Subjects / levels I can teach:
+Experience:
+Preferred areas / mode:
+Questions:`;
+
+  return (
+    <>
+      <PageHeader 
+        title="How Can We Support Your Child's Growth?" 
+        subtitle="Integrated Learnings is a tuition agency and learning advisory service. We help parents understand their child's needs, then guide them to the right support — crash courses, enrichment workshops, tutor matching, or long-term learning plans."
+      />
+
+      <Section>
+        {/* Main Enquiry Paths - 4 Cards */}
+        <div className="mb-16">
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {/* Card 1: Crash Courses */}
+            <div className="bg-white border-2 border-blue-200 rounded-2xl p-8 hover:shadow-lg transition h-full flex flex-col">
+              <div className="mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-700 font-bold text-lg">⏰</div>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">PSLE & O-Level Exam Rescue</h3>
+              <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                For students who need urgent help after WA2 / mid-year results. Fixed June intakes available for focused Math and Science support.
+              </p>
+              <p className="text-xs font-semibold text-slate-500 mb-6 uppercase tracking-wider">PSLE Math & Science · O-Level Math & Science</p>
+              <div className="mt-auto">
+                <a
+                  href={toWhatsApp(crashCourseMsg)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full justify-center rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 transition"
+                >
+                  Check Crash Course Intakes
+                </a>
+              </div>
+            </div>
+
+            {/* Card 2: Future Choices */}
+            <div className="bg-white border-2 border-amber-200 rounded-2xl p-8 hover:shadow-lg transition h-full flex flex-col">
+              <div className="mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700 font-bold text-lg">🎯</div>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Future Choices Simulation Workshop</h3>
+              <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                A life-simulation and financial literacy enrichment workshop that helps secondary school students understand study, money, work, happiness, and future pathways.
+              </p>
+              <p className="text-xs font-semibold text-slate-500 mb-6 uppercase tracking-wider">Sec 1–5 · Zoom & physical runs</p>
+              <div className="mt-auto">
+                <a
+                  href={toWhatsApp(futureChoicesMsg)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full justify-center rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2.5 px-4 transition"
+                >
+                  View Workshop Dates
+                </a>
+              </div>
+            </div>
+
+            {/* Card 3: Tutor Matching */}
+            <div className="bg-white border-2 border-sky-200 rounded-2xl p-8 hover:shadow-lg transition h-full flex flex-col">
+              <div className="mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100 text-sky-700 font-bold text-lg">👤</div>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Tutor Matching & Learning Guidance</h3>
+              <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                We don't simply pass you a tutor list. We first understand your child's level, learning gaps, personality, and family preferences before recommending support.
+              </p>
+              <p className="text-xs font-semibold text-slate-500 mb-6 uppercase tracking-wider">Diagnostic guidance · Tutor matching · Parent support</p>
+              <div className="mt-auto">
+                <a
+                  href={toWhatsApp(tutorMatchingMsg)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full justify-center rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-semibold py-2.5 px-4 transition"
+                >
+                  Request Learning Guidance
+                </a>
+              </div>
+            </div>
+
+            {/* Card 4: Educator Network */}
+            <div className="bg-white border-2 border-green-200 rounded-2xl p-8 hover:shadow-lg transition h-full flex flex-col">
+              <div className="mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-700 font-bold text-lg">🎓</div>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Join Our Educator Network</h3>
+              <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+                Work with families who value structured learning, clear communication, and student growth.
+              </p>
+              <p className="text-xs font-semibold text-slate-500 mb-6 uppercase tracking-wider">Verified families · Flexible assignments</p>
+              <div className="mt-auto">
+                <a
+                  href={toWhatsApp(educatorMsg)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full justify-center rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 transition"
+                >
+                  Apply as Educator
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Brand Differentiation Section */}
+        <div className="mb-16 bg-gradient-to-r from-slate-50 to-blue-50 border border-slate-200 rounded-2xl p-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-slate-900 text-center mb-3">A Tuition Agency That Looks Beyond Just Matching</h2>
+            <p className="text-center text-slate-600 mb-10">
+              Many tuition agencies focus mainly on finding an available tutor. At Integrated Learnings, we go one step further. We look at the child's learning gaps, confidence, study habits, personality, and family situation before recommending the next step.
             </p>
-            <div className="mt-auto">
-              <Button to="/tuition#parent-inquiry" variant="white" className="w-full group-hover:scale-105 transition">
-                📋 Get Diagnostic Assessment
-                <span className="block text-xs font-normal mt-1">Value $120 - Waived</span>
-              </Button>
-              <p className="text-xs text-blue-200 mt-3 text-center">Limited to 5-8 families per week</p>
+            <div className="grid md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl p-6 border border-slate-200 text-center">
+                <p className="text-lg font-bold text-slate-900 mb-2">Understand first</p>
+                <p className="text-sm text-slate-600">We ask the right questions before recommending a tutor or programme.</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-slate-200 text-center">
+                <p className="text-lg font-bold text-slate-900 mb-2">Match with purpose</p>
+                <p className="text-sm text-slate-600">We consider subject needs, learning style, location, schedule, and personality fit.</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-slate-200 text-center">
+                <p className="text-lg font-bold text-slate-900 mb-2">Support beyond lessons</p>
+                <p className="text-sm text-slate-600">We offer crash courses, enrichment workshops, diagnostic guidance, and parent updates.</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-slate-200 text-center">
+                <p className="text-lg font-bold text-slate-900 mb-2">Care about growth</p>
+                <p className="text-sm text-slate-600">The goal is not just more lessons. The goal is helping the child move forward with clarity and confidence.</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-green-600 to-green-700 text-white p-10 rounded-2xl shadow-xl relative overflow-hidden group hover:shadow-2xl transition h-full flex flex-col">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
-          <div className="relative z-10 flex flex-col h-full">
-            <div className="text-4xl mb-4">🎓</div>
-            <h2 className="text-2xl font-bold mb-3">For Educators</h2>
-            <p className="text-green-100 mb-6 leading-relaxed">
-              Join our curated educator network and get matched with families who value fit and outcomes.
+        {/* Contact Method Section */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-slate-900 text-center mb-10">Choose the Fastest Way to Reach Us</h2>
+          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            {/* WhatsApp */}
+            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 hover:shadow-lg transition flex flex-col">
+              <div className="mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-700 font-bold text-lg">💬</div>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">WhatsApp Chat</h3>
+              <p className="text-sm text-slate-600 mb-6">Best for quick questions, June intake dates, and checking availability.</p>
+              <div className="mt-auto">
+                <a
+                  href="https://wa.me/6598882675"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full justify-center rounded-lg bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-4 transition"
+                >
+                  Start WhatsApp Chat
+                </a>
+              </div>
+            </div>
+
+            {/* Enquiry Form */}
+            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 hover:shadow-lg transition flex flex-col">
+              <div className="mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-700 font-bold text-lg">📝</div>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Send Enquiry Form</h3>
+              <p className="text-sm text-slate-600 mb-6">Best if you want to share your child's level, subject, results, and learning concerns.</p>
+              <div className="mt-auto">
+                <Button
+                  to="/tuition#parent-inquiry"
+                  variant="outline"
+                  className="w-full justify-center"
+                >
+                  Submit Enquiry Form
+                </Button>
+              </div>
+            </div>
+
+            {/* Book a Call */}
+            <div className="bg-white border-2 border-slate-200 rounded-2xl p-8 hover:shadow-lg transition flex flex-col">
+              <div className="mb-4">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700 font-bold text-lg">📞</div>
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Book a Short Call</h3>
+              <p className="text-sm text-slate-600 mb-6">Best if you are unsure whether your child needs tuition, crash course, enrichment, or diagnostic guidance.</p>
+              <div className="mt-auto">
+                <Button
+                  to="/tuition#parent-inquiry"
+                  variant="outline"
+                  className="w-full justify-center"
+                >
+                  View Call Times
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Response Commitment */}
+        <div className="bg-gradient-to-r from-blue-50 to-slate-50 border border-blue-100 rounded-2xl p-8 mb-16">
+          <h3 className="text-xl font-bold text-slate-900 text-center mb-6">Our Response Commitment</h3>
+          <div className="max-w-3xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-4 mb-6">
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
+                <span className="text-sm font-semibold text-slate-700">Parent enquiries</span>
+                <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Same day where possible</span>
+              </div>
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
+                <span className="text-sm font-semibold text-slate-700">Crash course / workshop dates</span>
+                <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Within 24 hours</span>
+              </div>
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
+                <span className="text-sm font-semibold text-slate-700">Tutor applications</span>
+                <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">Within 2–3 working days</span>
+              </div>
+              <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
+                <span className="text-sm font-semibold text-slate-700">School / partnership enquiries</span>
+                <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold">Within 5 working days</span>
+              </div>
+            </div>
+            <p className="text-center text-xs text-slate-600 bg-white px-4 py-3 rounded-lg border border-slate-100">
+              <strong>Operating hours:</strong> Mon–Sun, 9am–9pm SGT. Replies may be slower during lessons, weekends, or public holidays.
             </p>
-            <div className="mt-auto">
-              <Button to="/tutors/signup" variant="white" className="w-full group-hover:scale-105 transition bg-white text-green-700 hover:bg-green-50">🎓 Join Educator Network</Button>
-              <p className="text-xs text-green-200 mt-3 text-center">Flexible schedules • Verified families</p>
+          </div>
+        </div>
+
+        {/* Why Parents Contact Us First */}
+        <div className="mb-16 bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200 rounded-2xl p-12">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-slate-900 text-center mb-2">Why Parents Contact Us First</h2>
+            <p className="text-center text-slate-600 mb-10">We help you choose the right support before you commit.</p>
+            <div className="grid md:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl p-6 border border-sky-200 text-center">
+                <p className="text-lg font-bold text-slate-900 mb-2">Clear next step</p>
+                <p className="text-sm text-slate-600">We help you decide whether your child needs crash course, enrichment, tutor matching, or diagnostic support.</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-sky-200 text-center">
+                <p className="text-lg font-bold text-slate-900 mb-2">Student-first guidance</p>
+                <p className="text-sm text-slate-600">We look at the child's level, situation, and goals before recommending a path.</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-sky-200 text-center">
+                <p className="text-lg font-bold text-slate-900 mb-2">Structured programmes</p>
+                <p className="text-sm text-slate-600">Our June programmes run on fixed intakes so scheduling is clearer and learning flow is stronger.</p>
+              </div>
+              <div className="bg-white rounded-xl p-6 border border-sky-200 text-center">
+                <p className="text-lg font-bold text-slate-900 mb-2">Transparent communication</p>
+                <p className="text-sm text-slate-600">We confirm dates, format, pricing, and next steps before payment.</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Quick Contact Options */}
-      <div className="mb-16">
-        <h3 className="text-2xl font-bold text-primary text-center mb-8">How Would You Like to Connect?</h3>
-        <div className="grid md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer h-full flex flex-col items-center">
-            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mb-3">
-              <Phone className="text-secondary" size={24} />
+        {/* Direct Contact */}
+        <div className="border-t border-slate-200 pt-12">
+          <h3 className="text-xl font-bold text-slate-900 text-center mb-10">Prefer Direct Contact?</h3>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Phone */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Phone className="text-green-700" size={28} />
+              </div>
+              <h4 className="font-bold text-slate-900 mb-2">WhatsApp / Phone</h4>
+              <p className="text-lg font-bold text-green-600 mb-1">9888 2675</p>
+              <p className="text-xs text-slate-500">Mon–Sun, 9am–9pm</p>
             </div>
-            <h4 className="font-bold text-sm text-primary mb-1">WhatsApp Chat</h4>
-            <p className="text-xs text-slate-500 mb-3">Quick questions</p>
-            <div className="mt-auto">
-              <a href="https://wa.me/6598882675" className="text-secondary text-xs font-semibold hover:underline">Start Chat →</a>
-            </div>
-          </div>
 
-          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer h-full flex flex-col items-center">
-            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mb-3">
-              <Calendar className="text-secondary" size={24} />
+            {/* General Email */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="text-blue-700" size={28} />
+              </div>
+              <h4 className="font-bold text-slate-900 mb-2">General Email</h4>
+              <p className="text-sm font-semibold text-blue-600 mb-1 break-all">hello@integratedlearnings.com.sg</p>
+              <p className="text-xs text-slate-500">Best for general enquiries</p>
             </div>
-            <h4 className="font-bold text-sm text-primary mb-1">Book Call</h4>
-            <p className="text-xs text-slate-500 mb-3">15-min consultation</p>
-            <div className="mt-auto">
-              <Button to="/tuition#parent-inquiry" variant="outline" className="text-xs py-1 px-3">View Times</Button>
-            </div>
-          </div>
 
-          <div className="bg-white border-2 border-slate-200 p-6 rounded-xl text-center hover:border-secondary hover:shadow-md transition cursor-pointer h-full flex flex-col items-center">
-            <div className="bg-blue-50 w-14 h-14 rounded-full flex items-center justify-center mb-3">
-              <FileText className="text-secondary" size={24} />
+            {/* Parent Enquiries */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+              <div className="bg-gradient-to-br from-sky-50 to-sky-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="text-sky-700" size={28} />
+              </div>
+              <h4 className="font-bold text-slate-900 mb-2">Parent Enquiries</h4>
+              <p className="text-sm font-semibold text-sky-600 mb-1 break-all">parents@integratedlearnings.com.sg</p>
+              <p className="text-xs text-slate-500">Tuition, crash courses, and learning guidance</p>
             </div>
-            <h4 className="font-bold text-sm text-primary mb-1">Learning Assessment Form</h4>
-            <p className="text-xs text-slate-500 mb-3">Tell us your needs</p>
-            <div className="mt-auto">
-              <Button to="/tuition#parent-inquiry" variant="outline" className="text-xs py-1 px-3">Get Started</Button>
-            </div>
-          </div>
 
-        </div>
-      </div>
+            {/* School Programmes */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+              <div className="bg-gradient-to-br from-amber-50 to-amber-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="text-amber-700" size={28} />
+              </div>
+              <h4 className="font-bold text-slate-900 mb-2">School Programmes</h4>
+              <p className="text-sm font-semibold text-amber-600 mb-1 break-all">schools@integratedlearnings.com.sg</p>
+              <p className="text-xs text-slate-500">Enrichment and partnership enquiries</p>
+            </div>
 
-      {/* Response Time Transparency */}
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 mb-16">
-        <h3 className="text-xl font-bold text-primary text-center mb-6">Our Response Commitment</h3>
-        <div className="max-w-3xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
-              <span className="text-sm font-semibold text-slate-700">Learning Inquiries (Families)</span>
-              <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Within 24 hours</span>
+            {/* Educator Applications */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="text-green-700" size={28} />
+              </div>
+              <h4 className="font-bold text-slate-900 mb-2">Educator Applications</h4>
+              <p className="text-sm font-semibold text-green-600 mb-1 break-all">tutors@integratedlearnings.com.sg</p>
+              <p className="text-xs text-slate-500">Apply to join our educator network</p>
             </div>
-            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
-              <span className="text-sm font-semibold text-slate-700">Educator Applications</span>
-              <span className="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">Within 2–3 days</span>
-            </div>
-            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
-              <span className="text-sm font-semibold text-slate-700">WhatsApp / Email</span>
-              <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-bold">Same day</span>
-            </div>
-            <div className="flex items-center justify-between bg-white p-4 rounded-lg border border-slate-100">
-              <span className="text-sm font-semibold text-slate-700">School / Partnership Enquiries</span>
-              <span className="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full font-bold">Within 5 business days</span>
-            </div>
-          </div>
-          <p className="text-center text-xs text-slate-500 mt-4">*Business hours: Mon–Sun, 9am–9pm SGT. Responses may be slower on public holidays.</p>
-        </div>
-      </div>
 
-      {/* Credibility without hard numbers */}
-      <div className="bg-gradient-to-r from-blue-50 to-slate-50 border border-blue-100 rounded-xl p-8 mb-16">
-        <div className="text-center mb-6">
-          <h3 className="text-xl font-bold text-primary mb-2">Why Parents Choose Us</h3>
-          <p className="text-sm text-slate-600">Verified educators, curated guidance, transparent communication.</p>
-        </div>
-        <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-secondary mb-1">Verified</p>
-            <p className="text-xs text-slate-600 uppercase tracking-wide">Educator Network</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-secondary mb-1">Curated</p>
-            <p className="text-xs text-slate-600 uppercase tracking-wide">Matches by Style</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-secondary mb-1">Responsive</p>
-            <p className="text-xs text-slate-600 uppercase tracking-wide">Consultant Support</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-secondary mb-1">Transparent</p>
-            <p className="text-xs text-slate-600 uppercase tracking-wide">Policy & Payments</p>
+            {/* Operating Hours */}
+            <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="text-slate-700" size={28} />
+              </div>
+              <h4 className="font-bold text-slate-900 mb-2">Operating Hours</h4>
+              <p className="text-sm font-semibold text-slate-600 mb-1">Mon – Sun</p>
+              <p className="text-xs text-slate-500">9:00 AM – 9:00 PM SGT</p>
+            </div>
           </div>
         </div>
-      </div>
+      </Section>
+    </>
+  );
+};
 
-      {/* Direct Contact */}
-      <div className="border-t border-slate-200 pt-12">
-        <h3 className="text-xl font-bold text-primary text-center mb-8">Prefer Direct Contact?</h3>
-        <div className="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-          <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Phone className="text-secondary" size={28} />
-            </div>
-            <h4 className="font-bold text-primary mb-2">WhatsApp / Phone</h4>
-            <p className="text-lg font-bold text-secondary mb-1">9888 2675</p>
-            <p className="text-xs text-slate-500">Mon-Sun, 9am-9pm</p>
-          </div>
-          
-          <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="text-secondary" size={28} />
-            </div>
-            <h4 className="font-bold text-primary mb-2">Email</h4>
-            <p className="text-sm font-semibold text-secondary mb-1 break-all">manage.integrated.learnings@gmail.com</p>
-            <p className="text-xs text-slate-500">Response within 24hrs</p>
-          </div>
-          
-          <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="text-secondary" size={28} />
-            </div>
-            <h4 className="font-bold text-primary mb-2">Operating Hours</h4>
-            <p className="text-sm font-semibold text-secondary mb-1">Mon - Sun</p>
-            <p className="text-xs text-slate-500">9:00 AM - 9:00 PM SGT</p>
-          </div>
-        </div>
-      </div>
-    </Section>
-  </>
-);
 
 export const ExtraLearnings: React.FC = () => (
   <>

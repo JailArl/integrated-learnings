@@ -581,7 +581,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
   const slotsMessage = isPsle
     ? [
-        'Hi Integrated Learnings, I\'m checking available PSLE Home Crash Course slots.',
+        'Hi Integrated Learnings, I\'m checking PSLE June Rescue intake availability.',
         '',
         'My child is in P6.',
         '',
@@ -592,13 +592,13 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         '3. Mini-group',
         '',
         'Preferred area:',
-        'Preferred days/timing:',
+        'Preferred intake window: Intake A (15-19 Jun) / Intake B (22-26 Jun) / 1-Day Targeted Correction',
         '',
-        'Please advise the available slots and suitable package.',
+        'Please advise intake availability and suitable package.',
       ].join('\n')
     : isOLevel
       ? [
-          'Hi Integrated Learnings, I\'m checking available O-Level Home Crash Course slots.',
+          'Hi Integrated Learnings, I\'m checking O-Level June Rescue intake availability.',
           '',
           'My child is in Sec 4 / Sec 5.',
           '',
@@ -611,11 +611,11 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           '3. Mini-group',
           '',
           'Preferred area:',
-          'Preferred days/timing:',
+          'Preferred intake window: Math Focus (15-19 Jun) / Science Focus (22-26 Jun) / 1-Day Chapter Rescue',
           '',
-          'Please advise the available slots and suitable package.',
+          'Please advise intake availability and suitable package.',
         ].join('\n')
-      : 'Hi Integrated Learnings, I\'m checking available home crash course slots for PSLE / O-Level. Please advise the available slots and suitable package.';
+      : 'Hi Integrated Learnings, I\'m checking June intake availability for PSLE / O-Level crash courses. Please advise the available intakes and suitable package.';
 
   const slotsLink = toWhatsApp(slotsMessage);
   const fitCheckLink = toWhatsApp(fitCheckMessage);
@@ -716,6 +716,14 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             question: 'Do I need to book the full 15–28 June period?',
             answer: 'No. The 15–28 June period is the rescue window, not a compulsory full-time course. The actual number of sessions depends on your child\'s needs. Some students only need one focused correction session, while others benefit more from a 4-block rescue plan.',
           },
+          {
+            question: 'Can I choose any date in June?',
+            answer: 'No. To keep the rescue programme focused and organised, we run on selected June intake windows. This helps us group students properly, avoid schedule clashes, and maintain lesson quality.',
+          },
+          {
+            question: 'What are the PSLE June intake dates?',
+            answer: 'The main PSLE rescue windows are 15–19 June and 22–26 June 2026. Limited 1-day targeted correction slots may be available on selected weekdays.',
+          },
         ]
       : []),
     ...(isOLevel
@@ -735,6 +743,18 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           {
             question: 'Do I need to book the full 15–28 June period?',
             answer: 'No. The 15–28 June period is the rescue window. Your child may only need one focused session, or may benefit from a 4-block intensive if there are multiple weak chapters.',
+          },
+          {
+            question: 'Can I choose any date in June?',
+            answer: 'No. To keep the rescue programme focused and organised, we run on selected June intake windows. This helps us group students properly, avoid schedule clashes, and maintain lesson quality.',
+          },
+          {
+            question: 'What are the O-Level June intake dates?',
+            answer: 'The O-Level Math Rescue Focus runs from 15–19 June 2026. The Science Rescue Focus runs from 22–26 June 2026. Selected 1-day chapter rescue slots may also be available.',
+          },
+          {
+            question: 'Can my child join both Math and Science rescue?',
+            answer: 'Yes, subject to availability. We may recommend different intake windows so the schedule does not overload the student.',
           },
         ]
       : []),
@@ -910,7 +930,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
                   className="bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
                 />
                 <ActionButton
-                  label={isPsle || isOLevel ? 'Check 15–28 June Availability' : 'Check Available Slots'}
+                  label={isPsle || isOLevel ? 'Check Intake Availability' : 'Check Available Slots'}
                   href={slotsLink}
                   ctaName="hero_check_slots"
                   icon={<Home size={15} aria-hidden="true" />}
@@ -1119,32 +1139,36 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <SectionCard>
             <SectionHeading
               kicker="Schedule"
-              title="June Holiday Rescue Window"
-              subtitle="Plan your intensive around the two-week holiday sprint before Term 3 resumes on 29 June 2026."
+              title="PSLE June Rescue Intakes"
+              subtitle="Fixed June intakes. Limited seats per intake. Clear schedule for better learning flow."
             />
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {[
                 {
-                  window: '15–21 June',
-                  body: 'Diagnose weak topics + start urgent correction',
+                  window: '15–19 June 2026',
+                  title: 'Intake A',
+                  body: 'Best for students who need to start urgent topic correction early in the second half of June.',
                 },
                 {
-                  window: '22–28 June',
-                  body: 'Exam-style practice + readiness check',
+                  window: '22–26 June 2026',
+                  title: 'Intake B',
+                  body: 'Best for students who need a final focused rescue window before Term 3 begins.',
                 },
                 {
-                  window: 'Before 29 June',
-                  body: 'Parent update + next-step recommendation',
+                  window: 'Selected weekdays only',
+                  title: '1-Day Targeted Correction',
+                  body: 'For one urgent weak topic, careless-error correction, or quick paper review.',
                 },
               ].map((item) => (
                 <article key={item.window} className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5">
+                  <p className="text-sm font-black text-slate-900">{item.title}</p>
                   <p className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-800">{item.window}</p>
                   <p className="mt-3 text-sm font-semibold leading-6 text-slate-800">{item.body}</p>
                 </article>
               ))}
             </div>
             <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-              Exact lesson timing depends on tutor availability, student location, and subject needs. Send us your child’s latest paper or result slip and we will recommend the best slot.
+              Fixed June intakes. Limited seats. Clear schedule. Better learning flow. Private arrangements are by request only, subject to availability and pricing.
             </p>
           </SectionCard>
         )}
@@ -1153,32 +1177,36 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <SectionCard>
             <SectionHeading
               kicker="Schedule"
-              title="June Holiday O-Level Rescue Window"
-              subtitle="Use the second half of June to repair costly chapters before Term 3 resumes on 29 June 2026."
+              title="O-Level June Rescue Intakes"
+              subtitle="Fixed June intakes. Limited seats per intake. Clear schedule for better learning flow."
             />
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {[
                 {
-                  window: '15–21 June',
-                  body: 'Diagnose weak chapters + start urgent fixing',
+                  window: '15–19 June 2026',
+                  title: 'Math Rescue Focus',
+                  body: 'For E Math and A Math students who need chapter repair, method correction, and timed practice.',
                 },
                 {
-                  window: '22–28 June',
-                  body: 'Timed practice + paper strategy',
+                  window: '22–26 June 2026',
+                  title: 'Science Rescue Focus',
+                  body: 'For Physics, Chemistry, and Combined Science students who need concept repair and exam-answering practice.',
                 },
                 {
-                  window: 'Before Term 3',
-                  body: 'Parent update + next-step plan',
+                  window: 'Selected weekdays only',
+                  title: '1-Day Chapter Rescue',
+                  body: 'For one urgent weak chapter, paper section, or quick result-based correction.',
                 },
               ].map((item) => (
                 <article key={item.window} className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5">
+                  <p className="text-sm font-black text-slate-900">{item.title}</p>
                   <p className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-amber-800">{item.window}</p>
                   <p className="mt-3 text-sm font-semibold leading-6 text-slate-800">{item.body}</p>
                 </article>
               ))}
             </div>
             <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-              Exact lesson timing depends on subject, tutor availability, student location, and whether your child needs E Math, A Math, Physics, Chemistry, or Combined Science support.
+              Fixed June intakes. Limited seats. Clear schedule. Better learning flow. Private arrangements are by request only, subject to availability and pricing.
             </p>
           </SectionCard>
         )}
@@ -1620,7 +1648,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               className="bg-amber-500 text-slate-950 hover:bg-amber-400"
             />
             <ActionButton
-              label="Check Available Home Slots"
+              label={isPsle || isOLevel ? 'Check Intake Availability' : 'Check Available Home Slots'}
               href={slotsLink}
               ctaName="final_slots"
               icon={<Home size={15} aria-hidden="true" />}
@@ -1642,7 +1670,7 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             onClick={() => trackCtaClick('mobile_sticky_slots', slotsLink)}
             className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-3 py-3 text-xs font-black text-slate-950 transition hover:bg-amber-400"
           >
-            {isPsle || isOLevel ? 'Check 15–28 June' : 'Check Home Slots'}
+            {isPsle || isOLevel ? 'Check Intake' : 'Check Home Slots'}
           </a>
           <a
             href={fitCheckLink}

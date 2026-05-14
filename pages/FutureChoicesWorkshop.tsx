@@ -4,34 +4,65 @@ import { CheckCircle2, ChevronDown, Clock3, MessageCircle, ShieldCheck, Sparkles
 const WA_NUMBER = '6598882675';
 const PAGE_PATH = '/family/programmes/future-choices-workshop';
 
-const faqItems = [
+const faqWhyMatters = [
   {
-    question: 'Is this suitable for all Sec 1–3 students?',
-    answer: 'Yes. The workshop is designed for Sec 1 to Sec 3 students and is structured to be accessible, practical, and discussion-led without assuming prior subject knowledge.',
+    question: 'Why should my child attend this workshop?',
+    answer: 'Many students are told to study hard, but they may not understand how today\'s choices affect future options. This workshop lets them experience study, work, money, and life decisions through a safe simulation, so the lesson becomes more real and memorable.',
   },
   {
-    question: 'Does my child need prior knowledge in economics or finance?',
-    answer: 'No. The workshop is built for everyday thinking, not prior academic preparation. Students only need to be ready to take part in scenarios, discussion, and reflection.',
+    question: 'Is this only about financial literacy?',
+    answer: 'No. Financial literacy is one part of the programme. The bigger goal is to help students make wiser choices. They learn about money tools, education pathways, work decisions, happiness, and trade-offs at different life stages.',
   },
   {
-    question: 'Is this a classroom workshop or online?',
-    answer: 'This is a classroom workshop. The format is intentionally hands-on so students can respond to scenarios, discuss choices, and learn from the group setting.',
+    question: 'My child has no money now. Why learn about investing?',
+    answer: 'Students may not have money to invest yet, but they have time, effort, attention, and habits. For a student, studying well and building useful skills are some of the earliest investments they can make.',
+  },
+  {
+    question: 'Are you saying studies are everything?',
+    answer: 'No. The workshop teaches that studying is important, but life is not only about grades. The simulation includes a Happiness Index, so students also learn about balance, rest, relationships, and making sustainable choices.',
+  },
+  {
+    question: 'What does life has no reset button mean?',
+    answer: 'In a game, students can restart easily. In real life, choices move forward. The workshop helps students think before choosing, while also teaching them that mistakes are not the end - they can reflect, adapt, and make better next moves.',
+  },
+  {
+    question: 'Is this suitable for Sec 4 or Sec 5 students?',
+    answer: 'Yes. Sec 4 and Sec 5 students may benefit even more because post-secondary choices are closer. The workshop helps them connect current study effort with future routes such as ITE, Poly, JC, work-study pathways, and longer-term career options.',
+  },
+  {
+    question: 'Will this pressure my child?',
+    answer: 'No. The tone is not to scare or shame students. The aim is to help them understand choices with care, realism, and encouragement.',
+  },
+  {
+    question: 'What should my child take away?',
+    answer: 'Your child should leave with a clearer sense of why study effort matters, how money and career choices work, and how to balance ambition with happiness and resilience.',
+  },
+];
+
+const faqLogistics = [
+  {
+    question: 'Can I choose any June date?',
+    answer: 'No. The workshop runs on fixed cohort dates so the session stays interactive, structured, and properly facilitated. Parents can choose from the available Zoom or physical workshop runs.',
+  },
+  {
+    question: 'What are the Zoom dates?',
+    answer: 'The planned Zoom cohorts are 10 June, 17 June, and 24 June 2026.',
+  },
+  {
+    question: 'What are the physical class dates?',
+    answer: 'The planned physical classroom runs are 20 June and 27 June 2026. The venue will be in the central area and confirmed before payment.',
+  },
+  {
+    question: 'Do I need to pay before the physical venue is confirmed?',
+    answer: 'No. For physical workshops, final venue, timing, and pricing will be confirmed before payment.',
+  },
+  {
+    question: 'Can parents form a private group?',
+    answer: 'Yes. Parents can form a private friend group, available by Zoom or physical classroom, subject to schedule and venue.',
   },
   {
     question: 'Can my child join only Part 1?',
-    answer: 'Yes. Part 1 is the core workshop and can be booked on its own. Part 2 is optional for families who want to go deeper.',
-  },
-  {
-    question: 'Is Part 2 compulsory?',
-    answer: 'No. Part 2 is an add-on workshop for families who want a deeper follow-up on economics thinking for real life.',
-  },
-  {
-    question: 'What happens after I enquire?',
-    answer: 'We will reply with the workshop details, pricing, and the next steps. If needed, we can also help you decide which option fits best.',
-  },
-  {
-    question: 'Can friends sign up together?',
-    answer: 'Yes. If two students register for the same workshop or bundle, the friend rate applies to both students.',
+    answer: 'Yes. Part 1 can be booked on its own. Part 2 is optional, and the 2-Day Bundle is available for families who want both.',
   },
 ];
 
@@ -43,9 +74,9 @@ const pricingPlans = [
     earlyBird: 'S$128',
     standard: 'S$158',
     friendRate: 'S$138 each',
-    description: 'The core June holiday workshop for students who want a meaningful, hands-on simulation experience.',
+    description: 'Core life-simulation workshop for students to understand how choices shape future options.',
     badge: null,
-    cta: 'Reserve a Seat',
+    cta: 'Reserve Seat for Selected Date',
   },
   {
     title: 'Part 2 only',
@@ -54,7 +85,7 @@ const pricingPlans = [
     earlyBird: 'S$108',
     standard: 'S$138',
     friendRate: 'S$118 each',
-    description: 'An optional follow-up for students who want to go deeper into prices, incentives, markets, and everyday decisions.',
+    description: 'Optional follow-up for students who want deeper practical economics thinking for real life.',
     badge: null,
     cta: 'Get Workshop Details on WhatsApp',
   },
@@ -65,7 +96,7 @@ const pricingPlans = [
     earlyBird: 'S$218',
     standard: 'S$268',
     friendRate: 'S$228 each',
-    description: 'Includes Part 1 and Part 2 for families who want the full June holiday experience.',
+    description: 'Includes Part 1 and Part 2 for families who want a fuller June learning experience.',
     badge: 'Most Popular',
     cta: 'Ask About the 2-Day Bundle',
   },
@@ -214,13 +245,13 @@ const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ chi
   </article>
 );
 
-const FaqAccordion: React.FC = () => {
+const FaqAccordion: React.FC<{ items: { question: string; answer: string }[] }> = ({ items }) => {
   const [open, setOpen] = useState<number | null>(0);
   const uid = useId();
 
   return (
     <div className="space-y-3">
-      {faqItems.map((item, index) => {
+      {items.map((item, index) => {
         const isOpen = open === index;
         const buttonId = `${uid}-faq-btn-${index}`;
         const panelId = `${uid}-faq-panel-${index}`;
@@ -253,15 +284,24 @@ const FaqAccordion: React.FC = () => {
 const FutureChoicesWorkshop: React.FC = () => {
   useEffect(() => {
     const cleanup = setPageSeo(
-      'Singapore Sec 1–3 Future Choices Simulation Workshop | Integrated Learnings',
-      'A hands-on June holiday workshop for Singapore secondary school students (Sec 1–3) to explore money, choices, consequences, and real-life decision-making through realistic simulations and guided discussion.',
+      'Future Choices Life Simulation Workshop Sec 1–5 | Integrated Learnings',
+      'June holiday life-simulation and financial literacy workshop for secondary school students (Sec 1–5), covering study choices, money habits, happiness, and future pathways.',
       PAGE_PATH,
     );
 
     return cleanup;
   }, []);
 
-  const heroWhatsAppText = 'Hi, I would like the workshop details for the Future Choices Simulation Workshop. Please share the available options and pricing.';
+  const zoomScheduleText = 'Hi, I would like to view June intake dates for the Future Choices Simulation Workshop. Child level: Secondary __.';
+  const physicalInterestText = 'Hi, I would like to join the physical waitlist for the Future Choices Simulation Workshop. Child level: Secondary __.';
+  const quickTemplateText = [
+    'Hi, I would like details for the Future Choices Simulation Workshop.',
+    'Child level: Secondary __',
+    'Preferred mode: Zoom / Physical / Private group',
+    'Preferred date: 10 Jun Zoom / 17 Jun Zoom / 20 Jun Physical / 24 Jun Zoom / 27 Jun Physical',
+    'Interested in: Part 1 / Part 2 / 2-Day Bundle',
+    'Questions: __',
+  ].join('\n');
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(15,23,42,0.14),_transparent_24%),linear-gradient(180deg,#f8fbff_0%,#f5f7fb_26%,#eef3f9_100%)] text-slate-900">
@@ -272,30 +312,30 @@ const FutureChoicesWorkshop: React.FC = () => {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="inline-flex items-center rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-sky-700 shadow-sm">
-                  Singapore Secondary School Programme (Sec 1-3)
+                  For Secondary School Students: Sec 1-5
                 </p>
                 <p className="mt-3 text-sm font-semibold text-slate-600">Integrated Learnings</p>
               </div>
               <div className="hidden md:flex items-center gap-3">
-                <PrimaryButton href={toWhatsApp(heroWhatsAppText)} variant="ghost">Get Workshop Details on WhatsApp</PrimaryButton>
-                <PrimaryButton href="#reserve-seat">Reserve a Seat</PrimaryButton>
+                <PrimaryButton href={toWhatsApp(zoomScheduleText)} variant="ghost">View June Intake Dates</PrimaryButton>
+                <PrimaryButton href={toWhatsApp(physicalInterestText)}>Join Physical Waitlist</PrimaryButton>
               </div>
             </div>
 
             <div className="mt-8 grid gap-8 lg:grid-cols-[1.12fr_0.88fr] lg:items-center">
               <div>
                 <h1 className="max-w-3xl text-4xl font-black leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-7xl lg:leading-[1.02]">
-                  Future Choices Simulation Workshop
+                  Help Your Child Understand Why Their Choices Matter
                 </h1>
                 <p className={`mt-5 max-w-2xl ${desktopLeadClass}`}>
-                  Theme: <span className="font-bold text-sky-700">Making the Right Choice at the Right Time.</span> A hands-on June holiday workshop for Singapore secondary school students using realistic life simulations and guided discussion.
+                  A June holiday life-simulation and financial literacy workshop for secondary school students, where they make choices about study, work, money, happiness, and future pathways - then see how those choices affect their life journey.
                 </p>
                 <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500 sm:text-base lg:text-lg lg:leading-8">
-                  Students experience how study decisions, money habits, and timing affect long-term outcomes, so they understand why effort in school now creates better options later.
+                  Students may not have money to invest yet, but they do have time, effort, habits, and choices. This workshop helps them understand that studying now is one of the earliest investments they can make in themselves.
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-2">
-                  {['Theme-driven', 'Interactive game', 'Real SG scenarios', 'Small-group format'].map((item) => (
+                  {['Life-choice simulator', 'Financial literacy', 'Sec 1-5 suitable', 'June intake'].map((item) => (
                     <span key={item} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm">
                       {item}
                     </span>
@@ -303,13 +343,13 @@ const FutureChoicesWorkshop: React.FC = () => {
                 </div>
 
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                  <PrimaryButton href="#reserve-seat" className="sm:min-w-[170px]">Reserve a Seat</PrimaryButton>
-                  <PrimaryButton href={toWhatsApp(heroWhatsAppText)} variant="ghost" className="sm:min-w-[250px]">Get Workshop Details on WhatsApp</PrimaryButton>
+                  <PrimaryButton href={toWhatsApp(zoomScheduleText)} className="sm:min-w-[220px]">View June Intake Dates</PrimaryButton>
+                  <PrimaryButton href={toWhatsApp(physicalInterestText)} variant="ghost" className="sm:min-w-[280px]">Join Physical Waitlist</PrimaryButton>
                 </div>
 
                 <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-slate-600">
-                  <span className="inline-flex items-center gap-2"><ShieldCheck size={16} className="text-sky-700" /> Led by an educator together with a guest facilitator with real banking-industry experience.</span>
-                  <span className="inline-flex items-center gap-2"><Clock3 size={16} className="text-sky-700" /> Limited seats. Small-group format for better discussion and engagement.</span>
+                  <span className="inline-flex items-center gap-2"><ShieldCheck size={16} className="text-sky-700" /> Warm, guided facilitation focused on reflection and growth.</span>
+                  <span className="inline-flex items-center gap-2"><Clock3 size={16} className="text-sky-700" /> Fixed June intakes. Limited seats. Clear schedule. Better learning flow.</span>
                 </div>
               </div>
 
@@ -320,17 +360,17 @@ const FutureChoicesWorkshop: React.FC = () => {
                     <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-sky-200">
                       <Sparkles size={13} /> June Holiday Experience
                     </div>
-                    <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-3xl">A better way to use the June holidays</h2>
+                    <h2 className="mt-4 text-2xl font-black tracking-tight sm:text-3xl">A safe place to learn through choices</h2>
                     <p className="mt-3 text-sm leading-7 text-slate-300">
-                      More than a generic holiday class. Students step through realistic situations, compare trade-offs, and discuss how everyday decisions shape outcomes.
+                      Students make choices, face outcomes, and discuss what they would do differently next. The goal is not fear. The goal is maturity, perspective, and confidence.
                     </p>
 
                     <div className="mt-6 grid grid-cols-2 gap-3">
                       {[
-                        ['Age 17->65', 'Life simulation arc'],
-                        ['Sg Sec 1-3', 'Target audience'],
-                        ['CPF + tax + housing', 'Real SG systems'],
-                        ['Choices + timing', 'Core learning goal'],
+                        ['Sec 1-5', 'Secondary levels'],
+                        ['Life + money', 'Integrated simulation'],
+                        ['Happiness index', 'Balance matters'],
+                        ['June intake', 'Zoom + physical'],
                       ].map(([value, label]) => (
                         <div key={label} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                           <p className="text-xl font-black text-white">{value}</p>
@@ -340,7 +380,7 @@ const FutureChoicesWorkshop: React.FC = () => {
                     </div>
 
                     <div className="mt-6 rounded-2xl border border-sky-400/20 bg-sky-400/10 p-4 text-sm leading-7 text-sky-50">
-                      More than theory: students play, decide, win, lose, and reflect. They feel the consequences of choices and timing in a safe learning environment.
+                      Life has no reset button, but mistakes are not the end. Students learn to reflect, adapt, and move forward.
                     </div>
                   </div>
                 </Card>
@@ -352,12 +392,16 @@ const FutureChoicesWorkshop: React.FC = () => {
 
       <section className="py-6 sm:py-10">
         <div className={sectionClass}>
-          <div className="grid gap-4 md:grid-cols-4">
+          <SectionHeading
+            kicker="Why we created this workshop"
+            title="Why we created this workshop"
+            subtitle="Many students are told to study hard, but they may not truly understand why it matters. This workshop lets them experience life choices in a safe simulation - education routes, work decisions, money pressure, happiness, and long-term consequences - so the message becomes real, not just another lecture from adults."
+          />
+          <div className="grid gap-4 md:grid-cols-3">
             {[
-              ['More meaningful than just another holiday activity', 'A structured experience with real-world scenarios and discussion.'],
-              ['Helps teens think about money and life choices earlier', 'Students see how decisions about spending, work, and priorities connect.'],
-              ['Encourages reflection, discussion, and practical decision-making', 'The workshop is designed to get students thinking, not just listening.'],
-              ['Gives students real-world exposure beyond school routines', 'A useful break from passive screen time or filler holiday activities.'],
+              ['Your time is your first investment', 'Before students have money, they have time. The workshop helps them see how effort, habits, and learning can create more future options.'],
+              ['Life has no reset button', 'Students make decisions, face outcomes, and learn that choices move life forward. Even when things go wrong, they learn to reflect, adapt, and continue.'],
+              ['Balance matters too', 'The game includes a Happiness Index because a good life is not only about grades or income. Students learn to balance study, money, rest, and long-term goals.'],
             ].map(([title, text]) => (
               <Card key={title} className="h-full p-5">
                 <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
@@ -374,65 +418,20 @@ const FutureChoicesWorkshop: React.FC = () => {
       <section id="pricing" className="py-8 sm:py-12">
         <div className={sectionClass}>
           <SectionHeading
-            kicker="Who it is for"
-            title="Who this workshop is for"
-            subtitle="Built for Singapore parents who want the June holidays to be useful, not wasted, and for secondary school students who are ready for more than a passive class."
+            kicker="Useful for every secondary stage"
+            title="Useful for every secondary stage"
+            subtitle="The workshop is designed for Secondary School Students: Sec 1-5, with learning points that stay relevant at each stage."
           />
 
-          <div className="mt-6 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-            <Card className="p-6 sm:p-7">
-              <ul className="space-y-4">
-                {[
-                  'Singapore secondary school students (Sec 1 to Sec 3)',
-                  'Students who are curious, thoughtful, or need stronger real-world exposure',
-                  'Students who enjoy activities, scenarios, and discussion more than passive lectures',
-                  'Parents who want the June holidays to be useful, not wasted',
-                  'Students who are old enough to start thinking about money, choices, and future consequences',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm leading-7 text-slate-700">
-                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-600" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              {[
-                ['Practical', 'Students see how choices affect outcomes in everyday life.'],
-                ['Engaging', 'They are drawn into scenarios, not asked to sit through a lecture.'],
-                ['Real-world', 'The workshop connects directly to money, work, and responsibility.'],
-                ['Future-ready', 'Parents get a learning experience that feels relevant beyond school.'],
-              ].map(([title, text]) => (
-                <Card key={title} className="p-5">
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-sky-700">{title}</p>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{text}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8 sm:py-12">
-        <div className={sectionClass}>
-          <SectionHeading
-            kicker="What students will experience"
-            title="What happens during the game experience"
-            subtitle="Fast-paced, decision-based, and discussion-led. Students play through life stages and learn why the right choice at the right time matters."
-          />
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-5">
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[
-              ['01', 'Start at age 17 with limited cash', 'Students begin with realistic constraints and set early study/work pathways.'],
-              ['02', 'Make high-stakes choices every stage', 'Education, spending, investments, side gigs, and career decisions shape their progress.'],
-              ['03', 'Handle Singapore reality checks', 'They navigate CPF, inflation, taxes, housing, loans, and unexpected events.'],
-              ['04', 'Feel consequences immediately', 'Good timing creates momentum; poor timing causes debt, stress, or missed opportunities.'],
-              ['05', 'Debrief and lock in lessons', 'Facilitators connect game outcomes back to current study habits and future readiness.'],
-            ].map(([index, title, text]) => (
-              <Card key={index} className="p-5">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-sky-700">Step {index}</p>
-                <h3 className="mt-3 text-base font-bold text-slate-950">{title}</h3>
+              ['Sec 1-2: Build awareness early', 'For students adjusting to secondary school and learning how habits, effort, and choices affect future options.'],
+              ['Sec 3: Choose before pressure builds', 'For students facing heavier workload, subject demands, and early decisions about priorities and pathways.'],
+              ['Sec 4-5: Connect studies to next steps', 'For students approaching N-Level, O-Level, ITE, Poly, JC, work-study routes, or other post-secondary choices.'],
+              ['Parents: Start a better conversation', 'For parents who want their child to understand life choices without another round of nagging or scolding.'],
+            ].map(([title, text]) => (
+              <Card key={title} className="p-5">
+                <h3 className="text-base font-black text-slate-950">{title}</h3>
                 <p className="mt-2 text-sm leading-7 text-slate-600">{text}</p>
               </Card>
             ))}
@@ -445,17 +444,17 @@ const FutureChoicesWorkshop: React.FC = () => {
           <SectionHeading
             kicker="Inside the financial literacy game"
             title="What your child will actually play through"
-            subtitle="Built from our Life Choices Singapore simulator. Students don't just listen - they make decisions and see outcomes unfold."
+            subtitle="A practical life-choice simulator with financial literacy built in."
           />
 
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[
-              ['Age 17 to 65 life arc', 'Students experience long-term consequences, not one-off quiz answers.'],
-              ['Education pathways', 'ITE, Poly, JC, Uni, and part-time routes with realistic cost and duration trade-offs.'],
-              ['Career progression', 'Different industries with salary growth, promotion windows, and satisfaction impact.'],
-              ['Singapore money systems', 'CPF contribution, tax brackets, loan interest, and inflation are integrated into decisions.'],
-              ['Major life goals', 'Housing, car, marriage, and retirement planning are simulated with local constraints.'],
-              ['Risk and resilience', 'Students face retrenchment, scams, market shocks, and learn how good literacy reduces losses.'],
+              ['Education pathways after secondary school', 'Students compare routes and see how earlier decisions influence later options.'],
+              ['Study vs work choices', 'They experience short-term temptation vs long-term payoff decisions.'],
+              ['CPF, tax, housing, savings, loans, inflation and basic investing', 'Students learn core money systems in practical context, not abstract theory.'],
+              ['Career progression and income choices', 'They see how skills, qualifications, and habits affect income trajectory.'],
+              ['Happiness Index and work-life balance', 'Students learn that sustainable success includes health, relationships, and rest.'],
+              ['Risk, mistakes, resilience and moving forward', 'They practise adapting after setbacks instead of giving up.'],
             ].map(([title, text]) => (
               <Card key={title} className="p-5">
                 <p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Game highlight</p>
@@ -471,6 +470,60 @@ const FutureChoicesWorkshop: React.FC = () => {
               The workshop links every game decision back to one core message: <span className="font-bold">study discipline today creates better choices tomorrow.</span> Students leave with clearer motivation, not just financial terms.
             </p>
           </Card>
+        </div>
+      </section>
+
+      <section className="py-8 sm:py-12">
+        <div className={sectionClass}>
+          <SectionHeading
+            kicker="Delivery mode"
+            title="Choose how your child joins"
+            subtitle="Families can choose Zoom, physical classroom, or a private friend-group setup."
+          />
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              ['Live Zoom Workshop', 'Fixed cohort dates', 'Interactive online session with live facilitation, decision-making, discussion, and reflection.'],
+              ['Physical Classroom Workshop', 'From 15 June onwards', 'Central area venue, to be confirmed based on group size and classroom availability.'],
+              ['Private Friend Group', 'By request', 'Parents may gather a small group of friends or classmates. Available by Zoom or physical classroom, subject to availability and pricing.'],
+            ].map(([title, availability, text]) => (
+              <Card key={title} className="p-5">
+                <h3 className="text-base font-black text-slate-950">{title}</h3>
+                <p className="mt-2 inline-flex rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-xs font-bold text-sky-700">{availability}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{text}</p>
+              </Card>
+            ))}
+          </div>
+
+          <Card className="mt-5 border-sky-200 bg-sky-50 p-5">
+            <p className="text-sm leading-7 text-sky-900">Physical workshops will be held in a central area venue, to be confirmed before payment. Workshop runs are offered on fixed cohort dates with limited seats.</p>
+          </Card>
+        </div>
+      </section>
+
+      <section className="py-8 sm:py-12">
+        <div className={sectionClass}>
+          <SectionHeading
+            kicker="June intake"
+            title="June 2026 Workshop Runs"
+            subtitle="Choose from the fixed cohort dates below."
+          />
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {[
+              ['Zoom Cohort 1', '10 June 2026', 'Live online workshop with guided choices, discussion, and reflection.'],
+              ['Zoom Cohort 2', '17 June 2026', 'Mid-June online cohort for families who want a structured holiday activity.'],
+              ['Zoom Cohort 3', '24 June 2026', 'Final online cohort before the end of the June holidays.'],
+              ['Physical Run A', '20 June 2026, Saturday', 'Central area classroom venue, to be confirmed.'],
+              ['Physical Run B', '27 June 2026, Saturday', 'Central area classroom venue, to be confirmed.'],
+            ].map(([mode, when, location]) => (
+              <Card key={mode} className="p-5">
+                <h3 className="text-base font-black text-slate-950">{mode}</h3>
+                <p className="mt-2 text-sm font-semibold text-slate-700">{when}</p>
+                <p className="mt-1 text-sm text-slate-600">{location}</p>
+              </Card>
+            ))}
+          </div>
+          <p className="mt-5 text-sm leading-7 text-slate-600">To keep the workshop interactive and discussion-led, each run has limited seats. Parents should select one of the fixed cohort dates instead of requesting random June dates.</p>
         </div>
       </section>
 
@@ -507,8 +560,8 @@ const FutureChoicesWorkshop: React.FC = () => {
                 </div>
 
                 <PrimaryButton
-                  href={plan.cta === 'Reserve a Seat' ? '#reserve-seat' : toWhatsApp(`Hi, I would like details for ${plan.name}. Please share the workshop schedule, pricing, and registration steps.`)}
-                  variant={plan.cta === 'Reserve a Seat' ? 'solid' : 'ghost'}
+                  href={plan.cta === 'Reserve Seat for Selected Date' ? '#reserve-seat' : toWhatsApp(`Hi, I would like details for ${plan.name}. Please share the workshop schedule, pricing, and registration steps.`)}
+                  variant={plan.cta === 'Reserve Seat for Selected Date' ? 'solid' : 'ghost'}
                   className="mt-6 w-full"
                 >
                   {plan.cta}
@@ -516,6 +569,9 @@ const FutureChoicesWorkshop: React.FC = () => {
               </Card>
             ))}
           </div>
+
+          <p className="mt-5 text-sm text-slate-600">Online Zoom pricing applies to live online workshops.</p>
+          <p className="mt-2 text-sm text-slate-600">Physical classroom pricing may differ depending on venue cost. Final price, venue, and timing will be confirmed before payment.</p>
 
           <Card className="mt-5 bg-slate-950 px-5 py-4 text-white sm:px-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -531,110 +587,20 @@ const FutureChoicesWorkshop: React.FC = () => {
 
       <section className="py-8 sm:py-12">
         <div className={sectionClass}>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="p-6 sm:p-7">
-              <SectionHeading
-                kicker="Part 1 details"
-                title="Part 1: Future Choices Simulation Workshop"
-                subtitle="A highly interactive classroom workshop where students step into realistic scenarios involving money, trade-offs, pressure, work, and long-term choices."
-              />
-              <ul className="mt-6 space-y-3">
-                {[
-                  'understand that choices have consequences',
-                  'think more clearly about spending, saving, and priorities',
-                  'reflect on real-life pressures and decisions',
-                  'build more awareness of what adulthood can actually look like',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm leading-7 text-slate-700">
-                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-600" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-
-            <Card className="p-6 sm:p-7">
-              <SectionHeading
-                kicker="Part 2 details"
-                title="Optional Part 2: Economics for Real Life"
-                subtitle="A follow-up workshop for students who want to explore how economics shows up in everyday life - from prices and incentives to choices, markets, and behaviour."
-              />
-              <ul className="mt-6 space-y-3">
-                {[
-                  'understand simple economic thinking in real life',
-                  'see how incentives shape decisions',
-                  'explore why prices move and why trade-offs matter',
-                  'build stronger future-readiness and economic awareness',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm leading-7 text-slate-700">
-                    <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-emerald-600" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8 sm:py-12">
-        <div className={sectionClass}>
-          <SectionHeading
-            kicker="Who will be leading the workshop"
-            title="Who will be leading the workshop"
-            subtitle="Led by an educator together with a guest facilitator who brings real-world banking-industry experience into the discussion, helping students connect classroom thinking with real-life financial and decision-making contexts."
-          />
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-2">
-            <Card className="p-6">
-              <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700">
-                <Users size={20} />
+          <SectionHeading kicker="FAQ" title="FAQ" subtitle="Parents usually ask about both learning value and logistics." />
+          <div className="mt-6 space-y-8">
+            <div>
+              <h3 className="text-lg font-black text-slate-950">A. Why this matters</h3>
+              <div className="mt-3">
+                <FaqAccordion items={faqWhyMatters} />
               </div>
-              <h3 className="mt-4 text-lg font-black text-slate-950">Integrated Learnings educator</h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">The workshop is guided by an educator who keeps the session structured, clear, and age-appropriate for Sec 1 to Sec 3 students.</p>
-            </Card>
-            <Card className="p-6">
-              <div className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                <MessageCircle size={20} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-slate-950">B. Logistics</h3>
+              <div className="mt-3">
+                <FaqAccordion items={faqLogistics} />
               </div>
-              <h3 className="mt-4 text-lg font-black text-slate-950">Guest facilitator with banking experience</h3>
-              <p className="mt-3 text-sm leading-7 text-slate-600">A guest facilitator with real banking-industry experience contributes practical perspective without turning the workshop into a corporate talk or exam class.</p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8 sm:py-12">
-        <div className={sectionClass}>
-          <SectionHeading
-            kicker="Why this stands out"
-            title="Why this workshop stands out"
-            subtitle="Parents usually want something more useful than another lecture, and more engaging than another screen-based activity. This is built to sit in the middle: practical, structured, and discussion-led."
-          />
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {[
-              'Not just theory',
-              'Not just another lecture',
-              'Not just another screen-based activity',
-              'Interactive, discussion-led, and practical',
-              'Helps teens connect choices with outcomes',
-              'Designed to be meaningful, not just time-filling',
-              'Premium-but-approachable feel for parents',
-              'Future-readiness without sounding like tuition',
-            ].map((item) => (
-              <Card key={item} className="p-5">
-                <p className="text-sm font-semibold text-slate-800">{item}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="py-8 sm:py-12">
-        <div className={sectionClass}>
-          <SectionHeading kicker="FAQ" title="FAQ" />
-          <div className="mt-6">
-            <FaqAccordion />
+            </div>
           </div>
         </div>
       </section>
@@ -644,14 +610,14 @@ const FutureChoicesWorkshop: React.FC = () => {
           <div className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
             <div>
               <SectionHeading
-                kicker="Reserve a Seat"
+                kicker="Reserve Seat for Selected Date"
                 title="WhatsApp Us Directly"
                 subtitle="No form needed. Message us directly and we’ll reply with workshop schedule, pricing, and registration steps."
               />
               <Card className="mt-6 p-6">
                 <p className="text-sm leading-7 text-slate-600">This page now uses direct WhatsApp enquiries only, so you can get a faster response and ask follow-up questions immediately.</p>
                 <div className="mt-6 flex flex-wrap gap-3">
-                  <PrimaryButton href={toWhatsApp(heroWhatsAppText)}>Message on WhatsApp</PrimaryButton>
+                  <PrimaryButton href={toWhatsApp(quickTemplateText)}>Message on WhatsApp</PrimaryButton>
                   <PrimaryButton href="#pricing" variant="ghost">Review Pricing First</PrimaryButton>
                 </div>
                 <p className="mt-4 text-xs leading-6 text-slate-500">Tip: Include your child’s level and preferred workshop option in your first message for quicker support.</p>
@@ -664,11 +630,11 @@ const FutureChoicesWorkshop: React.FC = () => {
               <p className="mt-3 text-sm leading-7 text-slate-600">Tap the button below to open WhatsApp with a pre-filled message. Edit anything before sending.</p>
 
               <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-7 text-slate-700">
-                Hi, I would like details for the Future Choices Simulation Workshop.\n\nChild level: Secondary __\nInterested in: Part 1 / Part 2 / 2-Day Bundle\nQuestions: __
+                Hi, I would like details for the Future Choices Simulation Workshop.\nChild level: Secondary __\nPreferred mode: Zoom / Physical / Private group\nPreferred date: 10 Jun Zoom / 17 Jun Zoom / 20 Jun Physical / 24 Jun Zoom / 27 Jun Physical\nInterested in: Part 1 / Part 2 / 2-Day Bundle\nQuestions: __
               </div>
 
               <PrimaryButton
-                href={toWhatsApp('Hi, I would like details for the Future Choices Simulation Workshop. Child level: Secondary __. Interested in: Part 1 / Part 2 / 2-Day Bundle. Questions: __')}
+                href={toWhatsApp(quickTemplateText)}
                 variant="dark"
                 className="mt-6 w-full"
               >
@@ -684,8 +650,8 @@ const FutureChoicesWorkshop: React.FC = () => {
 
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:hidden">
         <div className="mx-auto grid max-w-3xl grid-cols-2 gap-3">
-          <PrimaryButton href="#reserve-seat" className="w-full">Reserve a Seat</PrimaryButton>
-          <PrimaryButton href={toWhatsApp(heroWhatsAppText)} variant="ghost" className="w-full">WhatsApp</PrimaryButton>
+          <PrimaryButton href={toWhatsApp(zoomScheduleText)} className="w-full">Zoom Dates</PrimaryButton>
+          <PrimaryButton href={toWhatsApp(physicalInterestText)} variant="ghost" className="w-full">Physical Class</PrimaryButton>
         </div>
       </div>
     </div>
