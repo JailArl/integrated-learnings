@@ -1098,14 +1098,14 @@ const StudyPulseAdmin: React.FC = () => {
                               <p className="text-xs text-slate-500"><strong>Stripe Subscription:</strong> {m.stripe_subscription_id || '—'}</p>
                               <p className="text-xs text-slate-500"><strong>Period End:</strong> {(stripeStatus?.current_period_end || m.current_period_end || '—') ? String(stripeStatus?.current_period_end || m.current_period_end || '—').split('T')[0] : '—'}</p>
                               <div className="flex flex-wrap gap-2">
-                                {m.status !== 'premium_active' ? (
+                                {!paid ? (
                                   <button
                                     type="button"
                                     disabled={updatingMembershipId === m.id}
                                     onClick={() => setMembershipPlan(m, 'premium')}
                                     className="rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 disabled:opacity-60"
                                   >
-                                    {updatingMembershipId === m.id ? 'Saving...' : 'Grant Premium'}
+                                    {updatingMembershipId === m.id ? 'Saving...' : (m.status === 'premium_active' ? 'Refresh Premium Access' : 'Grant Premium')}
                                   </button>
                                 ) : (
                                   <button
