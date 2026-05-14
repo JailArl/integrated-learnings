@@ -74,23 +74,23 @@ const CountdownCard: React.FC<{
 const getPageSeo = (variant: CrashCourseVariant) => {
   if (variant === 'psle') {
     return {
-      title: 'PSLE Math & Science Home Crash Course | Integrated Learnings Singapore',
-      description: 'Personalised home-based PSLE Math and Science final-lap crash course in North Singapore. Diagnostic-based correction for weak topics, exam technique, and parent-visible progress.',
+      title: 'PSLE Math & Science June Crash Course Singapore | Integrated Learnings',
+      description: 'PSLE Math and Science June holiday rescue course for weak topics, WA2 gaps, and exam preparation in North Singapore.',
       canonicalPath: '/family/crash-courses/psle-june-intensive',
     };
   }
 
   if (variant === 'olevel') {
     return {
-      title: 'O-Level Math & Science Home Crash Course | Integrated Learnings Singapore',
-      description: 'Personalised home-based O-Level E-Math, A-Math, Physics and Chemistry final-lap crash course in North Singapore. Diagnostic-based chapter rescue, paper strategy, and parent-visible progress.',
+      title: 'O-Level Math & Science June Crash Course Singapore | Integrated Learnings',
+      description: 'O-Level E Math, A Math, Physics, Chemistry and Combined Science June holiday rescue course for weak chapters and exam preparation.',
       canonicalPath: '/family/crash-courses/o-level-june-intensive',
     };
   }
 
   return {
-    title: 'PSLE & O-Level Home Crash Course | Integrated Learnings Singapore',
-    description: 'Personalised home-based PSLE and O-Level final-lap crash courses in North Singapore. Diagnostic-based correction for Math, Science, E-Math, A-Math, Physics and Chemistry, with parent updates and StudyPulse follow-through.',
+    title: 'PSLE & O-Level June Holiday Crash Courses Singapore | Integrated Learnings',
+    description: 'Targeted PSLE and O-Level June holiday crash courses in North Singapore. Send WA2 or mid-year results for a free fit check.',
     canonicalPath: '/family/crash-courses/psle-june-intensive',
   };
 };

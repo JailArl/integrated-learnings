@@ -315,12 +315,78 @@ const RECOMMENDATIONS: Record<OptionKey, React.ReactNode> = {
   ),
 };
 
+const setFamilyHomeSeo = () => {
+  const title = 'Home Tuition, Exam Rescue & Study Support Singapore | Integrated Learnings';
+  const description = 'Family learning support in Singapore: tutor matching, June exam rescue options, and StudyPulse accountability. Start with a free parent fit check.';
+  const canonicalPath = '/tuition';
+
+  const previousTitle = document.title;
+  document.title = title;
+
+  let metaDescription = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+  const previousDescription = metaDescription?.getAttribute('content') ?? '';
+  if (!metaDescription) {
+    metaDescription = document.createElement('meta');
+    metaDescription.setAttribute('name', 'description');
+    document.head.appendChild(metaDescription);
+  }
+  metaDescription.setAttribute('content', description);
+
+  const setMeta = (selector: string, attr: 'name' | 'property', key: string, value: string) => {
+    let el = document.querySelector<HTMLMetaElement>(selector);
+    const previous = el?.getAttribute('content') ?? '';
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', value);
+    return { el, previous };
+  };
+
+  const origin = window.location.origin || 'https://www.integratedlearnings.com.sg';
+  const canonicalHref = `${origin}${canonicalPath}`;
+  const ogTitle = setMeta('meta[property="og:title"]', 'property', 'og:title', title);
+  const ogDescription = setMeta('meta[property="og:description"]', 'property', 'og:description', description);
+  const ogUrl = setMeta('meta[property="og:url"]', 'property', 'og:url', canonicalHref);
+  const twitterTitle = setMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title);
+  const twitterDescription = setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description);
+
+  let canonicalLink = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+  const previousCanonicalHref = canonicalLink?.getAttribute('href') ?? '';
+  if (!canonicalLink) {
+    canonicalLink = document.createElement('link');
+    canonicalLink.setAttribute('rel', 'canonical');
+    document.head.appendChild(canonicalLink);
+  }
+  canonicalLink.setAttribute('href', canonicalHref);
+
+  return () => {
+    document.title = previousTitle;
+    metaDescription?.setAttribute('content', previousDescription);
+    ogTitle.el?.setAttribute('content', ogTitle.previous);
+    ogDescription.el?.setAttribute('content', ogDescription.previous);
+    ogUrl.el?.setAttribute('content', ogUrl.previous);
+    twitterTitle.el?.setAttribute('content', twitterTitle.previous);
+    twitterDescription.el?.setAttribute('content', twitterDescription.previous);
+    if (canonicalLink) {
+      if (previousCanonicalHref) {
+        canonicalLink.setAttribute('href', previousCanonicalHref);
+      } else {
+        canonicalLink.remove();
+      }
+    }
+  };
+};
+
 const FamilyHome: React.FC = () => {
   const [selected, setSelected] = useState<OptionKey | null>(null);
   const [flashId, setFlashId] = useState(0);
   const resultRef = useRef<HTMLDivElement>(null);
   const activeOption = GUIDE_STEPS[0].options.find((opt) => opt.key === selected) ?? null;
   const familyContext = getFamilyContext();
+
+  useEffect(() => setFamilyHomeSeo(), []);
 
   useEffect(() => {
     if (selected && resultRef.current) {
