@@ -759,11 +759,9 @@ export const getMatchesForInvoicing = async (): Promise<{
     
     // Payment instructions
     doc.setFontSize(10);
-    // TODO: Replace this placeholder messaging with an actual payment QR code
-    //       once QR-based payment integration is implemented.
-    doc.text('Payment via QR code will be available in a future update.', 20, yPos + 37);
-    doc.text('Please follow the payment instructions provided by the tutoring center.', 20, yPos + 50);
-    doc.text('[QR CODE PLACEHOLDER]', 20, yPos + 50);
+    // Billing is handled manually via WhatsApp — admin sends PayNow QR directly to parent
+    doc.text('Payment instructions will be sent separately via WhatsApp.', 20, yPos + 37);
+    doc.text('Please contact support if you have any payment questions.', 20, yPos + 50);
     
     // Convert to blob
     const pdfBlob = doc.output('blob');
