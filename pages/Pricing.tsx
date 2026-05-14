@@ -6,41 +6,37 @@ import { Link } from 'react-router-dom';
 const Pricing: React.FC = () => {
   return (
     <>
-      <PageHeader title="Transparent Pricing" subtitle="Fair rates for quality education. No hidden fees, pay only for completed lessons." />
+      <PageHeader title="Clear Tuition Rates. Smarter Matching. No Hidden Fees." subtitle="We show typical tutor rates upfront, then recommend the right support based on your child's needs - not just tutor availability." />
       
       {/* Diagnostic Advisory Banner */}
       <div className="bg-gradient-to-br from-blue-50 to-slate-50 border-b border-blue-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h3 className="text-2xl font-bold text-center text-slate-900 mb-6">Our Diagnostic Advisory Process</h3>
+          <h3 className="text-2xl font-bold text-center text-slate-900 mb-6">How We Recommend the Right Support</h3>
           <div className="max-w-3xl mx-auto">
             <div className="grid md:grid-cols-3 gap-6 mb-6">
               {/* Step 1 */}
               <div className="bg-white rounded-xl border-2 border-slate-200 p-6 text-center">
                 <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold text-primary">1</div>
-                <h4 className="font-bold text-slate-900 mb-2">15-Min Discovery Call</h4>
-                <p className="text-sm text-slate-600">Understand your child's needs, goals, and learning preferences</p>
+                <h4 className="font-bold text-slate-900 mb-2">Understand the child</h4>
+                <p className="text-sm text-slate-600">A short discovery call helps us understand your child's level, subject needs, goals, gaps, personality, and schedule.</p>
               </div>
               
               {/* Step 2 */}
               <div className="bg-gradient-to-br from-secondary to-blue-700 rounded-xl border-2 border-secondary p-6 text-center text-white relative shadow-lg">
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full">OUR EDGE</div>
                 <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">2</div>
-                <h4 className="font-bold mb-2">Diagnostic Matching Call</h4>
-                <p className="text-sm text-blue-100">30-minute Diagnostic Advisory Call to uncover what your child needs, how they learn, and which learning pathway will deliver results</p>
+                <h4 className="font-bold mb-2">Recommend the right path</h4>
+                <p className="text-sm text-blue-100">We may suggest tutor matching, crash course, enrichment workshop, StudyPulse, or a suitable combination.</p>
               </div>
               
               {/* Step 3 */}
               <div className="bg-white rounded-xl border-2 border-slate-200 p-6 text-center">
                 <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold text-green-700">3</div>
-                <h4 className="font-bold text-slate-900 mb-2">Right Learning Path</h4>
-                <p className="text-sm text-slate-600">Based on diagnostic data, not guesswork. Start your child's learning journey with confidence.</p>
+                <h4 className="font-bold text-slate-900 mb-2">Start with clarity</h4>
+                <p className="text-sm text-slate-600">We confirm tutor profile, rates, schedule, payment flow, and replacement policy before lessons begin.</p>
               </div>
             </div>
             
             <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6 text-center">
-              <p className="text-sm text-green-900 mb-4">
-                <strong>Why this works:</strong> Other agencies match on paper. We diagnose learning needs first and recommend the right pathway. That's why our students improve faster and parents are more satisfied.
-              </p>
               <Button to="/tuition#parent-inquiry" className="w-full text-lg py-3">Start Learning Assessment</Button>
             </div>
           </div>
@@ -95,50 +91,77 @@ const Pricing: React.FC = () => {
           <div className="bg-green-50 border border-green-200 rounded-xl p-6">
             <h3 className="text-lg font-bold text-green-900 mb-4">How Payment Works</h3>
             <ol className="space-y-3 text-sm text-green-800">
-              <li><strong>1. Get Assessed</strong> - We run a diagnostic assessment and recommend the right learning pathway</li>
-              <li><strong>2. First Month</strong> - You pay 50% of your first month's tuition to us as a matching fee</li>
-              <li><strong>3. Month 2 Onwards</strong> - Pay tutor directly via PayNow/bank transfer. No intermediaries.</li>
-              <li><strong>4. Flexible & Transparent</strong> - Cancel anytime with 1 week notice. No lock-in contracts.</li>
+              <li><strong>1. Get assessed</strong> - We understand your child's needs and recommend the right learning path.</li>
+              <li><strong>2. First 2 months: supported onboarding</strong> - Integrated Learnings stays involved during the early stage to monitor tutor fit, lesson flow, and parent feedback.</li>
+              <li><strong>3. No long-term agency markup</strong> - After the onboarding period, parents pay the tutor directly unless additional support or replacement is needed.</li>
+              <li><strong>4. Flexible and transparent</strong> - No lock-in contract. If the match is unsuitable early on, we will help arrange a replacement.</li>
             </ol>
           </div>
 
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
             <h3 className="text-lg font-bold text-blue-900 mb-4">Why This Model Works</h3>
             <ul className="space-y-2 text-sm text-blue-800">
-              <li>✓ <strong>One-Time Fee Only:</strong> After Month 1, your tutor keeps 100% of payment</li>
+              <li>✓ <strong>Support During Onboarding:</strong> We stay involved in the first two months to improve fit and outcomes</li>
               <li>✓ <strong>Transparent Pricing:</strong> Know the hourly rate before committing</li>
-              <li>✓ <strong>Long-Term Stability:</strong> Tutors stay motivated (direct payment, no commissions)</li>
-              <li>✓ <strong>Free Replacement:</strong> If the match doesn't work within first 2 lessons, swap for free</li>
+              <li>✓ <strong>Long-Term Flexibility:</strong> Parents pay tutors directly after onboarding unless extra support is needed</li>
+              <li>✓ <strong>Replacement Support:</strong> If the match does not work early on, we help arrange a replacement</li>
             </ul>
+          </div>
+        </div>
+
+        {/* Supported Onboarding Section */}
+        <div className="mt-12 bg-white border border-slate-200 rounded-2xl p-8">
+          <div className="text-center max-w-3xl mx-auto mb-8">
+            <h3 className="text-2xl font-bold text-slate-900 mb-3">Supported Onboarding, Not Just Matching</h3>
+            <p className="text-slate-600">
+              Many agencies introduce a tutor and step away. Integrated Learnings stays involved during the first two months to check whether the match is working, whether lessons are progressing, and whether parents need adjustments.
+            </p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <h4 className="font-bold text-slate-900 mb-2">Fit check</h4>
+              <p className="text-sm text-slate-600">We monitor whether the tutor's teaching style suits the child.</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <h4 className="font-bold text-slate-900 mb-2">Parent feedback</h4>
+              <p className="text-sm text-slate-600">We collect early feedback so issues can be addressed before they become bigger problems.</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <h4 className="font-bold text-slate-900 mb-2">Progress direction</h4>
+              <p className="text-sm text-slate-600">We help ensure lessons are aligned with the child's current needs.</p>
+            </div>
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5">
+              <h4 className="font-bold text-slate-900 mb-2">Replacement support</h4>
+              <p className="text-sm text-slate-600">If the match is unsuitable early on, we help arrange a replacement.</p>
+            </div>
           </div>
         </div>
         
         {/* CTA Section */}
         <div className="mt-16 bg-gradient-to-r from-secondary to-blue-700 p-8 rounded-2xl text-white text-center">
-           <h2 className="text-2xl font-bold mb-3">Ready to Start Your Child's Learning Journey?</h2>
+            <h2 className="text-2xl font-bold mb-3">Ready to Find the Right Learning Support?</h2>
            <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-              Tell us about your child's learning needs. We'll assess and recommend the right pathway — no account needed.
+              Tell us about your child's needs. We'll recommend whether tuition, crash course, enrichment, or monitoring support fits best.
            </p>
            <Link 
              to="/tuition#parent-inquiry"
              className="inline-block px-8 py-3 font-bold shadow-lg bg-white hover:bg-slate-100 text-secondary rounded-full transition"
            >
-              Start Learning Assessment →
+              Start Learning Assessment
            </Link>
         </div>
         
         {/* StudyPulse Cross-sell */}
         <div className="mt-12 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-8 text-center">
-          <h3 className="text-lg font-bold text-slate-900 mb-2">Already have a tutor? Track if your child is using the time well.</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">Already have a tutor? Add progress visibility.</h3>
           <p className="text-sm text-slate-600 mb-4 max-w-xl mx-auto">
-            Most parents spend $200–$600/month on tuition but have no visibility into daily study habits.
-            StudyPulse gives you check-ins, weekly reports, and exam tracking from <strong>$0/month</strong>.
+            StudyPulse helps parents track weekly study effort, check-ins, and exam preparation habits - even if the tutor is already arranged.
           </p>
           <Link 
             to="/studypulse"
             className="inline-block px-6 py-3 font-bold shadow bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-full transition text-sm"
           >
-            Try Free Study Monitoring →
+            Try StudyPulse Monitoring
           </Link>
         </div>
         
