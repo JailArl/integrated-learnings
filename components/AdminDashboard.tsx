@@ -308,6 +308,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const goToStudyPulseAdmin = () => {
+    navigate('/studypulse/admin');
+
+    // Fallback to hard navigation in case SPA navigation is interrupted.
+    if (typeof window !== 'undefined') {
+      window.setTimeout(() => {
+        if (window.location.pathname !== '/studypulse/admin') {
+          window.location.assign('/studypulse/admin');
+        }
+      }, 150);
+    }
+  };
+
   const handleLogout = async () => {
     const token = localStorage.getItem('adminToken');
     if (token) {
@@ -573,7 +586,7 @@ export default function AdminDashboard() {
               Review submissions
             </button>
             <button
-              onClick={() => navigate('/studypulse/admin')}
+              onClick={goToStudyPulseAdmin}
               className="px-3 py-2 text-sm bg-amber-500 text-slate-950 rounded-lg hover:bg-amber-400 transition"
             >
               Open StudyPulse Admin
@@ -613,7 +626,7 @@ export default function AdminDashboard() {
               <p className="text-gray-600 text-sm">Verified Tutors</p>
               <p className="text-3xl font-bold text-red-600">{stats.verifiedTutors}</p>
             </div>
-            <div onClick={() => navigate('/studypulse/admin')} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-amber-300 transition">
+            <div onClick={goToStudyPulseAdmin} className="bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-amber-300 transition">
               <p className="text-gray-600 text-sm">StudyPulse Signups</p>
               <p className="text-3xl font-bold text-amber-600">{stats.studyPulseSignups || 0}</p>
             </div>
@@ -682,7 +695,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-amber-800">These signups come from the StudyPulse flow, not the tuition form.</p>
                 </div>
                 <button
-                  onClick={() => navigate('/studypulse/admin')}
+                  onClick={goToStudyPulseAdmin}
                   className="rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-amber-400"
                 >
                   View full StudyPulse admin
@@ -889,7 +902,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-gray-500">These are separate from tuition inquiry form submissions.</p>
                 </div>
                 <button
-                  onClick={() => navigate('/studypulse/admin')}
+                  onClick={goToStudyPulseAdmin}
                   className="px-3 py-2 text-sm bg-amber-500 text-slate-950 rounded-lg hover:bg-amber-400 transition"
                 >
                   Open StudyPulse Admin
