@@ -62,8 +62,10 @@ import {
   submitCTARequest,
   upgradeMembership,
   startPremiumCheckout,
+  getStudyPulsePaymentsEnabled,
   openBillingPortal,
   isPremium,
+  STUDYPULSE_PAYMENTS_DISABLED_MESSAGE,
   updateStudyDays,
   updateCCADays,
   upsertExcuse,
@@ -320,6 +322,7 @@ const StudyPulseApp: React.FC = () => {
   const [metadataExcuses, setMetadataExcuses] = useState<Record<string, Record<string, string>>>({});
   const [childCheckTimes, setChildCheckTimes] = useState<Record<string, string>>({});
   const [savingCheckTimeId, setSavingCheckTimeId] = useState<string | null>(null);
+  const [paymentsEnabled, setPaymentsEnabled] = useState(false);
 
   // Excuse modal
   const [excuseDay, setExcuseDay] = useState<{ dateStr: string; label: string } | null>(null);
@@ -361,6 +364,17 @@ const StudyPulseApp: React.FC = () => {
       setLoading(false);
     })();
   }, [navigate]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const enabled = await getStudyPulsePaymentsEnabled();
+      if (active) setPaymentsEnabled(enabled);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!child) return;
@@ -538,6 +552,13 @@ const StudyPulseApp: React.FC = () => {
 
   const handleUpgrade = async (plan: CheckoutPlan = 'monthly_flex') => {
     if (!userId || upgrading) return;
+    const checkoutEnabled = await getStudyPulsePaymentsEnabled(true);
+    setPaymentsEnabled(checkoutEnabled);
+    if (!checkoutEnabled) {
+      setDashboardNotice({ type: 'info', text: STUDYPULSE_PAYMENTS_DISABLED_MESSAGE });
+      return;
+    }
+
     setDashboardNotice(null);
     setUpgrading(true);
 
@@ -2174,25 +2195,32 @@ const StudyPulseApp: React.FC = () => {
 
               {!premium && (
                 <div className="mt-4">
-                  {upgrading && (
+                  {!paymentsEnabled && (
+                    <p className="mb-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      {STUDYPULSE_PAYMENTS_DISABLED_MESSAGE}
+                    </p>
+                  )}
+                  {paymentsEnabled && upgrading && (
                     <p className="mb-2 text-xs font-semibold text-amber-700">Opening secure checkout — please wait...</p>
                   )}
-                  <div className="grid gap-2 sm:grid-cols-2">
-                  {CHECKOUT_PLAN_OPTIONS.map((plan) => (
-                    <button
-                      key={plan.code}
-                      disabled={upgrading}
-                      onClick={() => handleUpgrade(plan.code)}
-                      className={`rounded-xl border px-3 py-3 text-left transition disabled:opacity-50 ${plan.code === 'monthly_flex' ? 'border-amber-300 bg-amber-50 hover:bg-amber-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-slate-900">{plan.label}</span>
-                        <span className="text-xs font-black text-slate-900">{plan.priceLabel}</span>
-                      </div>
-                      <p className="mt-1 text-[11px] text-slate-500">{plan.description}</p>
-                    </button>
-                  ))}
-                  </div>
+                  {paymentsEnabled && (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                    {CHECKOUT_PLAN_OPTIONS.map((plan) => (
+                      <button
+                        key={plan.code}
+                        disabled={upgrading}
+                        onClick={() => handleUpgrade(plan.code)}
+                        className={`rounded-xl border px-3 py-3 text-left transition disabled:opacity-50 ${plan.code === 'monthly_flex' ? 'border-amber-300 bg-amber-50 hover:bg-amber-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-slate-900">{plan.label}</span>
+                          <span className="text-xs font-black text-slate-900">{plan.priceLabel}</span>
+                        </div>
+                        <p className="mt-1 text-[11px] text-slate-500">{plan.description}</p>
+                      </button>
+                    ))}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2369,43 +2397,51 @@ const StudyPulseApp: React.FC = () => {
             </h2>
             <p className="mt-1 text-xs text-slate-500">All plans include daily check-ins, all subjects, and unlimited children.</p>
 
-            {upgrading && (
+            {!paymentsEnabled && (
+              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                {STUDYPULSE_PAYMENTS_DISABLED_MESSAGE}
+              </p>
+            )}
+
+            {paymentsEnabled && upgrading && (
               <p className="mt-3 text-xs font-bold text-amber-700">Opening secure checkout — please wait...</p>
             )}
 
-            <div className="mt-4 grid gap-3">
-              {CHECKOUT_PLAN_OPTIONS.map((plan) => (
-                <button
-                  key={plan.code}
-                  disabled={upgrading}
-                  onClick={async () => {
-                    if (!userId || upgrading) return;
-                    setDashboardNotice(null);
-                    setUpgrading(true);
-                    try {
-                      const checkout = await startPremiumCheckout(plan.code);
-                      if (checkout.ok && checkout.url) {
-                        window.location.assign(checkout.url);
-                        return;
+            {paymentsEnabled && (
+              <div className="mt-4 grid gap-3">
+                {CHECKOUT_PLAN_OPTIONS.map((plan) => (
+                  <button
+                    key={plan.code}
+                    disabled={upgrading}
+                    onClick={async () => {
+                      if (!userId || upgrading) return;
+                      setDashboardNotice(null);
+                      setUpgrading(true);
+                      try {
+                        const checkout = await startPremiumCheckout(plan.code);
+                        if (checkout.ok && checkout.url) {
+                          window.location.assign(checkout.url);
+                          return;
+                        }
+                        setDashboardNotice({ type: 'error', text: checkout.message || 'Could not start checkout. Please try again.' });
+                      } catch (err: any) {
+                        setDashboardNotice({ type: 'error', text: err?.message || 'Something went wrong. Please try again.' });
+                      } finally {
+                        setUpgrading(false);
                       }
-                      setDashboardNotice({ type: 'error', text: checkout.message || 'Could not start checkout. Please try again.' });
-                    } catch (err: any) {
-                      setDashboardNotice({ type: 'error', text: err?.message || 'Something went wrong. Please try again.' });
-                    } finally {
-                      setUpgrading(false);
-                    }
-                    setShowPlanModal(false);
-                  }}
-                  className={`rounded-xl border px-4 py-4 text-left transition disabled:opacity-50 ${plan.code === 'monthly_flex' ? 'border-amber-300 bg-amber-50 hover:bg-amber-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-bold text-slate-900">{plan.label}</span>
-                    <span className="text-sm font-black text-slate-900">{plan.priceLabel}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-slate-500">{plan.description}</p>
-                </button>
-              ))}
-            </div>
+                      setShowPlanModal(false);
+                    }}
+                    className={`rounded-xl border px-4 py-4 text-left transition disabled:opacity-50 ${plan.code === 'monthly_flex' ? 'border-amber-300 bg-amber-50 hover:bg-amber-100' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-bold text-slate-900">{plan.label}</span>
+                      <span className="text-sm font-black text-slate-900">{plan.priceLabel}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">{plan.description}</p>
+                  </button>
+                ))}
+              </div>
+            )}
 
             <button
               disabled={upgrading}

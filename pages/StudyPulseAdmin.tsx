@@ -150,6 +150,10 @@ const StudyPulseAdmin: React.FC = () => {
   const [subscriptionStatusMap, setSubscriptionStatusMap] = useState<Record<string, StripeSubscriptionStatus>>({});
   const [syncingSubscriptionState, setSyncingSubscriptionState] = useState(false);
   const [disputeGateAcknowledged, setDisputeGateAcknowledged] = useState(false);
+  const [paymentsEnabled, setPaymentsEnabled] = useState(false);
+  const [paymentsSettingLoading, setPaymentsSettingLoading] = useState(true);
+  const [paymentsSettingSaving, setPaymentsSettingSaving] = useState(false);
+  const [paymentsSettingMeta, setPaymentsSettingMeta] = useState<{ updated_at?: string | null; updated_by?: string | null } | null>(null);
 
   // Cron health + failed messages
   interface CronLogRow {
@@ -262,6 +266,50 @@ const StudyPulseAdmin: React.FC = () => {
       cancelled = true;
     };
   }, [memberships]);
+
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      setPaymentsSettingLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await fetch('/api/studypulse/admin-memberships', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ action: 'get_payment_toggle' }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || !payload?.ok) {
+          if (!cancelled) {
+            setOpsActionMessage({ type: 'error', text: payload?.error || 'Could not load payments toggle status.' });
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          setPaymentsEnabled(Boolean(payload.enabled));
+          setPaymentsSettingMeta({ updated_at: payload.updated_at || null, updated_by: payload.updated_by || null });
+        }
+      } catch (error: any) {
+        if (!cancelled) {
+          setOpsActionMessage({ type: 'error', text: error?.message || 'Could not load payments toggle status.' });
+        }
+      } finally {
+        if (!cancelled) setPaymentsSettingLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!previewParentId) return;
@@ -595,6 +643,53 @@ const StudyPulseAdmin: React.FC = () => {
     }
   };
 
+  const setPaymentsToggle = async (nextEnabled: boolean) => {
+    const adminToken = localStorage.getItem('adminToken');
+    if (!adminToken) {
+      setOpsActionMessage({ type: 'error', text: 'Admin session expired. Please log in again.' });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      nextEnabled
+        ? 'Enable StudyPulse payments now? Parents will be able to start checkout immediately.'
+        : 'Pause StudyPulse payments now? New checkout sessions will be blocked immediately.'
+    );
+    if (!confirmed) return;
+
+    setPaymentsSettingSaving(true);
+    setOpsActionMessage(null);
+    try {
+      const response = await fetch('/api/studypulse/admin-memberships', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ action: 'set_payment_toggle', enabled: nextEnabled }),
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok || !payload?.ok) {
+        setOpsActionMessage({ type: 'error', text: payload?.error || 'Could not update payments toggle.' });
+        return;
+      }
+
+      setPaymentsEnabled(Boolean(payload.enabled));
+      setPaymentsSettingMeta({ updated_at: payload.updated_at || null, updated_by: payload.updated_by || null });
+      setOpsActionMessage({
+        type: 'success',
+        text: payload.enabled
+          ? 'StudyPulse payments are now enabled.'
+          : 'StudyPulse payments are now paused.',
+      });
+    } catch (error: any) {
+      setOpsActionMessage({ type: 'error', text: error?.message || 'Could not update payments toggle.' });
+    } finally {
+      setPaymentsSettingSaving(false);
+    }
+  };
+
   const previewParent = memberships.find(m => m.user_id === previewParentId) || null;
   const previewChildren = previewParent ? children.filter(c => c.parent_id === previewParent.user_id) : [];
   const previewChild = previewChildren.find(c => c.id === previewChildId) || previewChildren[0] || null;
@@ -720,6 +815,44 @@ const StudyPulseAdmin: React.FC = () => {
                 {opsActionMessage.text}
               </div>
             )}
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-slate-700">Payments Control</h3>
+                  <p className="mt-1 text-xs text-slate-500">Toggle whether parents can start new StudyPulse checkout sessions.</p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-black uppercase ${paymentsEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                      {paymentsEnabled ? 'Enabled' : 'Paused'}
+                    </span>
+                    {paymentsSettingMeta?.updated_at && (
+                      <span className="text-[11px] text-slate-400">
+                        Updated {new Date(paymentsSettingMeta.updated_at).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    disabled={paymentsSettingLoading || paymentsSettingSaving || !paymentsEnabled}
+                    onClick={() => setPaymentsToggle(false)}
+                    className="rounded-lg border border-amber-300 bg-white px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 disabled:opacity-50"
+                  >
+                    {paymentsSettingSaving ? 'Saving...' : 'Pause Payments'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={paymentsSettingLoading || paymentsSettingSaving || paymentsEnabled}
+                    onClick={() => setPaymentsToggle(true)}
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 disabled:opacity-50"
+                  >
+                    {paymentsSettingSaving ? 'Saving...' : 'Enable Payments'}
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Platform Health Row */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">

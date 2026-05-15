@@ -23,6 +23,58 @@ const ALLOWED_REQUEST_TABLES = new Set([
 ]);
 
 const ALLOWED_REQUEST_STATUSES = new Set(['pending', 'contacted']);
+const STUDYPULSE_PAYMENTS_FLAG_KEY = 'studypulse_payments';
+
+async function getStudyPulsePaymentsFlag() {
+  if (!admin) return { ok: false, error: 'StudyPulse admin controls are not configured.' };
+
+  const { data, error } = await admin
+    .from('sq_runtime_flags')
+    .select('value_json, updated_at, updated_by')
+    .eq('key', STUDYPULSE_PAYMENTS_FLAG_KEY)
+    .maybeSingle();
+
+  if (error) {
+    return { ok: false, error: error.message || 'Could not load runtime payments setting.' };
+  }
+
+  const enabled = Boolean(data?.value_json?.enabled);
+  return {
+    ok: true,
+    enabled,
+    updated_at: data?.updated_at || null,
+    updated_by: data?.updated_by || null,
+  };
+}
+
+async function setStudyPulsePaymentsFlag(enabled, actor) {
+  if (!admin) return { ok: false, error: 'StudyPulse admin controls are not configured.' };
+
+  const { data, error } = await admin
+    .from('sq_runtime_flags')
+    .upsert(
+      {
+        key: STUDYPULSE_PAYMENTS_FLAG_KEY,
+        value_json: { enabled: Boolean(enabled) },
+        updated_at: new Date().toISOString(),
+        updated_by: actor || 'admin',
+      },
+      { onConflict: 'key' }
+    )
+    .select('value_json, updated_at, updated_by')
+    .single();
+
+  if (error) {
+    return { ok: false, error: error.message || 'Could not save runtime payments setting.' };
+  }
+
+  return {
+    ok: true,
+    enabled: Boolean(data?.value_json?.enabled),
+    updated_at: data?.updated_at || null,
+    updated_by: data?.updated_by || null,
+  };
+}
 
 async function verifyAdminToken(req) {
   const token = getBearerToken(req);
@@ -136,6 +188,37 @@ export default async function handler(req, res) {
         table,
         id,
         status,
+      });
+    }
+
+    if (action === 'get_payment_toggle') {
+      const setting = await getStudyPulsePaymentsFlag();
+      if (!setting.ok) {
+        return json(res, 400, { error: setting.error });
+      }
+      return json(res, 200, {
+        ok: true,
+        enabled: setting.enabled,
+        updated_at: setting.updated_at,
+        updated_by: setting.updated_by,
+      });
+    }
+
+    if (action === 'set_payment_toggle') {
+      if (typeof body.enabled !== 'boolean') {
+        return json(res, 400, { error: 'enabled must be boolean.' });
+      }
+
+      const setting = await setStudyPulsePaymentsFlag(body.enabled, 'admin');
+      if (!setting.ok) {
+        return json(res, 400, { error: setting.error });
+      }
+
+      return json(res, 200, {
+        ok: true,
+        enabled: setting.enabled,
+        updated_at: setting.updated_at,
+        updated_by: setting.updated_by,
       });
     }
 

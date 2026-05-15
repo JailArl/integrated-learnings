@@ -2,7 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '../services/supabase';
-import { createMembership, CHECKOUT_PLAN_OPTIONS, startPremiumCheckout, type CheckoutPlan } from '../services/studyquest';
+import {
+  createMembership,
+  CHECKOUT_PLAN_OPTIONS,
+  startPremiumCheckout,
+  getStudyPulsePaymentsEnabled,
+  STUDYPULSE_PAYMENTS_DISABLED_MESSAGE,
+  type CheckoutPlan,
+} from '../services/studyquest';
 
 /* ═══════════════════════════════════════════
    StudyPulse — Minimal Signup
@@ -20,13 +27,30 @@ const StudyPulseSetup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<'free' | CheckoutPlan>('free');
+  const [paymentsEnabled, setPaymentsEnabled] = useState(false);
 
   useEffect(() => {
+    let active = true;
+    (async () => {
+      const enabled = await getStudyPulsePaymentsEnabled();
+      if (active) setPaymentsEnabled(enabled);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!paymentsEnabled) {
+      setSelectedPlan('free');
+      return;
+    }
+
     const params = new URLSearchParams(location.search);
     const plan = params.get('plan');
     const isCheckoutPlan = CHECKOUT_PLAN_OPTIONS.some((option) => option.code === plan);
     setSelectedPlan(isCheckoutPlan ? (plan as CheckoutPlan) : 'free');
-  }, [location.search]);
+  }, [location.search, paymentsEnabled]);
 
   // If already signed in as parent, go to app
   useEffect(() => {
@@ -73,7 +97,10 @@ const StudyPulseSetup: React.FC = () => {
       // Create a free membership so the dashboard detects them
       await createMembership(userId, 'free', { email, name: fullName.trim() });
 
-      if (selectedPlan === 'free') {
+      const checkoutEnabled = await getStudyPulsePaymentsEnabled(true);
+      setPaymentsEnabled(checkoutEnabled);
+
+      if (selectedPlan === 'free' || !checkoutEnabled) {
         navigate('/studypulse/app');
         return;
       }
@@ -108,6 +135,11 @@ const StudyPulseSetup: React.FC = () => {
 
           <div className="mt-6 rounded-2xl border border-slate-200 bg-stone-50 p-4">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Choose your start</p>
+            {!paymentsEnabled && (
+              <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                {STUDYPULSE_PAYMENTS_DISABLED_MESSAGE}
+              </p>
+            )}
             <div className="mt-3 grid gap-2">
               <button
                 type="button"
@@ -121,7 +153,7 @@ const StudyPulseSetup: React.FC = () => {
                 <p className="mt-1 text-xs text-slate-500">Create your account first. Upgrade later from Billing anytime.</p>
               </button>
 
-              {CHECKOUT_PLAN_OPTIONS.map((plan) => (
+              {paymentsEnabled && CHECKOUT_PLAN_OPTIONS.map((plan) => (
                 <button
                   key={plan.code}
                   type="button"
@@ -190,7 +222,7 @@ const StudyPulseSetup: React.FC = () => {
               disabled={loading}
               className="flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-400 disabled:opacity-50"
             >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <>{selectedPlan === 'free' ? 'Create Account' : 'Create Account & Continue to Payment'} <ArrowRight size={16} className="ml-1.5" /></>}
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <>{selectedPlan === 'free' || !paymentsEnabled ? 'Create Account' : 'Create Account & Continue to Payment'} <ArrowRight size={16} className="ml-1.5" /></>}
             </button>
           </form>
 

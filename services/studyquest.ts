@@ -146,6 +146,39 @@ export const CHECKOUT_PLAN_OPTIONS: Array<{
   { code: 'pack_4m', label: 'Exam Season (120 Days)', priceLabel: '$43.90', description: 'One-time payment · no auto-renew · longest coverage' },
 ];
 
+const STUDYPULSE_PAYMENTS_ENABLED_DEFAULT =
+  String(import.meta.env.VITE_STUDYPULSE_PAYMENTS_ENABLED || '').toLowerCase() === 'true';
+export const STUDYPULSE_PAYMENTS_DISABLED_MESSAGE =
+  'StudyPulse payments are temporarily paused while testing is in progress.';
+
+let studypulsePaymentsCache: { enabled: boolean; fetchedAt: number } | null = null;
+
+export async function getStudyPulsePaymentsEnabled(forceRefresh = false): Promise<boolean> {
+  if (!forceRefresh && studypulsePaymentsCache && Date.now() - studypulsePaymentsCache.fetchedAt < 30000) {
+    return studypulsePaymentsCache.enabled;
+  }
+
+  if (typeof window === 'undefined') {
+    return STUDYPULSE_PAYMENTS_ENABLED_DEFAULT;
+  }
+
+  try {
+    const response = await fetch('/api/studypulse/payment-settings', {
+      method: 'GET',
+      credentials: 'same-origin',
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || typeof payload?.enabled !== 'boolean') {
+      return STUDYPULSE_PAYMENTS_ENABLED_DEFAULT;
+    }
+
+    studypulsePaymentsCache = { enabled: payload.enabled, fetchedAt: Date.now() };
+    return payload.enabled;
+  } catch {
+    return STUDYPULSE_PAYMENTS_ENABLED_DEFAULT;
+  }
+}
+
 export const FREE_CHECKIN_DAYS = ['Tuesday', 'Thursday', 'Saturday'] as const;
 export const PREMIUM_SUBJECTS = ['Math', 'Science', 'Chinese'] as const;
 
@@ -307,6 +340,11 @@ export async function upgradeMembership(userId: string, planType: PlanType): Pro
 }
 
 export async function startPremiumCheckout(plan: CheckoutPlan = 'monthly_flex'): Promise<{ ok: boolean; url?: string; message?: string }> {
+  const paymentsEnabled = await getStudyPulsePaymentsEnabled(true);
+  if (!paymentsEnabled) {
+    return { ok: false, message: STUDYPULSE_PAYMENTS_DISABLED_MESSAGE };
+  }
+
   if (!supabase) return { ok: false, message: 'Billing service is not configured yet.' };
 
   const { data: { session } } = await supabase.auth.getSession();

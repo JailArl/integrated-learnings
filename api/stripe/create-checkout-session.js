@@ -8,8 +8,11 @@ const stripePriceIdPack2m = process.env.STRIPE_PRICE_ID_PACK_2M;
 const stripePriceIdPack4m = process.env.STRIPE_PRICE_ID_PACK_4M;
 const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const envStudyPulsePaymentsEnabled = String(process.env.STUDYPULSE_PAYMENTS_ENABLED || process.env.VITE_STUDYPULSE_PAYMENTS_ENABLED || '').toLowerCase() === 'true';
 
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;
+const admin = supabaseUrl && serviceRoleKey ? createClient(supabaseUrl, serviceRoleKey) : null;
 const PLAN_CONFIG = {
   monthly_flex: { mode: 'subscription', priceId: stripePriceIdMonthly, label: 'Core Monthly', durationDays: null },
   pass_1m: { mode: 'payment', priceId: stripePriceIdPass1m, label: 'Exam Pass (30 Days)', durationDays: 30 },
@@ -45,8 +48,30 @@ async function getAuthenticatedUser(req) {
   return { user: data.user, client };
 }
 
+async function isStudyPulsePaymentsEnabled() {
+  if (!admin) return envStudyPulsePaymentsEnabled;
+
+  try {
+    const { data, error } = await admin
+      .from('sq_runtime_flags')
+      .select('value_json')
+      .eq('key', 'studypulse_payments')
+      .maybeSingle();
+
+    if (error) return envStudyPulsePaymentsEnabled;
+    if (!data) return envStudyPulsePaymentsEnabled;
+    return Boolean(data?.value_json?.enabled);
+  } catch {
+    return envStudyPulsePaymentsEnabled;
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
+  const paymentsEnabled = await isStudyPulsePaymentsEnabled();
+  if (!paymentsEnabled) {
+    return json(res, 503, { error: 'StudyPulse payments are temporarily paused while testing is in progress.' });
+  }
   if (!stripe) return json(res, 500, { error: 'Stripe is not configured yet.' });
 
   try {
