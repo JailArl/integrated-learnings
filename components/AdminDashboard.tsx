@@ -221,6 +221,8 @@ export default function AdminDashboard() {
           'Physics Bootcamp','Chemistry Bootcamp','A Math Bootcamp','E Math Bootcamp',
           'Weak-Topic Clinic','Mock + Correction Clinic','2-Subject Bundle','Multi-Block Bundle',
           'Not sure — please advise',
+          'PSLE June Intensive (Enquiry)',
+          'O-Level June Intensive (Enquiry)',
         ];
         const crashRes = await supabase.from('parent_submissions').select('*')
           .overlaps('subjects', crashSubjects)

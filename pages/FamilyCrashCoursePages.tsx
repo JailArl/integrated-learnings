@@ -1,4 +1,4 @@
-import React, { useEffect, useId, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight,
@@ -8,9 +8,11 @@ import {
   FileText,
   Home,
   MessageCircle,
+  Send,
   Sparkles,
   Users,
 } from 'lucide-react';
+import { supabase } from '../services/supabase';
 
 const WA_NUMBER = '6598882675';
 const PAGE_TAG = 'exam-rescue-home-crash-course';
@@ -517,6 +519,196 @@ const getPageCopy = (variant: CrashCourseVariant) => {
     oLevelCrossLink: 'Looking for O-Level support? View O-Level Math & Science Exam Rescue Course.',
     psleCrossLink: 'Looking for PSLE support? View PSLE Math & Science Exam Rescue Course.',
   };
+};
+
+// ─── Inline Crash Course Enquiry Form ────────────────────────────────────────
+
+const ENQUIRY_COOLDOWN_MS = 10 * 60 * 1000;
+
+const InlineCrashEnquiryForm: React.FC<{ variant: 'psle' | 'olevel' }> = ({ variant }) => {
+  const isPsle = variant === 'psle';
+  const studentLevelDefault = isPsle ? 'Primary 6' : 'Secondary 4';
+  const subjectTag = isPsle ? 'PSLE June Intensive (Enquiry)' : 'O-Level June Intensive (Enquiry)';
+  const formLoadTime = useRef(Date.now());
+  const submittingRef = useRef(false);
+
+  const [parentName, setParentName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [note, setNote] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submittingRef.current || submitted) return;
+    setError('');
+
+    // Anti-spam guards
+    if (honeypot) return;
+    if (Date.now() - formLoadTime.current < 2500) {
+      setError('Please take a moment to fill in the form.');
+      return;
+    }
+    const lastSubmit = localStorage.getItem('il_crash_enquiry');
+    if (lastSubmit && Date.now() - Number(lastSubmit) < ENQUIRY_COOLDOWN_MS) {
+      setError('You already submitted recently. Please wait a few minutes before trying again.');
+      return;
+    }
+
+    const cleanPhone = phone.replace(/\s/g, '');
+    if (!parentName.trim()) { setError('Your name is required.'); return; }
+    if (!/^[89]\d{7}$/.test(cleanPhone)) {
+      setError('Please enter a valid Singapore mobile number (8 digits, starting with 8 or 9).');
+      return;
+    }
+
+    submittingRef.current = true;
+    setLoading(true);
+
+    try {
+      if (!supabase) throw new Error('Not configured');
+      const { error: dbError } = await supabase.from('parent_submissions').insert([{
+        parent_name: parentName.trim(),
+        student_name: '',
+        contact_number: cleanPhone,
+        email: '',
+        student_level: studentLevelDefault,
+        subjects: [subjectTag],
+        preferred_mode: 'home',
+        location: null,
+        budget_range: null,
+        current_challenge: note.trim() || null,
+        goals: null,
+        preferred_contact_timing: null,
+        additional_notes: null,
+        status: 'new',
+      }]);
+      if (dbError) throw dbError;
+
+      // Fire Google Ads conversion — only on successful submission
+      try {
+        const w = window as any;
+        if (typeof w.gtag === 'function') {
+          w.gtag('event', 'conversion', {
+            send_to: 'AW-18165644066/UK4uCMXF4K0cEKL2htZD',
+            value: 1.0,
+            currency: 'SGD',
+          });
+        }
+      } catch {
+        // Tracking must never block the success state.
+      }
+
+      localStorage.setItem('il_crash_enquiry', String(Date.now()));
+      setSubmitted(true);
+    } catch {
+      setError('Something went wrong. Please try again or reach us on WhatsApp.');
+    } finally {
+      setLoading(false);
+      submittingRef.current = false;
+    }
+  };
+
+  if (submitted) {
+    return (
+      <div className="rounded-2xl border border-green-200 bg-green-50 px-6 py-8 text-center">
+        <CheckCircle2 size={40} className="mx-auto mb-3 text-green-600" aria-hidden="true" />
+        <h3 className="text-lg font-black text-slate-900">Enquiry Received!</h3>
+        <p className="mt-2 text-sm text-slate-600">
+          We'll reach out to you on WhatsApp within 1 business day to arrange a free fit check.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      {/* Honeypot — hidden from real users */}
+      <input
+        type="text"
+        name="website"
+        value={honeypot}
+        onChange={(e) => setHoneypot(e.target.value)}
+        tabIndex={-1}
+        aria-hidden="true"
+        style={{ display: 'none' }}
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="cc-parent-name" className="mb-1 block text-xs font-bold text-slate-700">
+            Your name <span className="text-rose-500">*</span>
+          </label>
+          <input
+            id="cc-parent-name"
+            type="text"
+            autoComplete="name"
+            value={parentName}
+            onChange={(e) => setParentName(e.target.value)}
+            placeholder="Parent / guardian name"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="cc-phone" className="mb-1 block text-xs font-bold text-slate-700">
+            WhatsApp / mobile <span className="text-rose-500">*</span>
+          </label>
+          <input
+            id="cc-phone"
+            type="tel"
+            autoComplete="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="e.g. 91234567"
+            className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="cc-note" className="mb-1 block text-xs font-bold text-slate-700">
+          Anything you'd like us to know? <span className="text-slate-400">(optional)</span>
+        </label>
+        <textarea
+          id="cc-note"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={3}
+          placeholder={isPsle
+            ? 'e.g. My child is weak in Math fractions and Science open-ended. WA2 was 65 for Math.'
+            : 'e.g. My child is weak in A Math differentiation and Physics electricity. Mid-year was 52.'}
+          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
+        />
+      </div>
+
+      {error && (
+        <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-700">
+          {error}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-amber-500 px-6 py-3.5 text-sm font-black text-slate-950 transition hover:bg-amber-400 disabled:opacity-60"
+      >
+        {loading ? 'Sending…' : (
+          <>
+            <Send size={15} aria-hidden="true" />
+            Send Enquiry — We'll WhatsApp You
+          </>
+        )}
+      </button>
+
+      <p className="text-center text-[11px] text-slate-400">
+        No spam. We only use your number to follow up on this enquiry.
+      </p>
+    </form>
+  );
 };
 
 const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ variant = 'combined' }) => {
@@ -1632,6 +1824,19 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
         )}
 
         <FaqAccordion items={faqItems} />
+
+        {(isPsle || isOLevel) && (
+          <SectionCard id="enquiry-form">
+            <SectionHeading
+              kicker="ENQUIRE NOW"
+              title={isPsle ? 'Get a Free PSLE Fit Check' : 'Get a Free O-Level Fit Check'}
+              subtitle="Leave your name and number. We’ll WhatsApp you within 1 business day to review your child’s results and recommend the right rescue plan."
+            />
+            <div className="mt-6">
+              <InlineCrashEnquiryForm variant={isPsle ? 'psle' : 'olevel'} />
+            </div>
+          </SectionCard>
+        )}
 
         <SectionCard className="border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50">
           <SectionHeading
