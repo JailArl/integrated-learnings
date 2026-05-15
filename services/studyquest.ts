@@ -149,7 +149,7 @@ export const CHECKOUT_PLAN_OPTIONS: Array<{
 const STUDYPULSE_PAYMENTS_ENABLED_DEFAULT =
   String(import.meta.env.VITE_STUDYPULSE_PAYMENTS_ENABLED || '').toLowerCase() === 'true';
 export const STUDYPULSE_PAYMENTS_DISABLED_MESSAGE =
-  'StudyPulse payments are temporarily paused while testing is in progress.';
+  'Premium features are coming soon. Create your free account now and be first to unlock them.';
 
 let studypulsePaymentsCache: { enabled: boolean; fetchedAt: number } | null = null;
 

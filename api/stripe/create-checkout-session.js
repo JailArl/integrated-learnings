@@ -70,7 +70,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
   const paymentsEnabled = await isStudyPulsePaymentsEnabled();
   if (!paymentsEnabled) {
-    return json(res, 503, { error: 'StudyPulse payments are temporarily paused while testing is in progress.' });
+    return json(res, 503, { error: 'Premium features are coming soon. Create your free account now and be first to unlock them.' });
   }
   if (!stripe) return json(res, 500, { error: 'Stripe is not configured yet.' });
 
