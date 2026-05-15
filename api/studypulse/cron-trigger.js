@@ -4,7 +4,7 @@ import {
   getServiceRoleKey,
   getSupabaseUrl,
   json,
-} from './_shared.js';
+} from '../../server/studypulse-shared.js';
 
 /**
  * api/studypulse/cron-trigger.js

@@ -6,7 +6,7 @@ import {
   getSupabaseUrl,
   json,
   readJsonBody,
-} from './_shared.js';
+} from '../../server/studypulse-shared.js';
 
 const supabaseUrl = getSupabaseUrl();
 const serviceRoleKey = getServiceRoleKey();

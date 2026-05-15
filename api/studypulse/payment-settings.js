@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { getServiceRoleKey, getSupabaseUrl, json } from './_shared.js';
+import { getServiceRoleKey, getSupabaseUrl, json } from '../../server/studypulse-shared.js';
 
 const supabaseUrl = getSupabaseUrl();
 const serviceRoleKey = getServiceRoleKey();
