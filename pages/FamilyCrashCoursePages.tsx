@@ -125,6 +125,26 @@ const trackCtaClick = (ctaName: string, destination: string) => {
   }
 };
 
+const trackGoogleAdsConversion = () => {
+  try {
+    const w = window as any;
+    if (typeof w.gtag === 'function') {
+      w.gtag('event', 'conversion', {
+        send_to: 'AW-18165644066/UK4uCMXF4K0cEKL2htZD',
+        value: 1.0,
+        currency: 'SGD',
+      });
+    }
+  } catch {
+    // Tracking must never block CTA actions.
+  }
+};
+
+const trackWhatsAppPrimaryCtaClick = (ctaName: string, destination: string) => {
+  trackCtaClick(ctaName, destination);
+  trackGoogleAdsConversion();
+};
+
 const setPageSeo = (title: string, description: string, canonicalPath: string) => {
   const previousTitle = document.title;
   document.title = title;
@@ -211,12 +231,19 @@ const ActionButton: React.FC<{
   className?: string;
   ctaName: string;
   icon?: React.ReactNode;
-}> = ({ label, href, className = '', ctaName, icon }) => (
+  isWhatsAppPrimary?: boolean;
+}> = ({ label, href, className = '', ctaName, icon, isWhatsAppPrimary = false }) => (
   <a
     href={href}
     target="_blank"
     rel="noreferrer"
-    onClick={() => trackCtaClick(ctaName, href)}
+    onClick={() => {
+      if (isWhatsAppPrimary) {
+        trackWhatsAppPrimaryCtaClick(ctaName, href);
+        return;
+      }
+      trackCtaClick(ctaName, href);
+    }}
     className={`inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-black transition ${className}`.trim()}
   >
     {icon}
@@ -534,7 +561,6 @@ const InlineCrashEnquiryForm: React.FC<{ variant: 'psle' | 'olevel' }> = ({ vari
 
   const [parentName, setParentName] = useState('');
   const [phone, setPhone] = useState('');
-  const [note, setNote] = useState('');
   const [honeypot, setHoneypot] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -557,10 +583,11 @@ const InlineCrashEnquiryForm: React.FC<{ variant: 'psle' | 'olevel' }> = ({ vari
       return;
     }
 
-    const cleanPhone = phone.replace(/\s/g, '');
+    const cleanPhone = phone.replace(/\s|-/g, '');
+    const normalizedPhone = cleanPhone.replace(/^\+?65/, '');
     if (!parentName.trim()) { setError('Your name is required.'); return; }
-    if (!/^[89]\d{7}$/.test(cleanPhone)) {
-      setError('Please enter a valid Singapore mobile number (8 digits, starting with 8 or 9).');
+    if (!/^[89]\d{7}$/.test(normalizedPhone)) {
+      setError('Please enter a valid Singapore WhatsApp number (8 digits, starting with 8 or 9).');
       return;
     }
 
@@ -572,14 +599,14 @@ const InlineCrashEnquiryForm: React.FC<{ variant: 'psle' | 'olevel' }> = ({ vari
       const { error: dbError } = await supabase.from('parent_submissions').insert([{
         parent_name: parentName.trim(),
         student_name: '',
-        contact_number: cleanPhone,
+        contact_number: normalizedPhone,
         email: '',
         student_level: studentLevelDefault,
         subjects: [subjectTag],
         preferred_mode: 'home',
         location: null,
         budget_range: null,
-        current_challenge: note.trim() || null,
+        current_challenge: null,
         goals: null,
         preferred_contact_timing: null,
         additional_notes: null,
@@ -589,14 +616,7 @@ const InlineCrashEnquiryForm: React.FC<{ variant: 'psle' | 'olevel' }> = ({ vari
 
       // Fire Google Ads conversion — only on successful submission
       try {
-        const w = window as any;
-        if (typeof w.gtag === 'function') {
-          w.gtag('event', 'conversion', {
-            send_to: 'AW-18165644066/UK4uCMXF4K0cEKL2htZD',
-            value: 1.0,
-            currency: 'SGD',
-          });
-        }
+        trackGoogleAdsConversion();
       } catch {
         // Tracking must never block the success state.
       }
@@ -654,7 +674,7 @@ const InlineCrashEnquiryForm: React.FC<{ variant: 'psle' | 'olevel' }> = ({ vari
         </div>
         <div>
           <label htmlFor="cc-phone" className="mb-1 block text-xs font-bold text-slate-700">
-            WhatsApp / mobile <span className="text-rose-500">*</span>
+            WhatsApp number <span className="text-rose-500">*</span>
           </label>
           <input
             id="cc-phone"
@@ -662,27 +682,11 @@ const InlineCrashEnquiryForm: React.FC<{ variant: 'psle' | 'olevel' }> = ({ vari
             autoComplete="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g. 91234567"
+            placeholder="e.g. 91234567 or +6591234567"
             className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
             required
           />
         </div>
-      </div>
-
-      <div>
-        <label htmlFor="cc-note" className="mb-1 block text-xs font-bold text-slate-700">
-          Anything you'd like us to know? <span className="text-slate-400">(optional)</span>
-        </label>
-        <textarea
-          id="cc-note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          rows={3}
-          placeholder={isPsle
-            ? 'e.g. My child is weak in Math fractions and Science open-ended. WA2 was 65 for Math.'
-            : 'e.g. My child is weak in A Math differentiation and Physics electricity. Mid-year was 52.'}
-          className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-200"
-        />
       </div>
 
       {error && (
@@ -699,7 +703,7 @@ const InlineCrashEnquiryForm: React.FC<{ variant: 'psle' | 'olevel' }> = ({ vari
         {loading ? 'Sending…' : (
           <>
             <Send size={15} aria-hidden="true" />
-            Send Enquiry — We'll WhatsApp You
+            Send Enquiry
           </>
         )}
       </button>
@@ -730,45 +734,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
   const oLevelCountdown = getTimeLeft(EXAM_COUNTDOWN_TARGETS.oLevelMath, now);
 
   const fitCheckMessage = isPsle
-    ? [
-        'Hi Integrated Learnings, I\'m interested in the PSLE Math & Science Home Crash Course.',
-        '',
-        'My child is in P6.',
-        '',
-        'Subject needed:',
-        'Latest score / result:',
-        'Weak topics:',
-        'Preferred lesson format:',
-        '1. Student\'s home',
-        '2. Tutor-hosted study space',
-        '3. Mini-group',
-        '',
-        'Preferred area:',
-        'Preferred timing:',
-        '',
-        'I can send the result slip / school paper for a free WhatsApp fit check.',
-      ].join('\n')
+    ? 'Hi Integrated Learnings, I\'m interested in the PSLE June Rescue Intake. I would like to do a free fit check for my child.'
     : isOLevel
-      ? [
-          'Hi Integrated Learnings, I\'m interested in the O-Level Math & Science Home Crash Course.',
-          '',
-          'My child is in Sec 4 / Sec 5.',
-          '',
-          'Subject needed:',
-          'E-Math / A-Math / Physics / Chemistry / Combined Science',
-          '',
-          'Latest score / result:',
-          'Weak chapters:',
-          'Preferred lesson format:',
-          '1. Student\'s home',
-          '2. Tutor-hosted study space',
-          '3. Mini-group',
-          '',
-          'Preferred area:',
-          'Preferred timing:',
-          '',
-          'I can send the result slip / school paper for a free WhatsApp fit check.',
-        ].join('\n')
+      ? 'Hi Integrated Learnings, I\'m interested in the O-Level June Rescue Intake. I would like to check suitable support for my child.'
       : 'Hi Integrated Learnings, I\'m interested in the PSLE & O-Level Home Crash Course. I can send the result slip / school paper for a free WhatsApp fit check.';
 
   const slotsMessage = isPsle
@@ -811,6 +779,9 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
   const slotsLink = toWhatsApp(slotsMessage);
   const fitCheckLink = toWhatsApp(fitCheckMessage);
+  const quickEnquiryLink = '#enquiry-form';
+  const viewPackagesLink = isPsle ? '#psle-packages' : '#olevel-packages';
+  const primaryWhatsAppLabel = isPsle ? 'WhatsApp PSLE Fit Check' : 'WhatsApp O-Level Fit Check';
   const friendGroupLink = toWhatsApp('Hi Integrated Learnings, I have 2-4 students and would like to form a friend-group home crash course.');
   const followThroughLink = toWhatsApp('Hi Integrated Learnings, please tell me about post-crash-course follow-through and StudyPulse options.');
   const mockInterestLink = toWhatsApp('Hi Integrated Learnings, I want to join the mock exam interest list for PSLE / O-Level.');
@@ -1115,19 +1086,31 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <ActionButton
-                  label={isPsle || isOLevel ? 'Reserve June Rescue Slot' : "Secure Your Child's Spot"}
+                  label={isPsle || isOLevel ? primaryWhatsAppLabel : "Secure Your Child's Spot"}
                   href={fitCheckLink}
-                  ctaName="hero_fit_check"
-                  icon={<FileText size={15} aria-hidden="true" />}
+                  ctaName="hero_whatsapp_fit_check"
+                  icon={<MessageCircle size={15} aria-hidden="true" />}
+                  isWhatsAppPrimary={isPsle || isOLevel}
                   className="bg-amber-400 text-slate-950 shadow-lg shadow-amber-500/25 hover:bg-amber-300"
                 />
-                <ActionButton
-                  label={isPsle || isOLevel ? 'Check Intake Availability' : 'Check Available Slots'}
-                  href={slotsLink}
-                  ctaName="hero_check_slots"
-                  icon={<Home size={15} aria-hidden="true" />}
-                  className="border border-white/20 bg-white/10 text-white hover:bg-white/15"
-                />
+                {isPsle || isOLevel ? (
+                  <a
+                    href={viewPackagesLink}
+                    onClick={() => trackCtaClick('hero_view_packages', viewPackagesLink)}
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-black text-white transition hover:bg-white/15"
+                  >
+                    <FileText size={15} aria-hidden="true" />
+                    View Packages
+                  </a>
+                ) : (
+                  <ActionButton
+                    label="Check Available Slots"
+                    href={slotsLink}
+                    ctaName="hero_check_slots"
+                    icon={<Home size={15} aria-hidden="true" />}
+                    className="border border-white/20 bg-white/10 text-white hover:bg-white/15"
+                  />
+                )}
               </div>
 
               <p className="mt-3 text-xs font-semibold text-slate-300">
@@ -1325,6 +1308,26 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           <p className="mt-5 text-xs font-semibold text-slate-700">
             Prices shown are starting rates. Final recommendation depends on level, subject, learning needs, and travel.
           </p>
+          {!showCombined && (
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <ActionButton
+                label={primaryWhatsAppLabel}
+                href={fitCheckLink}
+                ctaName="pricing_whatsapp_fit_check"
+                icon={<MessageCircle size={15} aria-hidden="true" />}
+                isWhatsAppPrimary
+                className="bg-amber-500 text-slate-950 hover:bg-amber-400"
+              />
+              <a
+                href={quickEnquiryLink}
+                onClick={() => trackCtaClick('pricing_quick_enquiry', quickEnquiryLink)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              >
+                <Send size={15} aria-hidden="true" />
+                Submit Quick Enquiry
+              </a>
+            </div>
+          )}
         </SectionCard>
 
         {isPsle && (
@@ -1362,6 +1365,24 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
               Fixed June intakes. Limited seats. Clear schedule. Better learning flow. Private arrangements are by request only, subject to availability and pricing.
             </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <ActionButton
+                label={primaryWhatsAppLabel}
+                href={fitCheckLink}
+                ctaName="intake_psle_whatsapp_fit_check"
+                icon={<MessageCircle size={15} aria-hidden="true" />}
+                isWhatsAppPrimary
+                className="bg-amber-500 text-slate-950 hover:bg-amber-400"
+              />
+              <a
+                href={quickEnquiryLink}
+                onClick={() => trackCtaClick('intake_psle_quick_enquiry', quickEnquiryLink)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              >
+                <Send size={15} aria-hidden="true" />
+                Submit Quick Enquiry
+              </a>
+            </div>
           </SectionCard>
         )}
 
@@ -1400,6 +1421,24 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
             <p className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
               Fixed June intakes. Limited seats. Clear schedule. Better learning flow. Private arrangements are by request only, subject to availability and pricing.
             </p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <ActionButton
+                label={primaryWhatsAppLabel}
+                href={fitCheckLink}
+                ctaName="intake_olevel_whatsapp_fit_check"
+                icon={<MessageCircle size={15} aria-hidden="true" />}
+                isWhatsAppPrimary
+                className="bg-amber-500 text-slate-950 hover:bg-amber-400"
+              />
+              <a
+                href={quickEnquiryLink}
+                onClick={() => trackCtaClick('intake_olevel_quick_enquiry', quickEnquiryLink)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              >
+                <Send size={15} aria-hidden="true" />
+                Submit Quick Enquiry
+              </a>
+            </div>
           </SectionCard>
         )}
 
@@ -1476,6 +1515,26 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               </p>
             )}
             <p className="mt-5 text-xs text-slate-500">Package prices vary by format. Open the lesson-format cards above to compare options.</p>
+            {!showCombined && (
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <ActionButton
+                  label={primaryWhatsAppLabel}
+                  href={fitCheckLink}
+                  ctaName="psle_packages_whatsapp_fit_check"
+                  icon={<MessageCircle size={15} aria-hidden="true" />}
+                  isWhatsAppPrimary
+                  className="bg-amber-500 text-slate-950 hover:bg-amber-400"
+                />
+                <a
+                  href={quickEnquiryLink}
+                  onClick={() => trackCtaClick('psle_packages_quick_enquiry', quickEnquiryLink)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+                >
+                  <Send size={15} aria-hidden="true" />
+                  Submit Quick Enquiry
+                </a>
+              </div>
+            )}
           </SectionCard>
         )}
 
@@ -1600,6 +1659,26 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
               </p>
             )}
             <p className="mt-5 text-xs text-slate-500">Package prices vary by lesson format. Open the lesson format cards above to compare student-home, tutor-hosted, and mini-group options.</p>
+            {!showCombined && (
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <ActionButton
+                  label={primaryWhatsAppLabel}
+                  href={fitCheckLink}
+                  ctaName="olevel_packages_whatsapp_fit_check"
+                  icon={<MessageCircle size={15} aria-hidden="true" />}
+                  isWhatsAppPrimary
+                  className="bg-amber-500 text-slate-950 hover:bg-amber-400"
+                />
+                <a
+                  href={quickEnquiryLink}
+                  onClick={() => trackCtaClick('olevel_packages_quick_enquiry', quickEnquiryLink)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+                >
+                  <Send size={15} aria-hidden="true" />
+                  Submit Quick Enquiry
+                </a>
+              </div>
+            )}
           </SectionCard>
         )}
 
@@ -1825,19 +1904,6 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
 
         <FaqAccordion items={faqItems} />
 
-        {(isPsle || isOLevel) && (
-          <SectionCard id="enquiry-form">
-            <SectionHeading
-              kicker="ENQUIRE NOW"
-              title={isPsle ? 'Get a Free PSLE Fit Check' : 'Get a Free O-Level Fit Check'}
-              subtitle="Leave your name and number. We’ll WhatsApp you within 1 business day to review your child’s results and recommend the right rescue plan."
-            />
-            <div className="mt-6">
-              <InlineCrashEnquiryForm variant={isPsle ? 'psle' : 'olevel'} />
-            </div>
-          </SectionCard>
-        )}
-
         <SectionCard className="border-amber-200 bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50">
           <SectionHeading
             kicker="NEXT STEP"
@@ -1846,45 +1912,86 @@ const CrashCourseLandingPage: React.FC<{ variant?: CrashCourseVariant }> = ({ va
           />
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <ActionButton
-              label={isPsle || isOLevel ? 'Send Result Slip for Free Fit Check' : 'Send Result Slip for Fit Check'}
+              label={isPsle || isOLevel ? primaryWhatsAppLabel : 'Send Result Slip for Fit Check'}
               href={fitCheckLink}
-              ctaName="final_fit_check"
-              icon={<FileText size={15} aria-hidden="true" />}
+              ctaName="final_whatsapp_fit_check"
+              icon={<MessageCircle size={15} aria-hidden="true" />}
+              isWhatsAppPrimary={isPsle || isOLevel}
               className="bg-amber-500 text-slate-950 hover:bg-amber-400"
             />
-            <ActionButton
-              label={isPsle || isOLevel ? 'Check Intake Availability' : 'Check Available Home Slots'}
-              href={slotsLink}
-              ctaName="final_slots"
-              icon={<Home size={15} aria-hidden="true" />}
-              className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
-            />
+            {isPsle || isOLevel ? (
+              <a
+                href={quickEnquiryLink}
+                onClick={() => trackCtaClick('final_quick_enquiry', quickEnquiryLink)}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
+              >
+                <Send size={15} aria-hidden="true" />
+                Submit Quick Enquiry
+              </a>
+            ) : (
+              <ActionButton
+                label="Check Available Home Slots"
+                href={slotsLink}
+                ctaName="final_slots"
+                icon={<Home size={15} aria-hidden="true" />}
+                className="border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+              />
+            )}
           </div>
           <p className="mt-4 text-xs text-slate-600">
             {pageCopy.finalNote}
           </p>
         </SectionCard>
+
+        {(isPsle || isOLevel) && (
+          <SectionCard id="enquiry-form">
+            <SectionHeading
+              kicker="SECONDARY OPTION"
+              title="Prefer not to WhatsApp yet?"
+              subtitle="Submit a quick enquiry and we’ll follow up shortly."
+            />
+            <div className="mt-6">
+              <InlineCrashEnquiryForm variant={isPsle ? 'psle' : 'olevel'} />
+            </div>
+          </SectionCard>
+        )}
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 px-3 py-2 backdrop-blur-sm md:hidden [padding-bottom:calc(0.5rem+env(safe-area-inset-bottom))]">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2">
-          <a
-            href={slotsLink}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => trackCtaClick('mobile_sticky_slots', slotsLink)}
-            className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-3 py-3 text-xs font-black text-slate-950 transition hover:bg-amber-400"
-          >
-            {isPsle || isOLevel ? 'Check Intake' : 'Check Home Slots'}
-          </a>
+          {isPsle || isOLevel ? (
+            <a
+              href={quickEnquiryLink}
+              onClick={() => trackCtaClick('mobile_sticky_quick_enquiry', quickEnquiryLink)}
+              className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-3 text-xs font-black text-slate-700 transition hover:bg-slate-50"
+            >
+              Submit Enquiry
+            </a>
+          ) : (
+            <a
+              href={slotsLink}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => trackCtaClick('mobile_sticky_slots', slotsLink)}
+              className="inline-flex items-center justify-center rounded-xl bg-amber-500 px-3 py-3 text-xs font-black text-slate-950 transition hover:bg-amber-400"
+            >
+              Check Home Slots
+            </a>
+          )}
           <a
             href={fitCheckLink}
             target="_blank"
             rel="noreferrer"
-            onClick={() => trackCtaClick('mobile_sticky_fit_check', fitCheckLink)}
-            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-3 text-xs font-black text-slate-700 transition hover:bg-slate-50"
+            onClick={() => {
+              if (isPsle || isOLevel) {
+                trackWhatsAppPrimaryCtaClick('mobile_sticky_whatsapp_fit_check', fitCheckLink);
+                return;
+              }
+              trackCtaClick('mobile_sticky_fit_check', fitCheckLink);
+            }}
+            className={`inline-flex items-center justify-center rounded-xl px-3 py-3 text-xs font-black transition ${isPsle || isOLevel ? 'bg-amber-500 text-slate-950 hover:bg-amber-400' : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}
           >
-            {isPsle || isOLevel ? 'Free Fit Check' : 'Send Result Slip'}
+            {isPsle || isOLevel ? primaryWhatsAppLabel : 'Send Result Slip'}
           </a>
         </div>
       </div>
